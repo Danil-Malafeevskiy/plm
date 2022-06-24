@@ -1,33 +1,45 @@
 <template>
-  <div id="app">
-    
-    <img alt="KT logo" 
-      src="https://upload.wikimedia.org/wikipedia/commons/7/7c/AO_Kronstadt_Group_logo.jpg"
-      width="297.3"
-      height="91.7"
+  <v-app>
+    <v-app-bar
+      app
+      color="red lighten-1"
+      dark
     >
-    <HomePage msg="КРОНШТАДТ Х IT GANG"/>
-  </div>
+      <v-app-bar-title>
+        Кронштадт х IT GANG
+      </v-app-bar-title>
+
+      <v-spacer></v-spacer>
+
+    </v-app-bar>
+    <v-main>
+      <HomePage/>
+    </v-main>
+  </v-app>
 </template>
 
 <script>
-import HomePage from './components/CommonPages/HomePage.vue'
+import HomePage from './components/HomePage';
 
 export default {
   name: 'App',
+
   components: {
-    HomePage
-}
-}
+    HomePage,
+  },
+
+  data: () => ({
+    //
+  }),
+};
 </script>
 
+
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+
+  #title{
+    color: black;
+  }
+
+
 </style>
