@@ -1,5 +1,4 @@
 <template>
-  <v-container>
     <div id="container">
       <div id="title">
         Карта ЛЭП
@@ -9,10 +8,10 @@
         Автоматизированное приложение для решения поставленных задач
       </div>
     </div>
-  </v-container>
 </template>
 
 <script>
+
   export default {
     name: 'HomePage',
   }
@@ -30,8 +29,8 @@
   }
 
   #container{
-    margin-top: 8em;
-    margin-left: 1em;
+    margin-top: 25em;
+    margin-left: 0em;
     opacity: 0;
     animation: ani 1.5s forwards;
     
