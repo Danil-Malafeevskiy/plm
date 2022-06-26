@@ -9,31 +9,27 @@
         Кронштадт х IT GANG
       </v-app-bar-title>
 
-      <v-spacer></v-spacer>
-
+      
+      
+      <router-view></router-view>
     </v-app-bar>
+
     <v-main>
-      <HomePage/>
+      <nav>
+          <router-link to='/'>Home</router-link>
+            <br>
+          <router-link to='/map'>Map</router-link>
+        </nav>
+
+      <v-content>
+
+        
+
+
+      </v-content>
     </v-main>
   </v-app>
 </template>
-
-<script>
-import HomePage from './components/HomePage';
-
-export default {
-  name: 'App',
-
-  components: {
-    HomePage,
-  },
-
-  data: () => ({
-    //
-  }),
-};
-</script>
-
 
 <style>
 
@@ -41,5 +37,19 @@ export default {
     color: black;
   }
 
+  nav {
+  padding: 30px;
+  }
+
+  nav a {
+    font-weight: bold;
+    text-decoration: none;
+  }
+
+  nav a.router-link-exact-active {
+    color: #EF5350;
+    text-decoration: none;
+  }
 
 </style>
+
