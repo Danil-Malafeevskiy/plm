@@ -1,6 +1,6 @@
 <template>
   <v-content id="content">
-    <vl-map :load-tiles-while-animating="true" :load-tiles-while-interacting="true" style="height: 800px; width: 1600px;">
+    <vl-map :load-tiles-while-animating="true" :load-tiles-while-interacting="true" style="height: 600px; width: 1200px;">
         <vl-view :zoom.sync="zoom" :center.sync="center" :rotation.sync="rotation"></vl-view>
 
         <vl-layer-tile id="osm">
@@ -24,6 +24,6 @@
 
 <style>
   #content{
-    margin-top: 50em;
+    margin-top: 40em;
   }
 </style>
