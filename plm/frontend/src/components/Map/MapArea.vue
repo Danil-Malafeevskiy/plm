@@ -7,8 +7,8 @@
         <vl-source-osm></vl-source-osm>
       </vl-layer-tile>
 
-      <vl-feature>
-        <vl-geom-point :coordinates="[38.726634,9.003391]"></vl-geom-point>
+       <vl-feature>
+        <vl-geom-multi-point :coordinates="cord"></vl-geom-multi-point>
       </vl-feature>
     </vl-map>
   </v-content>
@@ -20,21 +20,25 @@ import axios from 'axios'
 export default {
     data () {
       return { 
-        zoom: 17,
+        zoom: 2,
         center: [38.7241, 9.0048],
         rotation: 0,
+        cord: [],
       }
     },
+    methods: {
+      point(){
+        axios.get("/tower")
+        .then((response) => {
+          response.data.forEach(element =>
+            this.cord.push([element.dolgota, element.shirota]));
+          })
+      }
+    },
+    mounted() {
+     this.point();
+    }
   };
-
-  function point(){
-    axios.
-        get("/tower")
-        .then( (response) => console.log(response.data[0].shirota))
-        
-
-  }
-  point();
 </script>
 
 <style>
