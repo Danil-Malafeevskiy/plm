@@ -6,29 +6,32 @@ from django.http.response import JsonResponse
 
 from app.models import Tower
 from app.serializers import TowerSerializer
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
-@csrf_exempt
+@api_view(["GET", "POST", "PUT", "DELETE"])
 def TowerAPI(request, id=0):
     if request.method == 'GET':
         tower = Tower.objects.all()
         tower_serializer = TowerSerializer(tower, many=True)
-        return JsonResponse(tower_serializer.data, safe=False)
+        return Response(tower_serializer.data)
     elif request.method == 'POST':
         tower_data = JSONParser().parse(request)
         tower_serializer = TowerSerializer(data=tower_data)
         if tower_serializer.is_valid():
             tower_serializer.save()
-            return JsonResponse("Success new", safe=False)
-        return JsonResponse("Failed new", safe=False)
+            return Response("Success new")
+        return Response("Failed new")
     elif request.method == 'PUT':
         tower_data = JSONParser().parse(request)
         tower = Tower.objects.get(id=tower_data['number_support'])
         tower_serializer = TowerSerializer(tower, data=tower_data)
         if tower_serializer.is_valid():
             tower_serializer.save()
-            return JsonResponse("Success up", safe=False)
+            return Response("Success up")
         return JsonResponse("Failed up", safe=False)
     elif request.method == 'DELETE':
         tower = Tower.objects.get(Unique_number=id)
         tower.delete()
-        return JsonResponse("SUCCESS DEL", safe=False)
+        return Response("SUCCESS DEL")
+

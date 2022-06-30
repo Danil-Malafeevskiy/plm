@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from app.models import Tower
 
+
 class TowerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tower
