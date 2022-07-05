@@ -12,6 +12,7 @@ import 'vuelayers/dist/vuelayers.css'
 Vue.config.productionTip = false
 Vue.use(VueAxios, axios)
 Vue.use(VueLayers)
+Vue.use(vuetify);
 
 new Vue({
   router,
