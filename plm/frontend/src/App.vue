@@ -3,7 +3,6 @@
     <v-app-bar
       app
       color="red lighten-1"
-      dark
     >
       <v-app-bar-title>
         Кронштадт х IT GANG
