@@ -3,6 +3,12 @@
     <div class="add_window" style="display: none" >
         Добавление <br>
         <p v-if="this.cord[0] === this.cord[0]"> Координата: {{this.cord[0]}}  {{this.cord[0]}} </p> 
+        <p>Выбери своего бойца
+        <select v-model="draw" @change="updateValue($event.target.value)">
+            <option value="Point">Point</option>
+            <option value="LineString">LineString</option>
+            <option value="Polygon">Polygon</option>
+        </select></p>
             <ValidationObserver v-slot="{ invalid }">
                 <form @submit.prevent="onSubmit">
                     <ValidationProvider name="VL" rules="required|alpha_dash|alpha_spaces" v-slot="{ errors }">
@@ -36,13 +42,6 @@
                 </form>
             </ValidationObserver>
         <button class="edit save" @click="close('.add_window')">Закрыть</button>
-
-        <select v-model="drawType">
-            <option value="Point">Point</option>
-            <option value="LineString">LineString</option>
-            <option value="Polygon">Polygon</option>
-        </select>
-
     </div>
 </template>
 
@@ -55,7 +54,7 @@ export default {
         ValidationObserver
     },
     name: 'AddGeometryObject',
-    props: ['close', 'cord', 'drawType'],
+    props: ['cord', 'drawType', 'close'],
     data: function() {
         return {
             id: null,
@@ -66,9 +65,9 @@ export default {
             material: null,
             corner: null,
             height: null,
+            draw: this.drawType,
         };
     },
-
     methods: {
         onSubmit() {
             console.log(JSON.stringify({
@@ -82,7 +81,16 @@ export default {
                 height: this.height,
             }));
         },
+        updateValue: function (drawType) {
+            this.$emit('input', drawType);
+    }
     },
+    computed: {
+        propModel: {
+            get () { return this.prop },
+            set (value) { this.$emit('update:prop', value) },
+  },
+},
 
 };
 </script>
@@ -101,6 +109,10 @@ input {
     border-radius: 10px;
     border: 1px solid #aaa;
     transition: .3s border-color;
+}
+
+select{
+    border: 1px solid black;
 }
 
 input:hover {

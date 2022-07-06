@@ -25,11 +25,8 @@
     </vl-map>
 
     <EditGeometryObject :feature="feature" :close="close" />
-    <AddGeometryObject :close="close" :cord="cord" :drawType="drawType" />
+    <AddGeometryObject v-model="drawType" :close="close" :cord="cord"/>
     <button class="add edit" @click="edit(feature, '.add_window')">Добавить объект</button>
-
-    
-
   </v-content>
 </template>
 
