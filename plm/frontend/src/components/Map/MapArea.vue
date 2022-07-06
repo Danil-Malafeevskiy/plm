@@ -1,112 +1,135 @@
 <template>
   <v-content id="content">
-    <div>
-    <vl-map data-projection="EPSG:4326" style="height: 37.5em; width: 75em;">
+    <vl-map data-projection="EPSG:4326" style="height: 37.5em; width: 75em;" @click="onMapClick">
       <vl-view :zoom.sync="zoom" :center.sync="center" :rotation.sync="rotation"></vl-view>
 
       <vl-layer-tile>
         <vl-source-osm></vl-source-osm>
       </vl-layer-tile>
 
+
       <vl-layer-vector ref="featuresLayer">
-        <vl-source-vector :features="features"></vl-source-vector>
+        <vl-source-vector ident="drawTarget" :features="features"></vl-source-vector>
       </vl-layer-vector>
 
-      <vl-interaction-select :features.sync="selectedFeatures">
-        <template slot-scope="select">
-          <vl-overlay v-for="feature in select.features" :key="feature.id" :id="feature.id"
-                        :position="feature.geometry.coordinates" :auto-pan="true">
-            <div id="card">
-              Точка № {{ feature.properties.id }}<br>
-              Номер опоры: {{ feature.properties.number_support }} <br>
-              ВЛ: {{ feature.properties.VL }} <br>
-              Тип опоры: {{ feature.properties.type_support }} <br>
-              Шифр опоры: {{ feature.properties.code_support }} <br>
-              Материал: {{ feature.properties.material }} <br>
-              Угол: {{ feature.properties.corner }} <br>
-              Высота: {{ feature.properties.height }}<br>
-              <button class="edit" @click="edit(feature)">Редактировать</button>
-            </div>
-          </vl-overlay>
-        </template>
-      </vl-interaction-select>
+      <vl-interaction-draw source="drawTarget" :type="drawType"></vl-interaction-draw>
+      <vl-interaction-modify source="drawTarget"></vl-interaction-modify>
+      <vl-interaction-snap source="drawTarget" :priority="10"></vl-interaction-snap>
+
+      <vl-feature>
+        <vl-geom-point :coordinates="cord"></vl-geom-point>
+      </vl-feature>
+
+      <OverlayInfo :edit='edit' />
 
     </vl-map>
-    </div>
-    <AddGeometryObject :feature="feature" :close="close"/>
+
+    <EditGeometryObject :feature="feature" :close="close" />
+    <AddGeometryObject v-model="drawType" :close="close" :cord="cord"/>
+    <button class="add edit" @click="edit(feature, '.add_window')">Добавить объект</button>
   </v-content>
 </template>
 
 <script>
 import features from '@/components/Map/coordinates.js';
-import AddGeometryObject from './AddGeometryObject.vue'
-import axios from 'axios'
+// import axios from 'axios'
+
+import EditGeometryObject from './HelpfulFunctions/EditGeometryObject.vue'
+import AddGeometryObject from './HelpfulFunctions/AddGeometryObject.vue'
+import OverlayInfo from './HelpfulFunctions/OverlayInfo.vue';
+
+
 
 export default {
-  components:{
-    AddGeometryObject
+  components: {
+    EditGeometryObject,
+    AddGeometryObject,
+    OverlayInfo,
   },
-    data () {
-      return { 
-        zoom: 13,
-        center: [56.105601504697127, 54.937854572222477],
-        rotation: 0,
-        cord: [],
-        features: features,
-        feature: null,
+  data() {
+    return {
+      zoom: 13,
+      center: [56.105601504697127, 54.937854572222477],
+      rotation: 0,
+      cord: [],
+      features: features,
+      feature: null,
+      status: false,
+      statusPoint: true,
+      drawType: "Point",
+    }
+  },
+  methods: {
+    // point() {
+    //   axios.get("/tower")
+    //     .then((response) => {
+    //       this.cord = response.data;
+    //     })
+    // },
+    edit(feature, className) {
+      document.querySelector(className).style.display = "block";
+      document.querySelector('.add').style.display = "none";
+      this.feature = feature;
+      if (className === '.add_window') {
+        this.status = !this.status
       }
     },
-    methods: {
-      point(){
-        axios.get("/tower")
-        .then((response) => {
-            this.cord = response.data;
-      })
-      },
-      edit(feature){
-        document.querySelector('.edit_window').style.display = "block";
-        this.feature = feature;  
-        },
-        close(){
-          document.querySelector('.edit_window').style.display = "none";
-        },
+    close(className) {
+      document.querySelector(className).style.display = "none";
+      document.querySelector('.add').style.display = "block";
+      if (className === '.add_window') {
+        this.status = !this.status;
+      }
+      this.cord = [NaN, NaN];
     },
-    mounted() {
-     this.point();
+    onMapClick(event) {
+      if (this.status) {
+        this.cord = event.coordinate;
+      }
     }
-  };
+  },
+  mounted() {
+    this.point();
+  }
+};
 </script>
 
 <style>
-  #content{
-    margin-top: 40em;
-  }
+#content {
+  margin-top: 40em;
+}
 
-  .v-main__wrap{
-    display: flex;
-  }
+.v-main__wrap {
+  display: flex;
+}
 
-  #card{
-    background: white; 
-    border: 1px solid grey; 
-    color: black;
-    padding: 0.5em;
-    border-radius: 8%;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    box-shadow: 0 0 10px rgba(128, 128, 128, 0.5);
-  }
+#card {
+  background: white;
+  border: 1px solid grey;
+  color: black;
+  padding: 0.5em;
+  border-radius: 8%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 0 0 10px rgba(128, 128, 128, 0.5);
+}
 
-  .edit{
-    border: 1px solid grey;
-    padding: 2px;
-  }
+.edit {
+  border: 1px solid grey;
+  padding: 2px;
+}
 
-  .edit_window{
-    border-left: 1px solid black;
-    min-width: 20em;
-  }
+.add {
+  min-width: 5em;
+  max-height: 2.5em;
 
-  .save{
-    margin-left: 1em;
-  }
+}
+
+.edit_window {
+  border-left: 1px solid black;
+  min-width: 20em;
+}
+
+.save {
+  margin-left: 1em;
+}
 </style>

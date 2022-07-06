@@ -1,5 +1,14 @@
+<!-- eslint-disable vue/no-mutating-props -->
 <template>
-    <div class="edit_window" style="display: none">
+    <div class="add_window" style="display: none" >
+        Добавление <br>
+        <p v-if="this.cord[0] === this.cord[0]"> Координата: {{this.cord[0]}}  {{this.cord[0]}} </p> 
+        <p>Выбери своего бойца
+        <select v-model="draw" @change="updateValue($event.target.value)">
+            <option value="Point">Point</option>
+            <option value="LineString">LineString</option>
+            <option value="Polygon">Polygon</option>
+        </select></p>
             <ValidationObserver v-slot="{ invalid }">
                 <form @submit.prevent="onSubmit">
                     <ValidationProvider name="VL" rules="required|alpha_dash|alpha_spaces" v-slot="{ errors }">
@@ -32,7 +41,7 @@
                     <button class="edit save" type="submit" :disabled="invalid">Submit</button>
                 </form>
             </ValidationObserver>
-        <button class="edit save" @click="close">Сохранить</button>
+        <button class="edit save" @click="close('.add_window')">Закрыть</button>
     </div>
 </template>
 
@@ -45,7 +54,7 @@ export default {
         ValidationObserver
     },
     name: 'AddGeometryObject',
-    props: ['feature', 'close'],
+    props: ['cord', 'drawType', 'close'],
     data: function() {
         return {
             id: null,
@@ -56,35 +65,10 @@ export default {
             material: null,
             corner: null,
             height: null,
+            draw: this.drawType,
         };
     },
-
-    watch: {
-        feature: function() {
-            this.id = this.feature.properties.id;
-            this.number_support = this.feature.properties.number_support;
-            this.VL = this.feature.properties.VL;
-            this.type_support = this.feature.properties.type_support;
-            this.code_support = this.feature.properties.code_support;
-            this.material = this.feature.properties.material;
-            this.corner = this.feature.properties.corner;
-            this.height = this.feature.properties.height;
-        }
-    },
-
     methods: {
-        checkPasswordsEquality() {
-            const { password, repeatedPassword } = this;
-            const { repeatedPasswordEl } = this.$refs;
-
-            if (password !== repeatedPassword) {
-                repeatedPasswordEl.setCustomValidity(
-                    'Пароли должны совпадать',
-                );
-            } else {
-                repeatedPasswordEl.setCustomValidity('');
-            }
-        },
         onSubmit() {
             console.log(JSON.stringify({
                 id: this.id,
@@ -97,24 +81,38 @@ export default {
                 height: this.height,
             }));
         },
+        updateValue: function (drawType) {
+            this.$emit('input', drawType);
+    }
     },
+    computed: {
+        propModel: {
+            get () { return this.prop },
+            set (value) { this.$emit('update:prop', value) },
+  },
+},
 
 };
 </script>
+
 <style>
+
+.add_window{
+    width: 20em;
+}
+
 input {
     display: block;
     width: 100%;
     margin: 10px 0;
     padding: 10px;
-
-}
-
-input {
     border-radius: 10px;
     border: 1px solid #aaa;
-    ;
     transition: .3s border-color;
+}
+
+select{
+    border: 1px solid black;
 }
 
 input:hover {
