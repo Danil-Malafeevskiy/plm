@@ -1,5 +1,6 @@
 <template>
     <div class="edit_window" style="display: none">
+        Редактирование
             <ValidationObserver v-slot="{ invalid }">
                 <form @submit.prevent="onSubmit">
                     <ValidationProvider name="VL" rules="required|alpha_dash|alpha_spaces" v-slot="{ errors }">
@@ -32,7 +33,7 @@
                     <button class="edit save" type="submit" :disabled="invalid">Submit</button>
                 </form>
             </ValidationObserver>
-        <button class="edit save" @click="close">Сохранить</button>
+        <button class="edit save" @click="close('.edit_window')">Закрыть</button>
     </div>
 </template>
 
@@ -73,18 +74,6 @@ export default {
     },
 
     methods: {
-        checkPasswordsEquality() {
-            const { password, repeatedPassword } = this;
-            const { repeatedPasswordEl } = this.$refs;
-
-            if (password !== repeatedPassword) {
-                repeatedPasswordEl.setCustomValidity(
-                    'Пароли должны совпадать',
-                );
-            } else {
-                repeatedPasswordEl.setCustomValidity('');
-            }
-        },
         onSubmit() {
             console.log(JSON.stringify({
                 id: this.id,
@@ -101,6 +90,7 @@ export default {
 
 };
 </script>
+
 <style>
 input {
     display: block;
