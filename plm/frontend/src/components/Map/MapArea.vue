@@ -12,20 +12,19 @@
         <vl-source-vector ident="drawTarget" :features="features"></vl-source-vector>
       </vl-layer-vector>
 
-      <vl-interaction-draw source="drawTarget" :type="drawType"></vl-interaction-draw>
-      <vl-interaction-modify source="drawTarget"></vl-interaction-modify>
-      <vl-interaction-snap source="drawTarget" :priority="10"></vl-interaction-snap>
-
-      <vl-feature>
-        <vl-geom-point :coordinates="cord"></vl-geom-point>
-      </vl-feature>
+      <div v-if="this.statusPoint">
+        <vl-interaction-draw source="drawTarget" :type="drawType"></vl-interaction-draw>
+          <!-- <vl-interaction-modify source="drawTarget"></vl-interaction-modify> -->
+        <vl-interaction-snap source="drawTarget" :priority="10"></vl-interaction-snap>
+      </div>
+      
 
       <OverlayInfo :edit='edit' />
 
     </vl-map>
 
     <EditGeometryObject :feature="feature" :close="close" />
-    <AddGeometryObject v-model="drawType" :close="close" :cord="cord"/>
+    <AddGeometryObject v-model="drawType" :close="close" :cord="cord" :drawSelect="drawSelect"/>
     <button class="add edit" @click="edit(feature, '.add_window')">Добавить объект</button>
   </v-content>
 </template>
@@ -55,7 +54,7 @@ export default {
       features: features,
       feature: null,
       status: false,
-      statusPoint: true,
+      statusPoint: false,
       drawType: "Point",
     }
   },
@@ -72,16 +71,20 @@ export default {
       this.feature = feature;
       if (className === '.add_window') {
         this.status = !this.status
+        this.statusPoint = false;
       }
     },
+
     close(className) {
       document.querySelector(className).style.display = "none";
       document.querySelector('.add').style.display = "block";
       if (className === '.add_window') {
         this.status = !this.status;
+        this.statusPoint = false;
       }
       this.cord = [NaN, NaN];
     },
+
     onMapClick(event) {
       if (this.status) {
         this.cord = event.coordinate;
