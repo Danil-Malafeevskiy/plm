@@ -120,3 +120,5 @@ ENV/
 # sqlite
 *.sqlite
 *.sqlite3
+/plm/app/migrations/0001_initial.py
+/plm/app/migrations/__init__.py
