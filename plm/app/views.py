@@ -17,7 +17,7 @@ def TowerAPI(request, id=0):
         return Response(feature_serializer.data)
     elif request.method == 'POST':
         feature_data = JSONParser().parse(request)
-        feature_serializer = FeatureSerializer(data=feature_data)
+        feature_serializer = FeatureSerializer(data=feature_data, many=True)
         if feature_serializer.is_valid():
             feature_serializer.save()
             return Response("Success new")
