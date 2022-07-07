@@ -54,6 +54,7 @@ export default {
             type: null,
             properties:{
                 id: null,
+                name_tap: null,
                 number_support: null,
                 VL: null,
                 type_support: null,

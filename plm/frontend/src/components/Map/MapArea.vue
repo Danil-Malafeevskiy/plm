@@ -14,10 +14,13 @@
 
       <div v-if="status">
         <vl-interaction-draw source="drawTarget" :type="drawType"></vl-interaction-draw>
-        <!-- <vl-interaction-modify source="drawTarget"></vl-interaction-modify> -->
+         <vl-interaction-modify source="drawTarget"></vl-interaction-modify> 
         <vl-interaction-snap source="drawTarget" :priority="10"></vl-interaction-snap>
-      </div>
-
+      </div> 
+      
+      <!-- <vl-feature v-if="status">
+        <vl-geom-point :coordinates="cord"></vl-geom-point>
+      </vl-feature> -->
 
       <OverlayInfo :edit='edit' />
 
@@ -50,7 +53,13 @@ export default {
       center: [56.105601504697127, 54.937854572222477],
       rotation: 0,
       cord: [],
-      features: [],
+      features: [{
+        type: 'Feature',
+        geometry: {
+          type: "Point",
+          coordinates: [56.105601504697127, 54.937854572222477], 
+        }
+      }],
       feature: null,
       status: false,
       drawType: "Point",
