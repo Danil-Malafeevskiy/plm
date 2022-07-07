@@ -1,9 +1,13 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
+
+class Geometry(models.Model):
+    type = models.CharField(max_length=100, blank=True, default="Point")
+    coordinates = ArrayField(models.FloatField(), size=2)
 
 class Tower(models.Model):
-    Unique_number = models.IntegerField(unique=True)
     name_tap = models.CharField(max_length=50, blank=True, default="-")
-    number_support = models.IntegerField(unique=True)
+    number_support = models.IntegerField()
     VL = models.CharField(max_length=100, default="-")
     type_support = models.CharField(max_length=50)
     code_support = models.CharField(max_length=50, blank=True, default="Не определен")
@@ -21,7 +25,11 @@ class Tower(models.Model):
     v_defects = models.CharField(max_length=10000, blank=True, default="-")
     u_defects = models.CharField(max_length=100, blank=True, default="-")
     code_support_in_1C = models.CharField(max_length=200, blank=True, default="-")
-    guid = models.IntegerField(blank=True, default=0)
+    guid = models.CharField(max_length=100, blank=True, default="-")
     flag_defects = models.BooleanField()
     comment_in_TOiR = models.CharField(max_length=100, blank=True, default="-")
-    geometry = models.CharField(max_length=100, blank=True, default="-")
+
+class Feature(models.Model):
+    type = models.CharField(max_length=100, blank=True, default="Feature")
+    properties = models.OneToOneField(Tower, on_delete=models.CASCADE)
+    geometry = models.OneToOneField(Geometry, on_delete=models.CASCADE)
