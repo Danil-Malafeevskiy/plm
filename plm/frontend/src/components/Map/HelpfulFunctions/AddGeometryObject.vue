@@ -135,11 +135,11 @@ export default {
 
     methods: {
         onSubmit() {
-            axios.post('/tower', {
+            axios.post('/tower', [{
                 type: this.type,
                 properties: this.properties,
-                geometry: this.geometry,
-            }).then((response) => console.log(response.data));
+                geometry: this.geometry
+            }]).then((response) => console.log(response.data));
             window.parent.location = window.parent.location.href;
         },
         updateValue: function (drawType) {
