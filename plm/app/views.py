@@ -27,7 +27,7 @@ def TowerAPI(request, id=0):
         feature = Feature.objects.get(id=feature_data['id'])
         feature_serializer = FeatureSerializer(feature, data=feature_data)
         if feature_serializer.is_valid():
-            feature_data.save()
+            feature_serializer.save()
             return Response("Success up")
         return Response("Failed up")
     elif request.method == 'DELETE':

@@ -35,8 +35,8 @@ class FeatureSerializer(serializers.ModelSerializer):
     def update(self, instance, request):
         geometry_id = request['geometry']
         tower_id = request['properties']
-        properties = TowerSerializer.update(self, instance=instance, validated_data=tower_id)
-        geometry = GeometrySerializer.update(self, instance=instance, validated_data=geometry_id)
+        properties = TowerSerializer.update(self, instance=instance.properties, validated_data=tower_id)
+        geometry = GeometrySerializer.update(self, instance=instance.geometry, validated_data=geometry_id)
 
         instance.type = request['type']
         instance.properties = properties
