@@ -1,5 +1,3 @@
-{% extends 'base.html' %}
-
 {% block html%}
 
 <!DOCTYPE html>
@@ -15,6 +13,8 @@
 
       {% block body%}
           {{ block.super }}
+          {% block content %}
+              {% endblock %}
       {% endblock %}
 
     <!-- built files will be auto injected -->

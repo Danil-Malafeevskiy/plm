@@ -1,24 +1,25 @@
 <template>
-    <div class="add_window" style="display: none" >
-        Добавление <br>
-        
-        <p>Выбери своего бойца
-        <select v-model="draw" @change="updateValue($event.target.value)">
-            <option value="Point">Point</option>
-            <option value="LineString">LineString</option>
-            <option value="Polygon">Polygon</option>
-        </select></p>
-        <p v-if="this.cord[0] === this.cord[0]"> Координата: {{this.cord[0]}}  {{this.cord[0]}} </p> 
-        <ValidationObserver v-slot="{ invalid }">
+<transition name="animation">
+    <div class="add_window" v-if="showAdd">
+        <p style="font-size: 32px;">Добавление объекта</p>
+        <p>Выбор объекта для выделения
+            <select v-model="draw" @change="updateValue($event.target.value)">
+                <option selected value="Point">Point</option>
+                <option value="LineString">LineString</option>
+                <option value="Polygon">Polygon</option>
+            </select>
+        </p>
+        <p v-if="this.cord[0] === this.cord[0]"> Координата: {{ this.cord[1] }} {{ this.cord[0] }} </p>
+        <ValidationObserver v-slot="{ invalid }" class="slow">
             <form @submit.prevent="onSubmit">
 
                 <ValidationProvider name="number_support" rules="required|decimal" v-slot="{ errors }">
-                    <input v-model="properties.number_support" type="text" step="1" placeholder="number_support" >
+                    <input v-model="properties.number_support" type="text" step="1" placeholder="number_support">
                     <span>{{ errors[0] }}</span>
                 </ValidationProvider>
 
                 <ValidationProvider name="VL" rules="required|alpha_dash|alpha_spaces" v-slot="{ errors }">
-                    <input v-model="properties.VL" type="text" placeholder="VL" >
+                    <input v-model="properties.VL" type="text" placeholder="VL">
                     <span>{{ errors[0] }}</span>
                 </ValidationProvider>
 
@@ -66,23 +67,14 @@
                     <input v-model="properties.flag_defects" type="number" placeholder="flag_defects">
                     <span>{{ errors[0] }}</span>
                 </ValidationProvider>
-
-                <ValidationProvider name="type" rules="required|alpha_num" v-slot="{ errors }">
-                    <input v-model="geometry.type" type="text" placeholder="type" >
-                    <span>{{ errors[0] }}</span>
-                </ValidationProvider>
-
-                <button class="edit save" type="submit" :disabled="invalid">Submit</button>
+                <div>
+                    <button class="edit save" type="submit" :disabled="invalid">Создать</button>
+                    <a type="button" class="edit save" @click="close('add')">Закрыть</a>
+                </div>
             </form>
         </ValidationObserver>
-        <button class="edit save" @click="close('.add_window')">Закрыть</button>
-        <div style="font-size: 10px">
-        <p>{{type}}</p>
-        <p>{{properties}}</p>
-        <p>{{geometry}}</p>
-        <p>{{fuck}}</p>
-        </div>
     </div>
+   </transition>
 </template>
 
 <script>
@@ -96,12 +88,12 @@ export default {
         ValidationObserver
     },
     name: 'AddGeometryObject',
-    props: ['cord', 'drawType', 'close'],
-    data: function() {
+    props: ['drawType', 'showAdd', 'cord', 'close'],
+    data: function () {
         return {
-            fuck: this.cord,
+            draw: "Point",
             type: 'Feature',
-            properties:{
+            properties: {
                 name_tap: '',
                 number_support: 1,
                 VL: '',
@@ -124,53 +116,48 @@ export default {
                 flag_defects: 1,
                 comment_in_TOiR: '',
             },
-            geometry:{
-                type: '',
-                coordinates: [ this.cord[1], this.cord[0]]
+            geometry: {
+                type: "Point",
+                coordinates: [this.cord[1], this.cord[0]]
             },
-
-            draw: this.drawType,
         };
     },
     watch: {
         cord: function () {
             this.properties.shirota = this.cord[0];
             this.properties.dolgota = this.cord[1];
-            this.geometry.coordinates = [this.cord[1], this.cord[0]];
-            this.fuck = this.cord;
+            this.geometry.coordinates = [this.cord[0], this.cord[1]]
         },
+        draw: function () {
+            this.geometry.type = this.draw;
+        }
     },
-    
+
     methods: {
         onSubmit() {
             axios.post('/tower', {
-                type: this.type,               
+                type: this.type,
                 properties: this.properties,
                 geometry: this.geometry,
             }).then((response) => console.log(response.data));
-            
+            window.parent.location = window.parent.location.href;
         },
         updateValue: function (drawType) {
             this.$emit('input', drawType);
-    }
+        },
     },
     computed: {
         propModel: {
-            get () { return this.prop },
-            set (value) { this.$emit('update:prop', value) },
-  },
+            get() { return this.prop },
+            set(value) { this.$emit('update:prop', value) },
+        },
 
-},
+    },
 
 };
 </script>
 
 <style>
-
-.add_window{
-    width: 20em;
-}
-
 input {
     display: block;
     width: 100%;
@@ -179,13 +166,19 @@ input {
     border-radius: 10px;
     border: 1px solid #aaa;
     transition: .3s border-color;
+    outline: none;
 }
 
-select{
+select {
     border: 1px solid black;
 }
 
-input:hover {
-    border: 1px solid #111;
+input:active {
+    border: 1px solid #EF5350;
+}
+
+input:focus {
+    border: 1px solid #EF5350;
+    box-shadow: 0 0 10px rgba(239, 83, 80, 0.5);
 }
 </style>
