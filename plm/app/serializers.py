@@ -9,18 +9,18 @@ class GeometrySerializer(serializers.ModelSerializer):
 
 
 class TowerSerializer(serializers.ModelSerializer):
-    name_tap = serializers.CharField(required=False, max_length=50, default="")
-    VL = serializers.CharField(max_length=100, required=False, default="")
-    code_support = serializers.CharField(max_length=50, required=False, default="Не определен")
-    TPV_photo = serializers.CharField(max_length=50, required=False, default="")
-    UF_photo = serializers.CharField(max_length=50, required=False, default="")
-    photo = serializers.CharField(max_length=50, required=False, default="")
-    v_defects = serializers.CharField(max_length=10000, required=False, default="")
-    u_defects = serializers.CharField(max_length=100, required=False, default="")
-    code_support_in_1C = serializers.CharField(max_length=200, required=False, default="")
-    guid = serializers.CharField(max_length=100, required=False, default="0")
+    name_tap = serializers.CharField(required=False, allow_blank=True, max_length=50, default="")
+    VL = serializers.CharField(max_length=100, allow_blank=True, required=False, default="")
+    code_support = serializers.CharField(max_length=50, allow_blank=True, required=False, default="Не определен")
+    TPV_photo = serializers.CharField(max_length=50, allow_blank=True, required=False, default="")
+    UF_photo = serializers.CharField(max_length=50, allow_blank=True, required=False, default="")
+    photo = serializers.CharField(max_length=50, allow_blank=True, required=False, default="")
+    v_defects = serializers.CharField(max_length=10000, allow_blank=True, required=False, default="")
+    u_defects = serializers.CharField(max_length=100, allow_blank=True, required=False, default="")
+    code_support_in_1C = serializers.CharField(max_length=200, allow_blank=True, required=False, default="")
+    guid = serializers.CharField(max_length=100, allow_blank=True, required=False, default="0")
     flag_defects = serializers.BooleanField(required=False, default=0)
-    comment_in_TOiR = serializers.CharField(max_length=100, required=False, default="")
+    comment_in_TOiR = serializers.CharField(max_length=100, allow_blank=True, required=False, default="")
     class Meta:
         model = Tower
         fields = ('id', 'name_tap', 'number_support', 'VL', 'type_support', 'code_support', 'material',
