@@ -2,12 +2,25 @@ from rest_framework import serializers
 from app.models import Tower, Geometry, Feature
 
 class GeometrySerializer(serializers.ModelSerializer):
+    type = serializers.CharField(required=False, max_length=100, default="Point")
     class Meta:
         model = Geometry
         fields = ('id', 'type', 'coordinates')
 
 
 class TowerSerializer(serializers.ModelSerializer):
+    name_tap = serializers.CharField(required=False, max_length=50, default="")
+    VL = serializers.CharField(max_length=100, required=False, default="")
+    code_support = serializers.CharField(max_length=50, required=False, default="Не определен")
+    TPV_photo = serializers.CharField(max_length=50, required=False, default="")
+    UF_photo = serializers.CharField(max_length=50, required=False, default="")
+    photo = serializers.CharField(max_length=50, required=False, default="")
+    v_defects = serializers.CharField(max_length=10000, required=False, default="")
+    u_defects = serializers.CharField(max_length=100, required=False, default="")
+    code_support_in_1C = serializers.CharField(max_length=200, required=False, default="")
+    guid = serializers.CharField(max_length=100, required=False, default="0")
+    flag_defects = serializers.BooleanField(required=False, default=0)
+    comment_in_TOiR = serializers.CharField(max_length=100, required=False, default="")
     class Meta:
         model = Tower
         fields = ('id', 'name_tap', 'number_support', 'VL', 'type_support', 'code_support', 'material',
@@ -17,7 +30,7 @@ class TowerSerializer(serializers.ModelSerializer):
 class FeatureSerializer(serializers.ModelSerializer):
     properties = TowerSerializer(required=True)
     geometry = GeometrySerializer(required=True)
-
+    type = serializers.CharField(required=False, max_length=100, default="Feature")
     class Meta:
         model = Feature
         fields = ('id', 'type', 'properties', 'geometry')
