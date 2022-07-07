@@ -20,7 +20,7 @@ class FeatureSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Feature
-        fields = ('id', 'type', 'properties', 'geometry')
+        fields = ('id', 'properties', 'geometry')
 
     def create(self, request):
         geometry_id = request['geometry']
