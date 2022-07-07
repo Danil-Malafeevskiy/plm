@@ -9,38 +9,39 @@
             <option value="LineString">LineString</option>
             <option value="Polygon">Polygon</option>
         </select></p>
-            <ValidationObserver v-slot="{ invalid }">
-                <form @submit.prevent="onSubmit">
-                    <ValidationProvider name="VL" rules="required|alpha_dash|alpha_spaces" v-slot="{ errors }">
-                        <input v-model="VL" type="text" placeholder="MAX_OOP" value="cockowin.danil@gmail.com">
-                        <span>{{ errors[0] }}</span>
-                    </ValidationProvider>
 
-                    <ValidationProvider name="type_support" rules="required|alpha" v-slot="{ errors }">
-                        <input v-model="type_support" type="text" placeholder="First Mom">
-                        <span>{{ errors[0] }}</span>
-                    </ValidationProvider>
+        <ValidationObserver v-slot="{ invalid }">
+            <form @submit.prevent="onSubmit">
+                <ValidationProvider name="VL" rules="required|alpha_dash|alpha_spaces" v-slot="{ errors }">
+                    <input v-model="VL" type="text" placeholder="MAX_OOP" value="cockowin.danil@gmail.com">
+                    <span>{{ errors[0] }}</span>
+                </ValidationProvider>
 
-                    <ValidationProvider name="code_support" rules="required|alpha_dash" v-slot="{ errors }">
-                        <input v-model="code_support" type="text">
-                        <span>{{ errors[0] }}</span>
-                    </ValidationProvider>
-                    <ValidationProvider name="material" rules="required|alpha" v-slot="{ errors }">
-                        <input v-model="material" type="text">
-                        <span>{{ errors[0] }}</span>
-                    </ValidationProvider>
-                    <ValidationProvider name="corner" rules="required|decimal" v-slot="{ errors }">
-                        <input v-model="corner" type="number" step="any">
-                        <span>{{ errors[0] }}</span>
-                    </ValidationProvider>
-                    <ValidationProvider name="height" rules="required|decimal" v-slot="{ errors }">
-                        <input v-model="height" type="number" step="any">
-                        <span>{{ errors[0] }}</span>
-                    </ValidationProvider>
+                <ValidationProvider name="type_support" rules="required|alpha" v-slot="{ errors }">
+                    <input v-model="type_support" type="text" placeholder="First Mom">
+                    <span>{{ errors[0] }}</span>
+                </ValidationProvider>
 
-                    <button class="edit save" type="submit" :disabled="invalid">Submit</button>
-                </form>
-            </ValidationObserver>
+                <ValidationProvider name="code_support" rules="required|alpha_dash" v-slot="{ errors }">
+                    <input v-model="code_support" type="text">
+                    <span>{{ errors[0] }}</span>
+                </ValidationProvider>
+                <ValidationProvider name="material" rules="required|alpha" v-slot="{ errors }">
+                    <input v-model="material" type="text">
+                    <span>{{ errors[0] }}</span>
+                </ValidationProvider>
+                <ValidationProvider name="corner" rules="required|decimal" v-slot="{ errors }">
+                    <input v-model="corner" type="number" step="any">
+                    <span>{{ errors[0] }}</span>
+                </ValidationProvider>
+                <ValidationProvider name="height" rules="required|decimal" v-slot="{ errors }">
+                    <input v-model="height" type="number" step="any">
+                    <span>{{ errors[0] }}</span>
+                </ValidationProvider>
+
+                <button class="edit save" type="submit" :disabled="invalid">Submit</button>
+            </form>
+        </ValidationObserver>
         <button class="edit save" @click="close('.add_window')">Закрыть</button>
     </div>
 </template>
