@@ -10,16 +10,20 @@
 
       
       
-      <router-view></router-view>
+      
     </v-app-bar>
 
     <v-main>
+      
       <nav>
           <router-link to='/'>Home</router-link>
             <br>
           <router-link to='/map'>Map</router-link>
         </nav>
+      <v-container fluid>
 
+        <router-view></router-view>
+      </v-container>
       <v-content>
 
         
@@ -50,5 +54,10 @@
     text-decoration: none;
   }
 
+</style>
+<style scoped>
+:slotted(v-main) {
+  padding-top: 0;
+}
 </style>
 

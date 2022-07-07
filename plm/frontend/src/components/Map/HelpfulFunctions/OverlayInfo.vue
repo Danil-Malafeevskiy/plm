@@ -12,7 +12,8 @@
             Материал: {{ feature.properties.material }} <br>
             Угол: {{ feature.properties.corner }} <br>
             Высота: {{ feature.properties.height }}<br>
-            <button class="edit" @click="edit(feature, '.edit_window')">Редактировать</button>
+            <button class="edit btn" @click="edit(feature, '.edit_window')"><img src="/static/edit.png"></button>
+            <button class="edit btn" @click="delet(feature.id)"><img src="/static/delete.png"></button>
             </div>
         </vl-overlay>
         </template>
@@ -20,27 +21,23 @@
 </template>
 
 <script>
+import axios from 'axios';
 
 export default {
   name: 'OverlayInfo',
-  props: ['edit'],
-  components: {
-
-  },
-  data() {
-    return {
-      
+  props: ['dialog', 'edit'],
+  methods:{
+    delet(id){
+      axios.delete(`/tower/${id}`).then((response) => console.log(response.data));
+      window.parent.location = window.parent.location.href;
     }
-  },
+  }
+  
   }
   
 </script>
 
 <style>
-#content {
-  margin-top: 40em;
-}
-
 .v-main__wrap {
   display: flex;
 }
@@ -56,14 +53,21 @@ export default {
 }
 
 .edit {
-  border: 1px solid grey;
+  border: 1px solid white;
   padding: 2px;
+  margin-right: 5px;
 }
 
 .add{
   min-width: 5em;
   max-height: 2.5em;
 
+}
+
+.btn > img{
+  display: block;
+  max-width: 40px;
+  max-height: 40px;
 }
 
 .edit_window {

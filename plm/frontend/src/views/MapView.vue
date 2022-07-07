@@ -1,9 +1,6 @@
 <template>
-  <v-content>
-    <div id="map">
+
      <MapArea />
-    </div>
-  </v-content>
 </template>
 
 <script>

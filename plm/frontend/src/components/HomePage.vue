@@ -29,8 +29,6 @@
   }
 
   #container{
-    margin-top: 25em;
-    margin-left: 0em;
     opacity: 0;
     animation: ani 1.5s forwards;
     
