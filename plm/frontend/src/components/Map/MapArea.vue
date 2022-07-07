@@ -12,27 +12,26 @@
         <vl-source-vector ident="drawTarget" :features="features"></vl-source-vector>
       </vl-layer-vector>
 
-      <div v-if="this.statusPoint">
+      <div v-if="status">
         <vl-interaction-draw source="drawTarget" :type="drawType"></vl-interaction-draw>
-          <!-- <vl-interaction-modify source="drawTarget"></vl-interaction-modify> -->
+        <!-- <vl-interaction-modify source="drawTarget"></vl-interaction-modify> -->
         <vl-interaction-snap source="drawTarget" :priority="10"></vl-interaction-snap>
       </div>
-      
+
 
       <OverlayInfo :edit='edit' />
 
     </vl-map>
-
-    <EditGeometryObject :feature="feature" :close="close" />
-    <AddGeometryObject v-model="drawType" :close="close" :cord="cord" :drawSelect="drawSelect"/>
+    <div v-if="!status">
+      <EditGeometryObject :feature="feature" :close="close" />
+    </div>
+    <AddGeometryObject v-model="drawType" :close="close" :cord="cord" />
     <button class="add edit" @click="edit(feature, '.add_window')">Добавить объект</button>
   </v-content>
 </template>
 
 <script>
-import features from '@/components/Map/coordinates.js';
-// import axios from 'axios'
-
+import axios from 'axios'
 import EditGeometryObject from './HelpfulFunctions/EditGeometryObject.vue'
 import AddGeometryObject from './HelpfulFunctions/AddGeometryObject.vue'
 import OverlayInfo from './HelpfulFunctions/OverlayInfo.vue';
@@ -51,27 +50,26 @@ export default {
       center: [56.105601504697127, 54.937854572222477],
       rotation: 0,
       cord: [],
-      features: features,
+      features: [],
       feature: null,
       status: false,
-      statusPoint: false,
       drawType: "Point",
     }
   },
   methods: {
-    // point() {
-    //   axios.get("/tower")
-    //     .then((response) => {
-    //       this.cord = response.data;
-    //     })
-    // },
+    point() {
+      axios.get("/tower")
+        .then((response) => {
+          this.features = response.data;
+          console.log(this.features);
+        });
+    },
     edit(feature, className) {
       document.querySelector(className).style.display = "block";
       document.querySelector('.add').style.display = "none";
       this.feature = feature;
       if (className === '.add_window') {
         this.status = !this.status
-        this.statusPoint = false;
       }
     },
 
@@ -80,7 +78,6 @@ export default {
       document.querySelector('.add').style.display = "block";
       if (className === '.add_window') {
         this.status = !this.status;
-        this.statusPoint = false;
       }
       this.cord = [NaN, NaN];
     },
@@ -89,7 +86,8 @@ export default {
       if (this.status) {
         this.cord = event.coordinate;
       }
-    }
+    },
+    
   },
   mounted() {
     this.point();
