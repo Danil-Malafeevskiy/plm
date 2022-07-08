@@ -13,7 +13,7 @@
             Угол: {{ feature.properties.corner }} <br>
             Высота: {{ feature.properties.height }}<br>
             <button class="edit btn" @click="edit(feature, '.edit_window')"><img src="/static/edit.png"></button>
-            <button class="edit btn" @click="delet(feature.id)"><img src="/static/delete.png"></button>
+            <button class="edit btn" @click="deleteFeature(feature.id)"><img src="/static/delete.png"></button>
             </div>
         </vl-overlay>
         </template>
@@ -21,17 +21,12 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { mapActions } from 'vuex'
 
 export default {
   name: 'OverlayInfo',
   props: ['dialog', 'edit'],
-  methods:{
-    delet(id){
-      axios.delete(`/tower/${id}`).then((response) => console.log(response.data));
-      window.parent.location = window.parent.location.href;
-    }
-  }
+  methods:mapActions(['deleteFeature']),
   
   }
   

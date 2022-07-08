@@ -43,7 +43,7 @@
 
 <script>
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
-import axios from 'axios'
+import { mapActions } from 'vuex'
 
 export default {
     components: {
@@ -98,16 +98,21 @@ export default {
     },
 
     methods: {
+        ...mapActions(['putFeature']),
         onSubmit() {
-            axios.put('/tower', {
-                id: this.id,
-                type: this.type,
-                properties: this.properties,
-                geometry: this.geometry
-            }).then((response) => {
-                console.log(response.data);
-            });
-            window.parent.location = window.parent.location.href;
+            // axios.put('/tower', {
+            //     id: this.id,
+            //     type: this.type,
+            //     properties: this.properties,
+            //     geometry: this.geometry
+            // }).then((response) => {
+            //     console.log(response.data);
+            // });
+            // window.parent.location = window.parent.location.href;
+            this.putFeature({id: this.id,
+                 type: this.type,
+                 properties: this.properties,
+                 geometry: this.geometry});
         },
     },
 
