@@ -199,6 +199,7 @@ input {
 
 select {
     border: 1px solid black;
+    padding: 2px 3px;
 }
 
 input:active {
