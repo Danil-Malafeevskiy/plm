@@ -1,6 +1,8 @@
 <template>
-  <div id="content">
-    <vl-map data-projection="EPSG:4326" style="height: 50em; width: 65%;" @click="onMapClick">
+  <div id="content" style="width: 100%; height: 100%">
+    <p></p>
+    <div id="map_content" style="width: 75%; height: 90%"></div>
+    <!-- <vl-map data-projection="EPSG:4326" style="height: 50em; width: 65%;" @click="onMapClick">
       <vl-view :zoom.sync="zoom" :center.sync="center" :rotation.sync="rotation"></vl-view>
 
       <vl-layer-tile>
@@ -22,30 +24,38 @@
 
       <OverlayInfo :edit='edit' v-if="!status" />
 
-    </vl-map>
+    </vl-map> -->
     <div v-if="!status">
       <EditGeometryObject :feature="feature" :close="close" :showEdit="showEdit" />
     </div>
     <AddGeometryObject v-model="drawType" :showAdd="showAdd" :close="close" :cord="cord" />
-    <button class="add edit " style="margin-left: 0.5em; padding: 5px;" @click="edit(feature, 'add')">Добавить
+    <button class="add edit " style="margin-left: 0.5em; padding: 5px;" @click="add()">Добавить
       объект</button>
   </div>
 
 </template>
 
 <script>
-//import axios from 'axios'
 import EditGeometryObject from './HelpfulFunctions/EditGeometryObject.vue'
 import AddGeometryObject from './HelpfulFunctions/AddGeometryObject.vue'
-import OverlayInfo from './HelpfulFunctions/OverlayInfo.vue';
-import { mapGetters, mapActions } from 'vuex'
+//import OverlayInfo from './HelpfulFunctions/OverlayInfo.vue';
+import { mapGetters, mapActions } from 'vuex';
+import Map from 'ol/Map';
+import View from 'ol/View';
+import TileLayer from 'ol/layer/Tile';
+import OSM from 'ol/source/OSM';
+import { fromLonLat } from 'ol/proj';
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
+import GeoJSON from 'ol/format/GeoJSON';
 
+import 'ol/ol.css';
 
 export default {
   components: {
     EditGeometryObject,
     AddGeometryObject,
-    OverlayInfo,
+    //OverlayInfo,
   },
   data() {
     return {
@@ -53,22 +63,34 @@ export default {
       center: [56.105601504697127, 54.937854572222477],
       rotation: 0,
       cord: [NaN, NaN],
-      features: [],
+      features: {
+        type: 'FeatureCollection',
+        features: this.allFeatures,
+      },
       feature: null,
       status: false,
       showAdd: false,
       showEdit: false,
       drawType: "Point",
+      vectorLayer: null,
+      map: null,
     }
   },
-  computed: mapGetters(['allFeatures']),
+  watch: {
+    allFeatures: function () {
+      this.features = {
+        type: 'FeatureCollection',
+        features: this.allFeatures,
+      }
+    },
+  },
+  computed: mapGetters(['allFeatures', 'getMap']),
   methods: {
-    ...mapActions(['getFeatures']),
-    // point() {
-    //   axios.get("/tower")
-    //     .then((response) => {
-    //       this.features = response.data;});
-    // },
+    ...mapActions(['getFeatures', 'postFeature']),
+    add() {
+      const feature = [{ "type": "Feature", "properties": { "name_tap": "", "number_support": 1, "VL": "НПЗ-ГПП-2 1Т УНХ", "type_support": "Анкерная", "code_support": "не определен", "material": "Металлическая", "corner": 0.7071064293676279, "X": -393.959439006409, "Y": -181.1536460213778, "Z": 221.62639012939093, "shirota": 54, "dolgota": 56, "height": 206.62639012939093, "TPV_photo": "", "UF_photo": "", "photo": "0_12992_DSC01525.JPG;0_13404_DSC01937.JPG;", "v_defects": "Наличие ДКР на земле, отведенной под опору;Cущественные повреждения изоляторов;Cущественные повреждения изоляторов;Cущественные повреждения изоляторов", "u_defects": "", "code_support_in_1C": "", "guid": "", "flag_defects": true, "comment_in_TOiR": "" }, "geometry": { "type": "Point", "coordinates": [56, 54] } }];
+      this.postFeature(feature);
+    },
     edit(feature, className) {
       document.querySelector('.add').style.opacity = "0";
       this.feature = feature;
@@ -103,9 +125,32 @@ export default {
     },
   },
   async mounted() {
-    this.getFeatures();
+    await this.getFeatures();
+    
+    this.vectorLayer = new VectorLayer({
+      source: new VectorSource({
+        features: new GeoJSON().readFeatures(this.features, {
+          featureProjection: 'EPSG:3857'
+        })
+      })
+    });
+
+    this.map = new Map({
+      target: 'map_content',
+      layers: [
+        new TileLayer({
+          source: new OSM()
+        }),
+        this.vectorLayer,
+      ],
+      view: new View({
+        zoom: 13,
+        center: fromLonLat([56, 54]),
+        constrainResolution: true,
+      })
+    });
   }
-};
+}
 </script>
 
 <style>

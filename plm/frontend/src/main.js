@@ -14,6 +14,7 @@ Vue.use(VueAxios, axios)
 Vue.use(VueLayers)
 Vue.use(vuetify);
 
+
 new Vue({
   router,
   vuetify,
