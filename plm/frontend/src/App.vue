@@ -55,9 +55,4 @@
   }
 
 </style>
-<style scoped>
-:slotted(v-main) {
-  padding-top: 0;
-}
-</style>
 

@@ -1,45 +1,44 @@
 <template>
   <div id="content">
-    <vl-map data-projection="EPSG:4326" style="height: 50em; width: 75em;" @click="onMapClick">
+    <vl-map data-projection="EPSG:4326" style="height: 50em; width: 65%;" @click="onMapClick">
       <vl-view :zoom.sync="zoom" :center.sync="center" :rotation.sync="rotation"></vl-view>
 
       <vl-layer-tile>
         <vl-source-osm></vl-source-osm>
       </vl-layer-tile>
 
-
       <vl-layer-vector ref="featuresLayer">
-        <vl-source-vector ident="drawTarget" :features="features"></vl-source-vector>
+        <vl-source-vector ident="drawTarget" :features="allFeatures"></vl-source-vector>
       </vl-layer-vector>
 
-      <!-- <div v-if="status">
+      <div v-if="status && drawType != 'Point'">
         <vl-interaction-draw source="drawTarget" :type="drawType"></vl-interaction-draw>
          <vl-interaction-modify source="drawTarget"></vl-interaction-modify> 
         <vl-interaction-snap source="drawTarget" :priority="10"></vl-interaction-snap>
-      </div>  -->
-      
-      <vl-feature v-if="status">
+      </div> 
+      <vl-feature v-else-if="status">
         <vl-geom-point :coordinates="cord"></vl-geom-point>
       </vl-feature>
 
-      <OverlayInfo :edit='edit' v-if="!status"/>
+      <OverlayInfo :edit='edit' v-if="!status" />
 
     </vl-map>
     <div v-if="!status">
-      <EditGeometryObject :feature="feature" :close="close" :showEdit="showEdit"/>
+      <EditGeometryObject :feature="feature" :close="close" :showEdit="showEdit" />
     </div>
     <AddGeometryObject v-model="drawType" :showAdd="showAdd" :close="close" :cord="cord" />
-    <button  class="add edit hidden" style="margin-left: 1em; padding: 5px;" @click="edit(feature, 'add')">Добавить объект</button>
+    <button class="add edit " style="margin-left: 0.5em; padding: 5px;" @click="edit(feature, 'add')">Добавить
+      объект</button>
   </div>
-  
+
 </template>
 
 <script>
-import axios from 'axios'
+//import axios from 'axios'
 import EditGeometryObject from './HelpfulFunctions/EditGeometryObject.vue'
 import AddGeometryObject from './HelpfulFunctions/AddGeometryObject.vue'
 import OverlayInfo from './HelpfulFunctions/OverlayInfo.vue';
-
+import { mapGetters, mapActions } from 'vuex'
 
 
 export default {
@@ -62,37 +61,39 @@ export default {
       drawType: "Point",
     }
   },
+  computed: mapGetters(['allFeatures']),
   methods: {
-    point() {
-      axios.get("/tower")
-        .then((response) => {
-          this.features = response.data;});
-    },
+    ...mapActions(['getFeatures']),
+    // point() {
+    //   axios.get("/tower")
+    //     .then((response) => {
+    //       this.features = response.data;});
+    // },
     edit(feature, className) {
-      document.querySelector('.add').style.display = "none";
+      document.querySelector('.add').style.opacity = "0";
       this.feature = feature;
-      
+
       if (className === 'add') {
         this.status = !this.status;
         this.showAdd = !this.showAdd;
       }
-      else{
+      else {
         this.showEdit = !this.showEdit;
       }
     },
 
     close(className) {
-      document.querySelector('.add').style.display = "block";
-      
+      document.querySelector('.add').style.opacity = "1";
+
       if (className === 'add') {
         this.status = !this.status;
         this.showAdd = !this.showAdd;
       }
-      else{
+      else {
         this.showEdit = !this.showEdit;
       }
       this.cord = [NaN, NaN];
-      
+
     },
 
     onMapClick(event) {
@@ -100,21 +101,19 @@ export default {
         this.cord = event.coordinate;
       }
     },
-    
   },
-  mounted() {
-    this.point();
+  async mounted() {
+    this.getFeatures();
   }
 };
 </script>
 
 <style>
-
 .v-main__wrap {
   display: flex;
 }
 
-#content{
+#content {
   display: flex;
   padding-left: 5em;
 }
@@ -137,29 +136,29 @@ export default {
   transition: .3s;
 }
 
-.edit:hover{
+.edit:hover {
   border: 1px solid #EF5350;
-  box-shadow: 0 0 10px rgba(239, 83, 80, 0.5); 
+  box-shadow: 0 0 10px rgba(239, 83, 80, 0.5);
 }
 
 .add {
   min-width: 5em;
   max-height: 2.5em;
-
 }
 
-.add_window, .edit_window{
-    padding-left: 1em;
-    margin-left: 1em;
-    border-left: 1px solid black;
-    transition: all 1s;
+.add_window,
+.edit_window {
+  padding-left: 1em;
+  margin-left: 1em;
+  border-left: 1px solid black;
+  transition: all 1s;
 }
 
-.edit_window{
+.edit_window {
   min-height: 800px;
 }
 
-.slow{
+.slow {
   max-height: 2000px;
 }
 
@@ -167,17 +166,20 @@ export default {
   margin-left: 1em;
 }
 
-.v_content{
+.v_content {
   min-width: 100%;
 }
 
 .animation-enter-active {
   transition: all .3s ease;
 }
+
 .animation-leave-active {
   transition: all .3s;
 }
-.animation-enter, .animation-leave-to {
+
+.animation-enter,
+.animation-leave-to {
   transform: translateX(10em);
   opacity: 0;
 }
