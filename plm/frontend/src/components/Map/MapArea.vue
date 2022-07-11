@@ -82,6 +82,20 @@ export default {
         type: 'FeatureCollection',
         features: this.allFeatures,
       }
+      
+      if (this.map != null) {
+        this.map.removeLayer(this.vectorLayer);
+        
+        this.vectorLayer = new VectorLayer({
+          source: new VectorSource({
+            features: new GeoJSON().readFeatures(this.features, {
+              featureProjection: 'EPSG:3857'
+            })
+          })
+        });
+
+        this.map.addLayer(this.vectorLayer);
+      }
     },
   },
   computed: mapGetters(['allFeatures', 'getMap']),
@@ -126,7 +140,7 @@ export default {
   },
   async mounted() {
     await this.getFeatures();
-    
+
     this.vectorLayer = new VectorLayer({
       source: new VectorSource({
         features: new GeoJSON().readFeatures(this.features, {
