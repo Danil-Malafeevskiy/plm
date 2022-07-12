@@ -3,7 +3,7 @@
             :position="feature.geometry.coordinates" :auto-pan="true"> -->
   <div id="card">
     <div v-if="feature != null">
-      <div v-for="(f, index) in feature" :key="f.number_support">
+      <div v-for="(f, index) in feature.properties" :key="f.number_support">
          <p v-if='(index != "geometry") && f && (index != "v_defects")'>{{ index }}: {{ f }}</p>
       </div>
       <!--ВЛ: {{ feature.properties.VL }} <br>

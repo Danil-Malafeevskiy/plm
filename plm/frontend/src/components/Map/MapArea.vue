@@ -1,44 +1,21 @@
 <template>
   <div id="content" style="width: 100%; height: 100%">
+    <p>{{ drawType.data }}</p>
     <div id="map_content" style="width: 75%; height: 90%"></div>
-    <!-- <vl-map data-projection="EPSG:4326" style="height: 50em; width: 65%;" @click="onMapClick">
-      <vl-view :zoom.sync="zoom" :center.sync="center" :rotation.sync="rotation"></vl-view>
+    <OverlayInfo :edit='edit' :feature="feature" />
 
-      <vl-layer-tile>
-        <vl-source-osm></vl-source-osm>
-      </vl-layer-tile>
-
-      <vl-layer-vector ref="featuresLayer">
-        <vl-source-vector ident="drawTarget" :features="allFeatures"></vl-source-vector>
-      </vl-layer-vector>
-
-      <div v-if="status && drawType != 'Point'">
-        <vl-interaction-draw source="drawTarget" :type="drawType"></vl-interaction-draw>
-         <vl-interaction-modify source="drawTarget"></vl-interaction-modify> 
-        <vl-interaction-snap source="drawTarget" :priority="10"></vl-interaction-snap>
-      </div> 
-      <vl-feature v-else-if="status">
-        <vl-geom-point :coordinates="cord"></vl-geom-point>
-      </vl-feature>
-
-      
-
-    </vl-map> -->
-    <OverlayInfo :edit='edit' :feature="feature" v-if="!status" />
-
-    <!-- <div v-if="!status">
-      <EditGeometryObject :feature="feature" :close="close" :showEdit="showEdit" />
-    </div>
-    <AddGeometryObject v-model="drawType" :showAdd="showAdd" :close="close" :cord="cord" /> -->
-    <button class="add edit " style="margin-left: 0.5em; padding: 5px;" @click="add()">Добавить
+    <EditGeometryObject :feature="feature" :close="close" :showEdit="showEdit" />
+    <AddGeometryObject :drawType="drawType" :showAdd="showAdd" :close="close" :cord="cord"
+      :addInteraction="addInteraction" />
+    <button class="add edit " style="margin-left: 0.5em; padding: 5px;" @click="edit(feature, 'add')">Добавить
       объект</button>
   </div>
 
 </template>
 
 <script>
-//import EditGeometryObject from './HelpfulFunctions/EditGeometryObject.vue'
-//import AddGeometryObject from './HelpfulFunctions/AddGeometryObject.vue'
+import EditGeometryObject from './HelpfulFunctions/EditGeometryObject.vue'
+import AddGeometryObject from './HelpfulFunctions/AddGeometryObject.vue'
 import OverlayInfo from './HelpfulFunctions/OverlayInfo.vue';
 import { mapGetters, mapActions } from 'vuex';
 import Map from 'ol/Map';
@@ -50,13 +27,14 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
 import { Overlay } from 'ol';
+import Draw from "ol/interaction/Draw";
 
 import 'ol/ol.css';
 
 export default {
   components: {
-    //EditGeometryObject,
-    //AddGeometryObject,
+    EditGeometryObject,
+    AddGeometryObject,
     OverlayInfo,
   },
   data() {
@@ -73,9 +51,14 @@ export default {
       status: false,
       showAdd: false,
       showEdit: false,
-      drawType: "Point",
+      drawType: { data: "-" },
       vectorLayer: null,
       map: null,
+      drawSource: new VectorSource({ wrapX: true }),
+      drawLayer: new VectorLayer({
+        source: this.drawSource,
+      }),
+      interactionId: null,
     }
   },
   watch: {
@@ -103,10 +86,7 @@ export default {
   computed: mapGetters(['allFeatures']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature']),
-    add() {
-      const feature = [{ "type": "Feature", "properties": { "name_tap": "", "number_support": 1, "VL": "НПЗ-ГПП-2 1Т УНХ", "type_support": "Анкерная", "code_support": "не определен", "material": "Металлическая", "corner": 0.7071064293676279, "X": -393.959439006409, "Y": -181.1536460213778, "Z": 221.62639012939093, "shirota": 54, "dolgota": 56, "height": 206.62639012939093, "TPV_photo": "", "UF_photo": "", "photo": "0_12992_DSC01525.JPG;0_13404_DSC01937.JPG;", "v_defects": "Наличие ДКР на земле, отведенной под опору;Cущественные повреждения изоляторов;Cущественные повреждения изоляторов;Cущественные повреждения изоляторов", "u_defects": "", "code_support_in_1C": "", "guid": "", "flag_defects": true, "comment_in_TOiR": "" }, "geometry": { "type": "Point", "coordinates": [56, 54] } }];
-      this.postFeature(feature);
-    },
+
     edit(feature, className) {
       document.querySelector('.add').style.opacity = "0";
       this.feature = feature;
@@ -118,6 +98,7 @@ export default {
       else {
         this.showEdit = !this.showEdit;
       }
+      document.querySelector('#card').style.display = 'none';
     },
 
     close(className) {
@@ -131,7 +112,14 @@ export default {
         this.showEdit = !this.showEdit;
       }
       this.cord = [NaN, NaN];
+      this.map.addOverlay(new Overlay({
+        element: document.querySelector('#card')
+      }))
 
+      this.drawSource.clear();
+      this.map.getInteractions().getArray()[this.interactionId].finishDrawing();
+
+      document.querySelector('#card').style.display = 'block';
     },
 
     onMapClick(event) {
@@ -139,20 +127,41 @@ export default {
         this.cord = event.coordinate;
       }
     },
+
     getFeature(event) {
       const feature = this.map.getFeaturesAtPixel(event.pixel)[0];
       this.feature = null;
 
       if (feature != null) {
-        this.feature = feature.getProperties();
+        this.feature = { properties: feature.getProperties() };
+        this.feature['id'] = this.feature.properties.id;
+        this.feature['type'] = "Feature";
         this.feature["geometry"] = {
-          type: this.feature.geometry.getType(),
-          coordinates: toLonLat(this.feature.geometry.getCoordinates())
+          id: this.feature.id,
+          type: feature.getProperties().geometry.getType(),
+          coordinates: toLonLat(feature.getProperties().geometry.getCoordinates())
         };
-        console.log(this.feature);
+        delete this.feature.properties.geometry;
+      }
+    },
+
+    addInteraction() {
+      if (this.drawType.data != '-') {
+        const draw = new Draw({
+          source: this.drawSource,
+          type: this.drawType.data,
+          features: new GeoJSON().readFeatures(this.features, {
+            featureProjection: 'EPSG:3857'
+          }),
+        });
+        this.map.removeInteraction(draw);
+
+        this.map.addInteraction(draw);
+        this.interactionId = this.map.getInteractions().getArray().length - 1;
       }
     }
   },
+
   async mounted() {
     await this.getFeatures();
 
@@ -171,6 +180,7 @@ export default {
           source: new OSM()
         }),
         this.vectorLayer,
+        this.drawLayer,
       ],
       view: new View({
         zoom: 13,
@@ -178,19 +188,22 @@ export default {
         constrainResolution: false,
       })
     });
-    const OverlayLayer = new Overlay({
+
+    this.map.addOverlay(new Overlay({
       element: document.querySelector('#card')
-    })
-    this.map.addOverlay(OverlayLayer);
+    }));
 
     this.map.on('click', this.getFeature);
-    
+
     this.map.on('click', function (event) {
-      OverlayLayer.setPosition(undefined);
-      this.forEachFeatureAtPixel(event.pixel, function(){
-        OverlayLayer.setPosition(event.coordinate);
+      let overlay = this.getOverlays().getArray()[0];
+      overlay.setPosition(undefined);
+
+      this.forEachFeatureAtPixel(event.pixel, function () {
+        overlay.setPosition(event.coordinate);
       })
     });
+    console.log(this.map.getOverlays().getArray()[0]);
   }
 }
 </script>
