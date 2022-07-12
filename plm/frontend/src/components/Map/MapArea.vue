@@ -1,6 +1,5 @@
 <template>
   <div id="content" style="width: 100%; height: 100%">
-    <p></p>
     <div id="map_content" style="width: 75%; height: 90%"></div>
     <!-- <vl-map data-projection="EPSG:4326" style="height: 50em; width: 65%;" @click="onMapClick">
       <vl-view :zoom.sync="zoom" :center.sync="center" :rotation.sync="rotation"></vl-view>
@@ -22,13 +21,15 @@
         <vl-geom-point :coordinates="cord"></vl-geom-point>
       </vl-feature>
 
-      <OverlayInfo :edit='edit' v-if="!status" />
+      
 
     </vl-map> -->
-    <div v-if="!status">
+    <OverlayInfo :edit='edit' :feature="feature" v-if="!status" />
+
+    <!-- <div v-if="!status">
       <EditGeometryObject :feature="feature" :close="close" :showEdit="showEdit" />
     </div>
-    <AddGeometryObject v-model="drawType" :showAdd="showAdd" :close="close" :cord="cord" />
+    <AddGeometryObject v-model="drawType" :showAdd="showAdd" :close="close" :cord="cord" /> -->
     <button class="add edit " style="margin-left: 0.5em; padding: 5px;" @click="add()">Добавить
       объект</button>
   </div>
@@ -36,26 +37,27 @@
 </template>
 
 <script>
-import EditGeometryObject from './HelpfulFunctions/EditGeometryObject.vue'
-import AddGeometryObject from './HelpfulFunctions/AddGeometryObject.vue'
-//import OverlayInfo from './HelpfulFunctions/OverlayInfo.vue';
+//import EditGeometryObject from './HelpfulFunctions/EditGeometryObject.vue'
+//import AddGeometryObject from './HelpfulFunctions/AddGeometryObject.vue'
+import OverlayInfo from './HelpfulFunctions/OverlayInfo.vue';
 import { mapGetters, mapActions } from 'vuex';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
-import { fromLonLat } from 'ol/proj';
+import { fromLonLat, toLonLat } from 'ol/proj';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
+import { Overlay } from 'ol';
 
 import 'ol/ol.css';
 
 export default {
   components: {
-    EditGeometryObject,
-    AddGeometryObject,
-    //OverlayInfo,
+    //EditGeometryObject,
+    //AddGeometryObject,
+    OverlayInfo,
   },
   data() {
     return {
@@ -82,23 +84,23 @@ export default {
         type: 'FeatureCollection',
         features: this.allFeatures,
       }
-      
+
       if (this.map != null) {
         this.map.removeLayer(this.vectorLayer);
-        
+
         this.vectorLayer = new VectorLayer({
           source: new VectorSource({
             features: new GeoJSON().readFeatures(this.features, {
               featureProjection: 'EPSG:3857'
-            })
-          })
+            }),
+          }),
         });
 
         this.map.addLayer(this.vectorLayer);
       }
     },
   },
-  computed: mapGetters(['allFeatures', 'getMap']),
+  computed: mapGetters(['allFeatures']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature']),
     add() {
@@ -137,6 +139,19 @@ export default {
         this.cord = event.coordinate;
       }
     },
+    getFeature(event) {
+      const feature = this.map.getFeaturesAtPixel(event.pixel)[0];
+      this.feature = null;
+
+      if (feature != null) {
+        this.feature = feature.getProperties();
+        this.feature["geometry"] = {
+          type: this.feature.geometry.getType(),
+          coordinates: toLonLat(this.feature.geometry.getCoordinates())
+        };
+        console.log(this.feature);
+      }
+    }
   },
   async mounted() {
     await this.getFeatures();
@@ -145,8 +160,8 @@ export default {
       source: new VectorSource({
         features: new GeoJSON().readFeatures(this.features, {
           featureProjection: 'EPSG:3857'
-        })
-      })
+        }),
+      }),
     });
 
     this.map = new Map({
@@ -160,7 +175,20 @@ export default {
       view: new View({
         zoom: 13,
         center: fromLonLat([56, 54]),
-        constrainResolution: true,
+        constrainResolution: false,
+      })
+    });
+    const OverlayLayer = new Overlay({
+      element: document.querySelector('#card')
+    })
+    this.map.addOverlay(OverlayLayer);
+
+    this.map.on('click', this.getFeature);
+    
+    this.map.on('click', function (event) {
+      OverlayLayer.setPosition(undefined);
+      this.forEachFeatureAtPixel(event.pixel, function(){
+        OverlayLayer.setPosition(event.coordinate);
       })
     });
   }

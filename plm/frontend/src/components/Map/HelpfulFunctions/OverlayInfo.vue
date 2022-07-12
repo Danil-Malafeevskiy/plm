@@ -1,23 +1,22 @@
 <template>
-    <vl-interaction-select :features.sync="selectedFeatures">
-        <template slot-scope="select">
-        <vl-overlay v-for="feature in select.features" :key="feature.id" :id="feature.id"
-            :position="feature.geometry.coordinates" :auto-pan="true">
-            <div id="card">
-            Точка № {{ feature.properties.id }}<br>
-            Номер опоры: {{ feature.properties.number_support }} <br>
-            ВЛ: {{ feature.properties.VL }} <br>
+  <!-- <div v-for="feature in select.features" :key="feature.id" :id="feature.id"
+            :position="feature.geometry.coordinates" :auto-pan="true"> -->
+  <div id="card">
+    <div v-if="feature != null">
+      <div v-for="(f, index) in feature" :key="f.number_support">
+         <p v-if='(index != "geometry") && f && (index != "v_defects")'>{{ index }}: {{ f }}</p>
+      </div>
+      <!--ВЛ: {{ feature.properties.VL }} <br>
             Тип опоры: {{ feature.properties.type_support }} <br>
             Шифр опоры: {{ feature.properties.code_support }} <br>
             Материал: {{ feature.properties.material }} <br>
             Угол: {{ feature.properties.corner }} <br>
-            Высота: {{ feature.properties.height }}<br>
-            <button class="edit btn" @click="edit(feature, '.edit_window')"><img src="/static/edit.png"></button>
-            <button class="edit btn" @click="deleteFeature(feature.id)"><img src="/static/delete.png"></button>
-            </div>
-        </vl-overlay>
-        </template>
-    </vl-interaction-select>
+            Высота: {{ feature.properties.height }}<br> -->
+      <button class="edit btn" @click="edit(feature, '.edit_window')"><img src="/static/edit.png"></button>
+      <button class="edit btn" @click="deleteFeature(feature.id)"><img src="/static/delete.png"></button>
+    </div>
+  </div>
+  <!-- </div> -->
 </template>
 
 <script>
@@ -25,11 +24,10 @@ import { mapActions } from 'vuex'
 
 export default {
   name: 'OverlayInfo',
-  props: ['dialog', 'edit'],
-  methods:mapActions(['deleteFeature']),
-  
-  }
-  
+  props: ['dialog', 'edit', 'feature'],
+  methods: mapActions(['deleteFeature']),
+}
+
 </script>
 
 <style>
@@ -53,13 +51,13 @@ export default {
   margin-right: 5px;
 }
 
-.add{
+.add {
   min-width: 5em;
   max-height: 2.5em;
 
 }
 
-.btn > img{
+.btn>img {
   display: block;
   max-width: 40px;
   max-height: 40px;

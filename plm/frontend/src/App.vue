@@ -24,12 +24,6 @@
 
         <router-view></router-view>
       </v-container>
-      <v-content>
-
-        
-
-
-      </v-content>
     </v-main>
   </v-app>
 </template>
