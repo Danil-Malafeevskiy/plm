@@ -3,13 +3,14 @@
         <div class="add_window" v-if="showAdd">
             <p style="font-size: 32px;">Добавление объекта</p>
             <p>Выбор объекта для выделения
-                <select v-model="draw" @change="updateValue($event.target.value)">
-                    <option selected value="Point">Point</option>
+                <select v-model="draw.data" @change="addInteraction">
+                    <option selected value="-">-</option>
+                    <option value="Point">Point</option>
                     <option value="LineString">LineString</option>
                     <option value="Polygon">Polygon</option>
                 </select>
             </p>
-            <p v-if="this.cord[0] === this.cord[0]"> Координата: {{ this.cord[1] }} {{ this.cord[0] }} </p>
+            <!-- <p v-if="this.cord[0] === this.cord[0]"> Координата: {{ this.cord[1] }} {{ this.cord[0] }} </p>
             <ValidationObserver v-slot="{ invalid }" class="slow">
                 <form @submit.prevent="onSubmit">
 
@@ -72,26 +73,27 @@
                         <a type="button" class="edit save" @click="close('add')">Закрыть</a>
                     </div>
                 </form>
-            </ValidationObserver>
+            </ValidationObserver> -->
+            <button class="edit save">Создать</button>
+            <a type="button" class="edit save" @click="close('add')">Закрыть</a>
         </div>
     </transition>
 </template>
 
 <script>
-import { ValidationProvider, ValidationObserver } from 'vee-validate';
-//import axios from 'axios';
+//import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { mapActions } from 'vuex'
 
 export default {
     components: {
-        ValidationProvider,
-        ValidationObserver
+        //ValidationProvider,
+        //ValidationObserver
     },
     name: 'AddGeometryObject',
-    props: ['drawType', 'showAdd', 'cord', 'close'],
+    props: ['drawType', 'showAdd', 'cord', 'close', 'addInteraction'],
     data: function () {
         return {
-            draw: "Point",
+            draw: this.drawType,
             type: 'Feature',
             properties: {
                 name_tap: '',
@@ -144,10 +146,7 @@ export default {
             this.defaultFields();
             this.postFeature(feature);
         },
-        updateValue: function (drawType) {
-            this.$emit('input', drawType);
-        },
-        defaultFields(){
+        defaultFields() {
             const properties = {
                 name_tap: '',
                 number_support: 1,
@@ -173,14 +172,8 @@ export default {
             };
             this.properties = properties;
         }
-    },
-    computed: {
-        propModel: {
-            get() { return this.prop },
-            set(value) { this.$emit('update:prop', value) },
-        },
 
-    },
+    }
 
 };
 </script>

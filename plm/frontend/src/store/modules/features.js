@@ -22,7 +22,6 @@ export default {
                 const feature = response.data;
                 console.log(feature);
             });
-            context.dispatch('getFeatures');
         },
 
         async deleteFeature(context, id) {
