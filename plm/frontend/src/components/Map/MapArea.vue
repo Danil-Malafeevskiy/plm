@@ -1,12 +1,10 @@
 <template>
-  <div id="content" style="width: 100%; height: 100%">
-  <p>{{emptyFeature}}</p>
-    <div id="map_content" style="width: 75%; height: 90%"></div>
-    <OverlayInfo :edit='edit' :feature="feature" />
-
+  <div id="content" style="width: 100%; height: 100%; position: absolute; overflow-y: scroll;">
+    <div id="map_content" style="width: 75%; height: 90%; "></div>
+    <OverlayInfo :edit='edit' :feature="feature" :overlay="map === null ? null : map.getOverlays().getArray()[this.overlayId]"/>
     <EditGeometryObject :feature="feature" :close="close" :showEdit="showEdit" />
-    <AddGeometryObject :drawType="drawType" :showAdd="showAdd" :close="close" :interaction="interaction" 
-     :clearDrawLayer="clearDrawLayer" :feature="allFeatures[0]"/>
+    <AddGeometryObject :drawType="drawType" :showAdd="showAdd" :close="close" :interaction="interaction"
+      :clearDrawLayer="clearDrawLayer" :feature="allFeatures[0]" :coord="coord"/>
     <button class="add edit " style="margin-left: 0.5em; padding: 5px;" @click="edit(feature, 'add')">Добавить
       объект</button>
   </div>
@@ -28,7 +26,7 @@ import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
 import { Overlay } from 'ol';
 import Draw from "ol/interaction/Draw";
-
+import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
 import 'ol/ol.css';
 
 
@@ -43,7 +41,7 @@ export default {
       zoom: 13,
       center: [56.105601504697127, 54.937854572222477],
       rotation: 0,
-      cord: [NaN, NaN],
+      coord: { data: [NaN, NaN]},
       features: {
         type: 'FeatureCollection',
         features: this.allFeatures,
@@ -56,8 +54,8 @@ export default {
       map: null,
       drawLayer: null,
       interactionId: null,
+      overlayId: null,
       draw: null,
-      emptyFeature: null, 
     }
   },
   watch: {
@@ -79,10 +77,6 @@ export default {
         });
 
         this.map.addLayer(this.vectorLayer);
-
-        for(let key in this.allFeatures[0]){
-          this.emptyFeature[key] = this.allFeatures[0][key];
-        }
       }
     },
   },
@@ -96,11 +90,11 @@ export default {
 
       if (className === 'add') {
         this.showAdd = !this.showAdd;
+        this.addInteraction();
       }
       else {
         this.showEdit = !this.showEdit;
       }
-      this.addInteraction();
       document.querySelector('#card').style.display = 'none';
     },
 
@@ -113,26 +107,21 @@ export default {
       else {
         this.showEdit = !this.showEdit;
       }
-      this.cord = [NaN, NaN];
+      this.coord.data = [NaN, NaN];
 
       this.map.removeInteraction(this.draw);
 
       document.querySelector('#card').style.display = 'block';
     },
 
-    onMapClick(event) {
-      if (this.status) {
-        this.cord = event.coordinate;
-      }
-    },
-
     getFeature(event) {
-      const feature = this.map.getFeaturesAtPixel(event.pixel)[0];
-      this.feature = null;
-
-      if(this.drawLayer.getSource().getFeatures().length === 1){
+      if (this.drawLayer.getSource().getFeatures().length === 1) {
+        this.coord.data = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
         this.map.removeInteraction(this.draw);
       }
+
+      const feature = this.map.getFeaturesAtPixel(event.pixel)[0];
+      this.feature = null;
 
       if (feature != null && !this.showAdd) {
         this.feature = { properties: feature.getProperties() };
@@ -144,10 +133,10 @@ export default {
           coordinates: toLonLat(feature.getProperties().geometry.getCoordinates())
         };
         delete this.feature.properties.geometry;
-        this.map.getOverlays().getArray()[0].setPosition(event.coordinate);
+        this.map.getOverlays().getArray()[this.overlayId].setPosition(event.coordinate);
       }
       else {
-        this.map.getOverlays().getArray()[0].setPosition(undefined);
+        this.map.getOverlays().getArray()[this.overlayId].setPosition(undefined);
       }
     },
 
@@ -167,7 +156,7 @@ export default {
       this.map.removeInteraction(this.draw);
       this.addInteraction();
     },
-    clearDrawLayer(){
+    clearDrawLayer() {
       this.drawLayer.getSource().refresh();
     }
   },
@@ -179,6 +168,21 @@ export default {
       source: new VectorSource({
         features: []
       }),
+      style: new Style({
+        fill: new Fill({
+          color: 'rgba(255, 255, 0, 0.2)',
+        }),
+        stroke: new Stroke({
+          color: '#ff0000',
+          width: 2,
+        }),
+        image: new CircleStyle({
+          radius: 7,
+          fill: new Fill({
+            color: '#ff0000',
+          }),
+        }),
+      }),
     });
 
     this.vectorLayer = new VectorLayer({
@@ -186,29 +190,29 @@ export default {
         features: new GeoJSON().readFeatures(this.features, {
           featureProjection: 'EPSG:3857'
         }),
-      }),
-    });
-
-    this.map = new Map({
-      target: 'map_content',
-      layers: [
-        new TileLayer({
-          source: new OSM()
-        }),
-        this.vectorLayer,
-        this.drawLayer
-      ],
-      view: new View({
-        zoom: 13,
-        center: fromLonLat([56, 54]),
-        constrainResolution: true,
       })
-    });
+    }),
+
+      this.map = new Map({
+        target: 'map_content',
+        layers: [
+          new TileLayer({
+            source: new OSM()
+          }),
+          this.vectorLayer,
+          this.drawLayer
+        ],
+        view: new View({
+          zoom: 13,
+          center: fromLonLat([56.105601504697127, 54.937854572222477]),
+          constrainResolution: true,
+        })
+      });
 
     this.map.addOverlay(new Overlay({
       element: document.querySelector('#card')
     }));
-
+    this.overlayId = this.map.getOverlays().getArray().length - 1;
 
     this.map.on('click', this.getFeature);
   }
@@ -216,13 +220,10 @@ export default {
 </script>
 
 <style>
-.v-main__wrap {
-  display: flex;
-}
 
 #content {
-  display: flex;
   padding-left: 5em;
+  display: flex;
 }
 
 #card {
