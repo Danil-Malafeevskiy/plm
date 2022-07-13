@@ -1,22 +1,13 @@
 <template>
-  <!-- <div v-for="feature in select.features" :key="feature.id" :id="feature.id"
-            :position="feature.geometry.coordinates" :auto-pan="true"> -->
   <div id="card">
     <div v-if="feature != null">
       <div v-for="(f, index) in feature.properties" :key="f.number_support">
          <p v-if='(index != "geometry") && f && (index != "v_defects")'>{{ index }}: {{ f }}</p>
       </div>
-      <!--ВЛ: {{ feature.properties.VL }} <br>
-            Тип опоры: {{ feature.properties.type_support }} <br>
-            Шифр опоры: {{ feature.properties.code_support }} <br>
-            Материал: {{ feature.properties.material }} <br>
-            Угол: {{ feature.properties.corner }} <br>
-            Высота: {{ feature.properties.height }}<br> -->
       <button class="edit btn" @click="edit(feature, '.edit_window')"><img src="/static/edit.png"></button>
-      <button class="edit btn" @click="deleteFeature(feature.id)"><img src="/static/delete.png"></button>
+      <button class="edit btn" @click="deleteFeature(feature.id); overlay.setPosition(undefined);"><img src="/static/delete.png"></button>
     </div>
   </div>
-  <!-- </div> -->
 </template>
 
 <script>
@@ -24,17 +15,13 @@ import { mapActions } from 'vuex'
 
 export default {
   name: 'OverlayInfo',
-  props: ['dialog', 'edit', 'feature'],
+  props: ['dialog', 'edit', 'feature', 'overlay'],
   methods: mapActions(['deleteFeature']),
 }
 
 </script>
 
 <style>
-.v-main__wrap {
-  display: flex;
-}
-
 #card {
   background: white;
   border: 1px solid grey;

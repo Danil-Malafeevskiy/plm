@@ -1,7 +1,5 @@
 <template>
-  <v-content>
     <HomePage />
-  </v-content>
 </template>
 
 <script>

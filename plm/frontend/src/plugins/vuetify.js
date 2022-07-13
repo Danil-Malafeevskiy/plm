@@ -1,10 +1,14 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify/lib/framework';
+import '@mdi/font/css/materialdesignicons.css'
 
 Vue.use(Vuetify);
 
 const vuetify = new Vuetify({
     theme: {
+      options: {
+        customProperties: true,
+      },
       themes: {
         light: {
             primary: '#000000',
@@ -14,8 +18,12 @@ const vuetify = new Vuetify({
             info: '#2196F3',
             success: '#4CAF50',
             warning: '#FFC107',
+            background: '#E5E5E5'
         },
       },
+    },
+    icons: {
+      iconfont: 'mdiSvg',
     },
   })
 

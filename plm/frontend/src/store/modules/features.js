@@ -10,17 +10,16 @@ export default {
         },
 
         async postFeature(context, feature) {
-            await axios.post('/tower', feature).then((response) => {
-                const feature = response.data;
-                console.log(feature);
-            });
+            const res = await axios.post('/tower', feature).catch(error => console.log(error));
+            context.commit('updateResultPost', (res.data === 'Success new'));
             context.dispatch('getFeatures');
         },
 
         async putFeature(context, feature) {
             await axios.put('/tower', feature).then((response) => {
                 const feature = response.data;
-                console.log(feature);
+                context.commit('updateResultPut', (feature === 'Success up'));
+                context.dispatch('getFeatures');
             });
         },
 
@@ -36,13 +35,27 @@ export default {
         updateFeatures(state, features) {
             state.features = features;
         },
+        updateResultPost(state, bool){
+            state.resultPost = bool;
+        },
+        updateResultPut(state, bool){
+            state.resultPut = bool;
+        }
     },
     getters: {
         allFeatures(state) {
             return state.features;
         },
+        getResultPost(state){
+            return state.resultPost;
+        },
+        getResultPut(state){
+            return state.resultPut;
+        }
     },
     state: {
         features: [],
+        resultPost: null,
+        resultPut: null,
     },
 }
