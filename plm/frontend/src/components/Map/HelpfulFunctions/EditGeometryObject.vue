@@ -22,30 +22,28 @@
 
                 <!-- <ValidationProvider name="VL" rules="required|alpha_dash|alpha_spaces" v-slot="{ errors }">
                     <input v-model="properties.VL" type="text" placeholder="MAX_OOP" value="cockowin.danil@gmail.com">
-                <ValidationProvider name="VL" rules="required|alpha_dash|alpha_spaces" v-slot="{ errors }">
-                    <input v-model="properties.VL" type="text" placeholder="MAX_OOP(VL)" value="cockowin.danil@gmail.com">
                     <span>{{ errors[0] }}</span>
                 </ValidationProvider>
 
                 <ValidationProvider name="type_support" rules="required|alpha" v-slot="{ errors }">
-                    <input v-model="properties.type_support" type="text" placeholder="type_support">
+                    <input v-model="properties.type_support" type="text" placeholder="First Mom">
                     <span>{{ errors[0] }}</span>
                 </ValidationProvider>
 
                 <ValidationProvider name="code_support" rules="required|alpha_dash" v-slot="{ errors }">
-                    <input v-model="properties.code_support" type="text" placeholder="code_support">
+                    <input v-model="properties.code_support" type="text">
                     <span>{{ errors[0] }}</span>
                 </ValidationProvider>
                 <ValidationProvider name="material" rules="required|alpha" v-slot="{ errors }">
-                    <input v-model="properties.material" type="text" placeholder="material">
+                    <input v-model="properties.material" type="text">
                     <span>{{ errors[0] }}</span>
                 </ValidationProvider>
                 <ValidationProvider name="corner" rules="required|decimal" v-slot="{ errors }">
-                    <input v-model="properties.corner" type="number" step="any" placeholder="corner">
+                    <input v-model="properties.corner" type="number" step="any">
                     <span>{{ errors[0] }}</span>
                 </ValidationProvider>
                 <ValidationProvider name="height" rules="required|decimal" v-slot="{ errors }">
-                    <input v-model="properties.height" type="number" step="any" placeholder="height">
+                    <input v-model="properties.height" type="number" step="any">
                     <span>{{ errors[0] }}</span>
                 </ValidationProvider> -->
                 <div style="display: flex;">
