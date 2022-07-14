@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from app.models import Tower, Geometry, Feature
+from rest_framework_gis.serializers import GeometryField
+from app.models import Feature
 
+'''
 class GeometrySerializer(serializers.ModelSerializer):
     type = serializers.CharField(required=False, max_length=100, default="Point")
     class Meta:
@@ -26,24 +28,28 @@ class TowerSerializer(serializers.ModelSerializer):
         fields = ('id', 'name_tap', 'number_support', 'VL', 'type_support', 'code_support', 'material',
                   'corner', 'X', 'Y', 'Z', 'shirota', 'dolgota', 'height',
                   'TPV_photo', 'UF_photo', 'photo', 'v_defects', 'u_defects', 'code_support_in_1C', 'guid', 'flag_defects', 'comment_in_TOiR')
+'''
+
 
 class FeatureSerializer(serializers.ModelSerializer):
-    properties = TowerSerializer(required=True)
-    geometry = GeometrySerializer(required=True)
     type = serializers.CharField(required=False, max_length=100, default="Feature")
+    geometry = GeometryField()
     class Meta:
+        geo_field = 'geometry'
         model = Feature
-        fields = ('id', 'type', 'properties', 'geometry')
+        fields = ('id', 'name', 'type', 'properties', 'geometry')
 
+    '''
     def create(self, request):
         geometry_id = request['geometry']
-        tower_id = request['properties']
-        properties = TowerSerializer.create(TowerSerializer(), validated_data=tower_id)
-        geometry = GeometrySerializer.create(GeometrySerializer(), validated_data=geometry_id)
+        str_1=''
+        if geometry_id['type']=='Point':
+            str_1 = f'POINT('+str(geometry_id['coordinates'][0])+' '+str(geometry_id['coordinates'][1])+')'
 
-        feature = Feature.objects.create(type=request['type'], properties=properties, geometry=geometry)
+        feature = Feature.objects.create(type=request['type'], properties=request['properties'], geometry=str_1)
 
         return feature
+
 
     def update(self, instance, request):
         geometry_id = request['geometry']
@@ -56,4 +62,4 @@ class FeatureSerializer(serializers.ModelSerializer):
         instance.geometry = geometry
         instance.save()
 
-        return instance
+        return instance'''

@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,6 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+GDAL_LIBRARY_PATH = r'D:\insTRUEment_verstka\Lib\site-packages\osgeo\gdal304.dll'
+GEOS_LIBRARY_PATH = r'D:\insTRUEment_verstka\Lib\site-packages\osgeo\geos_c.dll'
 
 # Application definition
 
@@ -37,9 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
     'rest_framework',
     'corsheaders',
-    'app.apps.AppConfig'
+    'app.apps.AppConfig',
 ]
 
 
@@ -88,7 +91,7 @@ WSGI_APPLICATION = 'plm.wsgi.application'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': 'den1042',
@@ -137,6 +140,11 @@ STATICFILES_DIRS = [
     BASE_DIR.joinpath('static')
 ]
 
+MEDIAFILES_DIRS = [
+    BASE_DIR.joinpath('media')
+]
+MEDIA_URL = 'media/'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
@@ -146,5 +154,8 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'rest_framework.parsers.FileUploadParser',
     ),
 }
