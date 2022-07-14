@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
-
+from django.contrib.gis.db import models
+'''
 class Geometry(models.Model):
     type = models.CharField(max_length=100, blank=True, default="Point")
     coordinates = ArrayField(models.FloatField(), size=2)
@@ -28,8 +29,15 @@ class Tower(models.Model):
     guid = models.CharField(max_length=100, blank=True, default="-")
     flag_defects = models.BooleanField()
     comment_in_TOiR = models.CharField(max_length=100, blank=True, default="-")
+'''
 
 class Feature(models.Model):
+    name = models.CharField(max_length=100, blank=True)
     type = models.CharField(max_length=100, blank=True, default="Feature")
-    properties = models.OneToOneField(Tower, on_delete=models.CASCADE)
-    geometry = models.OneToOneField(Geometry, on_delete=models.CASCADE)
+    properties = models.JSONField()
+    geometry = models.GeometryField()
+
+    #object type
+    #виртуальные файлы питон
+    #посмотреть как конввертировать json
+    #либо верторные библиотеки либо sqllite библиотеки
