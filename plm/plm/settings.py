@@ -159,3 +159,5 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.FileUploadParser',
     ),
 }
+
+SPATIALITE_LIBRARY_PATH = 'mod_spatialite'
