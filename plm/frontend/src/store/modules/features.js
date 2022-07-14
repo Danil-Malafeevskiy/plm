@@ -11,6 +11,7 @@ export default {
 
         async postFeature(context, feature) {
             const res = await axios.post('/tower', feature).catch(error => console.log(error));
+            console.log(res.data);
             context.commit('updateResultPost', (res.data === 'Success new'));
             context.dispatch('getFeatures');
         },

@@ -1,21 +1,9 @@
 <template>
-  <div id="content" style="width: 100%; height: 100%; position: absolute; overflow-y: scroll;">
-    <div id="map_content" style="width: 75%; height: 90%; "></div>
-    <OverlayInfo :edit='edit' :feature="feature" :overlay="map === null ? null : map.getOverlays().getArray()[this.overlayId]"/>
-    <EditGeometryObject :feature="feature" :close="close" :showEdit="showEdit" />
-    <AddGeometryObject :drawType="drawType" :showAdd="showAdd" :close="close" :interaction="interaction"
-      :clearDrawLayer="clearDrawLayer" :feature="allFeatures[0]" :coord="coord"/>
-    <button class="add edit " style="margin-left: 0.5em; padding: 5px;" @click="edit(feature, 'add')">Добавить
-      объект</button>
-  </div>
-
+    <div id="map_content" style="width: 100%; height: 100%; position: absolute;"></div>
 </template>
 
 <script>
-import EditGeometryObject from './HelpfulFunctions/EditGeometryObject.vue'
-import AddGeometryObject from './HelpfulFunctions/AddGeometryObject.vue'
-import OverlayInfo from './HelpfulFunctions/OverlayInfo.vue';
-import { mapGetters, mapActions } from 'vuex';
+//import { mapGetters, mapActions } from 'vuex';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -32,16 +20,11 @@ import 'ol/ol.css';
 
 export default {
   components: {
-    EditGeometryObject,
-    AddGeometryObject,
-    OverlayInfo,
   },
+  props: ['allFeatures', 'cord'],
   data() {
     return {
-      zoom: 13,
-      center: [56.105601504697127, 54.937854572222477],
-      rotation: 0,
-      coord: { data: [NaN, NaN]},
+      coord: this.cord,
       features: {
         type: 'FeatureCollection',
         features: this.allFeatures,
@@ -80,10 +63,7 @@ export default {
       }
     },
   },
-  computed: mapGetters(['allFeatures']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature']),
-
     edit(feature, className) {
       document.querySelector('.add').style.opacity = "0";
       this.feature = feature;
@@ -120,6 +100,9 @@ export default {
         this.map.removeInteraction(this.draw);
       }
 
+      this.coord.data = event.coordinate;
+      console.log(this.cord.data);
+
       const feature = this.map.getFeaturesAtPixel(event.pixel)[0];
       this.feature = null;
 
@@ -133,10 +116,6 @@ export default {
           coordinates: toLonLat(feature.getProperties().geometry.getCoordinates())
         };
         delete this.feature.properties.geometry;
-        this.map.getOverlays().getArray()[this.overlayId].setPosition(event.coordinate);
-      }
-      else {
-        this.map.getOverlays().getArray()[this.overlayId].setPosition(undefined);
       }
     },
 
@@ -162,7 +141,6 @@ export default {
   },
 
   async mounted() {
-    await this.getFeatures();
 
     this.drawLayer = new VectorLayer({
       source: new VectorSource({
@@ -204,7 +182,7 @@ export default {
         ],
         view: new View({
           zoom: 13,
-          center: fromLonLat([56.105601504697127, 54.937854572222477]),
+          center: fromLonLat([54, 56]),
           constrainResolution: true,
         })
       });
@@ -279,16 +257,15 @@ export default {
 }
 
 .animation-enter-active {
-  transition: all .3s ease;
+  transition: all 1s;
 }
 
 .animation-leave-active {
-  transition: all .3s;
+  transition: all 1s;
 }
 
 .animation-enter,
 .animation-leave-to {
-  transform: translateX(10em);
-  opacity: 0;
+  right: 100px;
 }
 </style>

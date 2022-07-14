@@ -6,11 +6,7 @@ import axios from 'axios'
 import VueAxios from 'vue-axios'
 import store from './store'
 
-//import VueLayers from 'vuelayers'
-//import 'vuelayers/dist/vuelayers.css'
-
 Vue.use(VueAxios, axios)
-//Vue.use(VueLayers)
 Vue.use(vuetify);
 
 
