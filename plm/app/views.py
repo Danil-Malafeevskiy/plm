@@ -1,14 +1,15 @@
 import json
+import os
 import sqlite3
 
 from plm import settings
-
+from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
 
-from rest_framework.parsers import JSONParser, FileUploadParser
+from rest_framework.parsers import JSONParser, MultiPartParser
 
 from app.models import Feature
-from app.serializers import FeatureSerializer
+from app.serializers import FeatureSerializer, FileSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
@@ -39,11 +40,15 @@ def TowerAPI(request, id=0):
         return Response("SUCCESS DEL")
 
 class FileUploadView(APIView):
-    parser_classes = [FileUploadParser]
-
-    def post(self, request, filename):
-        doc = sqlite3.connect(settings.MEDIA_URL + filename + ".sqlite")
+    parser_classes = [MultiPartParser]
+    serializer_class = FileSerializer
+    fs = FileSystemStorage(location=settings.MEDIA_URL)
+    def put(self, request):
+        self.fs.save(request.FILES['file'].name, request.FILES['file'])
+        doc = sqlite3.connect(settings.MEDIA_URL + request.FILES['file'].name)
         doc.enable_load_extension(True)
+
+        filename, res = os.path.splitext(self.request.FILES['file'].name)
 
         doc.execute(f'SELECT load_extension("mod_spatialite.dll")')
         cur = doc.cursor()
@@ -51,6 +56,8 @@ class FileUploadView(APIView):
         dict_0 = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in cur.fetchall()]
 
         cur.close()
+        doc.close()
+        self.fs.delete(request.FILES['file'].name)
 
         lis = []
         dict_1 = {}

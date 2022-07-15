@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeometryField
+
 from app.models import Feature
 
 '''
@@ -30,7 +31,6 @@ class TowerSerializer(serializers.ModelSerializer):
                   'TPV_photo', 'UF_photo', 'photo', 'v_defects', 'u_defects', 'code_support_in_1C', 'guid', 'flag_defects', 'comment_in_TOiR')
 '''
 
-
 class FeatureSerializer(serializers.ModelSerializer):
     type = serializers.CharField(required=False, max_length=100, default="Feature")
     geometry = GeometryField()
@@ -39,8 +39,11 @@ class FeatureSerializer(serializers.ModelSerializer):
         model = Feature
         fields = ('id', 'name', 'type', 'properties', 'geometry')
 
-    '''
-    def create(self, request):
+class FileSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+
+    '''def create(self, request):
         geometry_id = request['geometry']
         str_1=''
         if geometry_id['type']=='Point':
