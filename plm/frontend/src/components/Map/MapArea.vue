@@ -1,5 +1,5 @@
 <template>
-    <div id="map_content" style="width: 100%; height: 100%; position: absolute;"></div>
+  <div id="map_content" style="position: absolute; top: 0; bottom: 0; right: 0; left: 0;"></div>
 </template>
 
 <script>
@@ -15,13 +15,14 @@ import GeoJSON from 'ol/format/GeoJSON';
 import { Overlay } from 'ol';
 import Draw from "ol/interaction/Draw";
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
+import { mapMutations } from 'vuex';
 import 'ol/ol.css';
 
 
 export default {
   components: {
   },
-  props: ['allFeatures', 'cord'],
+  props: ['allFeatures', 'cord', 'visableCard'],
   data() {
     return {
       coord: this.cord,
@@ -29,7 +30,7 @@ export default {
         type: 'FeatureCollection',
         features: this.allFeatures,
       },
-      feature: null,
+      feature_: null,
       showAdd: false,
       showEdit: false,
       drawType: { data: "Point" },
@@ -64,9 +65,10 @@ export default {
     },
   },
   methods: {
-    edit(feature, className) {
+    ...mapMutations(['updateFeature']),
+    edit(feature_, className) {
       document.querySelector('.add').style.opacity = "0";
-      this.feature = feature;
+      this.feature_ = feature_;
 
       if (className === 'add') {
         this.showAdd = !this.showAdd;
@@ -101,22 +103,24 @@ export default {
       }
 
       this.coord.data = event.coordinate;
-      console.log(this.cord.data);
 
-      const feature = this.map.getFeaturesAtPixel(event.pixel)[0];
-      this.feature = null;
+      const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
+      this.feature_ = null;
 
-      if (feature != null && !this.showAdd) {
-        this.feature = { properties: feature.getProperties() };
-        this.feature['id'] = this.feature.properties.id;
-        this.feature['type'] = "Feature";
-        this.feature["geometry"] = {
-          id: this.feature.id,
-          type: feature.getProperties().geometry.getType(),
-          coordinates: toLonLat(feature.getProperties().geometry.getCoordinates())
+      if (feature_ != null && !this.showAdd) {
+        this.feature_ = { properties: feature_.getProperties() };
+        this.feature_['id'] = this.feature_.properties.id;
+        this.feature_['type'] = "Feature";
+        this.feature_["geometry"] = {
+          id: this.feature_.id,
+          type: feature_.getProperties().geometry.getType(),
+          coordinates: toLonLat(feature_.getProperties().geometry.getCoordinates())
         };
-        delete this.feature.properties.geometry;
+        delete this.feature_.properties.geometry;
+        this.updateFeature(this.feature_);
+        this.visableCard();
       }
+      
     },
 
     addInteraction() {
@@ -198,7 +202,6 @@ export default {
 </script>
 
 <style>
-
 #content {
   padding-left: 5em;
   display: flex;

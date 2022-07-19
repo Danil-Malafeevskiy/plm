@@ -36,7 +36,7 @@
               <span>{{ item }}</span>
             </v-tab>
           </v-tabs>
-          <v-btn class="show__card" height="28px" width="80px" depressed color="#EE5E5E" @click="toggleBtn()">
+          <v-btn class="show__card" height="28px" width="80px" depressed color="#EE5E5E" @click="visableCard()">
             <v-icon color="white !default" dark>
               {{ icon.mdiPlus }}
             </v-icon>
@@ -45,19 +45,22 @@
       </v-toolbar>
       <v-tabs-items v-model="tab" style="height: 89.7%">
 
-        <v-card v-if="mini" width="38.05%">
+        <v-card v-if="cardVisable.data" width="38.05%">
 
           <div class="card__window">
+            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon.mdiImagePlusOutline" hide-input></v-file-input>
             <div style="overflow-y: scroll; overflow-x: hidden;">
               <v-card-text class="pa-0">
                 <v-form @submit.prevent="onSubmit">
-                  <v-row justify="start" class="pa-2">
+                  <v-row justify="start">
                     <v-col cols="2" sm="6" md="5" lg="6">
                       <v-card-text style="font-size: 24px;">Создание объекта</v-card-text>
                     </v-col>
-                    <v-col v-for="(f, index) in feature_.properties" :key="f.number_support" cols="2" sm="6" md="5"
+                    <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support" cols="2" sm="6" md="5"
                       lg="6">
-                      <v-text-field v-model="feature_.properties[index]" :value="feature_.properties[index]" hide-details :label="index" :placeholder="index" filled></v-text-field>
+                      <v-text-field v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
+                        hide-details :label="index" :placeholder="index" filled>
+                      </v-text-field>
                     </v-col>
                   </v-row>
                 </v-form>
@@ -65,8 +68,8 @@
             </div>
 
             <div class="card__footer">
-              <v-btn color="white" depressed @click="toggleBtn()">ОТМЕНА</v-btn>
-              <v-btn color="white" depressed @click="onSubmit()">Применить</v-btn>
+              <v-btn color="white" depressed @click="notVisableCard()">ОТМЕНА</v-btn>
+              <v-btn color="white" depressed @click="onSubmit()">Создать</v-btn>
             </div>
 
           </div>
@@ -79,7 +82,7 @@
         </v-tab-item>
         <v-tab-item>
           <div flat>
-            <MapArea :allFeatures="allFeatures" :cord="cord" />
+            <MapArea :allFeatures="allFeatures" :cord="cord" :visableCard="visableCard" />
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -88,10 +91,10 @@
 </template>
 
 <script>
-import HomePage from './components/HomePage.vue'
-import MapArea from './components/Map/MapArea.vue'
-import * as icon from '@mdi/js'
-import { mapActions, mapGetters } from 'vuex';
+import HomePage from './components/HomePage.vue';
+import MapArea from './components/Map/MapArea.vue';
+import * as icon from '@mdi/js';
+import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { toLonLat } from 'ol/proj';
 //import { toLonLat } from 'ol/proj';
 
@@ -106,65 +109,67 @@ export default {
       items: [
         'СПИСОК', 'КАРТА'
       ],
-      mini: false,
+      cardVisable: { data: false },
       icon: icon,
       test: null,
-      feature_: {
-        type: 'Feature',
-        properties: {},
-        geometry: {},
-      },
-      cord: {data: [NaN, NaN]}
+      feature: this.getFeature,
+      cord: { data: [NaN, NaN] }
     }
   },
-  computed: mapGetters(['allFeatures']),
+  watch: {
+    getFeature: function () {
+      this.feature = this.getFeature;
+    }
+  },
+  computed: mapGetters(['allFeatures', 'getFeature']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature']),
-    toggleBtn() {
-      this.mini = !this.mini;
-      let btn = document.querySelector('.v-btn')
-      if (!btn.hasAttribute('disabled')) {
-        btn.setAttribute('disabled', true);
-        btn.classList.add('v-btn--disabled');
-        document.querySelector('.v-icon');
-      }
-      else {
-        btn.removeAttribute('disabled', false);
-        btn.classList.remove('v-btn--disabled');
-      }
+    ...mapMutations(['emptyFeature', 'emptyFeature']),
+    visableCard() {
+      this.cardVisable.data = true;
+      let btn = document.querySelector('.v-btn');
+      btn.setAttribute('disabled', true);
+      btn.classList.add('v-btn--disabled');
     },
-    async onSubmit() {
-      this.feature_.geometry = {
-        type: 'Point',
-        coordinates: toLonLat(this.cord.data),
-      }
-      this.feature_.properties.shirota = this.feature_.geometry.coordinates[1];
-      this.feature_.properties.dolgota = this.feature_.geometry.coordinates[0];
-      console.log(JSON.stringify([this.feature_]));
-      await this.postFeature(JSON.stringify([this.feature_]));
-    },
+    notVisableCard() {
+      this.cardVisable.data = false;
+      let btn = document.querySelector('.v-btn');
+      btn.removeAttribute('disabled', false);
+      btn.classList.remove('v-btn--disabled');
+    }
+  },
+
+  async onSubmit() {
+    this.feature.geometry = {
+      type: 'Point',
+      coordinates: toLonLat(this.cord.data),
+    }
+    this.feature.properties.shirota = this.feature.geometry.coordinates[1];
+    this.feature.properties.dolgota = this.feature.geometry.coordinates[0];
+    console.log(JSON.stringify([this.feature]));
+    await this.postFeature(JSON.stringify([this.feature]));
   },
   async mounted() {
     await this.getFeatures();
-
-    for (let key in this.allFeatures[0]) {
-      if (key === 'properties') {
-        for (let key1 in this.allFeatures[0][key]) {
-          if (key1 != 'id') {
-            if (typeof (this.allFeatures[0][key][key1]) === 'string')
-              this.feature_[key][key1] = "";
-            else if (typeof (this.allFeatures[0][key][key1]) === 'number')
-              this.feature_[key][key1] = 1;
-            else if (typeof (this.allFeatures[0][key][key1]) === 'boolean')
-              this.feature_[key][key1] = false;
-          }
-        }
-      }
-    }
+    this.emptyFeature();
   }
 }
 </script>
 <style>
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #A9A9A9;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #A9A9A9;
+  border-radius: 16px;
+}
+
 .v-tabs-items {
   background-color: #E5E5E5 !important;
 }
@@ -200,6 +205,37 @@ export default {
 
 .card__img {
   align-items: flex-start;
+}
+
+.v-input__icon, .v-icon--link{
+  min-width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.v-icon--link::after{
+  background-color: rgba(255, 255, 255, 0) !important;
+}
+
+.v-file-input{
+  min-height: 37.53%;
+  background-color: #EE5E5E;
+  border-radius: 12px 12px 0 0;
+}
+
+.v-input__prepend-outer{
+  min-width: 100% !important;
+  min-height: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+}
+
+.v-icon--link .v-icon__svg{
+  min-width: 133.33px !important;
+  min-height: 133.33px !important;
+  fill: #FFFFFF !important;
 }
 
 .v-btn {
@@ -270,8 +306,7 @@ html {
 }
 
 .row {
-  padding: 0 12px !important;
-
+  padding: 24px 24px 12px 24px !important;
 }
 </style>
 

@@ -76,7 +76,6 @@ input {
 input {
     border-radius: 10px;
     border: 1px solid #aaa;
-    ;
     transition: .3s border-color;
 }
 
