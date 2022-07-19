@@ -11,6 +11,7 @@ export default {
 
         async postFeature(context, feature) {
             const res = await axios.post('/tower', feature).catch(error => console.log(error));
+            console.log(res.data);
             context.commit('updateResultPost', (res.data === 'Success new'));
             context.dispatch('getFeatures');
         },
@@ -35,27 +36,58 @@ export default {
         updateFeatures(state, features) {
             state.features = features;
         },
-        updateResultPost(state, bool){
+        updateResultPost(state, bool) {
             state.resultPost = bool;
         },
-        updateResultPut(state, bool){
+        updateResultPut(state, bool) {
             state.resultPut = bool;
+        },
+        emptyFeature(state) {
+            for (let key in state.features[0]) {
+                if (key === 'properties') {
+                    for (let key1 in state.features[0][key]) {
+                        if (key1 != 'id') {
+                            if (typeof (state.features[0][key][key1]) === 'string')
+                                state.feature[key][key1] = "";
+                            else if (typeof (state.features[0][key][key1]) === 'number')
+                                state.feature[key][key1] = 1;
+                            else if (typeof (state.features[0][key][key1]) === 'boolean')
+                                state.feature[key][key1] = false;
+                        }
+                    }
+                }
+            }
+            delete state.feature.id;
+        },
+        updateFeature(state, feature){
+            state.id = feature.id;
+            delete feature.properties.id; 
+            state.feature = feature;
         }
     },
     getters: {
         allFeatures(state) {
             return state.features;
         },
-        getResultPost(state){
+        getResultPost(state) {
             return state.resultPost;
         },
-        getResultPut(state){
+        getResultPut(state) {
             return state.resultPut;
+        },
+        getFeature(state) {
+            return state.feature;
         }
     },
     state: {
         features: [],
         resultPost: null,
         resultPut: null,
+        idOfFeature: null,
+        feature: {
+            type: 'Feature',
+            properties: {},
+            geometry: {},
+        },
     },
 }

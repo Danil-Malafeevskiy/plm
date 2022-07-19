@@ -23,7 +23,7 @@ const vuetify = new Vuetify({
       },
     },
     icons: {
-      iconfont: 'mdiSvg',
+      iconfont: 'mdi',
     },
   })
 

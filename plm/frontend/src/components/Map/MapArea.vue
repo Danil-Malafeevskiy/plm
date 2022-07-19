@@ -1,21 +1,9 @@
 <template>
-  <div id="content" style="width: 100%; height: 100%; position: absolute; overflow-y: scroll;">
-    <div id="map_content" style="width: 75%; height: 90%; "></div>
-    <OverlayInfo :edit='edit' :feature="feature" :overlay="map === null ? null : map.getOverlays().getArray()[this.overlayId]"/>
-    <EditGeometryObject :feature="feature" :close="close" :showEdit="showEdit" />
-    <AddGeometryObject :drawType="drawType" :showAdd="showAdd" :close="close" :interaction="interaction"
-      :clearDrawLayer="clearDrawLayer" :feature="allFeatures[0]" :coord="coord"/>
-    <button class="add edit " style="margin-left: 0.5em; padding: 5px;" @click="edit(feature, 'add')">Добавить
-      объект</button>
-  </div>
-
+  <div id="map_content" style="position: absolute; top: 0; bottom: 0; right: 0; left: 0;"></div>
 </template>
 
 <script>
-import EditGeometryObject from './HelpfulFunctions/EditGeometryObject.vue'
-import AddGeometryObject from './HelpfulFunctions/AddGeometryObject.vue'
-import OverlayInfo from './HelpfulFunctions/OverlayInfo.vue';
-import { mapGetters, mapActions } from 'vuex';
+//import { mapGetters, mapActions } from 'vuex';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -27,26 +15,22 @@ import GeoJSON from 'ol/format/GeoJSON';
 import { Overlay } from 'ol';
 import Draw from "ol/interaction/Draw";
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
+import { mapMutations } from 'vuex';
 import 'ol/ol.css';
 
 
 export default {
   components: {
-    EditGeometryObject,
-    AddGeometryObject,
-    OverlayInfo,
   },
+  props: ['allFeatures', 'cord', 'visableCard'],
   data() {
     return {
-      zoom: 13,
-      center: [56.105601504697127, 54.937854572222477],
-      rotation: 0,
-      coord: { data: [NaN, NaN]},
+      coord: this.cord,
       features: {
         type: 'FeatureCollection',
         features: this.allFeatures,
       },
-      feature: null,
+      feature_: null,
       showAdd: false,
       showEdit: false,
       drawType: { data: "Point" },
@@ -80,13 +64,11 @@ export default {
       }
     },
   },
-  computed: mapGetters(['allFeatures']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature']),
-
-    edit(feature, className) {
+    ...mapMutations(['updateFeature']),
+    edit(feature_, className) {
       document.querySelector('.add').style.opacity = "0";
-      this.feature = feature;
+      this.feature_ = feature_;
 
       if (className === 'add') {
         this.showAdd = !this.showAdd;
@@ -120,24 +102,25 @@ export default {
         this.map.removeInteraction(this.draw);
       }
 
-      const feature = this.map.getFeaturesAtPixel(event.pixel)[0];
-      this.feature = null;
+      this.coord.data = event.coordinate;
 
-      if (feature != null && !this.showAdd) {
-        this.feature = { properties: feature.getProperties() };
-        this.feature['id'] = this.feature.properties.id;
-        this.feature['type'] = "Feature";
-        this.feature["geometry"] = {
-          id: this.feature.id,
-          type: feature.getProperties().geometry.getType(),
-          coordinates: toLonLat(feature.getProperties().geometry.getCoordinates())
+      const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
+      this.feature_ = null;
+
+      if (feature_ != null && !this.showAdd) {
+        this.feature_ = { properties: feature_.getProperties() };
+        this.feature_['id'] = this.feature_.properties.id;
+        this.feature_['type'] = "Feature";
+        this.feature_["geometry"] = {
+          id: this.feature_.id,
+          type: feature_.getProperties().geometry.getType(),
+          coordinates: toLonLat(feature_.getProperties().geometry.getCoordinates())
         };
-        delete this.feature.properties.geometry;
-        this.map.getOverlays().getArray()[this.overlayId].setPosition(event.coordinate);
+        delete this.feature_.properties.geometry;
+        this.updateFeature(this.feature_);
+        this.visableCard();
       }
-      else {
-        this.map.getOverlays().getArray()[this.overlayId].setPosition(undefined);
-      }
+      
     },
 
     addInteraction() {
@@ -162,7 +145,6 @@ export default {
   },
 
   async mounted() {
-    await this.getFeatures();
 
     this.drawLayer = new VectorLayer({
       source: new VectorSource({
@@ -204,7 +186,7 @@ export default {
         ],
         view: new View({
           zoom: 13,
-          center: fromLonLat([56.105601504697127, 54.937854572222477]),
+          center: fromLonLat([54, 56]),
           constrainResolution: true,
         })
       });
@@ -220,7 +202,6 @@ export default {
 </script>
 
 <style>
-
 #content {
   padding-left: 5em;
   display: flex;
@@ -279,16 +260,15 @@ export default {
 }
 
 .animation-enter-active {
-  transition: all .3s ease;
+  transition: all 1s;
 }
 
 .animation-leave-active {
-  transition: all .3s;
+  transition: all 1s;
 }
 
 .animation-enter,
 .animation-leave-to {
-  transform: translateX(10em);
-  opacity: 0;
+  right: 100px;
 }
 </style>
