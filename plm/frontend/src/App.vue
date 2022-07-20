@@ -12,13 +12,9 @@
       <v-divider></v-divider>
 
       <v-list dense nav>
-        <v-list-item v-for="item in items" :key="item.title" link>
-          <v-list-item-icon>
-            <v-icon>{{ item }}</v-icon>
-          </v-list-item-icon>
-
+        <v-list-item link>
           <v-list-item-content>
-            <v-list-item-title>{{ item }}</v-list-item-title>
+            <v-list-item-title></v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -36,7 +32,8 @@
               <span>{{ item }}</span>
             </v-tab>
           </v-tabs>
-          <v-btn class="show__card" height="28px" width="80px" depressed color="#EE5E5E" @click="visableCard(); addCardOn = !addCardOn">
+          <v-btn class="show__card" height="28px" width="80px" depressed color="#EE5E5E"
+            @click="visableCard(); addCardOn.data = !addCardOn.data; emptyFeature()">
             <v-icon color="white !default" dark>
               {{ icon.mdiPlus }}
             </v-icon>
@@ -44,61 +41,9 @@
         </template>
       </v-toolbar>
       <v-tabs-items v-model="tab" style="height: 89.7%">
-
-        <v-card v-if="cardVisable" width="38.05%">
-
-          <div class="card__window" v-if="addCardOn">
-            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon.mdiImagePlusOutline"
-              hide-input></v-file-input>
-            <div style="overflow-y: scroll; overflow-x: hidden;">
-              <v-card-text class="pa-0">
-                <v-form @submit.prevent="onSubmit">
-                  <v-row justify="start">
-                    <v-col cols="2" sm="6" md="5" lg="6">
-                      <v-card-text style="font-size: 24px;">Создание объекта</v-card-text>
-                    </v-col>
-                    <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support" cols="2" sm="6" md="5"
-                      lg="6">
-                      <v-text-field v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
-                        hide-details :label="index" :placeholder="index" filled>
-                      </v-text-field>
-                    </v-col>
-                  </v-row>
-                </v-form>
-              </v-card-text>
-            </div>
-
-
-            <div class="card__footer">
-              <v-btn color="white" depressed @click="notVisableCard(); addCardOn = !addCardOn">ОТМЕНА</v-btn>
-              <v-btn color="white" depressed @click="onSubmit()">Создать</v-btn>
-            </div>
-
-          </div>
-          <div class="card__window" v-else-if="infoCardOn.data">
-          <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon.mdiImagePlusOutline"
-              hide-input></v-file-input>
-            <div style="overflow-y: scroll; overflow-x: hidden;">
-              <v-card-text class="pa-0">
-                <v-form @submit.prevent="onSubmit">
-                  <v-row justify="start">
-                    <v-col cols="2" sm="6" md="5" lg="6">
-                      <v-card-text style="font-size: 24px;">{{getFeature.properties.name_tap}}</v-card-text>
-                    </v-col>
-                    <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support" cols="2" sm="6" md="5"
-                      lg="6">
-                      <v-text-field v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
-                        hide-details :label="index" :placeholder="index" filled>
-                      </v-text-field>
-                    </v-col>
-                  </v-row>
-                </v-form>
-              </v-card-text>
-            </div>
-          </div>
-          <div class="card__window" v-else-if="editCardOn"></div>
-        </v-card>
-
+        <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" 
+        :editCardOn="editCardOn" :icon="icon" :getFeature="getFeature" :visableCard="visableCard"
+        :notVisableCard="notVisableCard" :addNewFeature="addNewFeature" :editFeature="editFeature"/>
         <v-tab-item>
           <div flat>
             <HomePage />
@@ -106,7 +51,8 @@
         </v-tab-item>
         <v-tab-item>
           <div flat>
-            <MapArea :allFeatures="allFeatures" :cord="cord" :visableCard="visableCard" :addCardOn="addCardOn" :infoCardOn="infoCardOn"/>
+            <MapArea :allFeatures="allFeatures" :cord="cord" :visableCard="visableCard" :notVisableCard="notVisableCard"
+              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="getFeature"/>
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -117,14 +63,16 @@
 <script>
 import HomePage from './components/HomePage.vue';
 import MapArea from './components/Map/MapArea.vue';
+import CardInfo from './components/Map/HelpfulFunctions/Card.vue'
 import * as icon from '@mdi/js';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
-import { toLonLat } from 'ol/proj';
+//import { toLonLat } from 'ol/proj';
 
 export default {
   components: {
     HomePage,
-    MapArea
+    MapArea,
+    CardInfo
   },
   data() {
     return {
@@ -132,10 +80,10 @@ export default {
       items: [
         'СПИСОК', 'КАРТА'
       ],
-      cardVisable: false,
-      addCardOn: false,
+      cardVisable: { data: false },
+      addCardOn: {data: false},
       infoCardOn: { data: false },
-      editCardOn: false,
+      editCardOn: { data: false },
       icon: icon,
       test: null,
       feature: this.getFeature,
@@ -149,34 +97,30 @@ export default {
   },
   computed: mapGetters(['allFeatures', 'getFeature']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature']),
     ...mapMutations(['emptyFeature', 'updateFeature']),
     visableCard() {
-      this.cardVisable = true;
+      this.cardVisable.data = true;
       let btn = document.querySelector('.v-btn');
       btn.setAttribute('disabled', true);
       btn.classList.add('v-btn--disabled');
     },
     notVisableCard() {
-      this.cardVisable = false;
+      this.cardVisable.data = false;
       let btn = document.querySelector('.v-btn');
       btn.removeAttribute('disabled', false);
       btn.classList.remove('v-btn--disabled');
     },
-    async onSubmit() {
-      this.getFeature.geometry = {
-        type: 'Point',
-        coordinates: toLonLat(this.cord.data),
-      };
-      this.getFeature.properties.shirota = this.getFeature.geometry.coordinates[1];
-      this.getFeature.properties.dolgota = this.getFeature.geometry.coordinates[0];
-      //console.log(JSON.stringify([this.getFeature]));
+    async addNewFeature() {
       await this.postFeature(JSON.stringify([this.getFeature]));
-      this.addCardOn = !this.addCardOn; 
-      this.infoCardOn.data = !this.infoCardOn.data; 
-      this.updateFeature(this.allFeatures[this.allFeatures.length - 1]);
-      console.log(this.getFeature);
+      this.addCardOn.data = !this.addCardOn.data;
+      this.notVisableCard();
     },
+    async editFeature(){
+      await this.putFeature(JSON.stringify(this.getFeature));
+      this.editCardOn.data = !this.editCardOn.data;
+      this.infoCardOn.data = !this.infoCardOn.data;
+    }
   },
   async mounted() {
     await this.getFeatures();

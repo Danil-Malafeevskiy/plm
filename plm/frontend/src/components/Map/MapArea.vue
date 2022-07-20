@@ -12,7 +12,7 @@ import { fromLonLat, toLonLat } from 'ol/proj';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
-import Draw from "ol/interaction/Draw";
+import { Draw, Modify } from 'ol/interaction';
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
 import { mapMutations } from 'vuex';
 import 'ol/ol.css';
@@ -21,7 +21,7 @@ import 'ol/ol.css';
 export default {
   components: {
   },
-  props: ['allFeatures', 'cord', 'visableCard', 'addCardOn', 'infoCardOn'],
+  props: ['allFeatures', 'cord', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature'],
   data() {
     return {
       coord: this.cord,
@@ -29,7 +29,7 @@ export default {
         type: 'FeatureCollection',
         features: this.allFeatures,
       },
-      feature_: null,
+      feature: this.getFeature,
       showAdd: false,
       showEdit: false,
       drawType: { data: "Point" },
@@ -39,8 +39,10 @@ export default {
       interactionId: null,
       overlayId: null,
       draw: null,
+      modify: null,
       addCardOn_: this.addCardOn,
-      infoCardOn_: this.indoCardOn,
+      infoCardOn_: this.infoCardOn,
+      editCardOn_: this.editCardOn,
     }
   },
   watch: {
@@ -64,22 +66,30 @@ export default {
         this.map.addLayer(this.vectorLayer);
       }
     },
-    addCardOn: function () {
-      this.addCardOn_ = this.addCardOn;
-
-      if (this.addCardOn) {
-        this.map.removeInteraction(this.draw);
-        this.addInteraction();
-      }
-      else {
-        this.map.removeInteraction(this.draw);
-        this.drawLayer.getSource().refresh();
-      }
+    getFeature: function () {
+      this.feature = this.getFeature;
+    },
+    addCardOn: {
+      handler() {
+        this.addCardOn_ = this.addCardOn;
+        
+        if (this.addCardOn.data) {
+          this.map.removeInteraction(this.draw);
+          this.addInteraction();
+        }
+        else {
+          this.map.removeInteraction(this.draw);
+          this.drawLayer.getSource().refresh();
+          this.map.removeInteraction(this.modify);
+        }
+      },
+      deep: true
     }
   },
   methods: {
     ...mapMutations(['updateFeature']),
-    getFeature(event) {
+
+    getFeature_(event) {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
         this.coord.data = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
         this.map.removeInteraction(this.draw);
@@ -88,19 +98,37 @@ export default {
       this.coord.data = event.coordinate;
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
 
-      if (feature_ != null && !this.addCardOn) {
-        this.feature_ = { properties: feature_.getProperties() };
-        this.feature_['id'] = this.feature_.properties.id;
-        this.feature_['type'] = "Feature";
-        this.feature_["geometry"] = {
-          id: this.feature_.id,
+      if (feature_ != null) {
+        this.feature.geometry = {
+          id: feature_.getProperties().id,
           type: feature_.getProperties().geometry.getType(),
           coordinates: toLonLat(feature_.getProperties().geometry.getCoordinates())
         };
-        delete this.feature_.properties.geometry;
-        this.updateFeature(this.feature_);
-        this.visableCard();
+        this.feature.properties.shirota = this.feature.geometry.coordinates[1];
+        this.feature.properties.dolgota = this.feature.geometry.coordinates[0];
+        if (!this.addCardOn_.data) {
+          this.feature.properties = feature_.getProperties();
+          this.feature.id = this.feature.properties.id;
+          delete this.feature.properties.geometry;
+          this.infoCardOn_.data = true;
+          this.visableCard();
+        }
+        this.updateFeature(this.feature);
       }
+      else if (!this.addCardOn_.data) {
+        this.infoCardOn_.data = false;
+        this.editCardOn_.data = false;
+        this.notVisableCard();
+      }
+    },
+
+    changeCoordinates(event) {
+      this.feature.geometry = {
+        coordinates: toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
+      };
+
+      this.feature.properties.shirota = this.feature.geometry.coordinates[1];
+      this.feature.properties.dolgota = this.feature.geometry.coordinates[0];
     },
 
     addInteraction() {
@@ -111,15 +139,9 @@ export default {
       });
 
       this.map.addInteraction(this.draw);
+      this.map.addInteraction(this.modify);
       this.interactionId = this.map.getInteractions().getArray().length - 1;
     },
-    interaction() {
-      this.map.removeInteraction(this.draw);
-      this.addInteraction();
-    },
-    clearDrawLayer() {
-      this.drawLayer.getSource().refresh();
-    }
   },
 
   async mounted() {
@@ -168,15 +190,19 @@ export default {
           constrainResolution: true,
         })
       });
-    this.map.on('click', this.getFeature);
 
-    if (this.addCardOn) {
-      this.map.removeInteraction(this.draw);
+    this.modify = new Modify({
+      source: this.drawLayer.getSource(),
+    });
+
+    //this.modify.on('modifystart', this.changeCoordinates);
+
+    this.modify.on('modifyend', this.changeCoordinates);
+
+    this.map.on('click', this.getFeature_);
+
+    if (this.addCardOn_.data) {
       this.addInteraction();
-    }
-    else {
-      this.map.removeInteraction(this.draw);
-      this.drawLayer.getSource().refresh();
     }
 
     setTimeout(() => {
