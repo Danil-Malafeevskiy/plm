@@ -46,7 +46,7 @@
         :notVisableCard="notVisableCard" :addNewFeature="addNewFeature" :editFeature="editFeature"/>
         <v-tab-item>
           <div flat>
-            <HomePage />
+            <HomePage/>
           </div>
         </v-tab-item>
         <v-tab-item>
@@ -124,6 +124,7 @@ export default {
   },
   async mounted() {
     await this.getFeatures();
+    console.log(this.getFeature)
     this.emptyFeature();
   }
 }
