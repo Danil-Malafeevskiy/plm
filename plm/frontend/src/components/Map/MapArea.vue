@@ -12,7 +12,6 @@ import { fromLonLat, toLonLat } from 'ol/proj';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
-import { Overlay } from 'ol';
 import Draw from "ol/interaction/Draw";
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
 import { mapMutations } from 'vuex';
@@ -22,7 +21,7 @@ import 'ol/ol.css';
 export default {
   components: {
   },
-  props: ['allFeatures', 'cord', 'visableCard'],
+  props: ['allFeatures', 'cord', 'visableCard', 'addCardOn', 'infoCardOn'],
   data() {
     return {
       coord: this.cord,
@@ -40,6 +39,8 @@ export default {
       interactionId: null,
       overlayId: null,
       draw: null,
+      addCardOn_: this.addCardOn,
+      infoCardOn_: this.indoCardOn,
     }
   },
   watch: {
@@ -63,39 +64,21 @@ export default {
         this.map.addLayer(this.vectorLayer);
       }
     },
-  },
-  methods: {
-    ...mapMutations(['updateFeature']),
-    edit(feature_, className) {
-      document.querySelector('.add').style.opacity = "0";
-      this.feature_ = feature_;
+    addCardOn: function () {
+      this.addCardOn_ = this.addCardOn;
 
-      if (className === 'add') {
-        this.showAdd = !this.showAdd;
+      if (this.addCardOn) {
+        this.map.removeInteraction(this.draw);
         this.addInteraction();
       }
       else {
-        this.showEdit = !this.showEdit;
+        this.map.removeInteraction(this.draw);
+        this.drawLayer.getSource().refresh();
       }
-      document.querySelector('#card').style.display = 'none';
-    },
-
-    close(className) {
-      document.querySelector('.add').style.opacity = "1";
-      this.drawLayer.getSource().refresh();
-      if (className === 'add') {
-        this.showAdd = !this.showAdd;
-      }
-      else {
-        this.showEdit = !this.showEdit;
-      }
-      this.coord.data = [NaN, NaN];
-
-      this.map.removeInteraction(this.draw);
-
-      document.querySelector('#card').style.display = 'block';
-    },
-
+    }
+  },
+  methods: {
+    ...mapMutations(['updateFeature']),
     getFeature(event) {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
         this.coord.data = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
@@ -103,11 +86,9 @@ export default {
       }
 
       this.coord.data = event.coordinate;
-
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
-      this.feature_ = null;
 
-      if (feature_ != null && !this.showAdd) {
+      if (feature_ != null && !this.addCardOn) {
         this.feature_ = { properties: feature_.getProperties() };
         this.feature_['id'] = this.feature_.properties.id;
         this.feature_['type'] = "Feature";
@@ -120,20 +101,17 @@ export default {
         this.updateFeature(this.feature_);
         this.visableCard();
       }
-      
     },
 
     addInteraction() {
       this.drawLayer.getSource().refresh();
-      if (this.drawType.data != '-') {
-        this.draw = new Draw({
-          source: this.drawLayer.getSource(),
-          type: this.drawType.data,
-        });
+      this.draw = new Draw({
+        source: this.drawLayer.getSource(),
+        type: this.drawType.data,
+      });
 
-        this.map.addInteraction(this.draw);
-        this.interactionId = this.map.getInteractions().getArray().length - 1;
-      }
+      this.map.addInteraction(this.draw);
+      this.interactionId = this.map.getInteractions().getArray().length - 1;
     },
     interaction() {
       this.map.removeInteraction(this.draw);
@@ -190,13 +168,20 @@ export default {
           constrainResolution: true,
         })
       });
-
-    this.map.addOverlay(new Overlay({
-      element: document.querySelector('#card')
-    }));
-    this.overlayId = this.map.getOverlays().getArray().length - 1;
-
     this.map.on('click', this.getFeature);
+
+    if (this.addCardOn) {
+      this.map.removeInteraction(this.draw);
+      this.addInteraction();
+    }
+    else {
+      this.map.removeInteraction(this.draw);
+      this.drawLayer.getSource().refresh();
+    }
+
+    setTimeout(() => {
+      this.map.updateSize();
+    }, 400);
   }
 }
 </script>

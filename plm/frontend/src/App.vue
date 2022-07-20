@@ -36,7 +36,7 @@
               <span>{{ item }}</span>
             </v-tab>
           </v-tabs>
-          <v-btn class="show__card" height="28px" width="80px" depressed color="#EE5E5E" @click="visableCard()">
+          <v-btn class="show__card" height="28px" width="80px" depressed color="#EE5E5E" @click="visableCard(); addCardOn = !addCardOn">
             <v-icon color="white !default" dark>
               {{ icon.mdiPlus }}
             </v-icon>
@@ -45,10 +45,11 @@
       </v-toolbar>
       <v-tabs-items v-model="tab" style="height: 89.7%">
 
-        <v-card v-if="cardVisable.data" width="38.05%">
+        <v-card v-if="cardVisable" width="38.05%">
 
-          <div class="card__window">
-            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon.mdiImagePlusOutline" hide-input></v-file-input>
+          <div class="card__window" v-if="addCardOn">
+            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon.mdiImagePlusOutline"
+              hide-input></v-file-input>
             <div style="overflow-y: scroll; overflow-x: hidden;">
               <v-card-text class="pa-0">
                 <v-form @submit.prevent="onSubmit">
@@ -67,12 +68,35 @@
               </v-card-text>
             </div>
 
+
             <div class="card__footer">
-              <v-btn color="white" depressed @click="notVisableCard()">ОТМЕНА</v-btn>
+              <v-btn color="white" depressed @click="notVisableCard(); addCardOn = !addCardOn">ОТМЕНА</v-btn>
               <v-btn color="white" depressed @click="onSubmit()">Создать</v-btn>
             </div>
 
           </div>
+          <div class="card__window" v-else-if="infoCardOn.data">
+          <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon.mdiImagePlusOutline"
+              hide-input></v-file-input>
+            <div style="overflow-y: scroll; overflow-x: hidden;">
+              <v-card-text class="pa-0">
+                <v-form @submit.prevent="onSubmit">
+                  <v-row justify="start">
+                    <v-col cols="2" sm="6" md="5" lg="6">
+                      <v-card-text style="font-size: 24px;">{{getFeature.properties.name_tap}}</v-card-text>
+                    </v-col>
+                    <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support" cols="2" sm="6" md="5"
+                      lg="6">
+                      <v-text-field v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
+                        hide-details :label="index" :placeholder="index" filled>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-form>
+              </v-card-text>
+            </div>
+          </div>
+          <div class="card__window" v-else-if="editCardOn"></div>
         </v-card>
 
         <v-tab-item>
@@ -82,7 +106,7 @@
         </v-tab-item>
         <v-tab-item>
           <div flat>
-            <MapArea :allFeatures="allFeatures" :cord="cord" :visableCard="visableCard" />
+            <MapArea :allFeatures="allFeatures" :cord="cord" :visableCard="visableCard" :addCardOn="addCardOn" :infoCardOn="infoCardOn"/>
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -96,7 +120,6 @@ import MapArea from './components/Map/MapArea.vue';
 import * as icon from '@mdi/js';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { toLonLat } from 'ol/proj';
-//import { toLonLat } from 'ol/proj';
 
 export default {
   components: {
@@ -109,11 +132,14 @@ export default {
       items: [
         'СПИСОК', 'КАРТА'
       ],
-      cardVisable: { data: false },
+      cardVisable: false,
+      addCardOn: false,
+      infoCardOn: { data: false },
+      editCardOn: false,
       icon: icon,
       test: null,
       feature: this.getFeature,
-      cord: { data: [NaN, NaN] }
+      cord: { data: [NaN, NaN] },
     }
   },
   watch: {
@@ -124,30 +150,33 @@ export default {
   computed: mapGetters(['allFeatures', 'getFeature']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature']),
-    ...mapMutations(['emptyFeature', 'emptyFeature']),
+    ...mapMutations(['emptyFeature', 'updateFeature']),
     visableCard() {
-      this.cardVisable.data = true;
+      this.cardVisable = true;
       let btn = document.querySelector('.v-btn');
       btn.setAttribute('disabled', true);
       btn.classList.add('v-btn--disabled');
     },
     notVisableCard() {
-      this.cardVisable.data = false;
+      this.cardVisable = false;
       let btn = document.querySelector('.v-btn');
       btn.removeAttribute('disabled', false);
       btn.classList.remove('v-btn--disabled');
-    }
-  },
-
-  async onSubmit() {
-    this.feature.geometry = {
-      type: 'Point',
-      coordinates: toLonLat(this.cord.data),
-    }
-    this.feature.properties.shirota = this.feature.geometry.coordinates[1];
-    this.feature.properties.dolgota = this.feature.geometry.coordinates[0];
-    console.log(JSON.stringify([this.feature]));
-    await this.postFeature(JSON.stringify([this.feature]));
+    },
+    async onSubmit() {
+      this.getFeature.geometry = {
+        type: 'Point',
+        coordinates: toLonLat(this.cord.data),
+      };
+      this.getFeature.properties.shirota = this.getFeature.geometry.coordinates[1];
+      this.getFeature.properties.dolgota = this.getFeature.geometry.coordinates[0];
+      //console.log(JSON.stringify([this.getFeature]));
+      await this.postFeature(JSON.stringify([this.getFeature]));
+      this.addCardOn = !this.addCardOn; 
+      this.infoCardOn.data = !this.infoCardOn.data; 
+      this.updateFeature(this.allFeatures[this.allFeatures.length - 1]);
+      console.log(this.getFeature);
+    },
   },
   async mounted() {
     await this.getFeatures();
@@ -175,7 +204,6 @@ export default {
 }
 
 .v-main {
-  /* min-width: 81.04% !important; */
   padding-left: 18.96% !important;
 }
 
@@ -207,7 +235,8 @@ export default {
   align-items: flex-start;
 }
 
-.v-input__icon, .v-icon--link{
+.v-input__icon,
+.v-icon--link {
   min-width: 100% !important;
   height: 100% !important;
   min-height: 100% !important;
@@ -215,24 +244,24 @@ export default {
   align-items: center !important;
 }
 
-.v-icon--link::after{
+.v-icon--link::after {
   background-color: rgba(255, 255, 255, 0) !important;
 }
 
-.v-file-input{
+.v-file-input {
   min-height: 37.53%;
   background-color: #EE5E5E;
   border-radius: 12px 12px 0 0;
 }
 
-.v-input__prepend-outer{
+.v-input__prepend-outer {
   min-width: 100% !important;
   min-height: 100% !important;
   height: 100% !important;
   margin: 0 !important;
 }
 
-.v-icon--link .v-icon__svg{
+.v-icon--link .v-icon__svg {
   min-width: 133.33px !important;
   min-height: 133.33px !important;
   fill: #FFFFFF !important;
