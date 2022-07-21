@@ -1,10 +1,11 @@
 <template>
-  <v-app>
-    <v-navigation-drawer app color="#DDDDDD" permanent :mini-variant-width=55 width="18.96%">
+  <v-app style="display: flex">
+    <v-navigation-drawer v-if="list.length != 0" app color="#DDDDDD" permanent
+      style="max-width: 18.96% !important; min-width: 18.96% !important;">
       <v-list-item>
         <v-list-item-content>
           <v-list-item-title>
-            <v-icon left>{{ icon.mdiMenu }}</v-icon>
+            <v-icon left>mdi-menu</v-icon>
             База объектов
           </v-list-item-title>
         </v-list-item-content>
@@ -12,14 +13,27 @@
       <v-divider></v-divider>
 
       <v-list dense nav>
-        <v-list-item link>
+        <v-list-item v-for="key in list" :key="key" link>
           <v-list-item-content>
-            <v-list-item-title></v-list-item-title>
+            <v-list-item-title>
+              {{ key }}
+            </v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
-    </v-navigation-drawer>
 
+    </v-navigation-drawer>
+    <v-navigation-drawer v-else app color="#DDDDDD" permanent
+      style="max-width: 2.86% !important; min-width: 2.86% !important;">
+      <v-list-item>
+        <v-list-item-content>
+          <v-list-item-title>
+            <v-icon left>mdi-menu</v-icon>
+            База объектов
+          </v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+    </v-navigation-drawer>
 
     <v-main>
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0;">
@@ -35,24 +49,25 @@
           <v-btn class="show__card" height="28px" width="80px" depressed color="#EE5E5E"
             @click="visableCard(); addCardOn.data = !addCardOn.data; emptyFeature()">
             <v-icon color="white !default" dark>
-              {{ icon.mdiPlus }}
+              mdi-plus
             </v-icon>
           </v-btn>
+          
         </template>
       </v-toolbar>
       <v-tabs-items v-model="tab" style="height: 89.7%">
-        <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" 
-        :editCardOn="editCardOn" :icon="icon" :getFeature="getFeature" :visableCard="visableCard"
-        :notVisableCard="notVisableCard" :addNewFeature="addNewFeature" :editFeature="editFeature"/>
+        <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
+          :icon="icon" :getFeature="getFeature" :visableCard="visableCard" :notVisableCard="notVisableCard"
+          :addNewFeature="addNewFeature" :editFeature="editFeature" :list="list"/>
         <v-tab-item>
           <div flat>
-            <HomePage/>
+            <HomePage />
           </div>
         </v-tab-item>
         <v-tab-item>
           <div flat>
             <MapArea :allFeatures="allFeatures" :cord="cord" :visableCard="visableCard" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="getFeature"/>
+              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="getFeature" />
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -64,7 +79,6 @@
 import HomePage from './components/HomePage.vue';
 import MapArea from './components/Map/MapArea.vue';
 import CardInfo from './components/Map/HelpfulFunctions/Card.vue'
-import * as icon from '@mdi/js';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 //import { toLonLat } from 'ol/proj';
 
@@ -77,14 +91,14 @@ export default {
   data() {
     return {
       tab: null,
+      list:  [],
       items: [
-        'СПИСОК', 'КАРТА'
+        'список', 'карта'
       ],
       cardVisable: { data: false },
-      addCardOn: {data: false},
+      addCardOn: { data: false },
       infoCardOn: { data: false },
       editCardOn: { data: false },
-      icon: icon,
       test: null,
       feature: this.getFeature,
       cord: { data: [NaN, NaN] },
@@ -93,7 +107,18 @@ export default {
   watch: {
     getFeature: function () {
       this.feature = this.getFeature;
-    }
+    },
+    list: {
+      handler() {
+        // if (this.list.data.length === 0) {
+        //   document.querySelector('.v-main').style.cssText = `padding-left: ${100 - (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920)} !important`;
+        // }
+        // else{
+        //   document.querySelector('.v-main').style.cssText = `padding-left: ${100 - (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920)} !important`;
+        // }
+      },
+      deep: true,
+    }, 
   },
   computed: mapGetters(['allFeatures', 'getFeature']),
   methods: {
@@ -116,21 +141,28 @@ export default {
       this.addCardOn.data = !this.addCardOn.data;
       this.notVisableCard();
     },
-    async editFeature(){
+    async editFeature() {
       await this.putFeature(JSON.stringify(this.getFeature));
       this.editCardOn.data = !this.editCardOn.data;
       this.infoCardOn.data = !this.infoCardOn.data;
     }
   },
   async mounted() {
+
+    // if (this.list.length === 0) {
+    //   document.querySelector('.v-main').style.cssText = `padding-left: ${100 - (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920)} !important`;
+    // }
+    // else{
+    //   document.querySelector('.v-main').style.cssText = `padding-left: ${100 - (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920)} !important`;
+    // }
     await this.getFeatures();
-    console.log(this.getFeature)
+    //console.log(this.getFeature)
     this.emptyFeature();
+
   }
 }
 </script>
 <style>
-
 * {
   scrollbar-width: thin;
   scrollbar-color: #A9A9A9;
@@ -145,12 +177,21 @@ export default {
   border-radius: 16px;
 }
 
-.v-tabs-items {
-  background-color: #E5E5E5 !important;
+.v-application--wrap {
+  flex-direction: unset !important;
+}
+
+.v-navigation-drawer--fixed {
+  position: unset !important;
+  z-index: none;
 }
 
 .v-main {
-  padding-left: 18.96% !important;
+  padding-left: 0 !important;
+}
+
+.v-tabs-items {
+  background-color: #E5E5E5 !important;
 }
 
 .v-divider {

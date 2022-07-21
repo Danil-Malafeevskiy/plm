@@ -1,13 +1,14 @@
 <template>
     <div class="child">
       <p class="object ma-0">{{ items.length }} объекта </p>
-      <v-data-table :headers="headers" show-select :items="items" :items-per-page="14" class=" pa-0 elevation-1"
+      <v-data-table :headers="headers" show-select :items="items" :items-per-page="14" class=" pa-0"
         :expand-icon=icon.mdiAlertOctagon
         style="
-        height: 91.28%;
+        height: 100% !important;
         width: 50% !important; 
         background-color: #E5E5E5; 
         box-shadow: none !important;
+        margin-left: 2% !important;;
       "></v-data-table>
     </div>
 </template>
@@ -22,7 +23,7 @@ export default {
   data() {
     return {
       features: {
-        features: this.allFeaturesww
+        features: this.allFeatures
       },
       feature: this.getFeature,
       icon: icon,
@@ -46,6 +47,7 @@ export default {
     },
     allFeatures: function () {
       this.features = this.allFeatures;
+      this.addItem();
     },
 
   },
@@ -64,7 +66,6 @@ export default {
   async mounted() {
     await this.getFeatures();
     await this.emptyFeature();
-    this.addItem();
   }
 
 }
@@ -110,7 +111,9 @@ export default {
   animation: ani 1.5s forwards;
   
 }
-
+.v-data-table__wrapper{
+  overflow-x: hidden !important;
+}
 @keyframes ani {
 0% {opacity: 0;}
 100% {opacity: 1;}
