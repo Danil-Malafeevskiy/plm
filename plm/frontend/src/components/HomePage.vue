@@ -2,7 +2,6 @@
     <div class="child">
       <p class="object ma-0">{{ items.length }} объекта </p>
       <v-data-table :headers="headers" show-select :items="items" :items-per-page="14" class=" pa-0"
-        :expand-icon=icon.mdiAlertOctagon
         style="
         height: 100% !important;
         width: 50% !important; 
@@ -15,7 +14,6 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex';
-import * as icon from '@mdi/js';
 
 
 export default {
@@ -26,7 +24,6 @@ export default {
         features: this.allFeatures
       },
       feature: this.getFeature,
-      icon: icon,
       items: [],
       headers: [
         {

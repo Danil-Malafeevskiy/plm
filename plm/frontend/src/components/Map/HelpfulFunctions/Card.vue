@@ -1,8 +1,8 @@
 <template>
-    <v-card v-if="cardVisable_.data" width="38.05%">
+    <v-card v-show="cardVisable_.data === true">
         <div class="card__window" v-if="addCardOn_.data">
             <p style="display: none;">{{ feature }}</p>
-            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon.mdiImagePlusOutline"
+            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon"
                 hide-input></v-file-input>
             <div style="overflow-y: scroll; overflow-x: hidden;">
                 <v-card-text class="pa-0">
@@ -13,9 +13,8 @@
                             </v-col>
                             <v-col v-for="(f, index) in feature.properties" :key="f.number_support" cols="2" sm="6"
                                 md="5" lg="6">
-                                <v-text-field v-model="feature.properties[index]"
-                                    :value="feature.properties[index]" hide-details :label="index"
-                                    :placeholder="index" filled>
+                                <v-text-field v-model="feature.properties[index]" :value="feature.properties[index]"
+                                    hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
                             </v-col>
                         </v-row>
@@ -24,14 +23,15 @@
             </div>
 
             <div class="card__footer">
-                <v-btn color="white" depressed @click="notVisableCard(); addCardOn_.data = !addCardOn_.data">ОТМЕНА</v-btn>
+                <v-btn color="white" depressed @click="notVisableCard(); addCardOn_.data = !addCardOn_.data">ОТМЕНА
+                </v-btn>
                 <v-btn color="white" depressed @click="addNewFeature()">Создать</v-btn>
             </div>
 
         </div>
         <div class="card__window" v-else-if="infoCardOn_.data">
             <v-file-input disabled class="pa-0 ma-0" height="37.53%" color="#EE5E5E"
-                :prepend-icon="icon.mdiImagePlusOutline" hide-input></v-file-input>
+                :prepend-icon="icon" hide-input></v-file-input>
             <div style="overflow-y: scroll; overflow-x: hidden;">
                 <v-card-text class="pa-0">
                     <v-form @submit.prevent="onSubmit">
@@ -47,14 +47,14 @@
                                         @click="editCardOn_.data = !editCardOn_.data; infoCardOn_.data = !infoCardOn_.data;"
                                         class="ma-0" fab small elevation="0" color="white">
                                         <v-icon>
-                                            {{ icon.mdiPencil }}
+                                            mdi-pencil
                                         </v-icon>
                                     </v-btn>
                                     <v-btn
                                         @click="deleteFeature(feature.id); infoCardOn_.data = !infoCardOn_.data; notVisableCard()"
                                         class="ma-0" fab small elevation="0" color="white">
                                         <v-icon>
-                                            {{ icon.mdiDeleteOutline }}
+                                            mdi-delete-outline
                                         </v-icon>
                                     </v-btn>
                                 </v-card-text>
@@ -62,8 +62,8 @@
                             <v-col v-for="(f, index) in feature.properties" :key="f.number_support"
                                 v-show="index != 'name_tap' && index != 'id'" cols="2" sm="6" md="5" lg="6">
                                 <v-text-field readonly v-model="feature.properties[index]"
-                                    :value="feature.properties[index]" hide-details :label="index"
-                                    :placeholder="index" filled>
+                                    :value="feature.properties[index]" hide-details :label="index" :placeholder="index"
+                                    filled>
                                 </v-text-field>
                             </v-col>
                         </v-row>
@@ -73,7 +73,7 @@
         </div>
 
         <div class="card__window" v-else-if="editCardOn.data">
-            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon.mdiImagePlusOutline"
+            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon"
                 hide-input></v-file-input>
             <div style="overflow-y: scroll; overflow-x: hidden;">
                 <v-card-text class="pa-0">
@@ -84,9 +84,8 @@
                             </v-col>
                             <v-col v-for="(f, index) in feature.properties" :key="f.number_support"
                                 v-show="index != 'id'" cols="2" sm="6" md="5" lg="6">
-                                <v-text-field v-model="feature.properties[index]"
-                                    :value="feature.properties[index]" hide-details :label="index"
-                                    :placeholder="index" filled>
+                                <v-text-field v-model="feature.properties[index]" :value="feature.properties[index]"
+                                    hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
                             </v-col>
                         </v-row>
@@ -95,7 +94,8 @@
             </div>
 
             <div class="card__footer">
-                <v-btn color="white" depressed @click="notVisableCard(); addCardOn_.data = !addCardOn_.data">ОТМЕНА</v-btn>
+                <v-btn color="white" depressed @click="notVisableCard(); editCardOn_.data = !editCardOn_.data">ОТМЕНА
+                </v-btn>
                 <v-btn color="white" depressed @click="editFeature()">Редактирование</v-btn>
             </div>
         </div>
@@ -104,29 +104,49 @@
 
 <script>
 import { mapActions } from 'vuex';
+import { mdiImagePlusOutline } from '@mdi/js'
 
 export default {
     name: 'CardInfo',
-    props: ['cardVisable', 'addCardOn', 'infoCardOn', 
-    'editCardOn', 'icon', 'getFeature', 'visableCard', 'notVisableCard', 'addNewFeature', 'editFeature'],
-    data () {
-        return{
+    props: ['cardVisable', 'addCardOn', 'infoCardOn',
+        'editCardOn', 'getFeature', 'visableCard', 'notVisableCard', 'addNewFeature', 'editFeature', 'list'],
+    data() {
+        return {
             cardVisable_: this.cardVisable,
             addCardOn_: this.addCardOn,
             infoCardOn_: this.infoCardOn,
             editCardOn_: this.editCardOn,
             feature: this.getFeature,
+            list_: this.list,
+            icon: mdiImagePlusOutline,
         }
     },
     watch: {
-    cardVisable: function () {
-      this.cardVisable_ = this.cardVisable;
+        cardVisable: {
+            handler() {
+                this.cardVisable_ = this.cardVisable;
+                if (this.cardVisable_.data) {
+                    if (this.list_.length === 0) {
+                        document.querySelector('.v-card').style.cssText = 'width: 31.91% !important; left: 67.22% !important;'
+                    }
+                    else {
+                        document.querySelector('.v-card').style.cssText = 'width: 38.05% !important; left: 60.28% !important;'
+                    }
+                }
+            }, deep: true
+        },
+        getFeature: function () {
+            this.feature = this.getFeature;
+        },
+        list: {
+            handler() {
+                this.list_ = this.list;
+            }, deep: true
+        },
     },
-    getFeature: function(){
-        this.feature = this.getFeature;
+    methods: mapActions(['deleteFeature']),
+    mounted() {
+        console.log(this.cardVisable_.data);
     }
-  },
-  methods: mapActions(['deleteFeature']),
-
 }
 </script>

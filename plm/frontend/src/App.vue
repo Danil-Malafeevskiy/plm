@@ -57,7 +57,7 @@
       </v-toolbar>
       <v-tabs-items v-model="tab" style="height: 89.7%">
         <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
-          :icon="icon" :getFeature="getFeature" :visableCard="visableCard" :notVisableCard="notVisableCard"
+           :getFeature="getFeature" :visableCard="visableCard" :notVisableCard="notVisableCard"
           :addNewFeature="addNewFeature" :editFeature="editFeature" :list="list"/>
         <v-tab-item>
           <div flat>
@@ -107,17 +107,6 @@ export default {
   watch: {
     getFeature: function () {
       this.feature = this.getFeature;
-    },
-    list: {
-      handler() {
-        // if (this.list.data.length === 0) {
-        //   document.querySelector('.v-main').style.cssText = `padding-left: ${100 - (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920)} !important`;
-        // }
-        // else{
-        //   document.querySelector('.v-main').style.cssText = `padding-left: ${100 - (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920)} !important`;
-        // }
-      },
-      deep: true,
     }, 
   },
   computed: mapGetters(['allFeatures', 'getFeature']),
@@ -148,15 +137,7 @@ export default {
     }
   },
   async mounted() {
-
-    // if (this.list.length === 0) {
-    //   document.querySelector('.v-main').style.cssText = `padding-left: ${100 - (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920)} !important`;
-    // }
-    // else{
-    //   document.querySelector('.v-main').style.cssText = `padding-left: ${100 - (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920)} !important`;
-    // }
     await this.getFeatures();
-    //console.log(this.getFeature)
     this.emptyFeature();
 
   }
@@ -248,7 +229,7 @@ export default {
   margin: 0 !important;
 }
 
-.v-icon--link .v-icon__svg {
+.v-icon--link .v-icon__svg{
   min-width: 133.33px !important;
   min-height: 133.33px !important;
   fill: #FFFFFF !important;
