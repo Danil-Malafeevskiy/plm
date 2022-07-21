@@ -1,22 +1,20 @@
 <template>
-  <div id="object">
-    <p>{{ items.length }} объекта </p>
-    <v-data-table :headers="headers" show-select :items="items"  :items-per-page="14" 
-      class="ma-0 pa-0 elevation-1" 
-      
-      style="
+    <div class="child">
+      <p class="object ma-0">{{ items.length }} объекта </p>
+      <v-data-table :headers="headers" show-select :items="items" :items-per-page="14" class=" pa-0 elevation-1"
+        :expand-icon=icon.mdiAlertOctagon
+        style="
         height: 91.28%;
         width: 50% !important; 
         background-color: #E5E5E5; 
         box-shadow: none !important;
-      "
-    ></v-data-table>
-  </div>
-
+      "></v-data-table>
+    </div>
 </template>
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex';
+import * as icon from '@mdi/js';
 
 
 export default {
@@ -24,9 +22,10 @@ export default {
   data() {
     return {
       features: {
-        features: this.allFeatures
+        features: this.allFeaturesww
       },
       feature: this.getFeature,
+      icon: icon,
       items: [],
       headers: [
         {
@@ -56,11 +55,9 @@ export default {
     ...mapMutations(['emptyFeature', 'updateFeature']),
 
     addItem(){
-      console.log(1)
       this.features.forEach(element => {
         this.items.push(element.properties);
       });
-      console.log(this.items)
     }
   },
 
@@ -79,13 +76,28 @@ export default {
   background-color: #FBDADA !important;
 }
 
-#object{
+.object{
   padding-left: 2% !important;
   padding-top: 1% !important;
+  width: 50%;
+  display: inline-block;
 }
 
 #title{
   font-size: 96px;
+}
+
+.v-window__container {
+  position: relative;
+  display: block !important;
+}
+
+.child{
+  position: absolute; 
+  left:0;
+  right:0;
+  top:0;
+  bottom:0;
 }
 
 #subtitle{

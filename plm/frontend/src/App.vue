@@ -130,6 +130,7 @@ export default {
 }
 </script>
 <style>
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #A9A9A9;
