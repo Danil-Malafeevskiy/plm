@@ -1,7 +1,7 @@
 <template>
     <div class="child">
       <p class="object ma-0">{{ items.length }} объекта </p>
-      <v-data-table :headers="headers" show-select :items="items" :items-per-page="14" class=" pa-0"
+      <v-data-table :headers="headers" show-select :items="items" :items-per-page="11" class=" pa-0"
         style="
         height: 100% !important;
         width: 50% !important; 
@@ -27,14 +27,14 @@ export default {
       items: [],
       headers: [
         {
-          text: 'MAMA',
+          text: 'Номер опоры',
           align: 'start',
           sortable: false,
-          value: 'number_support',
+          value: 'Номер опоры',
         },
-        { text: 'VL', value: 'VL' },
-        { text: 'type_support', value: 'type_support' },
-        { text: 'material', value: 'material' },
+        { text: 'ВЛ', value: 'ВЛ' },
+        { text: 'Тип опоры', value: 'Тип опоры' },
+        { text: 'Материал', value: 'Материал' },
       ],
     }
   },
@@ -63,6 +63,7 @@ export default {
   async mounted() {
     await this.getFeatures();
     await this.emptyFeature();
+    console.log(this.items[1]['ВЛ'])
   }
 
 }

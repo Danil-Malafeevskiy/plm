@@ -2,8 +2,8 @@
     <v-card v-show="cardVisable_.data === true">
         <div class="card__window" v-if="addCardOn_.data">
             <p style="display: none;">{{ feature }}</p>
-            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon"
-                hide-input></v-file-input>
+            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon" hide-input>
+            </v-file-input>
             <div style="overflow-y: scroll; overflow-x: hidden;">
                 <v-card-text class="pa-0">
                     <v-form>
@@ -30,16 +30,17 @@
 
         </div>
         <div class="card__window" v-else-if="infoCardOn_.data">
-            <v-file-input disabled class="pa-0 ma-0" height="37.53%" color="#EE5E5E"
-                :prepend-icon="icon" hide-input></v-file-input>
+            <v-file-input disabled class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon" hide-input>
+            </v-file-input>
             <div style="overflow-y: scroll; overflow-x: hidden;">
                 <v-card-text class="pa-0">
                     <v-form @submit.prevent="onSubmit">
                         <v-row justify="start">
                             <v-col cols="2" sm="6" md="5" lg="6">
-                                <v-card-text class="pa-0" style="font-size: 24px;">{{ feature.properties.name_tap }}
+                                <v-card-text class="pa-0" style="font-size: 24px;">{{ feature.properties['ВЛ'] }}
                                 </v-card-text>
                             </v-col>
+
                             <v-col class="pa-0" cols="2" sm="6" md="5" lg="6">
                                 <v-card-text class="pa-0"
                                     style="font-size: 24px; display: flex; justify-content: flex-end;">
@@ -73,8 +74,8 @@
         </div>
 
         <div class="card__window" v-else-if="editCardOn.data">
-            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon"
-                hide-input></v-file-input>
+            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon" hide-input>
+            </v-file-input>
             <div style="overflow-y: scroll; overflow-x: hidden;">
                 <v-card-text class="pa-0">
                     <v-form @submit.prevent="onSubmit">
@@ -147,6 +148,7 @@ export default {
     methods: mapActions(['deleteFeature']),
     mounted() {
         console.log(this.cardVisable_.data);
+
     }
 }
 </script>
