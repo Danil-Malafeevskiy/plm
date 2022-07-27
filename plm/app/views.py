@@ -2,47 +2,64 @@ import json
 import os
 import sqlite3
 
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import Group
+from django.contrib.sessions.backends.db import SessionStore
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+
+from app.permissions import IsOwner, FileUploadPerm
 from plm import settings
 from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
 
-from rest_framework.parsers import JSONParser, MultiPartParser
+from rest_framework.parsers import MultiPartParser
 
 from app.models import Feature
 from app.serializers import FeatureSerializer, FileSerializer
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+
 
 @api_view(["GET", "POST", "PUT", "DELETE"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated, IsOwner])
 def TowerAPI(request, id=0):
     if request.method == 'GET':
-        feature = Feature.objects.all()
+        feature = Feature.objects.filter(group=request.user.groups.values_list('id', flat=True).first())
         feature_serializer = FeatureSerializer(feature, many=True)
         return Response(feature_serializer.data)
     elif request.method == 'POST':
-        feature_data = JSONParser().parse(request)
-        feature_serializer = FeatureSerializer(data=feature_data, many=True)
+        for obj in request.data:
+            obj['group'] = request.user.groups.values_list('id', flat=True).first()
+        feature_serializer = FeatureSerializer(data=request.data, many=True)
         if feature_serializer.is_valid():
             feature_serializer.save()
             return Response("Success new")
         return Response("Failed new")
     elif request.method == 'PUT':
-        feature_data = JSONParser().parse(request)
-        feature = Feature.objects.get(id=feature_data['id'])
-        feature_serializer = FeatureSerializer(feature, data=feature_data)
+        feature = Feature.objects.get(id=request.data['id'], group=request.user.groups.values_list('id', flat=True).first())
+        feature_serializer = FeatureSerializer(feature, data=request.data)
         if feature_serializer.is_valid():
             feature_serializer.save()
             return Response("Success up")
         return Response("Failed up")
     elif request.method == 'DELETE':
-        feature = Feature.objects.get(id=id)
+        try:
+           feature = Feature.objects.get(id=id, group=request.user.groups.values_list('id', flat=True).first())
+        except Exception:
+            return Response("There is no access to this object!")
         feature.delete()
         return Response("SUCCESS DEL")
 
 class FileUploadView(APIView):
     parser_classes = [MultiPartParser]
     serializer_class = FileSerializer
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated, FileUploadPerm]
+
     fs = FileSystemStorage(location=settings.MEDIA_URL)
+
     def put(self, request):
         self.fs.save(request.FILES['file'].name, request.FILES['file'])
         doc = sqlite3.connect(settings.MEDIA_URL + request.FILES['file'].name)
@@ -74,6 +91,7 @@ class FileUploadView(APIView):
                     continue
 
                 dict_1['properties'][key] = value[key]
+            dict_1['group'] = request.user.groups.values_list('id', flat=True).first()
             lis.append(json.dumps(dict_1))
 
         for i in range(len(lis)):
@@ -84,3 +102,40 @@ class FileUploadView(APIView):
             feature_serializer.save()
             return Response("Success new")
         return Response("Failed new")
+
+class LoginView(APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def post(self, request, format=None):
+        data = request.data
+
+        username = data.get('username', None)
+        password = data.get('password', None)
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            if user.is_active:
+                login(request, user)
+                return Response("Success login")
+            else:
+                return Response("Failed login")
+        else:
+            return Response("Failed login")
+
+class LogoutView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return Response("Success logout")
+
+class GroupView(APIView):
+
+    def get(self, request):
+        group = Group.objects.all()
+        return Response(group.values_list('name', flat=True))
+
+    def post(self, request):
+        new_group, created = Group.objects.get_or_create(name=request.data['name'])
+        return Response("suc")
+
