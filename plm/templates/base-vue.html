@@ -1,12 +1,15 @@
 {% block html%}
 
+
 <!DOCTYPE html>
 <html lang="">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <link rel="icon" href="http://localhost:8080/favicon.ico">
+    <link rel="icon" href="://localhost:8080/favicon.ico">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css" >
     <title>frontend</title>
   <script defer src="http://localhost:8080/js/chunk-vendors.js"></script><script defer src="http://localhost:8080/js/app.js"></script></head>
   <body>
@@ -19,6 +22,14 @@
 
     <!-- built files will be auto injected -->
   </body>
+  <style>
+      @font-face{
+        font-family:"franklin_gothic_condensed";
+        src:url("static/fonts/materialdesignicons-webfont.015e7571.ttf"),
+        url("static/fonts/materialdesignicons-webfont.43f2dfd1.woff2"),
+        url("static/fonts/materialdesignicons-webfont.52fd8e4e.woff");
+    }
+  </style>
 </html>
 
 {% endblock %}

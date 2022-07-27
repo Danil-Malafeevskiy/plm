@@ -12,9 +12,8 @@ import { fromLonLat, toLonLat } from 'ol/proj';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
-import { Overlay } from 'ol';
-import Draw from "ol/interaction/Draw";
-import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
+import { Draw, Modify } from 'ol/interaction';
+import { Circle as CircleStyle, Fill, Style } from 'ol/style';
 import { mapMutations } from 'vuex';
 import 'ol/ol.css';
 
@@ -22,7 +21,7 @@ import 'ol/ol.css';
 export default {
   components: {
   },
-  props: ['allFeatures', 'cord', 'visableCard'],
+  props: ['allFeatures', 'cord', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature'],
   data() {
     return {
       coord: this.cord,
@@ -30,7 +29,7 @@ export default {
         type: 'FeatureCollection',
         features: this.allFeatures,
       },
-      feature_: null,
+      feature: this.getFeature,
       showAdd: false,
       showEdit: false,
       drawType: { data: "Point" },
@@ -40,6 +39,10 @@ export default {
       interactionId: null,
       overlayId: null,
       draw: null,
+      modify: null,
+      addCardOn_: this.addCardOn,
+      infoCardOn_: this.infoCardOn,
+      editCardOn_: this.editCardOn,
     }
   },
   watch: {
@@ -63,101 +66,90 @@ export default {
         this.map.addLayer(this.vectorLayer);
       }
     },
+    getFeature: function () {
+      this.feature = this.getFeature;
+    },
+    addCardOn: {
+      handler() {
+        this.addCardOn_ = this.addCardOn;
+
+        if (this.addCardOn.data) {
+          this.map.removeInteraction(this.draw);
+          this.addInteraction();
+        }
+        else {
+          this.map.removeInteraction(this.draw);
+          this.drawLayer.getSource().refresh();
+          this.map.removeInteraction(this.modify);
+        }
+      },
+      deep: true
+    }
   },
   methods: {
     ...mapMutations(['updateFeature']),
-    edit(feature_, className) {
-      document.querySelector('.add').style.opacity = "0";
-      this.feature_ = feature_;
 
-      if (className === 'add') {
-        this.showAdd = !this.showAdd;
-        this.addInteraction();
-      }
-      else {
-        this.showEdit = !this.showEdit;
-      }
-      document.querySelector('#card').style.display = 'none';
-    },
-
-    close(className) {
-      document.querySelector('.add').style.opacity = "1";
-      this.drawLayer.getSource().refresh();
-      if (className === 'add') {
-        this.showAdd = !this.showAdd;
-      }
-      else {
-        this.showEdit = !this.showEdit;
-      }
-      this.coord.data = [NaN, NaN];
-
-      this.map.removeInteraction(this.draw);
-
-      document.querySelector('#card').style.display = 'block';
-    },
-
-    getFeature(event) {
+    getFeature_(event) {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
         this.coord.data = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
         this.map.removeInteraction(this.draw);
       }
 
       this.coord.data = event.coordinate;
-
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
-      this.feature_ = null;
 
-      if (feature_ != null && !this.showAdd) {
-        this.feature_ = { properties: feature_.getProperties() };
-        this.feature_['id'] = this.feature_.properties.id;
-        this.feature_['type'] = "Feature";
-        this.feature_["geometry"] = {
-          id: this.feature_.id,
+      if (feature_ != null) {
+        this.feature.geometry = {
           type: feature_.getProperties().geometry.getType(),
           coordinates: toLonLat(feature_.getProperties().geometry.getCoordinates())
         };
-        delete this.feature_.properties.geometry;
-        this.updateFeature(this.feature_);
-        this.visableCard();
+        this.feature.properties['Долгота'] = this.feature.geometry.coordinates[1];
+        this.feature.properties['Широта'] = this.feature.geometry.coordinates[0];
+        if (!this.addCardOn_.data) {
+          this.feature.properties = feature_.getProperties();
+          this.feature.id = feature_.id_;
+          delete this.feature.properties.geometry;
+          this.infoCardOn_.data = true;
+          this.visableCard();
+        }
+        this.updateFeature(this.feature);
       }
-      
+      else if (!this.addCardOn_.data) {
+        this.infoCardOn_.data = false;
+        this.editCardOn_.data = false;
+        this.notVisableCard();
+      }
+    },
+
+    changeCoordinates(event) {
+      this.feature.geometry = {
+        coordinates: toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
+      };
+
+      this.feature.properties.shirota = this.feature.geometry.coordinates[1];
+      this.feature.properties.dolgota = this.feature.geometry.coordinates[0];
     },
 
     addInteraction() {
       this.drawLayer.getSource().refresh();
-      if (this.drawType.data != '-') {
-        this.draw = new Draw({
-          source: this.drawLayer.getSource(),
-          type: this.drawType.data,
-        });
+      this.draw = new Draw({
+        source: this.drawLayer.getSource(),
+        type: this.drawType.data,
+      });
 
-        this.map.addInteraction(this.draw);
-        this.interactionId = this.map.getInteractions().getArray().length - 1;
-      }
+      this.map.addInteraction(this.draw);
+      this.map.addInteraction(this.modify);
+      this.interactionId = this.map.getInteractions().getArray().length - 1;
     },
-    interaction() {
-      this.map.removeInteraction(this.draw);
-      this.addInteraction();
-    },
-    clearDrawLayer() {
-      this.drawLayer.getSource().refresh();
-    }
   },
 
-  async mounted() {
+  mounted() {
 
     this.drawLayer = new VectorLayer({
       source: new VectorSource({
         features: []
       }),
       style: new Style({
-        fill: new Fill({
-          color: 'rgba(255, 255, 0, 0.2)',
-        }),
-        stroke: new Stroke({
-          color: '#ff0000',
-          width: 2,
-        }),
         image: new CircleStyle({
           radius: 7,
           fill: new Fill({
@@ -172,31 +164,40 @@ export default {
         features: new GeoJSON().readFeatures(this.features, {
           featureProjection: 'EPSG:3857'
         }),
+      }),
+    });
+
+    this.map = new Map({
+      target: 'map_content',
+      layers: [
+        new TileLayer({
+          source: new OSM()
+        }),
+        this.vectorLayer,
+        this.drawLayer
+      ],
+      view: new View({
+        zoom: 13,
+        center: fromLonLat([54, 56]),
+        constrainResolution: true,
       })
-    }),
+    });
 
-      this.map = new Map({
-        target: 'map_content',
-        layers: [
-          new TileLayer({
-            source: new OSM()
-          }),
-          this.vectorLayer,
-          this.drawLayer
-        ],
-        view: new View({
-          zoom: 13,
-          center: fromLonLat([54, 56]),
-          constrainResolution: true,
-        })
-      });
+    this.modify = new Modify({
+      source: this.drawLayer.getSource(),
+    });
 
-    this.map.addOverlay(new Overlay({
-      element: document.querySelector('#card')
-    }));
-    this.overlayId = this.map.getOverlays().getArray().length - 1;
+    this.modify.on('modifyend', this.changeCoordinates);
 
-    this.map.on('click', this.getFeature);
+    this.map.on('click', this.getFeature_);
+
+    if (this.addCardOn_.data) {
+      this.addInteraction();
+    }
+
+    setTimeout(() => {
+      this.map.updateSize();
+    }, 400);
   }
 }
 </script>

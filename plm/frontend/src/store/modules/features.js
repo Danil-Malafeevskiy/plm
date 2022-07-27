@@ -12,14 +12,13 @@ export default {
         async postFeature(context, feature) {
             const res = await axios.post('/tower', feature).catch(error => console.log(error));
             console.log(res.data);
-            context.commit('updateResultPost', (res.data === 'Success new'));
             context.dispatch('getFeatures');
         },
 
         async putFeature(context, feature) {
             await axios.put('/tower', feature).then((response) => {
                 const feature = response.data;
-                context.commit('updateResultPut', (feature === 'Success up'));
+                console.log(feature);
                 context.dispatch('getFeatures');
             });
         },
@@ -59,10 +58,12 @@ export default {
             }
             delete state.feature.id;
         },
-        updateFeature(state, feature){
-            state.id = feature.id;
-            delete feature.properties.id; 
+        updateFeature(state, feature){ 
             state.feature = feature;
+        },
+        filterForFeature(state, nameType){
+            state.featureNameType = nameType;
+            state.filteredFeature = state.features.filter(r => (` ${r.name}` === state.featureNameType))
         }
     },
     getters: {
@@ -77,13 +78,18 @@ export default {
         },
         getFeature(state) {
             return state.feature;
+        },
+        filterFeature(state){
+            return state.filteredFeature;
+        },
+        featureName(state){
+            return state.featureNameType;
         }
     },
     state: {
         features: [],
-        resultPost: null,
-        resultPut: null,
-        idOfFeature: null,
+        filteredFeature: [],
+        featureNameType: null,
         feature: {
             type: 'Feature',
             properties: {},

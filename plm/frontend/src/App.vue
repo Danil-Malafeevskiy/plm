@@ -1,30 +1,7 @@
 <template>
-  <v-app>
-    <v-navigation-drawer app color="#DDDDDD" permanent :mini-variant-width=55 width="18.96%">
-      <v-list-item>
-        <v-list-item-content>
-          <v-list-item-title>
-            <v-icon left>{{ icon.mdiMenu }}</v-icon>
-            База объектов
-          </v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
-      <v-divider></v-divider>
-
-      <v-list dense nav>
-        <v-list-item v-for="item in items" :key="item.title" link>
-          <v-list-item-icon>
-            <v-icon>{{ item }}</v-icon>
-          </v-list-item-icon>
-
-          <v-list-item-content>
-            <v-list-item-title>{{ item }}</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-
-
+  <v-app style="display: flex">
+    
+    <NavigationDrawer />
     <v-main>
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0;">
         <v-toolbar-title>Your Dashboard</v-toolbar-title>
@@ -32,57 +9,31 @@
         <template v-slot:extension>
 
           <v-tabs v-model="tab" align-with-title color="#E93030">
-            <v-tab v-for="item in items" :key="item">
+            <v-tab v-for="item in items" :key="item" class="ma-0">
               <span>{{ item }}</span>
             </v-tab>
           </v-tabs>
-          <v-btn class="show__card" height="28px" width="80px" depressed color="#EE5E5E" @click="visableCard()">
+          <v-btn class="show__card" height="28px" width="80px" depressed color="#EE5E5E"
+            @click="visableCard(); addCardOn.data = !addCardOn.data; emptyFeature()">
             <v-icon color="white !default" dark>
-              {{ icon.mdiPlus }}
+              mdi-plus
             </v-icon>
           </v-btn>
+
         </template>
       </v-toolbar>
       <v-tabs-items v-model="tab" style="height: 89.7%">
-
-        <v-card v-if="cardVisable.data" width="38.05%">
-
-          <div class="card__window">
-            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon.mdiImagePlusOutline" hide-input></v-file-input>
-            <div style="overflow-y: scroll; overflow-x: hidden;">
-              <v-card-text class="pa-0">
-                <v-form @submit.prevent="onSubmit">
-                  <v-row justify="start">
-                    <v-col cols="2" sm="6" md="5" lg="6">
-                      <v-card-text style="font-size: 24px;">Создание объекта</v-card-text>
-                    </v-col>
-                    <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support" cols="2" sm="6" md="5"
-                      lg="6">
-                      <v-text-field v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
-                        hide-details :label="index" :placeholder="index" filled>
-                      </v-text-field>
-                    </v-col>
-                  </v-row>
-                </v-form>
-              </v-card-text>
-            </div>
-
-            <div class="card__footer">
-              <v-btn color="white" depressed @click="notVisableCard()">ОТМЕНА</v-btn>
-              <v-btn color="white" depressed @click="onSubmit()">Создать</v-btn>
-            </div>
-
-          </div>
-        </v-card>
-
+        <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
+          :getFeature="getFeature" :visableCard="visableCard" :notVisableCard="notVisableCard" />
         <v-tab-item>
           <div flat>
-            <HomePage />
+            <TablePage />
           </div>
         </v-tab-item>
         <v-tab-item>
           <div flat>
-            <MapArea :allFeatures="allFeatures" :cord="cord" :visableCard="visableCard" />
+            <MapArea :allFeatures="allFeatures" :cord="cord" :visableCard="visableCard" :notVisableCard="notVisableCard"
+              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="getFeature" />
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -91,40 +42,52 @@
 </template>
 
 <script>
-import HomePage from './components/HomePage.vue';
+import TablePage from './components/HelpfulFunctions/TablePage.vue';
 import MapArea from './components/Map/MapArea.vue';
-import * as icon from '@mdi/js';
+import CardInfo from './components/HelpfulFunctions/Card.vue';
+import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
-import { toLonLat } from 'ol/proj';
-//import { toLonLat } from 'ol/proj';
 
 export default {
   components: {
-    HomePage,
-    MapArea
-  },
+    TablePage,
+    MapArea,
+    CardInfo,
+    NavigationDrawer,
+},
   data() {
     return {
       tab: null,
+      filteredFeatures: [],
       items: [
-        'СПИСОК', 'КАРТА'
+        'список', 'карта'
       ],
       cardVisable: { data: false },
-      icon: icon,
+      addCardOn: { data: false },
+      infoCardOn: { data: false },
+      editCardOn: { data: false },
       test: null,
       feature: this.getFeature,
-      cord: { data: [NaN, NaN] }
+      cord: { data: [NaN, NaN] },
     }
   },
   watch: {
     getFeature: function () {
       this.feature = this.getFeature;
+    },
+    selectedItem: {
+      handler() {
+        const domItem = document.querySelector('.v-item-group').childNodes[this.selectedItem];
+        if (domItem != undefined) {
+          this.filteredFeatures = this.allFeatures.filter(r => (` ${r.name}` === domItem.childNodes[0].innerText))
+        }
+      },
     }
   },
   computed: mapGetters(['allFeatures', 'getFeature']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature']),
-    ...mapMutations(['emptyFeature', 'emptyFeature']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature']),
+    ...mapMutations(['emptyFeature', 'updateFeature']),
     visableCard() {
       this.cardVisable.data = true;
       let btn = document.querySelector('.v-btn');
@@ -136,21 +99,10 @@ export default {
       let btn = document.querySelector('.v-btn');
       btn.removeAttribute('disabled', false);
       btn.classList.remove('v-btn--disabled');
-    }
+    },
   },
-
-  async onSubmit() {
-    this.feature.geometry = {
-      type: 'Point',
-      coordinates: toLonLat(this.cord.data),
-    }
-    this.feature.properties.shirota = this.feature.geometry.coordinates[1];
-    this.feature.properties.dolgota = this.feature.geometry.coordinates[0];
-    console.log(JSON.stringify([this.feature]));
-    await this.postFeature(JSON.stringify([this.feature]));
-  },
-  async mounted() {
-    await this.getFeatures();
+  mounted() {
+    this.getFeatures();
     this.emptyFeature();
   }
 }
@@ -170,13 +122,54 @@ export default {
   border-radius: 16px;
 }
 
+.v-application--wrap {
+  flex-direction: unset !important;
+}
+
+.v-navigation-drawer--fixed {
+  position: unset !important;
+  z-index: none;
+}
+
+.v-autocomplete {
+  max-width: 65.93% !important;
+  height: 3.57% !important;
+  max-height: 3.57% !important;
+  align-items: center !important;
+  background: #FAFAFA !important;
+  border-radius: 8px !important;
+}
+
+.v-list-item--link {
+  background-color: #FAFAFA;
+}
+
+/* .v-list-item__content{
+  margin: 31.25% 20px;
+} */
+
+/* .v-item--active{
+  background-color: #FDEDED;
+} */
+
+.v-list-item__title {
+  font-size: 20px !important;
+}
+
+.v-label {
+  font-size: 14px !important;
+}
+
+.v-main {
+  padding-left: 0 !important;
+}
+
 .v-tabs-items {
   background-color: #E5E5E5 !important;
 }
 
-.v-main {
-  /* min-width: 81.04% !important; */
-  padding-left: 18.96% !important;
+.v-tabs-slider-wrapper {
+  padding: 0 16px !important;
 }
 
 .v-divider {
@@ -207,7 +200,8 @@ export default {
   align-items: flex-start;
 }
 
-.v-input__icon, .v-icon--link{
+.v-input__icon,
+.v-icon--link {
   min-width: 100% !important;
   height: 100% !important;
   min-height: 100% !important;
@@ -215,24 +209,24 @@ export default {
   align-items: center !important;
 }
 
-.v-icon--link::after{
+.v-icon--link::after {
   background-color: rgba(255, 255, 255, 0) !important;
 }
 
-.v-file-input{
+.v-file-input {
   min-height: 37.53%;
   background-color: #EE5E5E;
   border-radius: 12px 12px 0 0;
 }
 
-.v-input__prepend-outer{
+.v-input__prepend-outer {
   min-width: 100% !important;
   min-height: 100% !important;
   height: 100% !important;
   margin: 0 !important;
 }
 
-.v-icon--link .v-icon__svg{
+.v-icon--link .v-icon__svg {
   min-width: 133.33px !important;
   min-height: 133.33px !important;
   fill: #FFFFFF !important;
