@@ -1,15 +1,17 @@
 <template>
-    <div class="child">
-      <p class="object ma-0">{{ items.length }} объекта </p>
-      <v-data-table :headers="headers" show-select :items="items" :items-per-page="11" class=" pa-0"
-        style="
+  <div class="child">
+    <p class="object ma-0" v-if="items.length % 10 === 1">{{ items.length }} объект </p>
+    <p class="object ma-0" v-else-if="items.length % 10 > 1 && items.length % 10 < 5">{{ items.length }} объекта </p>
+    <p class="object ma-0" v-else>{{ items.length }} объектов </p>
+    <v-data-table :headers="headers" show-select item-key="Номер опоры" :items="items" :items-per-page="10"
+      class="pa-0" style="
         height: 100% !important;
         width: 50% !important; 
         background-color: #E5E5E5; 
         box-shadow: none !important;
         margin-left: 2% !important;;
       "></v-data-table>
-    </div>
+  </div>
 </template>
 
 <script>
@@ -17,7 +19,7 @@ import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 
 export default {
-  name: 'HomePage',
+  name: 'TablePage',
   data() {
     return {
       features: {
@@ -44,45 +46,37 @@ export default {
     },
     allFeatures: function () {
       this.features = this.allFeatures;
-      this.addItem();
     },
-
+    filterFeature: {
+      handler() {
+        this.items = [];
+        this.filterFeature.forEach(element => {
+          this.items.push(element.properties);
+        });
+      }
+    }
   },
-  computed: mapGetters(['allFeatures', 'getFeature']),
+  computed: mapGetters(['allFeatures', 'getFeature', 'filterFeature']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature']),
     ...mapMutations(['emptyFeature', 'updateFeature']),
-
-    addItem(){
-      this.features.forEach(element => {
-        this.items.push(element.properties);
-      });
-    }
   },
-
-  async mounted() {
-    await this.getFeatures();
-    await this.emptyFeature();
-    console.log(this.items[1]['ВЛ'])
-  }
-
 }
 </script>
 
 <style>
-
-.v-data-table__selected{
+.v-data-table__selected {
   background-color: #FBDADA !important;
 }
 
-.object{
+.object {
   padding-left: 2% !important;
   padding-top: 1% !important;
   width: 50%;
   display: inline-block;
 }
 
-#title{
+#title {
   font-size: 96px;
 }
 
@@ -91,31 +85,37 @@ export default {
   display: block !important;
 }
 
-.child{
-  position: absolute; 
-  left:0;
-  right:0;
-  top:0;
-  bottom:0;
+.child {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
 }
 
-#subtitle{
+#subtitle {
   font-size: 32px;
   color: #EF5350;
 }
 
-#container{
+#container {
   opacity: 0;
   animation: ani 1.5s forwards;
-  
+
 }
-.v-data-table__wrapper{
+
+.v-data-table__wrapper {
   overflow-x: hidden !important;
 }
+
 @keyframes ani {
-0% {opacity: 0;}
-100% {opacity: 1;}
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 
 }
-
 </style>

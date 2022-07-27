@@ -13,7 +13,7 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
 import { Draw, Modify } from 'ol/interaction';
-import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
+import { Circle as CircleStyle, Fill, Style } from 'ol/style';
 import { mapMutations } from 'vuex';
 import 'ol/ol.css';
 
@@ -72,7 +72,7 @@ export default {
     addCardOn: {
       handler() {
         this.addCardOn_ = this.addCardOn;
-        
+
         if (this.addCardOn.data) {
           this.map.removeInteraction(this.draw);
           this.addInteraction();
@@ -100,15 +100,14 @@ export default {
 
       if (feature_ != null) {
         this.feature.geometry = {
-          id: feature_.getProperties().id,
           type: feature_.getProperties().geometry.getType(),
           coordinates: toLonLat(feature_.getProperties().geometry.getCoordinates())
         };
-        this.feature.properties.shirota = this.feature.geometry.coordinates[1];
-        this.feature.properties.dolgota = this.feature.geometry.coordinates[0];
+        this.feature.properties['Долгота'] = this.feature.geometry.coordinates[1];
+        this.feature.properties['Широта'] = this.feature.geometry.coordinates[0];
         if (!this.addCardOn_.data) {
           this.feature.properties = feature_.getProperties();
-          this.feature.id = this.feature.properties.id;
+          this.feature.id = feature_.id_;
           delete this.feature.properties.geometry;
           this.infoCardOn_.data = true;
           this.visableCard();
@@ -144,20 +143,13 @@ export default {
     },
   },
 
-  async mounted() {
+  mounted() {
 
     this.drawLayer = new VectorLayer({
       source: new VectorSource({
         features: []
       }),
       style: new Style({
-        fill: new Fill({
-          color: 'rgba(255, 255, 0, 0.2)',
-        }),
-        stroke: new Stroke({
-          color: '#ff0000',
-          width: 2,
-        }),
         image: new CircleStyle({
           radius: 7,
           fill: new Fill({
@@ -172,30 +164,28 @@ export default {
         features: new GeoJSON().readFeatures(this.features, {
           featureProjection: 'EPSG:3857'
         }),
-      })
-    }),
+      }),
+    });
 
-      this.map = new Map({
-        target: 'map_content',
-        layers: [
-          new TileLayer({
-            source: new OSM()
-          }),
-          this.vectorLayer,
-          this.drawLayer
-        ],
-        view: new View({
-          zoom: 13,
-          center: fromLonLat([54, 56]),
-          constrainResolution: true,
-        })
-      });
+    this.map = new Map({
+      target: 'map_content',
+      layers: [
+        new TileLayer({
+          source: new OSM()
+        }),
+        this.vectorLayer,
+        this.drawLayer
+      ],
+      view: new View({
+        zoom: 13,
+        center: fromLonLat([54, 56]),
+        constrainResolution: true,
+      })
+    });
 
     this.modify = new Modify({
       source: this.drawLayer.getSource(),
     });
-
-    //this.modify.on('modifystart', this.changeCoordinates);
 
     this.modify.on('modifyend', this.changeCoordinates);
 

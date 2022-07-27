@@ -57,11 +57,13 @@ export default {
                 }
             }
             delete state.feature.id;
-            delete state.feature.properties.id;
-            delete state.feature.geometry.id;
         },
         updateFeature(state, feature){ 
             state.feature = feature;
+        },
+        filterForFeature(state, nameType){
+            state.featureNameType = nameType;
+            state.filteredFeature = state.features.filter(r => (` ${r.name}` === state.featureNameType))
         }
     },
     getters: {
@@ -76,12 +78,18 @@ export default {
         },
         getFeature(state) {
             return state.feature;
+        },
+        filterFeature(state){
+            return state.filteredFeature;
+        },
+        featureName(state){
+            return state.featureNameType;
         }
     },
     state: {
         features: [],
-        resultPost: null,
-        resultPut: null,
+        filteredFeature: [],
+        featureNameType: null,
         feature: {
             type: 'Feature',
             properties: {},

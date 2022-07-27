@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
-import os.path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,8 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-GDAL_LIBRARY_PATH = r'C:\Users\maxkh\AppData\Local\Programs\Python\Python310\Lib\site-packages\osgeo\gdal304.dll'
-GEOS_LIBRARY_PATH = r'C:\Users\maxkh\AppData\Local\Programs\Python\Python310\Lib\site-packages\osgeo\geos_c.dll'
+GDAL_LIBRARY_PATH = r'C:\Users\ПК\AppData\Local\Programs\Python\Python310\Lib\site-packages\osgeo\gdal304.dll'
+GEOS_LIBRARY_PATH = r'C:\Users\ПК\AppData\Local\Programs\Python\Python310\Lib\site-packages\osgeo\geos_c.dll'
 
 # Application definition
 
@@ -137,10 +136,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static"),
-    '/static/',
-)
+STATICFILES_DIRS = [
+    BASE_DIR.joinpath('static')
+]
 
 MEDIAFILES_DIRS = [
     BASE_DIR.joinpath('media')
@@ -163,10 +161,4 @@ REST_FRAMEWORK = {
     ),
 }
 
-
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-MEDIA_URL = 'media/'
-
 SPATIALITE_LIBRARY_PATH = 'mod_spatialite'
-

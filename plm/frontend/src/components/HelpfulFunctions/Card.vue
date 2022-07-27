@@ -37,7 +37,7 @@
                     <v-form @submit.prevent="onSubmit">
                         <v-row justify="start">
                             <v-col cols="2" sm="6" md="5" lg="6">
-                                <v-card-text class="pa-0" style="font-size: 24px;">{{ feature.properties['ВЛ'] }}
+                                <v-card-text class="pa-0" style="font-size: 24px;">{{ feature.name }}
                                 </v-card-text>
                             </v-col>
 
@@ -104,13 +104,12 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 import { mdiImagePlusOutline } from '@mdi/js'
 
 export default {
     name: 'CardInfo',
-    props: ['cardVisable', 'addCardOn', 'infoCardOn',
-        'editCardOn', 'getFeature', 'visableCard', 'notVisableCard', 'addNewFeature', 'editFeature', 'list'],
+    props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'getFeature', 'visableCard', 'notVisableCard'],
     data() {
         return {
             cardVisable_: this.cardVisable,
@@ -118,7 +117,6 @@ export default {
             infoCardOn_: this.infoCardOn,
             editCardOn_: this.editCardOn,
             feature: this.getFeature,
-            list_: this.list,
             icon: mdiImagePlusOutline,
         }
     },
@@ -127,7 +125,7 @@ export default {
             handler() {
                 this.cardVisable_ = this.cardVisable;
                 if (this.cardVisable_.data) {
-                    if (this.list_.length === 0) {
+                    if (this.filterFeature.length != 0) {
                         document.querySelector('.v-card').style.cssText = 'width: 31.91% !important; left: 67.22% !important;'
                     }
                     else {
@@ -139,16 +137,25 @@ export default {
         getFeature: function () {
             this.feature = this.getFeature;
         },
-        list: {
-            handler() {
-                this.list_ = this.list;
-            }, deep: true
-        },
     },
-    methods: mapActions(['deleteFeature']),
-    mounted() {
-        console.log(this.cardVisable_.data);
-
+    computed: {
+        ...mapGetters(['featureName', 'filterFeature']),
+    },
+    methods: {
+        ...mapActions(['deleteFeature', 'putFeature', 'postFeature']),
+        async addNewFeature() {
+            const featureForPost = this.getFeature;
+            featureForPost.name = this.featureName;
+            console.log(JSON.stringify([featureForPost]));
+            await this.postFeature(JSON.stringify([this.getFeature]));
+            this.addCardOn_.data = !this.addCardOn_.data;
+            this.notVisableCard();
+        },
+        async editFeature() {
+            await this.putFeature(JSON.stringify(this.getFeature));
+            this.editCardOn_.data = !this.editCardOn_.data;
+            this.infoCardOn_.data = !this.infoCardOn_.data;
+        }
     }
 }
 </script>

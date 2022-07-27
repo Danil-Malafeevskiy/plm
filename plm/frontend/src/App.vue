@@ -1,40 +1,7 @@
 <template>
   <v-app style="display: flex">
-    <v-navigation-drawer v-if="list.length != 0" app color="#DDDDDD" permanent
-      style="max-width: 18.96% !important; min-width: 18.96% !important;">
-      <v-list-item>
-        <v-list-item-content>
-          <v-list-item-title>
-            <v-icon left>mdi-menu</v-icon>
-            База объектов
-          </v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
-      <v-divider></v-divider>
-
-      <v-list dense nav>
-        <v-list-item v-for="key in list" :key="key" link>
-          <v-list-item-content>
-            <v-list-item-title>
-              {{ key }}
-            </v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
-
-    </v-navigation-drawer>
-    <v-navigation-drawer v-else app color="#DDDDDD" permanent
-      style="max-width: 2.86% !important; min-width: 2.86% !important;">
-      <v-list-item>
-        <v-list-item-content>
-          <v-list-item-title>
-            <v-icon left>mdi-menu</v-icon>
-            База объектов
-          </v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
-    </v-navigation-drawer>
-
+    
+    <NavigationDrawer />
     <v-main>
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0;">
         <v-toolbar-title>Your Dashboard</v-toolbar-title>
@@ -42,7 +9,7 @@
         <template v-slot:extension>
 
           <v-tabs v-model="tab" align-with-title color="#E93030">
-            <v-tab v-for="item in items" :key="item">
+            <v-tab v-for="item in items" :key="item" class="ma-0">
               <span>{{ item }}</span>
             </v-tab>
           </v-tabs>
@@ -52,16 +19,15 @@
               mdi-plus
             </v-icon>
           </v-btn>
-          
+
         </template>
       </v-toolbar>
       <v-tabs-items v-model="tab" style="height: 89.7%">
         <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
-           :getFeature="getFeature" :visableCard="visableCard" :notVisableCard="notVisableCard"
-          :addNewFeature="addNewFeature" :editFeature="editFeature" :list="list"/>
+          :getFeature="getFeature" :visableCard="visableCard" :notVisableCard="notVisableCard" />
         <v-tab-item>
           <div flat>
-            <HomePage />
+            <TablePage />
           </div>
         </v-tab-item>
         <v-tab-item>
@@ -76,22 +42,23 @@
 </template>
 
 <script>
-import HomePage from './components/HomePage.vue';
+import TablePage from './components/HelpfulFunctions/TablePage.vue';
 import MapArea from './components/Map/MapArea.vue';
-import CardInfo from './components/Map/HelpfulFunctions/Card.vue'
+import CardInfo from './components/HelpfulFunctions/Card.vue';
+import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
-//import { toLonLat } from 'ol/proj';
 
 export default {
   components: {
-    HomePage,
+    TablePage,
     MapArea,
-    CardInfo
-  },
+    CardInfo,
+    NavigationDrawer,
+},
   data() {
     return {
       tab: null,
-      list:  [],
+      filteredFeatures: [],
       items: [
         'список', 'карта'
       ],
@@ -107,7 +74,15 @@ export default {
   watch: {
     getFeature: function () {
       this.feature = this.getFeature;
-    }, 
+    },
+    selectedItem: {
+      handler() {
+        const domItem = document.querySelector('.v-item-group').childNodes[this.selectedItem];
+        if (domItem != undefined) {
+          this.filteredFeatures = this.allFeatures.filter(r => (` ${r.name}` === domItem.childNodes[0].innerText))
+        }
+      },
+    }
   },
   computed: mapGetters(['allFeatures', 'getFeature']),
   methods: {
@@ -125,21 +100,10 @@ export default {
       btn.removeAttribute('disabled', false);
       btn.classList.remove('v-btn--disabled');
     },
-    async addNewFeature() {
-      await this.postFeature(JSON.stringify([this.getFeature]));
-      this.addCardOn.data = !this.addCardOn.data;
-      this.notVisableCard();
-    },
-    async editFeature() {
-      await this.putFeature(JSON.stringify(this.getFeature));
-      this.editCardOn.data = !this.editCardOn.data;
-      this.infoCardOn.data = !this.infoCardOn.data;
-    }
   },
-  async mounted() {
-    await this.getFeatures();
+  mounted() {
+    this.getFeatures();
     this.emptyFeature();
-
   }
 }
 </script>
@@ -167,12 +131,45 @@ export default {
   z-index: none;
 }
 
+.v-autocomplete {
+  max-width: 65.93% !important;
+  height: 3.57% !important;
+  max-height: 3.57% !important;
+  align-items: center !important;
+  background: #FAFAFA !important;
+  border-radius: 8px !important;
+}
+
+.v-list-item--link {
+  background-color: #FAFAFA;
+}
+
+/* .v-list-item__content{
+  margin: 31.25% 20px;
+} */
+
+/* .v-item--active{
+  background-color: #FDEDED;
+} */
+
+.v-list-item__title {
+  font-size: 20px !important;
+}
+
+.v-label {
+  font-size: 14px !important;
+}
+
 .v-main {
   padding-left: 0 !important;
 }
 
 .v-tabs-items {
   background-color: #E5E5E5 !important;
+}
+
+.v-tabs-slider-wrapper {
+  padding: 0 16px !important;
 }
 
 .v-divider {
@@ -229,7 +226,7 @@ export default {
   margin: 0 !important;
 }
 
-.v-icon--link .v-icon__svg{
+.v-icon--link .v-icon__svg {
   min-width: 133.33px !important;
   min-height: 133.33px !important;
   fill: #FFFFFF !important;
