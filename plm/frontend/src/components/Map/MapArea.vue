@@ -14,7 +14,7 @@ import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
 import { Draw, Modify } from 'ol/interaction';
 import { Circle as CircleStyle, Fill, Style } from 'ol/style';
-import { mapMutations } from 'vuex';
+import { mapMutations, mapActions } from 'vuex';
 import 'ol/ol.css';
 
 
@@ -87,9 +87,10 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(['updateFeature']),
+    ...mapMutations(['updateOneFeature']),
+    ...mapActions(['getOneFeature']),
 
-    getFeature_(event) {
+    async getFeature_(event) {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
         this.coord.data = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
         this.map.removeInteraction(this.draw);
@@ -99,20 +100,20 @@ export default {
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
 
       if (feature_ != null) {
-        this.feature.geometry = {
-          type: feature_.getProperties().geometry.getType(),
-          coordinates: toLonLat(feature_.getProperties().geometry.getCoordinates())
-        };
-        this.feature.properties['Долгота'] = this.feature.geometry.coordinates[1];
-        this.feature.properties['Широта'] = this.feature.geometry.coordinates[0];
-        if (!this.addCardOn_.data) {
-          this.feature.properties = feature_.getProperties();
-          this.feature.id = feature_.id_;
-          delete this.feature.properties.geometry;
+        if (this.addCardOn_.data) {
+          this.feature.geometry = {
+            type: feature_.getProperties().geometry.getType(),
+            coordinates: toLonLat(feature_.getProperties().geometry.getCoordinates())
+          };
+          this.feature.properties['Долгота'] = this.feature.geometry.coordinates[1];
+          this.feature.properties['Широта'] = this.feature.geometry.coordinates[0];
+          this.updateOneFeature(this.feature);
+        }
+        else {
+          await this.getOneFeature(feature_.id_);
           this.infoCardOn_.data = true;
           this.visableCard();
         }
-        this.updateFeature(this.feature);
       }
       else if (!this.addCardOn_.data) {
         this.infoCardOn_.data = false;
