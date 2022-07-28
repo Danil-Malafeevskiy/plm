@@ -107,7 +107,11 @@ export default {
   async mounted() {
     await this.getFeatures();
     this.emptyFeature();
-    //document.querySelector('.card_test').classList.toggle('v-card');
+
+
+    this.auth = document.getElementById('auth').innerText;
+
+
   }
 }
 </script>
