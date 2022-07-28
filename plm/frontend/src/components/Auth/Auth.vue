@@ -60,8 +60,7 @@ export default {
     methods:{
         ...mapActions(['postAuth', 'allFeatures']),
         async onSubmit(){
-            await this.postAuth(this.userData)
-            await this.postAuth(this.userData)
+            await this.postAuth(this.userData);
         },
     }
 }

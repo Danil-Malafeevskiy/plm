@@ -24,7 +24,7 @@
       </v-toolbar>
       <v-tabs-items v-model="tab" style="height: 89.7%">
         <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
-          :getFeature="getFeature" :visableCard="visableCard" :notVisableCard="notVisableCard" />
+         :visableCard="visableCard" :notVisableCard="notVisableCard" />
         <v-tab-item>
           <div flat>
             <Auth />
@@ -104,8 +104,8 @@ export default {
       btn.classList.remove('v-btn--disabled');
     },
   },
-  mounted() {
-    this.getFeatures();
+  async mounted() {
+    await this.getFeatures();
     this.emptyFeature();
   }
 }

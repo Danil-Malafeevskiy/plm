@@ -11,9 +11,9 @@
                             <v-col cols="2" sm="6" md="5" lg="6">
                                 <v-card-text style="font-size: 24px; padding: 16px 0;">Создание объекта</v-card-text>
                             </v-col>
-                            <v-col v-for="(f, index) in feature.properties" :key="f.number_support" cols="2" sm="6"
+                            <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support" cols="2" sm="6"
                                 md="5" lg="6">
-                                <v-text-field v-model="feature.properties[index]" :value="feature.properties[index]"
+                                <v-text-field v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
                                     hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
                             </v-col>
@@ -60,10 +60,10 @@
                                     </v-btn>
                                 </v-card-text>
                             </v-col>
-                            <v-col v-for="(f, index) in feature.properties" :key="f.number_support"
+                            <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support"
                                 v-show="index != 'name_tap' && index != 'id'" cols="2" sm="6" md="5" lg="6">
-                                <v-text-field readonly v-model="feature.properties[index]"
-                                    :value="feature.properties[index]" hide-details :label="index" :placeholder="index"
+                                <v-text-field readonly v-model="getFeature.properties[index]"
+                                    :value="getFeature.properties[index]" hide-details :label="index" :placeholder="index"
                                     filled>
                                 </v-text-field>
                             </v-col>
@@ -83,9 +83,9 @@
                             <v-col cols="2" sm="6" md="5" lg="6">
                                 <v-card-text style="font-size: 24px; padding: 16px 0;">Редактирование</v-card-text>
                             </v-col>
-                            <v-col v-for="(f, index) in feature.properties" :key="f.number_support"
+                            <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support"
                                 v-show="index != 'id'" cols="2" sm="6" md="5" lg="6">
-                                <v-text-field v-model="feature.properties[index]" :value="feature.properties[index]"
+                                <v-text-field v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
                                     hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
                             </v-col>
@@ -109,7 +109,7 @@ import { mdiImagePlusOutline } from '@mdi/js'
 
 export default {
     name: 'CardInfo',
-    props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'getFeature', 'visableCard', 'notVisableCard'],
+    props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'visableCard', 'notVisableCard'],
     data() {
         return {
             cardVisable_: this.cardVisable,
@@ -125,43 +125,35 @@ export default {
             handler() {
                 this.cardVisable_ = this.cardVisable;
                 if (this.cardVisable_.data) {
-                    if (this.filterFeature.length != 0) {
-                        document.querySelector('.v-card').style.cssText = 'width: 31.91% !important; left: 67.22% !important;'
+                    if (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920 < 18) {
+                        document.querySelector('.v-card').style.cssText = 'width: 38.05% !important; left: 60.28% !important;';
                     }
                     else {
-                        document.querySelector('.v-card').style.cssText = 'width: 38.05% !important; left: 60.28% !important;'
+                        document.querySelector('.v-card').style.cssText = 'width: 31.91% !important; left: 67.22% !important;';
                     }
                 }
             }, deep: true
         },
-        getFeature: function () {
-            this.feature = this.getFeature;
+        getFeature: function() {
+                this.feature = this.getFeature;
         },
     },
     computed: {
-        ...mapGetters(['featureName', 'filterFeature']),
+        ...mapGetters(['featureName', 'filterFeature', 'getFeature']),
     },
     methods: {
         ...mapActions(['deleteFeature', 'putFeature', 'postFeature']),
         async addNewFeature() {
-            const featureForPost = this.getFeature;
-            featureForPost.name = this.featureName;
-            //console.log(JSON.stringify([featureForPost]));
-            await this.postFeature(JSON.stringify([featureForPost]));
+            this.getFeature.name = this.featureName;
+            await this.postFeature(JSON.stringify([this.getFeature]));
             this.addCardOn_.data = !this.addCardOn_.data;
             this.notVisableCard();
         },
         async editFeature() {
-            const featureForPost = this.getFeature;
-            featureForPost.name = this.featureName;
-            //console.log(JSON.stringify(featureForPost));
-            await this.putFeature(JSON.stringify(featureForPost));
+            await this.putFeature(JSON.stringify(this.getFeature));
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
         }
     },
-    mounted() {
-        console.log(document.querySelector('input').value);
-    }
 }
 </script>
