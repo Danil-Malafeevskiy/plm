@@ -32,7 +32,7 @@
         <div class="card__window" v-else-if="infoCardOn_.data">
             <v-file-input disabled class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon" hide-input>
             </v-file-input>
-            <div style="overflow-y: scroll; overflow-x: hidden;">
+            <div class="card_from_block" style="overflow-y: scroll; overflow-x: hidden;">
                 <v-card-text class="pa-0">
                     <v-form @submit.prevent="onSubmit">
                         <v-row justify="start">
@@ -227,11 +227,16 @@ export default {
 
 .v-file-input {
   min-height: 37.53%;
+  max-height: 37.53%;
   background-color: #EE5E5E;
   border-radius: 12px 12px 0 0;
 }
 
 .row {
   padding: 24px 24px 12px 24px !important;
+}
+
+.card_from_block{
+    height: 100%;
 }
 </style>

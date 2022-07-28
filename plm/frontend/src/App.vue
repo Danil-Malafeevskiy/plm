@@ -28,7 +28,7 @@
         <v-tab-item>
           <div flat>
             <Auth />
-            <TablePage />
+            <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" />
           </div>
         </v-tab-item>
         <v-tab-item>
@@ -107,11 +107,7 @@ export default {
   async mounted() {
     await this.getFeatures();
     this.emptyFeature();
-
-
     this.auth = document.getElementById('auth').innerText;
-
-
   }
 }
 </script>
