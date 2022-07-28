@@ -1,5 +1,5 @@
 <template>
-  <div class="child">
+  <div class="child" v-if="filterFeature.length != 0">
     <p class="object ma-0" v-if="items.length % 10 === 1">{{ items.length }} объект </p>
     <p class="object ma-0" v-else-if="items.length % 10 > 1 && items.length % 10 < 5">{{ items.length }} объекта </p>
     <p class="object ma-0" v-else>{{ items.length }} объектов </p>

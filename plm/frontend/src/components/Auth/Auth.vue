@@ -1,7 +1,7 @@
 <template>
     <div class="text-center">
         <v-dialog v-model="dialog" width="500">
-            <v-card class="gays">
+            <v-card class="gays" style="border-radius: 12px !important">
                 <div class="text-h6" style="text-align: center; padding-top: 2em;">
                     Здраствуйте, Василий!
                 </div>
