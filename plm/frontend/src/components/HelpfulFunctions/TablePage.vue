@@ -3,7 +3,7 @@
     <p class="object ma-0" v-if="items.length % 10 === 1">{{ items.length }} объект </p>
     <p class="object ma-0" v-else-if="items.length % 10 > 1 && items.length % 10 < 5">{{ items.length }} объекта </p>
     <p class="object ma-0" v-else>{{ items.length }} объектов </p>
-    <v-data-table :headers="headers" show-select item-key="Номер опоры" :items="items" :items-per-page="10"
+    <v-data-table @click:row="test" :headers="headers" show-select item-key="Номер опоры" :items="items" :items-per-page="10"
       class="pa-0" style="
         height: 100% !important;
         width: 50% !important; 
@@ -20,6 +20,7 @@ import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 export default {
   name: 'TablePage',
+  props: ['infoCardOn', 'visableCard'],
   data() {
     return {
       features: {
@@ -38,6 +39,7 @@ export default {
         { text: 'Тип опоры', value: 'Тип опоры' },
         { text: 'Материал', value: 'Материал' },
       ],
+      infoCardOn_: this.infoCardOn
     }
   },
   watch: {
@@ -51,15 +53,22 @@ export default {
       handler() {
         this.items = [];
         this.filterFeature.forEach(element => {
-          this.items.push(element.properties);
+          let test = element.properties;
+          test.id = element.id;
+          this.items.push(test);
         });
       }
     }
   },
   computed: mapGetters(['allFeatures', 'getFeature', 'filterFeature']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature']),
+    ...mapActions(['getFeatures', 'postFeature', 'getOneFeature']),
     ...mapMutations(['emptyFeature', 'updateFeature']),
+    async test(obj){
+      await this.getOneFeature(obj.id);
+      this.infoCardOn_.data = true;
+      this.visableCard();
+    }
   },
 }
 </script>
