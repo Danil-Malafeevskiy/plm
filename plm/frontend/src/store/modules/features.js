@@ -1,4 +1,6 @@
 import axios from "axios";
+axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+axios.defaults.xsrfCookieName = "csrftoken";
 
 export default {
     actions: {
@@ -10,13 +12,22 @@ export default {
         },
 
         async postFeature(context, feature) {
-            const res = await axios.post('/tower', feature).catch(error => console.log(error));
-            console.log(res.data);
-            context.dispatch('getFeatures');
+            await axios.post('/tower', feature, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then((response) => {
+                console.log(response.data);
+                context.dispatch('getFeatures');
+            }).catch(error => console.log(error));
         },
 
-        async putFeature(context, feature) {
-            await axios.put('/tower', feature).then((response) => {
+        async putFeature(context, feature, ) {
+            await axios.put('/tower', feature, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then((response) => {
                 const feature = response.data;
                 console.log(feature);
                 context.dispatch('getFeatures');
@@ -58,10 +69,10 @@ export default {
             }
             delete state.feature.id;
         },
-        updateFeature(state, feature){ 
+        updateFeature(state, feature) {
             state.feature = feature;
         },
-        filterForFeature(state, nameType){
+        filterForFeature(state, nameType) {
             state.featureNameType = nameType;
             state.filteredFeature = state.features.filter(r => (` ${r.name}` === state.featureNameType))
         }
@@ -79,10 +90,10 @@ export default {
         getFeature(state) {
             return state.feature;
         },
-        filterFeature(state){
+        filterFeature(state) {
             return state.filteredFeature;
         },
-        featureName(state){
+        featureName(state) {
             return state.featureNameType;
         }
     },

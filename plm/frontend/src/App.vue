@@ -27,6 +27,7 @@
           :getFeature="getFeature" :visableCard="visableCard" :notVisableCard="notVisableCard" />
         <v-tab-item>
           <div flat>
+            <Auth />
             <TablePage />
           </div>
         </v-tab-item>
@@ -46,6 +47,7 @@ import TablePage from './components/HelpfulFunctions/TablePage.vue';
 import MapArea from './components/Map/MapArea.vue';
 import CardInfo from './components/HelpfulFunctions/Card.vue';
 import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue';
+import Auth from './components/Auth/Auth.vue';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 
 export default {
@@ -54,6 +56,7 @@ export default {
     MapArea,
     CardInfo,
     NavigationDrawer,
+    Auth,
 },
   data() {
     return {

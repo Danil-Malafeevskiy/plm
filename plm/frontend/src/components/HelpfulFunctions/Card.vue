@@ -146,16 +146,22 @@ export default {
         async addNewFeature() {
             const featureForPost = this.getFeature;
             featureForPost.name = this.featureName;
-            console.log(JSON.stringify([featureForPost]));
-            await this.postFeature(JSON.stringify([this.getFeature]));
+            //console.log(JSON.stringify([featureForPost]));
+            await this.postFeature(JSON.stringify([featureForPost]));
             this.addCardOn_.data = !this.addCardOn_.data;
             this.notVisableCard();
         },
         async editFeature() {
-            await this.putFeature(JSON.stringify(this.getFeature));
+            const featureForPost = this.getFeature;
+            featureForPost.name = this.featureName;
+            //console.log(JSON.stringify(featureForPost));
+            await this.putFeature(JSON.stringify(featureForPost));
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
         }
+    },
+    mounted() {
+        console.log(document.querySelector('input').value);
     }
 }
 </script>
