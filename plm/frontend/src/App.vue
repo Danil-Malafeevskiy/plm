@@ -107,6 +107,9 @@ export default {
   mounted() {
     this.getFeatures();
     this.emptyFeature();
+
+    this.auth = document.getElementById('auth').innerText;
+
   }
 }
 </script>

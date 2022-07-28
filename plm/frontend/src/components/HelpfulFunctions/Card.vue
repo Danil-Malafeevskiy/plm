@@ -160,8 +160,5 @@ export default {
             this.infoCardOn_.data = !this.infoCardOn_.data;
         }
     },
-    mounted() {
-        console.log(document.querySelector('input').value);
-    }
 }
 </script>
