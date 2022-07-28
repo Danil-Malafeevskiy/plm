@@ -6,6 +6,7 @@
                         Здраствуйте
                     </div>
 
+
                     <v-card-text>
                         <v-form @submit.prevent="onSubmit">
                             <v-row>
@@ -74,10 +75,11 @@ export default {
     },
     methods: {
         ...mapActions(['postAuth', 'allFeatures']),
+
         async onSubmit() {
             await this.postAuth(this.userData)
-            await this.postAuth(this.userData)
             location.reload();
+
         },
     },
     mounted() {
