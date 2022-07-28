@@ -232,6 +232,9 @@ html {
 .v-tabs>*:before {
   max-height: 100% !important;
 }
+
+
+
 </style>
 
 
