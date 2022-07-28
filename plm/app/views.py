@@ -3,10 +3,10 @@ import os
 import sqlite3
 
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import Group
-from django.contrib.sessions.backends.db import SessionStore
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from django.contrib.auth.models import Group, Permission
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from app.permissions import IsOwner, FileUploadPerm
 from plm import settings
@@ -16,20 +16,22 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 
 from app.models import Feature
-from app.serializers import FeatureSerializer, FileSerializer
+from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 
 
-@api_view(["GET", "POST", "PUT", "DELETE"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated, IsOwner])
-def TowerAPI(request, id=0):
-    if request.method == 'GET':
+class TowerAPI(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated, IsOwner]
+
+    def get(self, request):
         feature = Feature.objects.filter(group=request.user.groups.values_list('id', flat=True).first())
         feature_serializer = FeatureSerializer(feature, many=True)
         return Response(feature_serializer.data)
-    elif request.method == 'POST':
+
+    @csrf_exempt
+    def post(self, request):
         for obj in request.data:
             obj['group'] = request.user.groups.values_list('id', flat=True).first()
         feature_serializer = FeatureSerializer(data=request.data, many=True)
@@ -37,14 +39,18 @@ def TowerAPI(request, id=0):
             feature_serializer.save()
             return Response("Success new")
         return Response("Failed new")
-    elif request.method == 'PUT':
+
+    @csrf_exempt
+    def put(self, request):
         feature = Feature.objects.get(id=request.data['id'], group=request.user.groups.values_list('id', flat=True).first())
         feature_serializer = FeatureSerializer(feature, data=request.data)
         if feature_serializer.is_valid():
             feature_serializer.save()
             return Response("Success up")
         return Response("Failed up")
-    elif request.method == 'DELETE':
+
+    @csrf_exempt
+    def delete(self, request, id):
         try:
            feature = Feature.objects.get(id=id, group=request.user.groups.values_list('id', flat=True).first())
         except Exception:
@@ -130,12 +136,44 @@ class LogoutView(APIView):
         return Response("Success logout")
 
 class GroupView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
-        group = Group.objects.all()
-        return Response(group.values_list('name', flat=True))
+        groups = Group.objects.all()
+        group_info = {}
+        group_info_all = []
+        for group in groups:
+            group_info['id'] = group.id
+            group_info['name'] = group.name
+            perm = list(group.permissions.values_list('name', flat=True))
+            group_info['permissions'] = perm
+            group_info['available_permissions'] = [per for per in Permission.objects.all().values_list('name', flat=True) if per not in perm]
+            group_info_all.append(json.dumps(group_info))
+
+        for i in range(len(group_info_all)):
+            group_info_all[i] = json.loads(group_info_all[i])
+
+        return Response(group_info_all)
+
+    '''def get(self, request):
+        groups = Group.objects.all()
+        return  Response(GroupSerializer(groups, many=True).data)'''
+
+    def options(self, request, *args, **kwargs):
+        return Response(Permission.objects.all().values_list('name', flat=True))
 
     def post(self, request):
-        new_group, created = Group.objects.get_or_create(name=request.data['name'])
-        return Response("suc")
+        new_group = Group.objects.create(name=request.data['name'])
+        for perm in request.data['permissions']:
+            new_group.permissions.add(Permission.objects.get(name=perm))
+        return Response("Success new!")
+
+    def put(self, request):
+        change_group = Group.objects.get(id=request.data['id'])
+
+
+
+
+
 
