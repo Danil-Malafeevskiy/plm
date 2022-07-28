@@ -17,7 +17,6 @@ export default{
 
     },
     state:{        
-        features: [],
         userData: {
             username: null,
             password:null

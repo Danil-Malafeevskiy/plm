@@ -1,13 +1,15 @@
 <template>
     <div class="text-center" v-if="auth === 'GUEST'">
-        <v-dialog v-model="dialog" width="500" overlay-color="white" overlay-opacity="0.8" persistent no-click-animation>
-                <v-card class="title">
-                    <div class="text-h6" style="text-align: center; padding-top: 2em;">
-                        Здраствуйте
-                    </div>
+        <v-dialog v-model="dialog" width="500" overlay-color="white" overlay-opacity="0.8" persistent
+            no-click-animation>
+            <v-card class="title">
+                <div class="text-h6" style="text-align: center; padding-top: 2em;">
+                    Здраствуйте
+                </div>
 
 
-                    <v-card-text>
+                <v-card-text>
+                    <validation-observer ref="observer">
                         <v-form @submit.prevent="onSubmit">
                             <v-row>
                                 <v-col cols="2" sm="6" md="5" lg="6">
@@ -17,41 +19,35 @@
                                 </v-col>
 
                                 <v-col cols="2" sm="6" md="5" lg="6">
-                                    <v-text-field
-                                        background-color="#F1F1F1" 
+                                    <v-text-field background-color="#F1F1F1"
                                         :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                                        v-model="userData.password" 
-                                        :rules="[rules.min]"
-                                        hint="Минимум 8 символов"
-                                        placeholder="Пароль" 
-                                        :type="showPassword ? 'text' : 'password'"
-                                        filled
-                                        @click:append="showPassword = !showPassword"
-                                    >
+                                        v-model="userData.password" :rules="[rules.min]" hint="Минимум 8 символов"
+                                        placeholder="Пароль" :type="showPassword ? 'text' : 'password'" filled
+                                        @click:append="showPassword = !showPassword">
                                     </v-text-field>
                                 </v-col>
 
                             </v-row>
                             <div class="pa-0 btn">
-                                <v-btn color="#EE5E5E" type="submit" style="width: 100%; color: white !important;"
-                                    @click="dialog = false">
+                                <v-btn color="#EE5E5E" type="submit" :disabled="invalid"
+                                    style="width: 100%; color: white !important;" @click="dialog = false">
                                     ВОЙТИ
                                 </v-btn>
                             </div>
 
                         </v-form>
 
+                    </validation-observer>
+                </v-card-text>
 
-                    </v-card-text>
 
-
-                </v-card>
+            </v-card>
         </v-dialog>
     </div>
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 export default {
     name: "AuthModal",
     data() {
@@ -73,12 +69,18 @@ export default {
             this.features = this.allFeatures;
         },
     },
+    computed: mapGetters(['resultLogIn']),
     methods: {
         ...mapActions(['postAuth', 'allFeatures']),
 
         async onSubmit() {
-            await this.postAuth(this.userData)
-            location.reload();
+            await this.postAuth(this.userData);
+            if(this.resultLogIn){
+                location.reload();
+            }
+            else{
+                console.log('ошибка');
+            }
 
         },
     },
@@ -117,5 +119,4 @@ export default {
     filter: blur(1px) !important;
     backdrop-filter: blur(4px) !important;
 }
-
 </style>
