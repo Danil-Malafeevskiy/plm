@@ -25,12 +25,14 @@ class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, IsOwner]
 
-    def get(self, request):
-        feature = Feature.objects.filter(group=request.user.groups.values_list('id', flat=True).first())
+    def get(self, request, id=0):
+        if id == 0:
+            feature = Feature.objects.filter(group=request.user.groups.values_list('id', flat=True).first())
+        else:
+            feature = Feature.objects.filter(id=id, group=request.user.groups.values_list('id', flat=True).first())
         feature_serializer = FeatureSerializer(feature, many=True)
         return Response(feature_serializer.data)
 
-    @csrf_exempt
     def post(self, request):
         for obj in request.data:
             obj['group'] = request.user.groups.values_list('id', flat=True).first()
@@ -40,7 +42,6 @@ class TowerAPI(APIView):
             return Response("Success new")
         return Response("Failed new")
 
-    @csrf_exempt
     def put(self, request):
         feature = Feature.objects.get(id=request.data['id'], group=request.user.groups.values_list('id', flat=True).first())
         feature_serializer = FeatureSerializer(feature, data=request.data)
@@ -49,7 +50,6 @@ class TowerAPI(APIView):
             return Response("Success up")
         return Response("Failed up")
 
-    @csrf_exempt
     def delete(self, request, id):
         try:
            feature = Feature.objects.get(id=id, group=request.user.groups.values_list('id', flat=True).first())
