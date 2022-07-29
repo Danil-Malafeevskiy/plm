@@ -28,7 +28,7 @@
         <v-tab-item>
           <div flat>
             <Auth />
-            <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" />
+            <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"/>
           </div>
         </v-tab-item>
         <v-tab-item>
