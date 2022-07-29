@@ -20,7 +20,7 @@ import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 export default {
   name: 'TablePage',
-  props: ['infoCardOn', 'visableCard', 'notVisableCard'],
+  props: ['infoCardOn', 'visableCard', 'notVisableCard', 'addCardOn'],
   data() {
     return {
       features: {
@@ -39,7 +39,8 @@ export default {
         { text: 'Тип опоры', value: 'Тип опоры' },
         { text: 'Материал', value: 'Материал' },
       ],
-      infoCardOn_: this.infoCardOn
+      infoCardOn_: this.infoCardOn,
+      addCardOn_: this.addCardOn,
     }
   },
   watch: {
@@ -65,14 +66,16 @@ export default {
     ...mapActions(['getFeatures', 'postFeature', 'getOneFeature']),
     ...mapMutations(['emptyFeature', 'updateFeature']),
     async test(obj) {
-      if (this.getFeature.id != obj.id || !this.infoCardOn_.data) {
-        await this.getOneFeature(obj.id);
-        this.infoCardOn_.data = true;
-        this.visableCard();
-      }
-      else{
-        this.infoCardOn_.data = false;
-        this.notVisableCard();
+      if (!this.addCardOn.data) {
+        if (this.getFeature.id != obj.id || !this.infoCardOn_.data) {
+          await this.getOneFeature(obj.id);
+          this.infoCardOn_.data = true;
+          this.visableCard();
+        }
+        else {
+          this.infoCardOn_.data = false;
+          this.notVisableCard();
+        }
       }
     }
   },
