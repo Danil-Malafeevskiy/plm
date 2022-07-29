@@ -1,7 +1,7 @@
 <template>
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window" v-if="addCardOn_.data">
-            <p style="display: none;">{{ feature }}</p>
+            <p style="display: none;">{{ getFeature }}</p>
             <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon" hide-input>
             </v-file-input>
             <div style="overflow-y: scroll; overflow-x: hidden;">
@@ -13,9 +13,20 @@
                             </v-col>
                             <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support" cols="2" sm="6"
                                 md="5" lg="6">
-                                <v-text-field v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
+
+                                <v-text-field v-if="typeof (f) === 'number'" type="number"
+                                    v-model.number="getFeature.properties[index]" :value="getFeature.properties[index]"
                                     hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
+                                <v-text-field v-else-if="typeof (f) === 'string'" type="text"
+                                    v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
+                                    hide-details :label="index" :placeholder="index" filled>
+                                </v-text-field>
+                                <v-text-field v-else type="checkbox" v-model="getFeature.properties[index]"
+                                    :value="getFeature.properties[index]" hide-details :label="index"
+                                    :placeholder="index" filled>
+                                </v-text-field>
+
                             </v-col>
                         </v-row>
                     </v-form>
@@ -62,10 +73,20 @@
                             </v-col>
                             <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support"
                                 v-show="index != 'name_tap' && index != 'id'" cols="2" sm="6" md="5" lg="6">
-                                <v-text-field readonly v-model="getFeature.properties[index]"
-                                    :value="getFeature.properties[index]" hide-details :label="index" :placeholder="index"
-                                    filled>
+
+                                <v-text-field v-if="typeof (f) === 'number'" type="number" readonly
+                                    v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
+                                    hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
+                                <v-text-field v-else-if="typeof (f) === 'string'" type="text" readonly
+                                    v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
+                                    hide-details :label="index" :placeholder="index" filled>
+                                </v-text-field>
+                                <v-text-field v-else type="checkbox" v-model="getFeature.properties[index]"
+                                    :value="getFeature.properties[index]" hide-details :label="index"
+                                    :placeholder="index" filled readonly>
+                                </v-text-field>
+
                             </v-col>
                         </v-row>
                     </v-form>
@@ -85,9 +106,20 @@
                             </v-col>
                             <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support"
                                 v-show="index != 'id'" cols="2" sm="6" md="5" lg="6">
-                                <v-text-field v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
+
+                                <v-text-field v-if="typeof (f) === 'number'" type="number"
+                                    v-model.number="getFeature.properties[index]" :value="getFeature.properties[index]"
                                     hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
+                                <v-text-field v-else-if="typeof (f) === 'string'" type="text"
+                                    v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
+                                    hide-details :label="index" :placeholder="index" filled>
+                                </v-text-field>
+                                <v-text-field v-else type="checkbox" v-model="getFeature.properties[index]"
+                                    :value="getFeature.properties[index]" hide-details :label="index"
+                                    :placeholder="index" filled>
+                                </v-text-field>
+
                             </v-col>
                         </v-row>
                     </v-form>
@@ -134,8 +166,8 @@ export default {
                 }
             }, deep: true
         },
-        getFeature: function() {
-                this.feature = this.getFeature;
+        getFeature: function () {
+            this.feature = this.getFeature;
         },
     },
     computed: {
@@ -150,6 +182,8 @@ export default {
             this.notVisableCard();
         },
         async editFeature() {
+            this.getFeature.geometry.coordinates = [this.getFeature.properties['Широта'], this.getFeature.properties['Долгота']];
+            console.log(JSON.stringify(this.getFeature));
             await this.putFeature(JSON.stringify(this.getFeature));
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
@@ -160,83 +194,83 @@ export default {
 
 <style>
 .show__card {
-  margin-right: 8px;
-  border-radius: 8px !important;
+    margin-right: 8px;
+    border-radius: 8px !important;
 }
 
 .v-window__container {
-  min-height: 100%;
+    min-height: 100%;
 }
 
 .card_of_object {
-  z-index: 1 !important;
-  min-height: 92.08% !important;
-  position: absolute !important;
-  left: 60.28% !important;
-  top: 4.19% !important;
-  border-radius: 12px !important;
+    z-index: 1 !important;
+    min-height: 92.08% !important;
+    position: absolute !important;
+    left: 60.28% !important;
+    top: 4.19% !important;
+    border-radius: 12px !important;
 }
 
 .card__info {
-  align-items: center;
+    align-items: center;
 }
 
 .card__footer {
-  align-items: flex-end;
-  display: flex;
-  bottom: 0px;
-  justify-content: flex-end;
-  border-top: 1px solid #E0E0E0;
-  border-radius: 0 0 12px 12px !important;
-  background-color: white;
+    align-items: flex-end;
+    display: flex;
+    bottom: 0px;
+    justify-content: flex-end;
+    border-top: 1px solid #E0E0E0;
+    border-radius: 0 0 12px 12px !important;
+    background-color: white;
 }
 
 .v-icon--link .v-icon__svg {
-  min-width: 133.33px !important;
-  min-height: 133.33px !important;
-  fill: #FFFFFF !important;
+    min-width: 133.33px !important;
+    min-height: 133.33px !important;
+    fill: #FFFFFF !important;
 }
 
 .card__window {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  min-width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border-radius: 12px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    min-width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-radius: 12px;
 }
 
 .card__img {
-  align-items: flex-start;
+    align-items: flex-start;
 }
 
 .v-input__icon,
 .v-icon--link {
-  min-width: 100% !important;
-  height: 100% !important;
-  min-height: 100% !important;
-  justify-content: center !important;
-  align-items: center !important;
+    min-width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 
 .v-icon--link::after {
-  background-color: rgba(255, 255, 255, 0) !important;
+    background-color: rgba(255, 255, 255, 0) !important;
 }
 
 .v-file-input {
-  min-height: 37.53%;
-  max-height: 37.53%;
-  background-color: #EE5E5E;
-  border-radius: 12px 12px 0 0;
+    min-height: 37.53%;
+    max-height: 37.53%;
+    background-color: #EE5E5E;
+    border-radius: 12px 12px 0 0;
 }
 
 .row {
-  padding: 24px 24px 12px 24px !important;
+    padding: 24px 24px 12px 24px !important;
 }
 
-.card_from_block{
+.card_from_block {
     height: 100%;
 }
 </style>

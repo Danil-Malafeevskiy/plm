@@ -82,8 +82,13 @@ export default {
         },
         selectedItem: {
             handler() {
-                const domItem = document.querySelector('.v-item-group').childNodes[this.selectedItem];
-                this.filterForFeature(domItem.childNodes[0].innerText);
+                if (this.selectedItem != null) {
+                    const domItem = document.querySelector('.v-item-group').childNodes[this.selectedItem];
+                    this.filterForFeature(domItem.childNodes[0].innerText);
+                }
+                else{
+                    this.filterForFeature(null);
+                }
             }
         },
     },
@@ -112,7 +117,7 @@ export default {
     height: 28px !important;
 }
 
-.btn_menu i{
+.btn_menu i {
     margin: 0 auto !important;
 }
 </style>
