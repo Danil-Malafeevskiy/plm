@@ -3,8 +3,8 @@
     <p class="object ma-0" v-if="items.length % 10 === 1">{{ items.length }} объект </p>
     <p class="object ma-0" v-else-if="items.length % 10 > 1 && items.length % 10 < 5">{{ items.length }} объекта </p>
     <p class="object ma-0" v-else>{{ items.length }} объектов </p>
-    <v-data-table @click:row="test" :headers="headers" show-select item-key="Номер опоры" :items="items" :items-per-page="10"
-      class="pa-0" style="
+    <v-data-table @click:row="test" :headers="headers" show-select item-key="Номер опоры" :items="items"
+      :items-per-page="10" class="pa-0" style="
         height: 100% !important;
         width: 50% !important; 
         background-color: #E5E5E5; 
@@ -20,7 +20,7 @@ import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 export default {
   name: 'TablePage',
-  props: ['infoCardOn', 'visableCard'],
+  props: ['infoCardOn', 'visableCard', 'notVisableCard'],
   data() {
     return {
       features: {
@@ -64,10 +64,16 @@ export default {
   methods: {
     ...mapActions(['getFeatures', 'postFeature', 'getOneFeature']),
     ...mapMutations(['emptyFeature', 'updateFeature']),
-    async test(obj){
-      await this.getOneFeature(obj.id);
-      this.infoCardOn_.data = true;
-      this.visableCard();
+    async test(obj) {
+      if (this.getFeature.id != obj.id || !this.infoCardOn_.data) {
+        await this.getOneFeature(obj.id);
+        this.infoCardOn_.data = true;
+        this.visableCard();
+      }
+      else{
+        this.infoCardOn_.data = false;
+        this.notVisableCard();
+      }
     }
   },
 }
