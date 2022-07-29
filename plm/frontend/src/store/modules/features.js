@@ -66,10 +66,10 @@ export default {
                         if (key1 != 'id') {
                             if (typeof (state.features[0][key][key1]) === 'string')
                                 state.feature[key][key1] = "";
-                            else if (typeof (state.features[0][key][key1]) === 'number')
-                                state.feature[key][key1] = 1;
                             else if (typeof (state.features[0][key][key1]) === 'boolean')
                                 state.feature[key][key1] = false;
+                            else
+                                state.feature[key][key1] = 1;
                         }
                     }
                 }

@@ -4,7 +4,7 @@
     <NavigationDrawer />
     <v-main>
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0;">
-        <v-toolbar-title>Your Dashboard</v-toolbar-title>
+        <v-toolbar-title>{{featureName}}</v-toolbar-title>
 
         <template v-slot:extension>
 
@@ -87,7 +87,7 @@ export default {
       },
     }
   },
-  computed: mapGetters(['allFeatures', 'getFeature']),
+  computed: mapGetters(['allFeatures', 'getFeature', 'featureName']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature', 'putFeature']),
     ...mapMutations(['emptyFeature', 'updateFeature']),
