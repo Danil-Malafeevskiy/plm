@@ -4,7 +4,7 @@
     <NavigationDrawer />
     <v-main>
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0;">
-        <v-toolbar-title>Your Dashboard</v-toolbar-title>
+        <v-toolbar-title>{{featureName}}</v-toolbar-title>
 
         <template v-slot:extension>
 
@@ -24,11 +24,11 @@
       </v-toolbar>
       <v-tabs-items v-model="tab" style="height: 89.7%">
         <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
-          :getFeature="getFeature" :visableCard="visableCard" :notVisableCard="notVisableCard" />
+         :visableCard="visableCard" :notVisableCard="notVisableCard" />
         <v-tab-item>
           <div flat>
             <Auth />
-            <TablePage />
+            <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard" :addCardOn="addCardOn"/>
           </div>
         </v-tab-item>
         <v-tab-item>
@@ -87,26 +87,27 @@ export default {
       },
     }
   },
-  computed: mapGetters(['allFeatures', 'getFeature']),
+  computed: mapGetters(['allFeatures', 'getFeature', 'featureName']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature', 'putFeature']),
     ...mapMutations(['emptyFeature', 'updateFeature']),
     visableCard() {
       this.cardVisable.data = true;
-      let btn = document.querySelector('.v-btn');
+      let btn = document.querySelector('.show__card');
       btn.setAttribute('disabled', true);
       btn.classList.add('v-btn--disabled');
     },
     notVisableCard() {
       this.cardVisable.data = false;
-      let btn = document.querySelector('.v-btn');
+      let btn = document.querySelector('.show__card');
       btn.removeAttribute('disabled', false);
       btn.classList.remove('v-btn--disabled');
     },
   },
-  mounted() {
-    this.getFeatures();
+  async mounted() {
+    await this.getFeatures();
     this.emptyFeature();
+    this.auth = document.getElementById('auth').innerText;
   }
 }
 </script>
@@ -147,14 +148,6 @@ export default {
   background-color: #FAFAFA;
 }
 
-/* .v-list-item__content{
-  margin: 31.25% 20px;
-} */
-
-/* .v-item--active{
-  background-color: #FDEDED;
-} */
-
 .v-list-item__title {
   font-size: 20px !important;
 }
@@ -188,40 +181,6 @@ export default {
   max-height: 10.3% !important;
 }
 
-.card__window {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  min-width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border-radius: 12px;
-}
-
-.card__img {
-  align-items: flex-start;
-}
-
-.v-input__icon,
-.v-icon--link {
-  min-width: 100% !important;
-  height: 100% !important;
-  min-height: 100% !important;
-  justify-content: center !important;
-  align-items: center !important;
-}
-
-.v-icon--link::after {
-  background-color: rgba(255, 255, 255, 0) !important;
-}
-
-.v-file-input {
-  min-height: 37.53%;
-  background-color: #EE5E5E;
-  border-radius: 12px 12px 0 0;
-}
-
 .v-input__prepend-outer {
   min-width: 100% !important;
   min-height: 100% !important;
@@ -239,20 +198,6 @@ export default {
   padding: 4px 20px !important;
   margin: 16px 24px 16px 0 !important;
   font-size: 14px;
-}
-
-.card__info {
-  align-items: center;
-}
-
-.card__footer {
-  align-items: flex-end;
-  display: flex;
-  bottom: 0px;
-  justify-content: flex-end;
-  border-top: 1px solid #E0E0E0;
-  border-radius: 0 0 12px 12px !important;
-  background-color: white;
 }
 
 .v-toolbar__content {
@@ -274,22 +219,8 @@ html {
   background-color: #E5E5E5;
 }
 
-.show__card {
-  margin-right: 8px;
-  border-radius: 8px !important;
-}
-
 .v-window__container {
   min-height: 100%;
-}
-
-.v-card {
-  z-index: 1 !important;
-  min-height: 92.08% !important;
-  position: absolute !important;
-  left: 60.28% !important;
-  top: 4.19% !important;
-  border-radius: 12px !important;
 }
 
 .v-tabs {
@@ -302,9 +233,8 @@ html {
   max-height: 100% !important;
 }
 
-.row {
-  padding: 24px 24px 12px 24px !important;
-}
+
+
 </style>
 
 

@@ -8,7 +8,14 @@ export default {
             await axios.get('/tower').then((response) => {
                 const features = response.data;
                 context.commit('updateFeatures', features);
-            });
+            }).catch(error => console.log(error));
+        },
+
+        async getOneFeature(context, id){
+            await axios.get(`/tower/${id}`).then((response) => {
+                const feature = response.data;
+                context.commit('updateOneFeature', feature[0]);
+            }).catch(error => console.log(error));
         },
 
         async postFeature(context, feature) {
@@ -31,14 +38,14 @@ export default {
                 const feature = response.data;
                 console.log(feature);
                 context.dispatch('getFeatures');
-            });
+            }).catch(error => console.log(error));
         },
 
         async deleteFeature(context, id) {
             await axios.delete(`/tower/${id}`).then((response) => {
                 const feature = response.data;
                 console.log(feature);
-            });
+            }).catch(error => console.log(error));
             context.dispatch('getFeatures');
         }
     },
@@ -59,17 +66,17 @@ export default {
                         if (key1 != 'id') {
                             if (typeof (state.features[0][key][key1]) === 'string')
                                 state.feature[key][key1] = "";
-                            else if (typeof (state.features[0][key][key1]) === 'number')
-                                state.feature[key][key1] = 1;
                             else if (typeof (state.features[0][key][key1]) === 'boolean')
                                 state.feature[key][key1] = false;
+                            else
+                                state.feature[key][key1] = 1;
                         }
                     }
                 }
             }
             delete state.feature.id;
         },
-        updateFeature(state, feature) {
+        updateOneFeature(state, feature) {
             state.feature = feature;
         },
         filterForFeature(state, nameType) {

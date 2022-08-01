@@ -4,12 +4,18 @@
         <v-list-item>
             <v-list-item-content>
                 <v-list-item-title>
-                    <v-icon left>mdi-menu</v-icon>
+                    <v-btn @click="test = !test" class="ma-0 pa-0 btn_menu" elevation="0" fab>
+                        <v-icon left>mdi-menu</v-icon>
+                    </v-btn>
                     База объектов
                 </v-list-item-title>
             </v-list-item-content>
         </v-list-item>
-
+        <v-card class="card_test" v-if="test">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi saepe dolorem exercitationem nostrum amet.
+            Odio, magnam omnis similique reiciendis alias atque culpa praesentium quis quaerat quas eum officiis,
+            eligendi nihil?
+        </v-card>
 
         <v-list dense nav>
             <p
@@ -61,6 +67,7 @@ export default {
         return {
             selectedItem: null,
             list: [],
+            test: false,
         }
     },
     watch: {
@@ -75,8 +82,13 @@ export default {
         },
         selectedItem: {
             handler() {
-                const domItem = document.querySelector('.v-item-group').childNodes[this.selectedItem];
-                this.filterForFeature(domItem.childNodes[0].innerText);
+                if (this.selectedItem != null) {
+                    const domItem = document.querySelector('.v-item-group').childNodes[this.selectedItem];
+                    this.filterForFeature(domItem.childNodes[0].innerText);
+                }
+                else{
+                    this.filterForFeature(null);
+                }
             }
         },
     },
@@ -84,8 +96,28 @@ export default {
     methods: {
         ...mapMutations(['filterForFeature']),
     },
+    mounted() {
+    }
 }
 </script>
 
 <style>
+.card_test {
+    left: 16px !important;
+    right: 16px !important;
+    top: 50px !important;
+    position: absolute;
+    z-index: 1 !important;
+    border-radius: 12px !important;
+}
+
+.btn_menu {
+    background-color: #DDDDDD !important;
+    width: 28px !important;
+    height: 28px !important;
+}
+
+.btn_menu i {
+    margin: 0 auto !important;
+}
 </style>
