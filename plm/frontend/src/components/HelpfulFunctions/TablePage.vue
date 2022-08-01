@@ -41,6 +41,7 @@ export default {
       ],
       infoCardOn_: this.infoCardOn,
       addCardOn_: this.addCardOn,
+      auth: null,
     }
   },
   watch: {
@@ -78,6 +79,10 @@ export default {
         }
       }
     }
+  },
+  async mounted(){
+    this.auth = document.getElementById('auth').innerText;
+    console.log(this.auth)
   },
 }
 </script>
