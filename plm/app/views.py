@@ -4,7 +4,6 @@ import sqlite3
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import Group, Permission
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
@@ -16,10 +15,8 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 
 from app.models import Feature
-from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer
+from app.serializers import FeatureSerializer, FileSerializer
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
-
 
 class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
@@ -130,6 +127,7 @@ class LoginView(APIView):
             return Response("Failed login")
 
 class LogoutView(APIView):
+    authentication_classes = [SessionAuthentication]
 
     def get(self, request, *args, **kwargs):
         logout(request)
@@ -139,7 +137,7 @@ class GroupView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAdminUser]
 
-    def get(self, request):
+    '''def get(self, request):
         groups = Group.objects.all()
         group_info = {}
         group_info_all = []
@@ -154,16 +152,37 @@ class GroupView(APIView):
         for i in range(len(group_info_all)):
             group_info_all[i] = json.loads(group_info_all[i])
 
-        return Response(group_info_all)
+        return Response(group_info_all)'''
 
-    '''def get(self, request):
-        groups = Group.objects.all()
-        return  Response(GroupSerializer(groups, many=True).data)'''
+    def get(self, request, id=0):
+        group_info = {}
+        if id==0:
+            groups = Group.objects.all()
+            group_info_all = []
+            for group in groups:
+                group_info['id'] = group.id
+                group_info['name'] = group.name
+                group_info_all.append(json.dumps(group_info))
+
+            for i in range(len(group_info_all)):
+                group_info_all[i] = json.loads(group_info_all[i])
+
+            return Response(group_info_all)
+
+        group = Group.objects.get(id=id)
+        group_info['id'] = group.id
+        group_info['name'] = group.name
+        perm = list(group.permissions.values_list('name', flat=True))
+        group_info['permissions'] = perm
+        group_info['available_permissions'] = [per for per in Permission.objects.all().values_list('name', flat=True) if
+                                               per not in perm]
+
+        return Response(group_info)
 
     def options(self, request, *args, **kwargs):
         return Response(Permission.objects.all().values_list('name', flat=True))
 
-    def post(self, request):
+    def post(self, request, format=None):
         new_group = Group.objects.create(name=request.data['name'])
         for perm in request.data['permissions']:
             new_group.permissions.add(Permission.objects.get(name=perm))
@@ -171,9 +190,13 @@ class GroupView(APIView):
 
     def put(self, request):
         change_group = Group.objects.get(id=request.data['id'])
+        change_group.name = request.data['name']
+        change_group.save()
+        change_group.permissions.clear()
+        for perm in request.data['permissions']:
+            change_group.permissions.add(Permission.objects.get(name=perm))
+        return Response("Success up group!")
 
-
-
-
-
-
+    def delete(self, request, id):
+        Group.objects.get(id=id).delete()
+        return Response("SUCCESS DEL GROUP!")

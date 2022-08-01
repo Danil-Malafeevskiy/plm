@@ -1,6 +1,5 @@
 from rest_framework import serializers, authentication
 from rest_framework_gis.serializers import GeometryField
-from django.contrib.auth.models import User, Group
 
 from app.models import Feature
 
@@ -14,8 +13,3 @@ class FeatureSerializer(serializers.ModelSerializer):
 
 class FileSerializer(serializers.Serializer):
     file = serializers.FileField()
-
-class GroupSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Group
-        fields = ('id', 'name')
