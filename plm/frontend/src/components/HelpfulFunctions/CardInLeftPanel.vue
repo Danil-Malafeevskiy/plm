@@ -39,7 +39,7 @@ export default {
     name: 'CardInLeftPanel',
     data() {
         return {
-            selectedItem: 2,
+            selectedItem: null,
         }
     },
     watch: {
@@ -81,7 +81,7 @@ export default {
             this.logOut();
             location.reload();
         },
-    },
+    }
 }
 </script>
 
