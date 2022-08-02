@@ -10,4 +10,5 @@ urlpatterns = [
     re_path(r'^tower/logout$', views.LogoutView.as_view()),
     re_path(r'^group$', views.GroupView.as_view()),
     re_path(r'^group/([0-9]+)$', views.GroupView.as_view()),
+    re_path(r'^user$', views.UserView.as_view()),
 ]
