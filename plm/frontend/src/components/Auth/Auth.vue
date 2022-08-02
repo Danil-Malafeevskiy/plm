@@ -1,5 +1,5 @@
 <template>
-    <div class="text-center" v-if="auth === 'GUEST'">
+    <div class="text-center">
         <v-dialog v-model="dialog" width="500" overlay-color="white" overlay-opacity="0.8" persistent
             no-click-animation style="filter: blur(1px) !important; backdrop-filter: blur(4px) !important;">
             <v-card class="title">
@@ -32,13 +32,8 @@
                                 ВОЙТИ
                             </v-btn>
                         </div>
-
                     </v-form>
-
-
                 </v-card-text>
-
-
             </v-card>
         </v-dialog>
     </div>
@@ -56,7 +51,6 @@ export default {
                 username: null,
                 password: null
             },
-            auth: null,
             rules: {
                 required: value => !!value || 'Обязательное поле',
                 min: v => v.length >= 8 || 'Минимум 8 символов',
@@ -87,7 +81,9 @@ export default {
         },
     },
     mounted() {
-        this.auth = document.getElementById('auth').innerText;
+        setTimeout(() =>{
+            console.log(this.getAuth);
+        }, 1000)
     }
 
 }

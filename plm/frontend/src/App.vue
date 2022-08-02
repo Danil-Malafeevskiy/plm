@@ -1,5 +1,5 @@
 <template>
-  <v-app style="display: flex">
+  <v-app>
     
     <NavigationDrawer />
 
@@ -31,10 +31,9 @@
         <v-tab-item>
           <div flat>
 
-            <Auth />
+            <Auth v-if="getAuth === false"/>
 
-            <TablePage v-if="auth === 'AUTHED'" :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard" :addCardOn="addCardOn"/>
-            <AdminTable v-else-if="auth === 'ADMIN' "/>
+            <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard" :addCardOn="addCardOn"/>
           </div>
         </v-tab-item>
         <v-tab-item>
@@ -54,8 +53,6 @@ import MapArea from './components/Map/MapArea.vue';
 import CardInfo from './components/HelpfulFunctions/Card.vue';
 import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue';
 import Auth from './components/Auth/Auth.vue';
-import AdminTable from './components/Admin/AdminTable.vue';
-
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 
 
@@ -66,7 +63,6 @@ export default {
     CardInfo,
     NavigationDrawer,
     Auth,
-    AdminTable,
 },
   data() {
     return {
@@ -98,9 +94,9 @@ export default {
       },
     }
   },
-  computed: mapGetters(['allFeatures', 'getFeature', 'featureName']),
+  computed: mapGetters(['allFeatures', 'getFeature', 'featureName', 'getAuth']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser']),
     ...mapMutations(['emptyFeature', 'updateFeature']),
     visableCard() {
       this.cardVisable.data = true;
@@ -116,9 +112,9 @@ export default {
     },
   },
   async mounted() {
+    this.getUser();
     await this.getFeatures();
     this.emptyFeature();
-    this.auth = document.getElementById('auth').innerText;
   }
 }
 </script>
