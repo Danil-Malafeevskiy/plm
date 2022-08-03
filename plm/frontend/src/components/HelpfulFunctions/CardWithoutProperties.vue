@@ -11,19 +11,19 @@
                             <v-col cols="2" sm="6" md="5" lg="6">
                                 <v-card-text style="font-size: 24px; padding: 16px 0;">Создание объекта</v-card-text>
                             </v-col>
-                            <v-col v-for="(f, index) in getFeature.properties" :key="f.number_support" cols="2" sm="6"
-                                md="5" lg="6">
+                            <v-col v-for="(f, index) in getFeature" :key="f.id" cols="2" sm="6"
+                                md="5" lg="6" v-show="index != 'id'">
 
                                 <v-text-field v-if="typeof (f) === 'number'" type="number"
-                                    v-model.number="getFeature.properties[index]" :value="getFeature.properties[index]"
+                                    v-model.number="getFeature[index]" :value="getFeature[index]"
                                     hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
                                 <v-text-field v-else-if="typeof (f) === 'string'" type="text"
-                                    v-model="getFeature.properties[index]" :value="getFeature.properties[index]"
+                                    v-model="getFeature[index]" :value="getFeature[index]"
                                     hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
-                                <v-text-field v-else type="checkbox" v-model="getFeature.properties[index]"
-                                    :value="getFeature.properties[index]" hide-details :label="index"
+                                <v-text-field v-else type="checkbox" v-model="getFeature[index]"
+                                    :value="getFeature[index]" hide-details :label="index"
                                     :placeholder="index" filled>
                                 </v-text-field>
 
@@ -71,19 +71,19 @@
                                     </v-btn>
                                 </v-card-text>
                             </v-col>
-                            <v-col v-for="(f, index) in getObjectForCard.properties" :key="f.number_support"
+                            <v-col v-for="(f, index) in getObjectForCard" :key="f.id" 
                                 v-show="index != 'name_tap' && index != 'id'" cols="2" sm="6" md="5" lg="6">
 
                                 <v-text-field v-if="typeof (f) === 'number'" type="number" readonly
-                                    v-model="getObjectForCard.properties[index]" :value="getObjectForCard.properties[index]"
+                                    v-model="getObjectForCard[index]" :value="getObjectForCard[index]"
                                     hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
                                 <v-text-field v-else-if="typeof (f) === 'string'" type="text" readonly
-                                    v-model="getObjectForCard.properties[index]" :value="getObjectForCard.properties[index]"
+                                    v-model="getObjectForCard[index]" :value="getObjectForCard[index]"
                                     hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
-                                <v-text-field v-else type="checkbox" v-model="getObjectForCard.properties[index]"
-                                    :value="getObjectForCard.properties[index]" hide-details :label="index"
+                                <v-text-field v-else type="checkbox" v-model="getObjectForCard[index]"
+                                    :value="getObjectForCard[index]" hide-details :label="index"
                                     :placeholder="index" filled readonly>
                                 </v-text-field>
 
@@ -104,19 +104,19 @@
                             <v-col cols="2" sm="6" md="5" lg="6">
                                 <v-card-text style="font-size: 24px; padding: 16px 0;">Редактирование</v-card-text>
                             </v-col>
-                            <v-col v-for="(f, index) in getObjectForCard.properties" :key="f.number_support"
+                            <v-col v-for="(f, index) in getObjectForCard" :key="f.id"
                                 v-show="index != 'id'" cols="2" sm="6" md="5" lg="6">
 
                                 <v-text-field v-if="typeof (f) === 'number'" type="number"
-                                    v-model.number="getObjectForCard.properties[index]" :value="getObjectForCard.properties[index]"
+                                    v-model.number="getObjectForCard[index]" :value="getObjectForCard[index]"
                                     hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
                                 <v-text-field v-else-if="typeof (f) === 'string'" type="text"
-                                    v-model="getObjectForCard.properties[index]" :value="getObjectForCard.properties[index]"
+                                    v-model="getObjectForCard[index]" :value="getObjectForCard[index]"
                                     hide-details :label="index" :placeholder="index" filled>
                                 </v-text-field>
-                                <v-text-field v-else type="checkbox" v-model="getObjectForCard.properties[index]"
-                                    :value="getObjectForCard.properties[index]" hide-details :label="index"
+                                <v-text-field v-else type="checkbox" v-model="getObjectForCard[index]"
+                                    :value="getObjectForCard[index]" hide-details :label="index"
                                     :placeholder="index" filled>
                                 </v-text-field>
 
@@ -140,7 +140,7 @@ import { mapActions, mapGetters } from 'vuex';
 import { mdiImagePlusOutline } from '@mdi/js'
 
 export default {
-    name: 'CardInfo',
+    name: 'CardWthoutProperties',
     props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'visableCard', 'notVisableCard'],
     data() {
         return {
@@ -182,7 +182,7 @@ export default {
             this.notVisableCard();
         },
         async editFeature() {
-            this.getFeature.geometry.coordinates = [this.getObjectForCard.properties['Широта'], this.getObjectForCard.properties['Долгота']];
+            this.getFeature.geometry.coordinates = [this.getObjectForCard['Широта'], this.getObjectForCard['Долгота']];
             console.log(JSON.stringify(this.getFeature));
             await this.putFeature(JSON.stringify(this.getFeature));
             this.editCardOn_.data = !this.editCardOn_.data;
@@ -192,7 +192,7 @@ export default {
 }
 </script>
 
-<style>
+<!-- <style>
 .show__card {
     margin-right: 8px;
     border-radius: 8px !important;
@@ -273,4 +273,4 @@ export default {
 .card_from_block {
     height: 100%;
 }
-</style>
+</style> -->

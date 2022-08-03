@@ -10,8 +10,8 @@ export default{
         },
         async getGroup({commit}, id){
             await axios.get(`/group/${id}`).then((response) => {
-                console.log(response.data);
-                commit('updateGroup', response.data);
+                //console.log(response.data);
+                commit('updateObjectForCard', response.data);
             })
         }
     },
@@ -19,9 +19,6 @@ export default{
         updateAllGroups(state, groups){
             state.groups = groups;
         },
-        updateGroup(state, group){
-            state.group = group;
-        }
     },
     getters: {
         allGroups(state){
@@ -30,6 +27,5 @@ export default{
     },
     state: {
         groups: [],
-        group: null,
     },
 }
