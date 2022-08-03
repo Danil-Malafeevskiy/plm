@@ -13,14 +13,6 @@
   <script defer src="http://localhost:8080/js/chunk-vendors.js"></script><script defer src="http://localhost:8080/js/app.js"></script></head>
   <body>
 
-            {% if request.user.is_staff %}
-                <p id="auth" style="display: none">ADMIN</p>
-            {% elif request.user.is_authenticated  %}
-                <p id="auth" style="display: none">AUTHED</p>
-            {% else %}
-                <p id="auth" style="display: none">GUEST</p>
-            {% endif %}
-
       {% block body%}
           {{ block.super }}
           {% block content %}

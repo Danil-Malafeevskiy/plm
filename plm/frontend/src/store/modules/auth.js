@@ -6,19 +6,16 @@ export default {
     actions: {
         async postAuth({ commit }, userData) {
             await axios.post('/tower/login', userData).then((response) => {
-                console.log(response.data);
                 commit('updateAuth', response.data === 'Success login');
             });
         },
         async logOut({ commit }) {
             await axios.get('/tower/logout').then((response) => {
-                console.log(response.data);
                 commit('updateAuth', !response.data === 'Success logout')
             })
         },
         async getUser({ commit }){
             await axios.get('/user').then((response) => {
-                console.log(response.data);
                 commit('updateAuth', true);
                 commit('updateUser', response.data);
             }).catch((error) => {

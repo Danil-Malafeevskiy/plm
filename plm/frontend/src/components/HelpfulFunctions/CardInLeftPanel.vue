@@ -17,15 +17,13 @@
                         База объектов
                     </v-list-item-title>
                 </v-list-item>
-                <v-list-item>
+                <v-list-item @click="logOutAndResolve()">
                     <v-list-item-title>
                         {{ user.username }}
                     </v-list-item-title>
-                    <v-btn @click="logOutAndResolve()" elevation="0" fab class="ma-0 pa-0 btn_menu">
-                        <v-list-item-icon>
-                            <v-icon>mdi-logout-variant</v-icon>
-                        </v-list-item-icon>
-                    </v-btn>
+                    <v-list-item-icon>
+                        <v-icon>mdi-logout-variant</v-icon>
+                    </v-list-item-icon>
                 </v-list-item>
             </v-list-item-group>
         </v-list>
@@ -39,36 +37,43 @@ export default {
     name: 'CardInLeftPanel',
     data() {
         return {
-            selectedItem: null,
+            selectedItem: 2,
         }
     },
     watch: {
         selectedItem: {
             async handler() {
                 this.filterForFeature(null);
-
+                let list = [];
                 if (this.selectedItem != null) {
-                    if (this.selectedItem != 3) {
+                    if ((this.selectedItem != 3 && this.user.is_staff) || (this.selectedItem != 0 && this.user.is_active)) {
                         setTimeout(() => {
                             document.querySelector('.text_in_span').innerHTML = document.querySelector('.v-item--active .v-list-item__title').innerText;
                         })
                     }
                     if (this.selectedItem === 0) {
                         await this.getAllGroups();
-                        let list = [];
                         for (let key in this.allGroups) {
                             list.push(this.allGroups[key].name);
                         }
-                        this.updateList(list);
+                        let headers = [
+                            {
+                                text: 'id',
+                                align: 'start',
+                                sortable: false,
+                                value: 'id',
+                            },
+                            { text: 'name', value: 'name' },
+                        ]
+                        this.updateListItem({ headers, items: this.allGroups, nameAction: 'getGroup' });
                     }
                     else if (this.selectedItem === 2) {
-                        let list = [];
                         for (let key in this.allFeatures) {
                             list.push(this.allFeatures[key].name);
                         }
                         list = [...new Set(list)];
-                        this.updateList(list);
                     }
+                    this.updateList(list);
                 }
             }
         }
@@ -76,11 +81,13 @@ export default {
     computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList']),
     methods: {
         ...mapActions(['logOut', 'getAllGroups']),
-        ...mapMutations(['filterForFeature', 'updateList']),
+        ...mapMutations(['filterForFeature', 'updateList', 'updateListItem']),
         logOutAndResolve() {
             this.logOut();
             location.reload();
         },
+    },
+    mounted() {
     }
 }
 </script>
