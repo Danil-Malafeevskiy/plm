@@ -14,8 +14,9 @@ from rest_framework.views import APIView
 
 from rest_framework.parsers import MultiPartParser
 
-from app.models import Feature
-from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, Group_Perm_Serializer, UserSerializer
+from app.models import Feature, Dataset
+from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, Group_Perm_Serializer, UserSerializer, \
+    User_Perm_Serializer, User_Perm_Admin_Serializer, UserRegSerializer, DatasetSerializer
 from rest_framework.response import Response
 
 class TowerAPI(APIView):
@@ -37,7 +38,7 @@ class TowerAPI(APIView):
         if feature_serializer.is_valid():
             feature_serializer.save()
             return Response("Success new")
-        return Response("Failed new")
+        return Response(feature_serializer.errors)
 
     def put(self, request):
         feature = Feature.objects.get(id=request.data['id'], group=request.user.groups.values_list('id', flat=True).first())
@@ -45,7 +46,7 @@ class TowerAPI(APIView):
         if feature_serializer.is_valid():
             feature_serializer.save()
             return Response("Success up")
-        return Response("Failed up")
+        return Response(feature_serializer.errors)
 
     def delete(self, request, id):
         try:
@@ -104,7 +105,7 @@ class FileUploadView(APIView):
         if feature_serializer.is_valid():
             feature_serializer.save()
             return Response("Success new")
-        return Response("Failed new")
+        return Response(feature_serializer.errors)
 
 class LoginView(APIView):
     authentication_classes = [SessionAuthentication]
@@ -122,9 +123,9 @@ class LoginView(APIView):
                 login(request, user)
                 return Response("Success login")
             else:
-                return Response("Failed login")
+                return Response("A user not active.")
         else:
-            return Response("Failed login")
+            return Response("A user with this username and password is not found.")
 
 class LogoutView(APIView):
     authentication_classes = [SessionAuthentication]
@@ -151,24 +152,25 @@ class GroupView(APIView):
         return Response(Permission.objects.all().values_list('name', flat=True))
 
     def post(self, request):
-        group_serializer = Group_Perm_Serializer(data=request.data)
+        group_serializer = GroupSerializer(data=request.data)
         if group_serializer.is_valid():
             new_group = group_serializer.save()
             for perm in request.data['permissions']:
                 new_group.permissions.add(Permission.objects.get(name=perm))
-            return Response("Success new!")
-        return Response("The selected name already exists!")
+            return Response("Success new group!")
+
+        return Response(group_serializer.errors)
 
     def put(self, request):
         change_group = Group.objects.get(id=request.data['id'])
-        group_serializer = Group_Perm_Serializer(change_group, data=request.data)
+        group_serializer = GroupSerializer(change_group, data=request.data)
         if group_serializer.is_valid():
             change_group = group_serializer.save()
             change_group.permissions.clear()
             for perm in request.data['permissions']:
                 change_group.permissions.add(Permission.objects.get(name=perm))
             return Response("Success up group!")
-        return Response("The selected name already exists!")
+        return Response(group_serializer.errors)
 
     def delete(self, request, id):
         Group.objects.get(id=id).delete()
@@ -179,4 +181,78 @@ class UserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response(UserSerializer(request.user).data)
+        return Response(User_Perm_Serializer(request.user).data)
+
+class UserAdminView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, id=0):
+        if id == 0 :
+            user_serializer = UserSerializer(User.objects.all(), many=True)
+            return Response(user_serializer.data)
+
+        user_serializer = User_Perm_Admin_Serializer(User.objects.get(id=id))
+        return Response(user_serializer.data)
+
+    def post(self, request):
+        reg = UserRegSerializer(data=request.data)
+        if reg.is_valid():
+            reg.save()
+            return Response("Success new!")
+        return Response(reg.errors)
+
+    def put(self, request):
+        if 'password' in request.data.keys():
+            user = User.objects.get(username=request.data['username'])
+            user_serializer = UserRegSerializer(user, data=request.data)
+            if user_serializer.is_valid():
+                user_serializer.save()
+                return Response("Success up password!")
+            return Response(user_serializer.errors)
+
+        change_user = User.objects.get(id=request.data['id'])
+        user_serializer = User_Perm_Serializer(change_user, data=request.data)
+        if user_serializer.is_valid():
+            change_user = user_serializer.save()
+            change_user.user_permissions.clear()
+            change_user.groups.clear()
+            for perm in request.data['user_permissions']:
+                change_user.user_permissions.add(Permission.objects.get(name=perm))
+
+            for group in request.data['groups']:
+                change_user.groups.add(Group.objects.get(name=group))
+
+            return Response("Success up group!")
+        return Response(user_serializer.errors)
+
+    def delete(self, request, id):
+        User.objects.get(id=id).delete()
+        return Response("SUCCESS DEL USER!")
+
+class DatasetView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id=0):
+        dataset = Dataset.objects.all()
+        return Response(DatasetSerializer(dataset, many=True).data)
+
+    def post(self, request):
+        dataset_serializer = DatasetSerializer(data=request.data)
+        if dataset_serializer.is_valid():
+            dataset_serializer.save()
+            return Response("Success new dataset!")
+        return Response(dataset_serializer.errors)
+
+    def put(self, request):
+        dataset = Dataset.objects.get(id=request.data['id'])
+        dataset_serializer = DatasetSerializer(dataset, data=request.data)
+        if dataset_serializer.is_valid():
+            dataset_serializer.save()
+            return Response("Success update dataset!")
+        return Response(dataset_serializer.errors)
+
+    def delete(self, request, id):
+        Dataset.objects.get(id=id).delete()
+        return Response("SECCESS DEL Dataset!")

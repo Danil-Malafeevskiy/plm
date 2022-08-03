@@ -11,4 +11,8 @@ urlpatterns = [
     re_path(r'^group$', views.GroupView.as_view()),
     re_path(r'^group/([0-9]+)$', views.GroupView.as_view()),
     re_path(r'^user$', views.UserView.as_view()),
+    re_path(r'^user/admin$',views.UserAdminView.as_view()),
+    re_path(r'^user/admin/([0-9]+)$',views.UserAdminView.as_view()),
+    re_path(r'^dataset$',views.DatasetView.as_view()),
+    re_path(r'^dataset/([0-9]+)$',views.DatasetView.as_view()),
 ]
