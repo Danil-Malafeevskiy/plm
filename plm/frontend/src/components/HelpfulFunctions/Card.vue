@@ -161,7 +161,12 @@ export default {
         ...mapMutations(['updateFunction']),
         async addNewFeature() {
             this.emptyObject.name = this.featureName;
-            await this.postObject(JSON.stringify([this.emptyObject]));
+            if (this.emptyObject.name != null) {
+                await this.postObject(JSON.stringify([this.emptyObject]));
+            }
+            else {
+                await this.postObject(JSON.stringify([this.emptyObject.properties]));
+            }
             this.addCardOn_.data = !this.addCardOn_.data;
             this.notVisableCard();
         },

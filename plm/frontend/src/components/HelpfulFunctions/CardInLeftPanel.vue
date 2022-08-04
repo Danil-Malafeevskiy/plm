@@ -80,6 +80,9 @@ export default {
                                 actionPut: 'putTypeObject',
                                 actionDelete: 'deleteTypeObject',
                             });
+                            if (this.allType != []) {
+                                await this.getTypeObject();
+                            }
                             this.updateListItem({ items: this.allType });
                             this.updateListType([]);
                             this.upadateEmptyObject(object);
@@ -104,7 +107,7 @@ export default {
     methods: {
         ...mapActions(['logOut', 'getAllGroups', 'getTypeObject']),
         ...mapMutations(['filterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
-                         'updateAction', 'updateHeaders', 'updateListType']),
+            'updateAction', 'updateHeaders', 'updateListType']),
         logOutAndResolve() {
             this.logOut();
             location.reload();

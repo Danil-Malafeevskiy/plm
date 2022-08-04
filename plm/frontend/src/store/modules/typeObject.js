@@ -10,7 +10,7 @@ export default {
         },
         async getOneTypeObject({ commit }, id) {
             await axios.get(`/dataset/${id}`).then((response) => {
-                //console.log(response.data);
+                console.log(response.data, 1);
                 commit('updateOneType', response.data);
             });
         },

@@ -60,6 +60,7 @@ export default {
       if (!this.addCardOn.data) {
         if (this.getObjectForCard === null || this.getObjectForCard.id != obj.id || !this.infoCardOn_.data) {
           await this.getOneObject(obj.id);
+          console.log(this.getObjectForCard);
           this.infoCardOn_.data = true;
           this.visableCard();
         }

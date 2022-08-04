@@ -62,11 +62,11 @@ export default {
         this.map.addLayer(this.vectorLayer);
       }
     },
-    getFeature: function(){
+    getFeature: function () {
       this.feature = this.getFeature;
     },
     drawType: {
-      handler(){
+      handler() {
         if (this.addCardOn.data) {
           this.map.removeInteraction(this.draw);
           this.addInteraction();
@@ -100,35 +100,48 @@ export default {
     ...mapMutations(['updateOneFeature']),
     ...mapActions(['getOneFeature']),
 
-    async getFeature_(event) {
+    updateLonLat(cord) {
+      this.feature.properties['Долгота'] = cord[1];
+      this.feature.properties['Широта'] = cord[0];
+    },
+
+    updateCoordinates() {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
         this.map.removeInteraction(this.draw);
-      }
+        this.coord = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
 
-      this.coord.push(toLonLat(event.coordinate));
-      const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
-
-      if (feature_ != null) {
-        if (this.addCardOn_.data) {
-          if(this.drawType === 'Polygon'){
-            this.feature.geometry.coordinates = [this.coord];
+        if (typeof this.coord[0] === 'object') {
+          for (let i in this.coord) {
+            if (typeof this.coord[i][0] === 'object') {
+              for (let j in this.coord[i]) {
+                this.coord[i][j] = toLonLat(this.coord[i][j]);
+                this.updateLonLat(this.coord[0][0]);
+              }
+            }
+            else {
+              this.coord[i] = toLonLat(this.coord[i]);
+            }
           }
-          else if (this.drawType === 'LineString'){
-            this.feature.geometry.coordinates = this.coord;
-          }
-          else{
-            this.feature.geometry.coordinates = this.coord[0];
-          }
-          this.feature.properties['Долгота'] = this.coord[0][1];
-          this.feature.properties['Широта'] = this.coord[0][0];
-          this.feature.type = 'Feature';
-          this.feature.geometry.type = this.drawType;
         }
         else {
-          await this.getOneFeature(feature_.id_);
-          this.infoCardOn_.data = true;
-          this.visableCard();
+          this.coord = toLonLat(this.coord);
+          this.updateLonLat(this.coord);
         }
+        this.feature.geometry.coordinates = this.coord;
+        this.feature.type = 'Feature';
+        this.feature.geometry.type = this.drawType;
+      }
+    },
+
+    async getFeature_(event) {
+      this.updateCoordinates();
+
+      const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
+
+      if (feature_ != null && !this.addCardOn_.data) {
+        await this.getOneFeature(feature_.id_);
+        this.infoCardOn_.data = true;
+        this.visableCard();
       }
       else if (!this.addCardOn_.data) {
         this.infoCardOn_.data = false;
@@ -160,7 +173,7 @@ export default {
     resizeMap() {
       setTimeout(() => {
         this.map.updateSize();
-        if(this.map.getSize()[1] === 0)
+        if (this.map.getSize()[1] === 0)
           this.resizeMap();
       }, 400);
     }
