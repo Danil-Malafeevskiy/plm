@@ -1,8 +1,20 @@
 export default {
     actions: {
-        async getOneObject({dispatch, state}, id){
-            await dispatch(`${state.nameAction}`, id);
-        }
+        async getAllObject({ dispatch, state }) {
+            await dispatch(`${state.actionGet}`);
+        },
+        async getOneObject({ dispatch, state }, id) {
+            await dispatch(`${state.actionOneGet}`, id);
+        },
+        async postObject({ dispatch, state }, object) {
+            await dispatch(`${state.actionPost}`, object)
+        },
+        async putObject({ dispatch, state }, object) {
+            await dispatch(`${state.actionPut}`, object);
+        },
+        async deleteObject({ dispatch, state }, id) {
+            await dispatch(`${state.actionDelete}`, id);
+        },
     },
     mutations: {
         updateList(state, list) {
@@ -10,15 +22,48 @@ export default {
             state.list = list;
         },
         updateListItem(state, data) {
-            state.listItem.headers = data.headers;
-            state.listItem.data = data.items;
-            this.commit('updateFunction', data.nameAction);
+            state.listItem = data.items;
         },
-        updateFunction(state, nameAction) {
-            state.nameAction = nameAction;
+        updateAction(state, nameAction) {
+            state.actionGet = nameAction.actionGet;
+            state.actionPost = nameAction.actionPost;
+            state.actionPut = nameAction.actionPut;
+            state.actionDelete = nameAction.actionDelete;
+            state.actionOneGet = nameAction.actionOneGet;
         },
-        updateObjectForCard(state, object){
+        updateObjectForCard(state, object) {
             state.objectForCard = object;
+        },
+        upadateEmptyObject(state, object) {
+            state.emptyObject = JSON.parse(JSON.stringify(object));
+            delete state.emptyObject.id;
+            this.commit('updateFieldEmptyObject');
+        },
+        updateFieldEmptyObject(state, object = state.emptyObject) {
+            for (let i in object) {
+                if (i != 'headers') {
+                    switch (typeof object[i]) {
+                        case 'string':
+                            object[i] = '';
+                            break;
+                        case 'boolean':
+                            object[i] = false;
+                            break;
+                        case 'object':
+                            this.commit('updateFieldEmptyObject', object[i]);
+                            break;
+                        default:
+                            object[i] = 0;
+                            break;
+                    }
+                }
+            }
+        },
+        updateHeaders(state, headers) {
+            state.headers = headers;
+        },
+        updateDrawType(state, drawType) {
+            state.drawType = drawType;
         }
     },
     getters: {
@@ -28,20 +73,33 @@ export default {
         allListItem(state) {
             return state.listItem;
         },
-        functionGetOneObject(state){
+        functionGetOneObject(state) {
             return state.functionGetOneObject;
         },
-        getObjectForCard(state){
+        getObjectForCard(state) {
             return state.objectForCard;
+        },
+        emptyObject(state) {
+            return state.emptyObject;
+        },
+        headers(state) {
+            return state.headers;
+        },
+        drawType(state) {
+            return state.drawType;
         }
     },
     state: {
         list: [],
-        listItem: {
-            headers: [],
-            data: [],
-        },
-        nameAction: null,
+        listItem: [],
+        actionGet: 'getFeatures',
+        actionOneGet: 'getOneFeature',
+        actionPost: 'postFeature',
+        actionPut: 'putFeature',
+        actionDelete: 'deleteFeature',
         objectForCard: null,
+        emptyObject: {},
+        headers: {},
+        drawType: '',
     },
 }

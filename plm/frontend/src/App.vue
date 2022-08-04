@@ -15,7 +15,7 @@
             </v-tab>
           </v-tabs>
           <v-btn class="show__card" height="28px" width="80px" depressed color="#EE5E5E"
-            @click="visableCard(); addCardOn.data = !addCardOn.data; emptyFeature()">
+            @click="addCardOn.data = !addCardOn.data; visableCard();">
             <v-icon color="white !default" dark>
               mdi-plus
             </v-icon>
@@ -25,10 +25,8 @@
       </v-toolbar>
       <v-tabs-items v-model="tab" style="height: 89.7%">
 
-        <CardInfo v-if="getObjectForCard != null && getObjectForCard.properties != null" :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
+        <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
           :visableCard="visableCard" :notVisableCard="notVisableCard" />
-        <CardWithoutProperties v-else-if="getObjectForCard != null" :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn"
-          :editCardOn="editCardOn" :visableCard="visableCard" :notVisableCard="notVisableCard" />
 
         <v-tab-item>
           <div flat>
@@ -41,8 +39,8 @@
         </v-tab-item>
         <v-tab-item>
           <div flat>
-            <MapArea :allFeatures="allFeatures" :cord="cord" :visableCard="visableCard" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="getFeature" />
+            <MapArea :allFeatures="allFeatures" :visableCard="visableCard" :notVisableCard="notVisableCard"
+              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="emptyObject" />
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -56,7 +54,6 @@ import MapArea from './components/Map/MapArea.vue';
 import CardInfo from './components/HelpfulFunctions/Card.vue';
 import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue';
 import Auth from './components/Auth/Auth.vue';
-import CardWithoutProperties from './components/HelpfulFunctions/CardWithoutProperties.vue';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 
 
@@ -67,7 +64,6 @@ export default {
     CardInfo,
     NavigationDrawer,
     Auth,
-    CardWithoutProperties,
   },
   data() {
     return {
@@ -82,26 +78,17 @@ export default {
       editCardOn: { data: false },
       test: null,
       feature: this.getFeature,
-      cord: { data: [NaN, NaN] },
     }
   },
   watch: {
     getFeature: function () {
       this.feature = this.getFeature;
     },
-    selectedItem: {
-      handler() {
-        const domItem = document.querySelector('.v-item-group').childNodes[this.selectedItem];
-        if (domItem != undefined) {
-          this.filteredFeatures = this.allFeatures.filter(r => (` ${r.name}` === domItem.childNodes[0].innerText))
-        }
-      },
-    }
   },
-  computed: mapGetters(['allFeatures', 'getFeature', 'featureName', 'getAuth', 'getObjectForCard']),
+  computed: mapGetters(['allFeatures', 'getFeature', 'featureName', 'getAuth', 'getObjectForCard', 'emptyObject']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser']),
-    ...mapMutations(['emptyFeature', 'updateFeature', 'updateList']),
+    ...mapMutations(['updateFeature', 'updateList']),
     visableCard() {
       this.cardVisable.data = true;
       let btn = document.querySelector('.show__card');
@@ -115,16 +102,9 @@ export default {
       btn.classList.remove('v-btn--disabled');
     },
   },
-  async mounted() {
+  mounted() {
     this.getUser();
-    await this.getFeatures();
-    this.emptyFeature();
-    let list = [];
-    for (let key in this.allFeatures) {
-      list.push(this.allFeatures[key].name);
-    }
-    list = [...new Set(list)];
-    this.updateList(list);
+    this.getFeatures();
   }
 }
 </script>

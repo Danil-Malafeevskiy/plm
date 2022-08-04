@@ -6,8 +6,7 @@ export default {
     actions: {
         async getFeatures({ commit, state }) {
             await axios.get('/tower').then((response) => {
-                const features = response.data;
-                commit('updateFeatures', features);
+                commit('updateFeatures', response.data);
                 if (state.featureNameType != null) {
                     commit('filterForFeature');
                 }
@@ -16,8 +15,7 @@ export default {
 
         async getOneFeature({ commit }, id) {
             await axios.get(`/tower/${id}`).then((response) => {
-                const feature = response.data;
-                commit('updateObjectForCard', feature[0]);
+                commit('updateObjectForCard', response.data[0]);
             }).catch(error => console.log(error));
         },
 
@@ -62,44 +60,19 @@ export default {
         updateResultPut(state, bool) {
             state.resultPut = bool;
         },
-        emptyFeature(state) {
-            for (let key in state.features[0]) {
-                if (key === 'properties') {
-                    for (let key1 in state.features[0][key]) {
-                        if (key1 != 'id') {
-                            if (typeof (state.features[0][key][key1]) === 'string')
-                                state.feature[key][key1] = "";
-                            else if (typeof (state.features[0][key][key1]) === 'boolean')
-                                state.feature[key][key1] = false;
-                            else
-                                state.feature[key][key1] = 1;
-                        }
-                    }
-                }
-            }
-            delete state.feature.id;
-        },
         filterForFeature(state, nameType = state.featureNameType) {
             state.featureNameType = nameType;
-            state.filteredFeature = state.features.filter(r => (` ${r.name}` === state.featureNameType));
-            let headers = [
-                {
-                    text: 'Номер опоры',
-                    align: 'start',
-                    sortable: false,
-                    value: 'Номер опоры',
-                },
-                { text: 'ВЛ', value: 'ВЛ' },
-                { text: 'Тип опоры', value: 'Тип опоры' },
-                { text: 'Материал', value: 'Материал' },
-            ];
+            state.filteredFeature = state.features.filter(r => (`${r.name}` === state.featureNameType));
             let items = [];
             state.filteredFeature.forEach(element => {
-                let test = element.properties;
-                test.id = element.id;
-                items.push(test);
+                let item = JSON.parse(JSON.stringify(element.properties));
+                item.id = element.id;
+                items.push(item);
             });
-            this.commit('updateListItem', {items, headers, nameAction: 'getOneFeature'}, { root:true });
+            this.commit('updateListItem', { items }, { root: true });
+        },
+        updateFeatureNameType(state, nameType){
+            state.featureNameType = nameType;
         }
     },
     getters: {
@@ -125,7 +98,7 @@ export default {
         featureNameType: null,
         feature: {
             type: 'Feature',
-            properties: {},
+            keyerties: {},
             geometry: {},
         },
     },
