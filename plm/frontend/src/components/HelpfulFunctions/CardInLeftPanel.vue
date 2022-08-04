@@ -21,10 +21,8 @@
                     <v-list-item-title>
                         {{ user.username }}
                     </v-list-item-title>
-                    <v-btn @click="logOutAndResolve()" elevation="0" fab class="ma-0 pa-0 btn_menu">
-                        <v-list-item-icon>
-                            <v-icon>mdi-logout-variant</v-icon>
-                        </v-list-item-icon>
+                    <v-btn elevation="0" class="ma-0 pa-0 btn_menu" icon fab depressed retain-focus-on-click plain >
+                        <v-icon @click="logOutAndResolve()">mdi-logout-variant</v-icon>
                     </v-btn>
                 </v-list-item>
             </v-list-item-group>
@@ -86,12 +84,25 @@ export default {
 </script>
 
 <style>
+.btn_menu {
+    background-color: #DDDDDD !important;
+    width: 28px !important;
+    height: 28px !important;
+}
+
+.btn_menu i {
+    margin: 0 auto !important;
+}
+
 .card_test {
+    font-size: 16px !important;
     left: 16px !important;
     right: 16px !important;
     top: 50px !important;
     position: fixed;
     z-index: 1 !important;
-    border-radius: 12px !important;
-}
+    border-radius: 4px !important;
+    box-shadow: 0px 8px 10px rgba(0, 0, 0, 0.14), 0px 3px 14px rgba(0, 0, 0, 0.12), 0px 5px 5px rgba(0, 0, 0, 0.2);
+    }
+
 </style>
