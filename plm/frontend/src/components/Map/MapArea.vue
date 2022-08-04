@@ -13,24 +13,22 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
 import { Draw, Modify } from 'ol/interaction';
-import { Circle as CircleStyle, Fill, Style } from 'ol/style';
-import { mapMutations, mapActions } from 'vuex';
+import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 
 
 export default {
   components: {
   },
-  props: ['allFeatures', 'cord', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature'],
+  props: ['allFeatures', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature'],
   data() {
     return {
-      coord: this.cord,
+      coord: [],
       features: {
         type: 'FeatureCollection',
         features: this.allFeatures,
       },
       feature: this.getFeature,
-      drawType: { data: "Point" },
       vectorLayer: null,
       map: null,
       drawLayer: null,
@@ -67,6 +65,19 @@ export default {
     getFeature: function () {
       this.feature = this.getFeature;
     },
+    drawType: {
+      handler() {
+        if (this.addCardOn.data) {
+          this.map.removeInteraction(this.draw);
+          this.addInteraction();
+        }
+        else {
+          this.map.removeInteraction(this.draw);
+          this.drawLayer.getSource().refresh();
+          this.map.removeInteraction(this.modify);
+        }
+      }
+    },
     addCardOn: {
       handler() {
         this.addCardOn_ = this.addCardOn;
@@ -84,34 +95,53 @@ export default {
       deep: true
     }
   },
+  computed: mapGetters(['drawType']),
   methods: {
     ...mapMutations(['updateOneFeature']),
     ...mapActions(['getOneFeature']),
 
-    async getFeature_(event) {
+    updateLonLat(cord) {
+      this.feature.properties['Долгота'] = cord[1];
+      this.feature.properties['Широта'] = cord[0];
+    },
+
+    updateCoordinates() {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
-        this.coord.data = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
         this.map.removeInteraction(this.draw);
-      }
+        this.coord = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
 
-      this.coord.data = event.coordinate;
-      const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
-
-      if (feature_ != null) {
-        if (this.addCardOn_.data) {
-          this.feature.geometry = {
-            type: feature_.getProperties().geometry.getType(),
-            coordinates: toLonLat(feature_.getProperties().geometry.getCoordinates())
-          };
-          this.feature.properties['Долгота'] = this.feature.geometry.coordinates[1];
-          this.feature.properties['Широта'] = this.feature.geometry.coordinates[0];
-          this.updateOneFeature(this.feature);
+        if (typeof this.coord[0] === 'object') {
+          for (let i in this.coord) {
+            if (typeof this.coord[i][0] === 'object') {
+              for (let j in this.coord[i]) {
+                this.coord[i][j] = toLonLat(this.coord[i][j]);
+                this.updateLonLat(this.coord[0][0]);
+              }
+            }
+            else {
+              this.coord[i] = toLonLat(this.coord[i]);
+            }
+          }
         }
         else {
-          await this.getOneFeature(feature_.id_);
-          this.infoCardOn_.data = true;
-          this.visableCard();
+          this.coord = toLonLat(this.coord);
+          this.updateLonLat(this.coord);
         }
+        this.feature.geometry.coordinates = this.coord;
+        this.feature.type = 'Feature';
+        this.feature.geometry.type = this.drawType;
+      }
+    },
+
+    async getFeature_(event) {
+      this.updateCoordinates();
+
+      const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
+
+      if (feature_ != null && !this.addCardOn_.data) {
+        await this.getOneFeature(feature_.id_);
+        this.infoCardOn_.data = true;
+        this.visableCard();
       }
       else if (!this.addCardOn_.data) {
         this.infoCardOn_.data = false;
@@ -125,15 +155,15 @@ export default {
         coordinates: toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
       };
 
-      this.feature.properties.shirota = this.feature.geometry.coordinates[1];
-      this.feature.properties.dolgota = this.feature.geometry.coordinates[0];
+      this.feature.properties['Широта'] = this.feature.geometry.coordinates[1];
+      this.feature.properties['Долгота'] = this.feature.geometry.coordinates[0];
     },
 
     addInteraction() {
       this.drawLayer.getSource().refresh();
       this.draw = new Draw({
         source: this.drawLayer.getSource(),
-        type: this.drawType.data,
+        type: this.drawType,
       });
 
       this.map.addInteraction(this.draw);
@@ -143,7 +173,7 @@ export default {
     resizeMap() {
       setTimeout(() => {
         this.map.updateSize();
-        if(this.map.getSize()[1] === 0)
+        if (this.map.getSize()[1] === 0)
           this.resizeMap();
       }, 400);
     }
@@ -154,14 +184,6 @@ export default {
     this.drawLayer = new VectorLayer({
       source: new VectorSource({
         features: []
-      }),
-      style: new Style({
-        image: new CircleStyle({
-          radius: 7,
-          fill: new Fill({
-            color: '#ff0000',
-          }),
-        }),
       }),
     });
 

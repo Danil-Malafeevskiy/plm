@@ -44,44 +44,70 @@ export default {
         selectedItem: {
             async handler() {
                 this.filterForFeature(null);
-                let list = [];
                 if (this.selectedItem != null) {
                     if ((this.selectedItem != 3 && this.user.is_staff) || (this.selectedItem != 0 && this.user.is_active)) {
                         setTimeout(() => {
                             document.querySelector('.text_in_span').innerHTML = document.querySelector('.v-item--active .v-list-item__title').innerText;
                         })
                     }
-                    if (this.selectedItem === 0) {
-                        await this.getAllGroups();
-                        for (let key in this.allGroups) {
-                            list.push(this.allGroups[key].name);
+                    switch (this.selectedItem) {
+                        case 0:
+                            break;
+                        case 1: {
+                            let object = {
+                                properties: {
+                                    name: '',
+                                    type: '',
+                                }
+                            }
+                            let headers = [
+                                {
+                                    "text": "name",
+                                    "align": "start",
+                                    "value": "name",
+                                    "sortable": false
+                                },
+                                {
+                                    "text": "type",
+                                    "value": "type"
+                                }
+                            ];
+                            this.updateHeaders(headers);
+                            this.updateAction({
+                                actionGet: 'getTypeObject',
+                                actionPost: 'postTypeObject',
+                                actionOneGet: 'getOneTypeObject',
+                                actionPut: 'putTypeObject',
+                                actionDelete: 'deleteTypeObject',
+                            });
+                            if (this.allType != []) {
+                                await this.getTypeObject();
+                            }
+                            this.updateListItem({ items: this.allType });
+                            this.updateListType([]);
+                            this.upadateEmptyObject(object);
+                            break;
                         }
-                        let headers = [
-                            {
-                                text: 'id',
-                                align: 'start',
-                                sortable: false,
-                                value: 'id',
-                            },
-                            { text: 'name', value: 'name' },
-                        ]
-                        this.updateListItem({ headers, items: this.allGroups, nameAction: 'getGroup' });
+                        case 2:
+                            this.getTypeObject();
+                            this.updateAction({
+                                actionGet: 'getFeatures',
+                                actionOneGet: 'getOneFeature',
+                                actionPost: 'postFeature',
+                                actionPut: 'putFeature',
+                                actionDelete: 'deleteFeature',
+                            });
+                            break;
                     }
-                    else if (this.selectedItem === 2) {
-                        for (let key in this.allFeatures) {
-                            list.push(this.allFeatures[key].name);
-                        }
-                        list = [...new Set(list)];
-                    }
-                    this.updateList(list);
                 }
             }
         }
     },
-    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList']),
+    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType']),
     methods: {
-        ...mapActions(['logOut', 'getAllGroups']),
-        ...mapMutations(['filterForFeature', 'updateList', 'updateListItem']),
+        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject']),
+        ...mapMutations(['filterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
+            'updateAction', 'updateHeaders', 'updateListType']),
         logOutAndResolve() {
             this.logOut();
             location.reload();
