@@ -38,8 +38,10 @@
 
 
             </p>
-            <v-list-item-group class="object__data" v-model="selectedTypeNameFeature" color="#E93030">
-                <v-list-item v-for="key in getList" :key="key" link class="test">
+
+            <v-list-item-group class="object__data" v-model="selectedItem" color="#E93030">
+                <v-list-item v-for="key in getList" :key="key" link>
+
 
                     <v-list-item-title>
                         <v-list-item-icon v-if="key === 'Tower_1'">
@@ -79,17 +81,23 @@ export default {
         };
     },
     watch: {
-        selectedTypeNameFeature: {
+        selectedItem: {
             handler() {
-                if (this.selectedTypeNameFeature != null) {
-                    const domItem = document.querySelector(".object__data").childNodes[this.selectedTypeNameFeature];
+                if (this.selectedItem != null) {
+                    const domItem = document.querySelector(".object__data").childNodes[this.selectedItem];
                     this.filterForFeature(domItem.childNodes[0].innerText);
                 }
-                else {
-                    this.filterForFeature(null);
-                }
+                // else {
+                //     this.filterForFeature(null);
+                // }
             }
         },
+
+        getList: {
+            handler(){
+                this.selectedItem = null;
+            }
+        }
 
     },
     computed: { ...mapGetters(["allFeatures", 'getList', 'allGroups']) },

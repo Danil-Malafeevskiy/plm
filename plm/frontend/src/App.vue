@@ -1,11 +1,11 @@
 <template>
   <v-app>
-    
+
     <NavigationDrawer />
 
     <v-main>
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0;">
-        <v-toolbar-title>{{featureName}}</v-toolbar-title>
+        <v-toolbar-title>{{ featureName }}</v-toolbar-title>
 
         <template v-slot:extension>
 
@@ -25,15 +25,18 @@
       </v-toolbar>
       <v-tabs-items v-model="tab" style="height: 89.7%">
 
-        <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
-         :visableCard="visableCard" :notVisableCard="notVisableCard" />
+        <CardInfo v-if="getObjectForCard != null && getObjectForCard.properties != null" :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
+          :visableCard="visableCard" :notVisableCard="notVisableCard" />
+        <CardWithoutProperties v-else-if="getObjectForCard != null" :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn"
+          :editCardOn="editCardOn" :visableCard="visableCard" :notVisableCard="notVisableCard" />
 
         <v-tab-item>
           <div flat>
 
-            <Auth v-if="getAuth === false"/>
+            <Auth v-if="getAuth === false" />
 
-            <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard" :addCardOn="addCardOn"/>
+            <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
+              :addCardOn="addCardOn" />
           </div>
         </v-tab-item>
         <v-tab-item>
@@ -53,6 +56,7 @@ import MapArea from './components/Map/MapArea.vue';
 import CardInfo from './components/HelpfulFunctions/Card.vue';
 import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue';
 import Auth from './components/Auth/Auth.vue';
+import CardWithoutProperties from './components/HelpfulFunctions/CardWithoutProperties.vue';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 
 
@@ -63,7 +67,8 @@ export default {
     CardInfo,
     NavigationDrawer,
     Auth,
-},
+    CardWithoutProperties,
+  },
   data() {
     return {
       tab: null,
@@ -76,7 +81,6 @@ export default {
       infoCardOn: { data: false },
       editCardOn: { data: false },
       test: null,
-      auth: null,
       feature: this.getFeature,
       cord: { data: [NaN, NaN] },
     }
@@ -94,10 +98,10 @@ export default {
       },
     }
   },
-  computed: mapGetters(['allFeatures', 'getFeature', 'featureName', 'getAuth']),
+  computed: mapGetters(['allFeatures', 'getFeature', 'featureName', 'getAuth', 'getObjectForCard']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser']),
-    ...mapMutations(['emptyFeature', 'updateFeature']),
+    ...mapMutations(['emptyFeature', 'updateFeature', 'updateList']),
     visableCard() {
       this.cardVisable.data = true;
       let btn = document.querySelector('.show__card');
@@ -115,6 +119,12 @@ export default {
     this.getUser();
     await this.getFeatures();
     this.emptyFeature();
+    let list = [];
+    for (let key in this.allFeatures) {
+      list.push(this.allFeatures[key].name);
+    }
+    list = [...new Set(list)];
+    this.updateList(list);
   }
 }
 </script>
@@ -239,9 +249,6 @@ html {
 .v-tabs>*:before {
   max-height: 100% !important;
 }
-
-
-
 </style>
 
 

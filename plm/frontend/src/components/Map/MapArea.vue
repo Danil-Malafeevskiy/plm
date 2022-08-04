@@ -30,8 +30,6 @@ export default {
         features: this.allFeatures,
       },
       feature: this.getFeature,
-      showAdd: false,
-      showEdit: false,
       drawType: { data: "Point" },
       vectorLayer: null,
       map: null,
@@ -142,6 +140,13 @@ export default {
       this.map.addInteraction(this.modify);
       this.interactionId = this.map.getInteractions().getArray().length - 1;
     },
+    resizeMap() {
+      setTimeout(() => {
+        this.map.updateSize();
+        if(this.map.getSize()[1] === 0)
+          this.resizeMap();
+      }, 400);
+    }
   },
 
   mounted() {
@@ -195,10 +200,7 @@ export default {
     if (this.addCardOn_.data) {
       this.addInteraction();
     }
-
-    setTimeout(() => {
-      this.map.updateSize();
-    }, 400);
+    this.resizeMap();
   }
 }
 </script>

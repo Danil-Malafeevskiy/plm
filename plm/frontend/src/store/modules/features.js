@@ -4,32 +4,35 @@ axios.defaults.xsrfCookieName = "csrftoken";
 
 export default {
     actions: {
-        async getFeatures(context) {
+        async getFeatures({ commit, state }) {
             await axios.get('/tower').then((response) => {
                 const features = response.data;
-                context.commit('updateFeatures', features);
+                commit('updateFeatures', features);
+                if (state.featureNameType != null) {
+                    commit('filterForFeature');
+                }
             }).catch(error => console.log(error));
         },
 
-        async getOneFeature(context, id){
+        async getOneFeature({ commit }, id) {
             await axios.get(`/tower/${id}`).then((response) => {
                 const feature = response.data;
-                context.commit('updateOneFeature', feature[0]);
+                commit('updateObjectForCard', feature[0]);
             }).catch(error => console.log(error));
         },
 
-        async postFeature(context, feature) {
+        async postFeature({ dispatch }, feature) {
             await axios.post('/tower', feature, {
                 headers: {
                     'Content-Type': 'application/json',
                 }
             }).then((response) => {
                 console.log(response.data);
-                context.dispatch('getFeatures');
+                dispatch('getFeatures');
             }).catch(error => console.log(error));
         },
 
-        async putFeature(context, feature, ) {
+        async putFeature({ dispatch }, feature,) {
             await axios.put('/tower', feature, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -37,16 +40,16 @@ export default {
             }).then((response) => {
                 const feature = response.data;
                 console.log(feature);
-                context.dispatch('getFeatures');
+                dispatch('getFeatures');
             }).catch(error => console.log(error));
         },
 
-        async deleteFeature(context, id) {
+        async deleteFeature({ dispatch }, id) {
             await axios.delete(`/tower/${id}`).then((response) => {
                 const feature = response.data;
                 console.log(feature);
             }).catch(error => console.log(error));
-            context.dispatch('getFeatures');
+            dispatch('getFeatures');
         }
     },
     mutations: {
@@ -76,12 +79,27 @@ export default {
             }
             delete state.feature.id;
         },
-        updateOneFeature(state, feature) {
-            state.feature = feature;
-        },
-        filterForFeature(state, nameType) {
+        filterForFeature(state, nameType = state.featureNameType) {
             state.featureNameType = nameType;
-            state.filteredFeature = state.features.filter(r => (` ${r.name}` === state.featureNameType))
+            state.filteredFeature = state.features.filter(r => (` ${r.name}` === state.featureNameType));
+            let headers = [
+                {
+                    text: 'Номер опоры',
+                    align: 'start',
+                    sortable: false,
+                    value: 'Номер опоры',
+                },
+                { text: 'ВЛ', value: 'ВЛ' },
+                { text: 'Тип опоры', value: 'Тип опоры' },
+                { text: 'Материал', value: 'Материал' },
+            ];
+            let items = [];
+            state.filteredFeature.forEach(element => {
+                let test = element.properties;
+                test.id = element.id;
+                items.push(test);
+            });
+            this.commit('updateListItem', {items, headers, nameAction: 'getOneFeature'}, { root:true });
         }
     },
     getters: {
@@ -96,9 +114,6 @@ export default {
         },
         getFeature(state) {
             return state.feature;
-        },
-        filterFeature(state) {
-            return state.filteredFeature;
         },
         featureName(state) {
             return state.featureNameType;
