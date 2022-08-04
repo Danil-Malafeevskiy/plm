@@ -6,11 +6,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import Group, Permission, User
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-
+from django_filters.rest_framework import DjangoFilterBackend
 from app.permissions import IsOwner, FileUploadPerm
 from plm import settings
 from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
+from rest_framework import generics
 
 from rest_framework.parsers import MultiPartParser
 
@@ -22,14 +23,21 @@ from rest_framework.response import Response
 class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, IsOwner]
+    filterset_fields = ['name']
 
     def get(self, request, id=0):
         if id == 0:
-            feature = Feature.objects.filter(group=request.user.groups.values_list('id', flat=True).first())
+            ff = DjangoFilterBackend()
+            filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(group=request.user.groups.values_list('id', flat=True).first()),
+                                                   self)
+
+            if filtered_queryset.exists():
+                feature_serializer = FeatureSerializer(filtered_queryset, many=True)
+                return Response(feature_serializer.data)
         else:
             feature = Feature.objects.filter(id=id, group=request.user.groups.values_list('id', flat=True).first())
-        feature_serializer = FeatureSerializer(feature, many=True)
-        return Response(feature_serializer.data)
+            feature_serializer = FeatureSerializer(feature, many=True)
+            return Response(feature_serializer.data)
 
     def post(self, request):
         for obj in request.data:
@@ -186,11 +194,18 @@ class UserView(APIView):
 class UserAdminView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAdminUser]
+    filterset_fields = ['username', 'is_staff', 'groups']
 
     def get(self, request, id=0):
-        if id == 0 :
-            user_serializer = UserSerializer(User.objects.all(), many=True)
-            return Response(user_serializer.data)
+        if id == 0:
+            ff = DjangoFilterBackend()
+            filtered_queryset = ff.filter_queryset(request, User.objects.all(), self)
+
+            if filtered_queryset.exists():
+                user_serializer = UserSerializer(filtered_queryset, many=True)
+                return Response(user_serializer.data)
+            else:
+                return Response("Не данных удовлетворяющих запросу")
 
         user_serializer = User_Perm_Admin_Serializer(User.objects.get(id=id))
         return Response(user_serializer.data)
@@ -235,8 +250,12 @@ class DatasetView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, id=0):
-        dataset = Dataset.objects.all()
-        return Response(DatasetSerializer(dataset, many=True).data)
+        if id==0:
+            dataset = Dataset.objects.all()
+            return Response(DatasetSerializer(dataset, many=True).data)
+
+        dataset = Dataset.objects.get(id=id)
+        return Response(DatasetSerializer(dataset).data)
 
     def post(self, request):
         dataset_serializer = DatasetSerializer(data=request.data)
