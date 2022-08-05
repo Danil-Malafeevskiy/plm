@@ -177,7 +177,7 @@ export default {
             this.notVisableCard();
         },
         async editObject() {
-            this.getObjectForCard.geometry.coordinates = [this.getObjectForCard.properties['Широта'], this.getObjectForCard.properties['Долгота']];
+            // this.getObjectForCard.geometry.coordinates = [this.getObjectForCard.properties['Широта'], this.getObjectForCard.properties['Долгота']];
             await this.putObject(JSON.stringify(this.getObjectForCard));
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;

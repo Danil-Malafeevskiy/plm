@@ -21,20 +21,8 @@
 
                 Типы {{ getList.length }}
 
-                <v-autocomplete
-                    @click:clear="clear()" 
-                    id='search'
-                    dense 
-                    append-icon 
-                    hide-details 
-                    hint="Поиск" 
-                    hide-no-data
-                    clearable
-                    solo 
-                    :value="value"
-                    label="Поиск"
-                    @update:search-input="search()"
-                >
+                <v-autocomplete @click:clear="clear()" id='search' dense append-icon hide-details hint="Поиск"
+                    hide-no-data clearable solo :value="value" label="Поиск" @update:search-input="search()">
                 </v-autocomplete>
 
 
@@ -89,7 +77,7 @@ export default {
             handler() {
                 this.selectedItem = null;
             }
-=
+
         },
         // allType: {
         //     handler(){
@@ -98,7 +86,10 @@ export default {
         // }
     },
     computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject']) },
-=
+    async mounted() {
+        await this.getTypeObject();
+    },
+
     methods: {
         ...mapActions(['getGroup', 'getTypeObject']),
         ...mapMutations(['filterForFeature', 'upadateEmptyObject', 'updateFeatureNameType', 'updateHeaders', 'updateDrawType']),
@@ -110,15 +101,14 @@ export default {
             this.updateHeaders(objectType.headers);
             this.updateDrawType(objectType.type)
             this.filterForFeature(objectType.name);
-            
+
             for (let i in this.allFeatures) {
                 if (this.allFeatures[i].name === objectType.name) {
                     this.upadateEmptyObject(this.allFeatures[i]);
                     break;
                 }
             }
-        }
-    },
+        },
 
 
 
@@ -138,21 +128,13 @@ export default {
                     $(".v-list-item:contains(" + element + "):last").hide()
                 }
 
-                else  {
+                else {
                     $("div:contains(" + element + "):last").parent().show()
                     $(".v-list-item:contains(" + element + "):last").show()
                 }
             });
-        },
-
-
-
+        }
     },
-    async mounted() {
-        await this.getTypeObject();
-
-    },
-
     components: { CardInLeftPanel }
 }
 </script>
