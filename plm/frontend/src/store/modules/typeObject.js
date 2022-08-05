@@ -6,11 +6,19 @@ export default {
             await axios.get('/dataset').then((response) => {
                 //console.log(response.data);
                 commit('updateListType', response.data);
+                //commit('updateListType')
             });
         },
         async getOneTypeObject({ commit }, id) {
             await axios.get(`/dataset/${id}`).then((response) => {
-                console.log(response.data, 1);
+                let result = response.data;
+                result.properties = { ...result };
+                for (let i in result) {
+                    if (i != 'properties' && i != 'id') {
+                        delete result[i];
+                    }
+                }
+                commit('updateObjectForCard', result);
                 commit('updateOneType', response.data);
             });
         },
@@ -45,7 +53,7 @@ export default {
         updateListType(state, list) {
             state.listType = list;
         },
-        updateOneType(state, type){
+        updateOneType(state, type) {
             state.type = type;
         }
     },
@@ -53,7 +61,7 @@ export default {
         allType(state) {
             return state.listType;
         },
-        oneType(state){
+        oneType(state) {
             return state.type
         }
     },
