@@ -5,8 +5,8 @@
         allListItem.length
     }} объекта </p>
     <p class="object ma-0" v-else>{{ allListItem.length }} объектов </p>
-    <v-data-table @click:row="showCard" :headers="headers" show-select item-key="Номер опоры"
-      :items="allListItem" :items-per-page="10" class="pa-0" style="
+    <v-data-table @click:row="showCard" :headers="headers" show-select item-key="Номер опоры" :items="allListItem"
+      :items-per-page="10" class="pa-0" style="
         height: 100% !important;
         width: 50% !important; 
         background-color: #E5E5E5; 
@@ -56,13 +56,17 @@ export default {
     ...mapActions(['getFeatures', 'postFeature', 'getOneFeature', 'getOneObject']),
     ...mapMutations(['emptyFeature', 'updateFeature']),
 
+    // test() {
+
+    // },
+
     async showCard(obj) {
       if (!this.addCardOn.data) {
         if (this.getObjectForCard === null || this.getObjectForCard.id != obj.id || !this.infoCardOn_.data) {
           await this.getOneObject(obj.id);
-          console.log(this.getObjectForCard);
-          this.infoCardOn_.data = true;
+          //console.log(this.getObjectForCard)
           this.visableCard();
+          this.infoCardOn_.data = true;
         }
         else {
           this.infoCardOn_.data = false;

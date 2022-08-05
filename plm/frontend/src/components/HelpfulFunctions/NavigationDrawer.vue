@@ -53,7 +53,12 @@ export default {
             handler() {
                 this.selectedItem = null;
             }
-        }
+        },
+        // allType: {
+        //     handler(){
+        //         console.log(this.allType);
+        //     }
+        // }
     },
     computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject']) },
     methods: {

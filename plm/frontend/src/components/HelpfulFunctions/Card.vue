@@ -2,6 +2,7 @@
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
             <p style="display: none;">{{ emptyObject }}</p>
+            <p style="display: none">{{ getObjectForCard }}</p>
             <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon" hide-input>
             </v-file-input>
             <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
@@ -32,7 +33,12 @@
                         </v-row>
                         <v-row justify="start" v-else-if="infoCardOn_.data">
                             <v-col cols="2" sm="6" md="5" lg="6">
-                                <v-card-text class="pa-0" style="font-size: 24px;">{{ getObjectForCard.name }}
+                                <v-card-text v-if="getObjectForCard.name != null" class="pa-0" style="font-size: 24px;">
+                                    {{ getObjectForCard.name }}
+                                </v-card-text>
+                                <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
+                                        getObjectForCard.properties.name
+                                }}
                                 </v-card-text>
                             </v-col>
 
@@ -55,7 +61,7 @@
                                     </v-btn>
                                 </v-card-text>
                             </v-col>
-                            <v-col v-for="(f, index) in getObjectForCard.properties" :key="f.number_support"
+                            <v-col v-for="(f, index) in getObjectForCard.properties" :key="index"
                                 v-show="index != 'name_tap' && index != 'id'" cols="2" sm="6" md="5" lg="6">
 
                                 <v-text-field v-if="typeof (f) === 'number'" type="number" readonly

@@ -51,8 +51,30 @@ export default {
                         })
                     }
                     switch (this.selectedItem) {
-                        case 0:
+                        case 0: {
+                            let headers = [
+                                {
+                                    "text": "id",
+                                    "align": "start",
+                                    "value": "id",
+                                    "sortable": false
+                                },
+                                {
+                                    "text": "name",
+                                    "value": "name"
+                                }
+                            ];
+                            this.updateHeaders(headers);
+                            this.updateAction({
+                                actionGet: 'getAllGroups',
+                                actionPost: 'postGroup',
+                                actionOneGet: 'getGroup',
+                                actionPut: 'putGroup',
+                                actionDelete: 'deleteGroup',
+                            });
+                            this.getAllGroups();
                             break;
+                        }
                         case 1: {
                             let object = {
                                 properties: {
