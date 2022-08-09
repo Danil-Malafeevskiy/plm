@@ -37,6 +37,7 @@ import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 export default {
     name: 'CardInLeftPanel',
+    props: ['resetSelectItem'],
     data() {
         return {
             selectedItem: 2,
@@ -54,6 +55,7 @@ export default {
                     }
                     switch (this.selectedItem) {
                         case 0: {
+                            this.updateListType([]);
                             let headers = [
                                 {
                                     "text": "id",
@@ -66,6 +68,12 @@ export default {
                                     "value": "name"
                                 }
                             ];
+                            let object = {
+                                properties: {
+                                    name: '',
+                                }
+                            }
+                            this.upadateEmptyObject(object);
                             this.updateHeaders(headers);
                             this.updateAction({
                                 actionGet: 'getAllGroups',
@@ -113,6 +121,7 @@ export default {
                             break;
                         }
                         case 2:
+                            this.updateListType([]);
                             this.getTypeObject();
                             this.updateAction({
                                 actionGet: 'getFeatures',
@@ -123,6 +132,7 @@ export default {
                             });
                             break;
                     }
+                    this.resetSelectItem();
                 }
             }
         }

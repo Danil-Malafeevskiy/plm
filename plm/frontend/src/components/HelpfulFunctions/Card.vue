@@ -163,22 +163,23 @@ export default {
         ...mapGetters(['featureName', 'filterFeature', 'getFeature', 'getObjectForCard', 'emptyObject']),
     },
     methods: {
-        ...mapActions(['deleteObject', 'putObject', 'postObject']),
+        ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject']),
         ...mapMutations(['updateFunction']),
         async addNewFeature() {
             this.emptyObject.name = this.featureName;
             if (this.emptyObject.name != null) {
-                await this.postObject(JSON.stringify([this.emptyObject]));
+                await this.postObject([this.emptyObject]);
             }
             else {
-                await this.postObject(JSON.stringify([this.emptyObject.properties]));
+                await this.postObject(this.emptyObject.properties);
             }
             this.addCardOn_.data = !this.addCardOn_.data;
             this.notVisableCard();
         },
         async editObject() {
             // this.getObjectForCard.geometry.coordinates = [this.getObjectForCard.properties['Широта'], this.getObjectForCard.properties['Долгота']];
-            await this.putObject(JSON.stringify(this.getObjectForCard));
+            await this.putObject(this.getObjectForCard);
+            this.getOneObject(this.getObjectForCard.id);
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
         }
