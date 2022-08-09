@@ -56,10 +56,6 @@ export default {
     ...mapActions(['getFeatures', 'postFeature', 'getOneFeature', 'getOneObject']),
     ...mapMutations(['emptyFeature', 'updateFeature']),
 
-    // test() {
-
-    // },
-
     async showCard(obj) {
       if (!this.addCardOn.data) {
         if (this.getObjectForCard === null || this.getObjectForCard.id != obj.id || !this.infoCardOn_.data) {

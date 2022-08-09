@@ -2,11 +2,14 @@ import axios from "axios";
 
 export default {
     actions: {
-        async getTypeObject({ commit }) {
+        async getTypeObject({ commit }, change = false) {
             await axios.get('/dataset').then((response) => {
-                //console.log(response.data);
-                commit('updateListType', response.data);
-                //commit('updateListType')
+                if (!change) {
+                    commit('updateListType', response.data);
+                }
+                else{
+                    commit('updateListItem', {items: response.data});
+                }
             });
         },
         async getOneTypeObject({ commit }, id) {
@@ -23,29 +26,47 @@ export default {
             });
         },
         async postTypeObject({ dispatch }, newType) {
-            await axios.post('/dataset', newType, {
-                headers: {
-                    'Content-Type': 'application/json',
+            newType.headers = [
+                {
+                    "text": "Номер опоры",
+                    "align": "start",
+                    "value": "Номер опоры",
+                    "sortable": false
+                },
+                {
+                    "text": "ВЛ",
+                    "value": "ВЛ"
+                },
+                {
+                    "text": "Тип опоры",
+                    "value": "Тип опоры"
+                },
+                {
+                    "text": "Материал",
+                    "value": "Материал"
                 }
-            }).then((response) => {
+            ]
+
+            console.log(newType);
+            await axios.post('/dataset', newType).then((response) => {
                 console.log(response.data);
-                dispatch('getTypeObject');
+                dispatch('getTypeObject', true);
             })
         },
         async putTypeObject({ dispatch }, type) {
-            await axios.put('/dataset', type, {
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            }).then((response) => {
+            for(let key in type.properties){
+                type[key] = type.properties[key];
+            }
+            delete type.properties;
+            await axios.put('/dataset', type).then((response) => {
                 console.log(response.data);
-                dispatch('getTypeObject');
+                dispatch('getTypeObject', true);
             });
         },
         async deleteTypeObject({ dispatch }, id) {
             await axios.delete(`/dataset/${id}`).then((response) => {
                 console.log(response.data);
-                dispatch('getTypeObject');
+                dispatch('getTypeObject', true);
             })
         }
     },

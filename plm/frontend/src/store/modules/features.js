@@ -20,22 +20,14 @@ export default {
         },
 
         async postFeature({ dispatch }, feature) {
-            await axios.post('/tower', feature, {
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            }).then((response) => {
+            await axios.post('/tower', feature).then((response) => {
                 console.log(response.data);
                 dispatch('getFeatures');
             }).catch(error => console.log(error));
         },
 
         async putFeature({ dispatch }, feature,) {
-            await axios.put('/tower', feature, {
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            }).then((response) => {
+            await axios.put('/tower', feature).then((response) => {
                 const feature = response.data;
                 console.log(feature);
                 dispatch('getFeatures');

@@ -21,7 +21,15 @@ export default{
                 commit('updateObjectForCard', response.data);
             })
         },
+        async getUsersOfGroup({ commit }, idGroup){
+            await axios.get(`/user?group=${idGroup}`).then((response) => {
+                console.log(response.data);
+                commit('updateListItem', {items: response.data})
+            })
+        },
         async postGroup({ dispatch }, group){
+            console.log(group);
+            group.permissions = [];
             await axios.post('/group', group).then((response) => {
                 console.log(response.data);
                 dispatch('getAllGroups');
