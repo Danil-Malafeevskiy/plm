@@ -4,7 +4,7 @@ axios.defaults.xsrfCookieName = "csrftoken";
 
 export default {
     actions: {
-        async postAuth({ commit }, userData) {
+        async logIn({ commit }, userData) {
             await axios.post('/tower/login', userData).then((response) => {
                 commit('updateAuth', response.data === 'Success login');
             });
@@ -14,13 +14,54 @@ export default {
                 commit('updateAuth', !response.data === 'Success logout')
             })
         },
-        async getUser({ commit }){
+        async getUser({ commit }) {
             await axios.get('/user').then((response) => {
                 commit('updateAuth', true);
                 commit('updateUser', response.data);
             }).catch((error) => {
                 console.log(error);
                 commit('updateAuth', false);
+            })
+        },
+        async getOneUser({ commit }, idUser) {
+            await axios.get(`/user/admin/${idUser}`).then((response) => {
+                console.log(response.data);
+                let user = response.data;
+                user.properties = { ...user };
+                delete user.properties.id;
+                for (let key in user) {
+                    if (key != 'properties' && key != 'id') {
+                        if (typeof user[key] === 'object') {
+                            delete user.properties[key];
+                        }
+                        else {
+                            delete user[key];
+                        }
+                    }
+                }
+                console.log(user);
+                commit('updateObjectForCard', user);
+            })
+        },
+        async postUser({ dispatch }, newUser){
+            await axios.post('/user/admin', newUser).then((response) => {
+                console.log(response.data);
+                dispatch('getUser')
+            })
+        },
+        async putUser({ dispatch }, user) {
+            user = { ...user, ...user.properties };
+            delete user.properties;
+            console.log(JSON.stringify(user));
+            await axios.put('/user/admin', user).then((response) => {
+                console.log(response.data);
+                dispatch('getUsersOfGroup');
+            })
+        },
+        async deleteUser({ dispatch }, idUser) {
+            await axios.delete(`/user/admin/${idUser}`).then((response) => {
+                console.log(response.data);
+                dispatch('getUsersOfGroup');
             })
         }
     },
@@ -29,20 +70,24 @@ export default {
         updateAuth(state, bool) {
             state.authBool = bool;
         },
-        updateUser(state, user){
+        updateUser(state, user) {
             state.user = user;
+        },
+        updateAllUsers(state, users){
+            state.allUsers = users;
         }
     },
     getters: {
         getAuth(state) {
             return state.authBool;
         },
-        user(state){
+        user(state) {
             return state.user;
         }
     },
     state: {
         authBool: null,
         user: null,
+        allUsers: [],
     },
 }

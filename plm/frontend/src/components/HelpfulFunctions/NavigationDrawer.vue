@@ -66,6 +66,16 @@ export default {
                 if (this.selectedItem != null) {
                     const domItem = document.querySelector(".object__data").childNodes[this.selectedItem];
                     this.filterForFeature(domItem.childNodes[0].innerText);
+
+                    if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
+                        this.updateAction({
+                            actionGet: 'getUsersOfGroup',
+                            actionPost: 'postAuth',
+                            actionOneGet: 'getOneUser',
+                            actionPut: 'putUser',
+                            actionDelete: 'deleteUser',
+                        });
+                    }
                 }
             }
         },
@@ -84,7 +94,8 @@ export default {
 
     methods: {
         ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup']),
-        ...mapMutations(['filterForFeature', 'upadateEmptyObject', 'updateFeatureNameType', 'updateHeaders', 'updateDrawType']),
+        ...mapMutations(['filterForFeature', 'upadateEmptyObject', 'updateFeatureNameType', 
+                         'updateHeaders', 'updateDrawType', 'updateAction', 'updateGroupId']),
         getOneGroup(id) {
             this.getGroup(id);
         },
@@ -95,23 +106,15 @@ export default {
             if (domItem === "Пользователи") {
                 const headers = [
                     {
-                        "text": "username",
+                        "text": "id",
                         "align": "start",
-                        "value": "username",
+                        "value": "id",
                         "sortable": false
                     },
                     {
-                        "text": "first_name",
-                        "value": "first_name"
-                    },
-                    {
-                        "text": "last_name",
-                        "value": "last_name"
-                    },
-                    {
-                        "text": "is_staff",
-                        "value": "is_staff"
-                    },
+                        "text": "username",
+                        "value": "username"
+                    }
                 ];
                 this.updateHeaders(headers);
                 this.getUsersOfGroup(objectType.id);
@@ -131,8 +134,8 @@ export default {
         },
 
         resetSelectItem() {
-            console.log(1);
             this.selectedItem = null;
+            setTimeout(() => {this.showCard = !this.showCard;});
         }
 
         // clear() {

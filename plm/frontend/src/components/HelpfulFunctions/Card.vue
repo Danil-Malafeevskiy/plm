@@ -36,6 +36,11 @@
                                 <v-card-text v-if="getObjectForCard.name != null" class="pa-0" style="font-size: 24px;">
                                     {{ getObjectForCard.name }}
                                 </v-card-text>
+                                <v-card-text v-else-if="getObjectForCard.properties.username != null" class="pa-0"
+                                    style="font-size: 24px;">{{
+                                            getObjectForCard.properties.username
+                                    }}
+                                </v-card-text>
                                 <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
                                         getObjectForCard.properties.name
                                 }}
@@ -62,7 +67,8 @@
                                 </v-card-text>
                             </v-col>
                             <v-col v-for="(f, index) in getObjectForCard.properties" :key="index"
-                                v-show="index != 'name_tap' && index != 'id'" cols="2" sm="6" md="5" lg="6">
+                                v-show="typeof (f) != 'boolean' && index != 'name_tap' && index != 'id' && index != 'username'"
+                                cols="2" sm="6" md="5" lg="6">
 
                                 <v-text-field v-if="typeof (f) === 'number'" type="number" readonly
                                     v-model="getObjectForCard.properties[index]"
@@ -146,12 +152,12 @@ export default {
             handler() {
                 this.cardVisable_ = this.cardVisable;
                 if (this.cardVisable_.data) {
-                    if (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920 < 18) {
-                        document.querySelector('.card_of_object').style.cssText = 'width: 38.05% !important; left: 60.28% !important;';
-                    }
-                    else {
-                        document.querySelector('.card_of_object').style.cssText = 'width: 31.91% !important; left: 67.22% !important;';
-                    }
+                    // if (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920 < 18) {
+                         document.querySelector('.card_of_object').style.cssText = 'width: 38.05% !important; left: 60.28% !important;';
+                    // }
+                    // else {
+                    //     document.querySelector('.card_of_object').style.cssText = 'width: 31.91% !important; left: 67.22% !important;';
+                    // }
                 }
             }, deep: true
         },
@@ -177,7 +183,6 @@ export default {
             this.notVisableCard();
         },
         async editObject() {
-            // this.getObjectForCard.geometry.coordinates = [this.getObjectForCard.properties['Широта'], this.getObjectForCard.properties['Долгота']];
             await this.putObject(this.getObjectForCard);
             this.getOneObject(this.getObjectForCard.id);
             this.editCardOn_.data = !this.editCardOn_.data;

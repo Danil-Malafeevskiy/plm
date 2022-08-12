@@ -1,16 +1,14 @@
 import axios from "axios";
 
-export default{
+export default {
     actions: {
-        async getAllGroups({ commit }){
+        async getAllGroups({ commit }) {
             await axios.get('/group').then((response) => {
-                //console.log(response.data);
                 commit('updateAllGroups', response.data);
             })
         },
-        async getGroup({commit}, id){
+        async getGroup({ commit }, id) {
             await axios.get(`/group/${id}`).then((response) => {
-                //console.log(response.data);
                 let group = response.data;
                 group.properties = { ...group };
                 for (let i in group) {
@@ -21,27 +19,34 @@ export default{
                 commit('updateObjectForCard', response.data);
             })
         },
-        async getUsersOfGroup({ commit }, idGroup){
-            await axios.get(`/user?group=${idGroup}`).then((response) => {
+        async getUsersOfGroup({ commit, state }, idGroup = state.groupId) {
+            await axios.get(`/user/admin?groups=${idGroup}`).then((response) => {
                 console.log(response.data);
-                commit('updateListItem', {items: response.data})
-            })
+                if (typeof response.data === 'object') {
+                    commit('updateListItem', { items: response.data })
+                }
+                else {
+                    commit('updateListItem', { items: [] })
+                }
+                commit('updateGroupId', idGroup);
+            });
         },
-        async postGroup({ dispatch }, group){
-            console.log(group);
+        async postGroup({ dispatch }, group) {
             group.permissions = [];
             await axios.post('/group', group).then((response) => {
                 console.log(response.data);
                 dispatch('getAllGroups');
             })
         },
-        async putGroup({ dispatch }, group){
+        async putGroup({ dispatch }, group) {
+            group ={ ...group, ...group.properties};
+            delete group.properties;
             await axios.put('/group', group).then((response) => {
                 console.log(response.data);
                 dispatch('getAllGroups');
             })
         },
-        async deleteGroup({dispatch}, id){
+        async deleteGroup({ dispatch }, id) {
             await axios.delete(`/group/${id}`).then((response) => {
                 console.log(response.data);
                 dispatch('getAllGroups');
@@ -49,18 +54,22 @@ export default{
         },
     },
     mutations: {
-        updateAllGroups(state, groups){
+        updateAllGroups(state, groups) {
             state.groups = groups;
-            this.commit('updateListItem', {items: groups})
+            this.commit('updateListItem', { items: groups })
             this.commit('updateListType', groups)
         },
+        updateGroupId(state, id){
+            state.groupId = id;
+        }
     },
     getters: {
-        allGroups(state){
+        allGroups(state) {
             return state.groups;
         }
     },
     state: {
         groups: [],
+        groupId: null,
     },
 }
