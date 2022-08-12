@@ -81,7 +81,7 @@ class User_Perm_Admin_Serializer(User_Perm_Serializer):
 class UserRegSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'password')
+        fields = ('id','username', 'password')
 
     def validate(self, data):
         password = data.get('password')
@@ -104,7 +104,7 @@ class UserRegSerializer(serializers.ModelSerializer):
 class DatasetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dataset
-        fields = ('id', 'name', 'type', 'headers')
+        fields = ('id', 'name', 'type', 'headers', 'group')
         validators = [
             UniqueTogetherValidator(
                 queryset=Dataset.objects.all(),

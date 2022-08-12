@@ -4,6 +4,7 @@ import sqlite3
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import Group, Permission, User
+from django.shortcuts import render
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend
@@ -11,10 +12,8 @@ from app.permissions import IsOwner, FileUploadPerm
 from plm import settings
 from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
-from rest_framework import generics
 
 from rest_framework.parsers import MultiPartParser
-
 from app.models import Feature, Dataset
 from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, Group_Perm_Serializer, UserSerializer, \
     User_Perm_Serializer, User_Perm_Admin_Serializer, UserRegSerializer, DatasetSerializer
@@ -28,12 +27,12 @@ class TowerAPI(APIView):
     def get(self, request, id=0):
         if id == 0:
             ff = DjangoFilterBackend()
-            filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(group=request.user.groups.values_list('id', flat=True).first()),
-                                                   self)
+            filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(group=request.user.groups.values_list('id', flat=True).first()),self)
 
             if filtered_queryset.exists():
                 feature_serializer = FeatureSerializer(filtered_queryset, many=True)
                 return Response(feature_serializer.data)
+            return Response([])
         else:
             feature = Feature.objects.filter(id=id, group=request.user.groups.values_list('id', flat=True).first())
             feature_serializer = FeatureSerializer(feature, many=True)
@@ -90,7 +89,7 @@ class FileUploadView(APIView):
 
         lis = []
         dict_1 = {}
-        dict_1['name'] = filename
+        dict_1['name'] = Dataset.objects.get(name=filename).id
         dict_1['type'] = 'Feature'
         dict_1['properties'] = {}
         for value in dict_0:
@@ -214,7 +213,7 @@ class UserAdminView(APIView):
         reg = UserRegSerializer(data=request.data)
         if reg.is_valid():
             reg.save()
-            return Response("Success new!")
+            return Response({"id": reg.data['id']})
         return Response(reg.errors)
 
     def put(self, request):
@@ -251,13 +250,14 @@ class DatasetView(APIView):
 
     def get(self, request, id=0):
         if id==0:
-            dataset = Dataset.objects.all()
+            dataset = Dataset.objects.filter(group=request.user.groups.values_list('id', flat=True).first())
             return Response(DatasetSerializer(dataset, many=True).data)
 
-        dataset = Dataset.objects.get(id=id)
+        dataset = Dataset.objects.get(id=id, group=request.user.groups.values_list('id', flat=True).first())
         return Response(DatasetSerializer(dataset).data)
 
     def post(self, request):
+        request.data['group'] = request.user.groups.values_list('id', flat=True).first()
         dataset_serializer = DatasetSerializer(data=request.data)
         if dataset_serializer.is_valid():
             dataset_serializer.save()
@@ -265,7 +265,7 @@ class DatasetView(APIView):
         return Response(dataset_serializer.errors)
 
     def put(self, request):
-        dataset = Dataset.objects.get(id=request.data['id'])
+        dataset = Dataset.objects.get(id=request.data['id'], group=request.user.groups.values_list('id', flat=True).first())
         dataset_serializer = DatasetSerializer(dataset, data=request.data)
         if dataset_serializer.is_valid():
             dataset_serializer.save()
@@ -273,5 +273,12 @@ class DatasetView(APIView):
         return Response(dataset_serializer.errors)
 
     def delete(self, request, id):
-        Dataset.objects.get(id=id).delete()
-        return Response("SECCESS DEL Dataset!")
+        try:
+            dataset = Dataset.objects.get(id=id, group=request.user.groups.values_list('id', flat=True).first())
+        except Exception:
+            return Response("There is no access to this object!")
+        dataset.delete()
+        return Response("SUCCESS DEL")
+
+def room(request):
+    return render(request, 'D://plm/plm/templates/test.html')
