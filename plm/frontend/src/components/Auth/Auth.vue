@@ -64,10 +64,10 @@ export default {
     },
     computed: mapGetters(['getAuth']),
     methods: {
-        ...mapActions(['postAuth', 'allFeatures']),
+        ...mapActions(['logIn']),
 
         async onSubmit() {
-            await this.postAuth(this.userData)
+            await this.logIn(this.userData)
             console.log(this.getAuth);
             if (this.getAuth){
                 location.reload();

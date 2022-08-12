@@ -4,39 +4,37 @@
         <v-list-item>
             <v-list-item-content>
                 <v-list-item-title>
-                    <v-btn @click="showCard = !showCard" class="ma-0 pa-0 btn_menu" elevation="0" fab>
+                    <v-btn @click="showCard = !showCard" class="ma-0 pa-0 btn_menu" elevation="0" fab depressed
+                        retain-focus-on-click plain>
                         <v-icon left>mdi-menu</v-icon>
                     </v-btn>
                     <span class="text_in_span">База объектов</span>
                 </v-list-item-title>
             </v-list-item-content>
         </v-list-item>
-        
-        <CardInLeftPanel v-show="showCard"/>
+
+        <CardInLeftPanel v-show="showCard" :resetSelectItem="resetSelectItem" />
 
         <v-list dense nav>
             <p
                 style="display: flex; font-size: 16px; color: #5E5E5E; justify-content: space-between; align-items: center;">
-                Типы {{ getList.length }}<v-autocomplete :items="getList" dense append-icon hide-details
-                    hint="Поиск" clearable solo label="Поиск">
+
+                Типы {{ allType.length }}
+
+                <v-autocomplete @click:clear="clear()" id='search' dense append-icon hide-details hint="Поиск"
+                    hide-no-data clearable solo label="Поиск">
                 </v-autocomplete>
+
+
             </p>
+
             <v-list-item-group class="object__data" v-model="selectedItem" color="#E93030">
-                <v-list-item v-for="key in getList" :key="key" link>
+
+                <v-list-item v-for="key in allType" :key="key.id" link @click="changeObject(key)">
 
                     <v-list-item-title>
-                        <v-list-item-icon v-if="key === 'Tower_1'">
-                            <v-icon>mdi-transmission-tower</v-icon>
-                        </v-list-item-icon>
-                        <v-list-item-icon v-else-if="key === 'Substations'">
-                            <v-icon>mdi-toy-brick</v-icon>
-                        </v-list-item-icon>
-                        <v-list-item-icon v-else>
-                            <v-icon>mdi-vector-line</v-icon>
-                        </v-list-item-icon>
-                        {{ key }}
+                        {{ key.name }}
                     </v-list-item-title>
-
                 </v-list-item>
             </v-list-item-group>
         </v-list>
@@ -45,6 +43,8 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex';
+//import $ from 'jquery'
+
 import CardInLeftPanel from './CardInLeftPanel.vue';
 
 export default {
@@ -60,32 +60,106 @@ export default {
         };
     },
     watch: {
+
         selectedItem: {
             handler() {
                 if (this.selectedItem != null) {
                     const domItem = document.querySelector(".object__data").childNodes[this.selectedItem];
                     this.filterForFeature(domItem.childNodes[0].innerText);
+
+                    if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
+                        this.updateAction({
+                            actionGet: 'getUsersOfGroup',
+                            actionPost: 'postAuth',
+                            actionOneGet: 'getOneUser',
+                            actionPut: 'putUser',
+                            actionDelete: 'deleteUser',
+                        });
+                    }
                 }
-                // else {
-                //     this.filterForFeature(null);
-                // }
             }
         },
+
         getList: {
-            handler(){
+            handler() {
                 this.selectedItem = null;
             }
-        }
+
+        },
     },
-    computed: { ...mapGetters(["allFeatures", 'getList']) },
+    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject']) },
+    async mounted() {
+        await this.getTypeObject();
+    },
+
     methods: {
-        ...mapActions(["getAllGroups", "getGroup"]),
-        ...mapMutations(['filterForFeature']),
+        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup']),
+        ...mapMutations(['filterForFeature', 'upadateEmptyObject', 'updateFeatureNameType', 
+                         'updateHeaders', 'updateDrawType', 'updateAction', 'updateGroupId']),
         getOneGroup(id) {
             this.getGroup(id);
+        },
+
+        changeObject(objectType) {
+            const domItem = document.querySelector('.text_in_span').innerHTML;
+
+            if (domItem === "Пользователи") {
+                const headers = [
+                    {
+                        "text": "id",
+                        "align": "start",
+                        "value": "id",
+                        "sortable": false
+                    },
+                    {
+                        "text": "username",
+                        "value": "username"
+                    }
+                ];
+                this.updateHeaders(headers);
+                this.getUsersOfGroup(objectType.id);
+            }
+            else {
+                this.updateHeaders(objectType.headers);
+                this.updateDrawType(objectType.type)
+                this.filterForFeature(objectType.name);
+
+                for (let i in this.allFeatures) {
+                    if (this.allFeatures[i].name === objectType.name) {
+                        this.upadateEmptyObject(this.allFeatures[i]);
+                        break;
+                    }
+                }
+            }
+        },
+
+        resetSelectItem() {
+            this.selectedItem = null;
+            setTimeout(() => {this.showCard = !this.showCard;});
         }
-    },
-    mounted() {
+
+        // clear() {
+        //     this.getList.forEach(element => {
+        //         $(".test:contains(" + element + "):hidden").show()
+        //     });
+        // },
+
+        // search() {
+        //     const value = document.getElementById('search').value;
+
+        //     this.getList.forEach(element => {
+
+        //         if (!element.toLowerCase().includes(value.toLowerCase())) {
+        //             $("div:contains(" + element + "):last").parent().hide()
+        //             $(".v-list-item:contains(" + element + "):last").hide()
+        //         }
+
+        //         else {
+        //             $("div:contains(" + element + "):last").parent().show()
+        //             $(".v-list-item:contains(" + element + "):last").show()
+        //         }
+        //     });
+        // }
     },
     components: { CardInLeftPanel }
 }
