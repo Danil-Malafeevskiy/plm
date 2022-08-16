@@ -44,7 +44,9 @@ export default {
             })
         },
         async postUser({ dispatch, getters }, newUser) {
+            console.log(newUser);
             await axios.post('/user/admin', newUser).then((response) => {
+                console.log(response.data)
                 newUser.id = response.data.id;
                 newUser.groups = [getters.currentGroup.name];
                 newUser.user_permissions = [];

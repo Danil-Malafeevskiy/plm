@@ -55,6 +55,7 @@ export default {
                     }
                     switch (this.selectedItem) {
                         case 0: {
+                            this.updateNameForArray('Пользователи');
                             this.updateListType([]);
                             let headers = [
                                 {
@@ -86,6 +87,7 @@ export default {
                             break;
                         }
                         case 1: {
+                            this.updateNameForArray('Типы объектов');
                             let object = {
                                 properties: {
                                     name: '',
@@ -121,6 +123,7 @@ export default {
                             break;
                         }
                         case 2:
+                            this.updateNameForArray('База объектов');
                             this.updateListType([]);
                             this.getTypeObject();
                             this.updateAction({
@@ -141,7 +144,7 @@ export default {
     methods: {
         ...mapActions(['logOut', 'getAllGroups', 'getTypeObject']),
         ...mapMutations(['updatefilterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
-            'updateAction', 'updateHeaders', 'updateListType']),
+            'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray']),
         logOutAndResolve() {
             this.logOut();
             location.reload();

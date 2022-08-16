@@ -1,22 +1,31 @@
-<template>
+  <template>
   <div class="child" v-if="allListItem.length != 0">
-    <div class="sub_tittle">
-      <p>{{ selected.length }}</p>
+    <div class="sub_tittle" v-if="selected.length != 0">
+      <div style="margin: 20px 0;">
+        <span class="object" v-if="selected.length % 10 === 1">{{ selected.length }} объект </span>
+        <span class="object" v-else-if="selected.length % 10 > 1 && selected.length % 10 < 5">
+          {{ selected.length }} объекта </span>
+
+        <span class="object" v-else>{{ selected.length }} объектов </span>
+
+        <a style="margin: 20px 0" @click="resetSelected()">
+          <v-icon v-if="selected.length != 0" small>mdi-close</v-icon>
+        </a>
+      </div>
+      <div style="margin-top: 20px;" v-if="selected.length != 0">
+        <v-btn color="#E5E5E5" depressed class="ma-0" @click="deleteObjects">
+          <span style="color: #787878; justify-content: end;">Удалить</span>
+        </v-btn>
+      </div>
+    </div>
+    <div class="sub_tittle" v-else>
       <span class="object" v-if="allListItem.length % 10 === 1">{{ allListItem.length }} объект </span>
       <span class="object" v-else-if="allListItem.length % 10 > 1 && allListItem.length % 10 < 5">
         {{ allListItem.length }} объекта </span>
       <span class="object" v-else>{{ allListItem.length }} объектов </span>
-      
-      <v-icon v-if="selected.length != 0" small>mdi-close</v-icon>
-      <div style="margin: 20px;" v-if="selected.length != 0">
-        <a @click="deleteObjects">
-          <span style="color: #787878;"></span>Удалить
-        </a>
-      </div>
     </div>
-    <v-data-table @click:row="showCard"
-      :headers="headers" v-model="selected" show-select :item-key="headers[0].text" :items="allListItem" :items-per-page="10" class="pa-0"
-      style="
+    <v-data-table @click:row="showCard" :headers="headers" v-model="selected" show-select :item-key="headers[0].text"
+      :items="allListItem" :items-per-page="10" class="pa-0" style="
         height: 100% !important;
         width: 50% !important; 
         background-color: #E5E5E5; 
@@ -41,7 +50,6 @@ export default {
       feature: this.getFeature,
       infoCardOn_: this.infoCardOn,
       addCardOn_: this.addCardOn,
-      test: [],
     }
   },
   watch: {
@@ -52,30 +60,20 @@ export default {
       this.features = this.allFeatures;
     },
     arrObjects: {
-      handler(){
-        console.log(this.arrObjects);
+      handler() {
+        console.log(this.arrObjects[this.nameArray])
       },
-      deep: true,
+      deep: true
     }
-    // allListItem:{
-    //   handler(){
-    //     for(let i in this.allListItem){
-    //       if(typeof (this.allListItem[i]) === 'object'){
-    //         delete this.allFeatures[i];
-    //       }
-    //     }
-    //   },
-    //   deep: true
-    // }
   },
   computed: {
-    ...mapGetters(['allFeatures', 'getFeature', 'allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'getToolbarTitle']),
+    ...mapGetters(['allFeatures', 'getFeature', 'allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray']),
     selected: {
-      get() { return this.arrObjects[`${this.getToolbarTitle}`]; },
-      set(value) { this.updateSelectedObejcts({objects: value, name: this.getToolbarTitle}); }
+      get() { return this.arrObjects[`${this.nameArray}`]; },
+      set(value) { this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
     },
-    selectedLength(){
-      return this.arrObjects[`${this.getToolbarTitle}`].length;
+    selectedLength() {
+      return this.arrObjects[`${this.nameArray}`].length;
     }
   },
   methods: {
@@ -94,6 +92,9 @@ export default {
           this.notVisableCard();
         }
       }
+    },
+    resetSelected() {
+      this.arrObjects[`${this.nameArray}`] = [];
     },
     // selectAllobject({ items, value }) {
     //   if (value) {
@@ -117,9 +118,10 @@ export default {
     //   console.log(this.arrObjects)
     // },
     deleteObjects() {
-      this.arrObjects.forEach(element => {
+      for (const element of this.arrObjects[`${this.nameArray}`]) {
         this.deleteObject(element.id);
-      });
+      }
+      this.resetSelected();
     }
   },
   async mounted() {
@@ -134,6 +136,8 @@ export default {
 
 .sub_tittle {
   display: flex;
+  justify-content: space-between;
+  width: 50%;
   /* min-width: 100%; */
   /* width: 50%; */
 }
@@ -143,7 +147,7 @@ export default {
   padding-top: 1% !important;
   width: 50%;
   display: inline-block; */
-  margin: 20px;
+  margin: 20px 5px 20px 20px;
   color: #787878;
   font-weight: 500;
 }
