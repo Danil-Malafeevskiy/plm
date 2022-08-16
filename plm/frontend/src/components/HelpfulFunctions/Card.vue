@@ -172,8 +172,8 @@ export default {
         ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject']),
         ...mapMutations(['updateFunction']),
         async addNewFeature() {
-            this.emptyObject.name = this.getTypeId;
             if (this.emptyObject.name != null) {
+                this.emptyObject.name = this.getTypeId;
                 console.log(this.emptyObject)
                 await this.postObject([this.emptyObject]);
             }

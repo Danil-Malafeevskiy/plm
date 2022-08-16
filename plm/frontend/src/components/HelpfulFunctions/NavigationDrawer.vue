@@ -80,6 +80,37 @@ export default {
                         });
                     }
                 }
+                // else {
+                //     this.updateNameForArray('Пользователи');
+                //     this.updateListType([]);
+                //     let headers = [
+                //         {
+                //             "text": "id",
+                //             "align": "start",
+                //             "value": "id",
+                //             "sortable": false
+                //         },
+                //         {
+                //             "text": "name",
+                //             "value": "name"
+                //         }
+                //     ];
+                //     let object = {
+                //         properties: {
+                //             name: '',
+                //         }
+                //     }
+                //     this.upadateEmptyObject(object);
+                //     this.updateHeaders(headers);
+                //     this.updateAction({
+                //         actionGet: 'getAllGroups',
+                //         actionPost: 'postGroup',
+                //         actionOneGet: 'getGroup',
+                //         actionPut: 'putGroup',
+                //         actionDelete: 'deleteGroup',
+                //     });
+                //     this.getAllGroups();
+                // }
             }
         },
 
@@ -96,16 +127,14 @@ export default {
     },
 
     methods: {
-        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature']),
-        ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle', 'addArrayFromSelectedObject']),
+        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getAllGroups']),
+        ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle', 
+                        'addArrayFromSelectedObject', 'updateNameForArray', 'updateListType']),
         getOneGroup(id) {
             this.getGroup(id);
         },
 
         async changeObject(objectType) {
-            if(!(`${objectType.name}` in this.arrObjects)){
-                this.addArrayFromSelectedObject(objectType.name);
-            }
             const domItem = document.querySelector('.text_in_span').innerHTML;
             this.upadateTitle(objectType.name);
             if (domItem === "Пользователи") {
@@ -140,7 +169,7 @@ export default {
 
         resetSelectItem() {
             this.selectedItem = null;
-            setTimeout(() => {this.showCard = !this.showCard;});
+            setTimeout(() => { this.showCard = !this.showCard; });
         }
 
         // clear() {
