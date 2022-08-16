@@ -46,7 +46,7 @@ export default {
     watch: {
         selectedItem: {
             async handler() {
-                this.filterForFeature(null);
+                this.updatefilterForFeature([]);
                 if (this.selectedItem != null) {
                     if ((this.selectedItem != 3 && this.user.is_staff) || (this.selectedItem != 0 && this.user.is_active)) {
                         setTimeout(() => {
@@ -140,7 +140,7 @@ export default {
     computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType']),
     methods: {
         ...mapActions(['logOut', 'getAllGroups', 'getTypeObject']),
-        ...mapMutations(['filterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
+        ...mapMutations(['updatefilterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
             'updateAction', 'updateHeaders', 'updateListType']),
         logOutAndResolve() {
             this.logOut();

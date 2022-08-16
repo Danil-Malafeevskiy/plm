@@ -60,17 +60,20 @@ export default {
         };
     },
     watch: {
-
         selectedItem: {
             handler() {
                 if (this.selectedItem != null) {
-                    const domItem = document.querySelector(".object__data").childNodes[this.selectedItem];
-                    this.filterForFeature(domItem.childNodes[0].innerText);
-
                     if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
+                        const object = {
+                            properties: {
+                                username: "",
+                                password: "",
+                            }
+                        }
+                        this.upadateEmptyObject(object);
                         this.updateAction({
                             actionGet: 'getUsersOfGroup',
-                            actionPost: 'postAuth',
+                            actionPost: 'postUser',
                             actionOneGet: 'getOneUser',
                             actionPut: 'putUser',
                             actionDelete: 'deleteUser',
@@ -87,22 +90,24 @@ export default {
 
         },
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject']) },
+    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'arrObjects']) },
     async mounted() {
         await this.getTypeObject();
     },
 
     methods: {
-        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup']),
-        ...mapMutations(['filterForFeature', 'upadateEmptyObject', 'updateFeatureNameType', 
-                         'updateHeaders', 'updateDrawType', 'updateAction', 'updateGroupId']),
+        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature']),
+        ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle', 'addArrayFromSelectedObject']),
         getOneGroup(id) {
             this.getGroup(id);
         },
 
-        changeObject(objectType) {
+        async changeObject(objectType) {
+            if(!(`${objectType.name}` in this.arrObjects)){
+                this.addArrayFromSelectedObject(objectType.name);
+            }
             const domItem = document.querySelector('.text_in_span').innerHTML;
-
+            this.upadateTitle(objectType.name);
             if (domItem === "Пользователи") {
                 const headers = [
                     {
@@ -117,15 +122,15 @@ export default {
                     }
                 ];
                 this.updateHeaders(headers);
-                this.getUsersOfGroup(objectType.id);
+                this.getUsersOfGroup(objectType);
             }
             else {
                 this.updateHeaders(objectType.headers);
                 this.updateDrawType(objectType.type)
-                this.filterForFeature(objectType.name);
+                await this.filterForFeature(objectType.id);
 
                 for (let i in this.allFeatures) {
-                    if (this.allFeatures[i].name === objectType.name) {
+                    if (this.allFeatures[i].name === objectType.id) {
                         this.upadateEmptyObject(this.allFeatures[i]);
                         break;
                     }

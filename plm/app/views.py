@@ -281,4 +281,4 @@ class DatasetView(APIView):
         return Response("SUCCESS DEL")
 
 def room(request):
-    return render(request, 'D://plm/plm/templates/test.html')
+    return render(request, 'D:/python/PLM/plm/templates/test.html')

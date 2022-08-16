@@ -64,6 +64,22 @@ export default {
         },
         updateDrawType(state, drawType) {
             state.drawType = drawType;
+        },
+        upadateTitle(state, title){
+            state.toolbarTitle = title;
+        },
+        updateSelectedObejcts(state, {objects, name}){
+            state.slectedObjects[`${name}`] = objects;
+            console.log(state.slectedObjects)
+        },
+        addSelectedObject(state, object, name){
+            console.log(name);
+            state.slectedObjects[`${name}`].push(object);
+            console.log(state.slectedObjects);
+        },
+        addArrayFromSelectedObject(state, name){
+            state.slectedObjects[`${name}`] = [];
+            console.log(state.slectedObjects)
         }
     },
     getters: {
@@ -87,6 +103,12 @@ export default {
         },
         drawType(state) {
             return state.drawType;
+        },
+        getToolbarTitle(state){
+            return state.toolbarTitle;
+        },
+        arrObjects(state){
+            return state.slectedObjects;
         }
     },
     state: {
@@ -101,5 +123,7 @@ export default {
         emptyObject: {},
         headers: {},
         drawType: '',
+        toolbarTitle: null,
+        slectedObjects: {},
     },
 }

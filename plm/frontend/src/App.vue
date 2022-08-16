@@ -5,7 +5,7 @@
 
     <v-main>
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0;">
-        <v-toolbar-title>{{ featureName }}</v-toolbar-title>
+        <v-toolbar-title>{{ getToolbarTitle }}</v-toolbar-title>
 
         <template v-slot:extension>
 
@@ -85,7 +85,7 @@ export default {
       this.feature = this.getFeature;
     },
   },
-  computed: mapGetters(['allFeatures', 'getFeature', 'featureName', 'getAuth', 'getObjectForCard', 'emptyObject']),
+  computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser']),
     ...mapMutations(['updateFeature', 'updateList']),

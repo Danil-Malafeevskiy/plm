@@ -19,8 +19,8 @@ export default {
                 commit('updateObjectForCard', response.data);
             })
         },
-        async getUsersOfGroup({ commit, state }, idGroup = state.groupId) {
-            await axios.get(`/user/admin?groups=${idGroup}`).then((response) => {
+        async getUsersOfGroup({ commit, state }, group = state.group) {
+            await axios.get(`/user/admin?groups=${group.id}`).then((response) => {
                 console.log(response.data);
                 if (typeof response.data === 'object') {
                     commit('updateListItem', { items: response.data })
@@ -28,7 +28,7 @@ export default {
                 else {
                     commit('updateListItem', { items: [] })
                 }
-                commit('updateGroupId', idGroup);
+                commit('updateGroup', group);
             });
         },
         async postGroup({ dispatch }, group) {
@@ -59,17 +59,23 @@ export default {
             this.commit('updateListItem', { items: groups })
             this.commit('updateListType', groups)
         },
-        updateGroupId(state, id){
-            state.groupId = id;
+        updateGroup(state, group){
+            state.group = group;
         }
     },
     getters: {
         allGroups(state) {
             return state.groups;
+        },
+        currentGroup(state){
+            return state.group;
         }
     },
     state: {
         groups: [],
-        groupId: null,
+        group: {
+            id: null,
+            name: null
+        },
     },
 }
