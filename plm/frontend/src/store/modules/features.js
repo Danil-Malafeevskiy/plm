@@ -4,11 +4,11 @@ axios.defaults.xsrfCookieName = "csrftoken";
 
 export default {
     actions: {
-        async getFeatures({ commit, state }) {
+        async getFeatures({ commit, state, dispatch }) {
             await axios.get('/tower').then((response) => {
                 commit('updateFeatures', response.data);
-                if (state.featureNameType != null) {
-                    commit('filterForFeature');
+                if (state.featureTypeId != null) {
+                    dispatch('filterForFeature');
                 }
             }).catch(error => console.log(error));
         },
@@ -40,6 +40,12 @@ export default {
                 console.log(feature);
             }).catch(error => console.log(error));
             dispatch('getFeatures');
+        },
+        async filterForFeature({ commit, state }, typeId = state.featureTypeId){
+            state.featureTypeId = typeId;
+            await axios.get(`/tower?name=${typeId}`).then((response) => {
+                commit('updatefilterForFeature', response.data);
+            })
         }
     },
     mutations: {
@@ -52,9 +58,8 @@ export default {
         updateResultPut(state, bool) {
             state.resultPut = bool;
         },
-        filterForFeature(state, nameType = state.featureNameType) {
-            state.featureNameType = nameType;
-            state.filteredFeature = state.features.filter(r => (`${r.name}` === state.featureNameType));
+        updatefilterForFeature(state, arrFeature) {
+            state.filteredFeature = arrFeature;
             let items = [];
             state.filteredFeature.forEach(element => {
                 let item = JSON.parse(JSON.stringify(element.properties));
@@ -63,8 +68,8 @@ export default {
             });
             this.commit('updateListItem', { items }, { root: true });
         },
-        updateFeatureNameType(state, nameType){
-            state.featureNameType = nameType;
+        updatefeatureTypeId(state, nameType){
+            state.featureTypeId = nameType;
         }
     },
     getters: {
@@ -80,14 +85,14 @@ export default {
         getFeature(state) {
             return state.feature;
         },
-        featureName(state) {
-            return state.featureNameType;
+        getTypeId(state){
+            return state.featureTypeId;
         }
     },
     state: {
         features: [],
         filteredFeature: [],
-        featureNameType: null,
+        featureTypeId: null,
         feature: {
             type: 'Feature',
             keyerties: {},

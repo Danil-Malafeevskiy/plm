@@ -34,7 +34,7 @@
                         <v-row justify="start" v-else-if="infoCardOn_.data">
                             <v-col cols="2" sm="6" md="5" lg="6">
                                 <v-card-text v-if="getObjectForCard.name != null" class="pa-0" style="font-size: 24px;">
-                                    {{ getObjectForCard.name }}
+                                    {{ oneType }}
                                 </v-card-text>
                                 <v-card-text v-else-if="getObjectForCard.properties.username != null" class="pa-0"
                                     style="font-size: 24px;">{{
@@ -166,14 +166,15 @@ export default {
         },
     },
     computed: {
-        ...mapGetters(['featureName', 'filterFeature', 'getFeature', 'getObjectForCard', 'emptyObject']),
+        ...mapGetters(['getTypeId', 'filterFeature', 'getFeature', 'getObjectForCard', 'emptyObject', 'oneType']),
     },
     methods: {
         ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject']),
         ...mapMutations(['updateFunction']),
         async addNewFeature() {
-            this.emptyObject.name = this.featureName;
+            this.emptyObject.name = this.getTypeId;
             if (this.emptyObject.name != null) {
+                console.log(this.emptyObject)
                 await this.postObject([this.emptyObject]);
             }
             else {
