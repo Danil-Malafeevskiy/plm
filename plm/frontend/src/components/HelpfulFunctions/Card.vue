@@ -38,13 +38,14 @@
                                 </v-card-text>
                                 <v-card-text v-else-if="getObjectForCard.properties.username != null" class="pa-0"
                                     style="font-size: 24px;">{{
-                                            getObjectForCard.properties.username
+                                    getObjectForCard.properties.username
                                     }}
                                 </v-card-text>
                                 <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
-                                        getObjectForCard.properties.name
-                                }}
+                                    getObjectForCard.properties.name
+                                    }}
                                 </v-card-text>
+
                             </v-col>
 
                             <v-col class="pa-0" cols="2" sm="6" md="5" lg="6">
@@ -108,8 +109,38 @@
                                     :value="getObjectForCard.properties[index]" hide-details :label="index"
                                     :placeholder="index" filled>
                                 </v-text-field> -->
-
                             </v-col>
+                            <div v-for="(f, index) in getObjectForCard.properties" :key="f.number_support"
+                                v-show="index != 'id'" class="ma-1" style="width: 100%">
+                                <div v-if="index === 'username'">
+                                    <v-expansion-panels flat class="pa-0 ma-0">
+                                        <v-expansion-panel class="pa-0 ma-0">
+                                            <v-expansion-panel-header class="pa-2">
+                                                Группы
+                                            </v-expansion-panel-header>
+
+                                            <v-expansion-panel-content class="ma-0 pa-0">
+                                                <v-row class="pa-2 ma-0">
+                                                    <v-col  cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                        <v-checkbox color="#E93030" label="Group 1"></v-checkbox>
+                                                    </v-col>
+                                                    <v-col cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                        <v-checkbox color="#E93030" label="Group 2"></v-checkbox>
+                                                    </v-col>
+                                                    <v-col cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                        <v-checkbox color="#E93030" label="Group 2"></v-checkbox>
+                                                    </v-col>
+                                                    <v-col cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                        <v-checkbox color="#E93030" label="Group 2"></v-checkbox>
+                                                    </v-col>
+                                                </v-row>
+                                            </v-expansion-panel-content>
+
+                                        </v-expansion-panel>
+                                    </v-expansion-panels>
+
+                                </div>
+                            </div>
                         </v-row>
                     </v-form>
                 </v-card-text>
@@ -190,10 +221,24 @@ export default {
             this.infoCardOn_.data = !this.infoCardOn_.data;
         }
     },
+
+    mounted(){
+        var el = document.querySelector('v-label').innerHTML
+        console.log(el)
+    },
 }
 </script>
 
 <style>
+
+.v-expansion-panel-content__wrap{
+    padding: 0 !important;
+}
+
+.v-application--is-ltr .v-expansion-panel-header__icon{
+    margin-left: 0 !important;
+}
+
 .show__card {
     margin-right: 8px;
     border-radius: 8px !important;

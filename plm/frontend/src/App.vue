@@ -6,7 +6,6 @@
     <v-main>
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0;">
         <v-toolbar-title>{{ getToolbarTitle }}</v-toolbar-title>
-
         <template v-slot:extension>
 
           <v-tabs v-model="tab" align-with-title color="#E93030">
