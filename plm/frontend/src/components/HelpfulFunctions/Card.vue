@@ -87,6 +87,55 @@
                                 </v-text-field> -->
 
                             </v-col>
+                            <div v-for="(f, index) in getObjectForCard.properties" :key="f.number_support"
+                                v-show="index != 'id'" class="ma-1" style="width: 100%">
+                                <div v-if="index === 'username'">
+                                    <v-expansion-panels flat class="pa-0 ma-0">
+                                        <v-expansion-panel class="pa-0 ma-0">
+                                            <v-expansion-panel-header class="pa-2">
+                                                Группы 
+                                            </v-expansion-panel-header>
+
+                                            <v-expansion-panel-content class="ma-0 pa-0">
+                                                <v-row class="pa-2 ma-0">
+                                                    <v-col v-for="(f, index) in getObjectForCard.groups" v-show="index != 'id'" :key="f.username" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                        <v-checkbox 
+                                                            :v-model="getObjectForCard.groups[index]"
+                                                            class="ma-2"
+                                                            color="#E93030"
+                                                            disabled
+                                                            :input-value="f === f" 
+                                                            style="
+                                                                min-height: 37.53% !important; 
+                                                                max-height: 37.53% !important;
+                                                            " 
+                                                            :label="f">
+                                                        </v-checkbox>
+                                                    </v-col>
+                                                    <v-col v-for="(f, index) in getObjectForCard.avaible_group" v-show="index != 'id'" :key="f.username" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                        <v-checkbox 
+                                                            :v-model="getObjectForCard.avaible_group[index]"
+                                                            class="ma-2"
+                                                            color="#E93030"
+                                                            disabled
+                                                            :input-value="f != f"  
+                                                            style="
+                                                                min-height: 37.53% !important; 
+                                                                max-height: 37.53% !important;
+                                                            " 
+                                                            :label="f">
+                                                        </v-checkbox>
+                                                        <p>{{getObjectForCard.avaible_group}}</p>
+                                                    </v-col>
+                                                </v-row>
+                                            </v-expansion-panel-content>
+
+                                        </v-expansion-panel>
+                                    </v-expansion-panels>
+
+                                </div>
+                            </div>
+                            
                         </v-row>
                         <v-row justify="start" v-else-if="editCardOn.data">
                             <v-col cols="2" sm="6" md="5" lg="6">
@@ -116,22 +165,36 @@
                                     <v-expansion-panels flat class="pa-0 ma-0">
                                         <v-expansion-panel class="pa-0 ma-0">
                                             <v-expansion-panel-header class="pa-2">
-                                                Группы
+                                                Группы 
                                             </v-expansion-panel-header>
 
                                             <v-expansion-panel-content class="ma-0 pa-0">
                                                 <v-row class="pa-2 ma-0">
-                                                    <v-col  cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                                        <v-checkbox color="#E93030" label="Group 1"></v-checkbox>
+                                                    <v-col v-for="(f, index) in getObjectForCard.groups" v-show="index != 'id'" :key="f.username" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                        <v-checkbox 
+                                                            :v-model="getObjectForCard.groups[index]"
+                                                            class="ma-2"
+                                                            color="#E93030"
+                                                            :input-value="f === f" 
+                                                            style="
+                                                                min-height: 37.53% !important; 
+                                                                max-height: 37.53% !important;
+                                                            " 
+                                                            :label="f">
+                                                        </v-checkbox>
                                                     </v-col>
-                                                    <v-col cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                                        <v-checkbox color="#E93030" label="Group 2"></v-checkbox>
-                                                    </v-col>
-                                                    <v-col cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                                        <v-checkbox color="#E93030" label="Group 2"></v-checkbox>
-                                                    </v-col>
-                                                    <v-col cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                                        <v-checkbox color="#E93030" label="Group 2"></v-checkbox>
+                                                    <v-col v-for="(f, index) in getObjectForCard.avaible_group" v-show="index != 'id'" :key="f.username" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                        <v-checkbox 
+                                                            :v-model="getObjectForCard.avaible_group[index]"
+                                                            class="ma-2"
+                                                            color="#E93030"
+                                                            :input-value="f != f"  
+                                                            style="
+                                                                min-height: 37.53% !important; 
+                                                                max-height: 37.53% !important;
+                                                            " 
+                                                            :label="f">
+                                                        </v-checkbox>
                                                     </v-col>
                                                 </v-row>
                                             </v-expansion-panel-content>
@@ -219,6 +282,7 @@ export default {
             this.getOneObject(this.getObjectForCard.id);
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
+            console.log(this.getObjectForCard)
         }
     },
 
@@ -230,6 +294,8 @@ export default {
 </script>
 
 <style>
+
+
 
 .v-expansion-panel-content__wrap{
     padding: 0 !important;
@@ -311,6 +377,8 @@ export default {
     background-color: #EE5E5E;
     border-radius: 12px 12px 0 0;
 }
+
+
 
 .row {
     padding: 24px 24px 12px 24px !important;
