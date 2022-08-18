@@ -1,22 +1,44 @@
-<template>
+  <template>
   <div class="child" v-if="allListItem.length != 0">
-    <div class="sub_tittle">
-      <p>{{ selected.length }}</p>
+    <div class="sub_tittle" v-if="selected.length != 0">
+      <div style="margin: 20px 0;">
+        <span class="object" v-if="selected.length % 10 === 1">{{ selected.length }} объект </span>
+        <span class="object" v-else-if="selected.length % 10 > 1 && selected.length % 10 < 5">
+          {{ selected.length }} объекта </span>
+
+        <span class="object" v-else>{{ selected.length }} объектов </span>
+
+        <a style="margin: 20px 0" @click="resetSelected()">
+          <v-icon v-if="selected.length != 0" small>mdi-close</v-icon>
+        </a>
+      </div>
+      <div style="margin-top: 20px;" v-if="selected.length != 0">
+        <v-menu offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn depressed class="ma-0" color="#E5E5E5" v-bind="attrs" v-on="on">
+              <span style="color: #787878">Переместить в </span>
+              <v-icon color="#787878">mdi-chevron-down</v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item v-for="(item, index) in type" :key="index" link @click="moveObject(item)">
+              <v-list-item-title>{{ item.name }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+        <v-btn color="#E5E5E5" depressed class="ma-0" @click="deleteObjects">
+          <span style="color: #787878">Удалить</span>
+        </v-btn>
+      </div>
+    </div>
+    <div class="sub_tittle" v-else>
       <span class="object" v-if="allListItem.length % 10 === 1">{{ allListItem.length }} объект </span>
       <span class="object" v-else-if="allListItem.length % 10 > 1 && allListItem.length % 10 < 5">
         {{ allListItem.length }} объекта </span>
       <span class="object" v-else>{{ allListItem.length }} объектов </span>
-      
-      <v-icon v-if="selected.length != 0" small>mdi-close</v-icon>
-      <div style="margin: 20px;" v-if="selected.length != 0">
-        <a @click="deleteObjects">
-          <span style="color: #787878;"></span>Удалить
-        </a>
-      </div>
     </div>
-    <v-data-table @click:row="showCard"
-      :headers="headers" v-model="selected" show-select :item-key="headers[0].text" :items="allListItem" :items-per-page="10" class="pa-0"
-      style="
+    <v-data-table @click:row="showCard" :headers="headers" v-model="selected" show-select :item-key="headers[0].text"
+      :items="allListItem" :items-per-page="10" class="pa-0" style="
         height: 100% !important;
         width: 50% !important; 
         background-color: #E5E5E5; 
@@ -41,7 +63,6 @@ export default {
       feature: this.getFeature,
       infoCardOn_: this.infoCardOn,
       addCardOn_: this.addCardOn,
-      test: [],
     }
   },
   watch: {
@@ -51,35 +72,25 @@ export default {
     allFeatures: function () {
       this.features = this.allFeatures;
     },
-    arrObjects: {
-      handler(){
-        console.log(this.arrObjects);
-      },
-      deep: true,
-    }
-    // allListItem:{
-    //   handler(){
-    //     for(let i in this.allListItem){
-    //       if(typeof (this.allListItem[i]) === 'object'){
-    //         delete this.allFeatures[i];
-    //       }
-    //     }
+    // arrObjects: {
+    //   handler() {
+    //     console.log(this.arrObjects[this.nameArray])
     //   },
     //   deep: true
     // }
   },
   computed: {
-    ...mapGetters(['allFeatures', 'getFeature', 'allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'getToolbarTitle']),
+    ...mapGetters(['allFeatures', 'getFeature', 'allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray', 'allType', 'drawType']),
     selected: {
-      get() { return this.arrObjects[`${this.getToolbarTitle}`]; },
-      set(value) { this.updateSelectedObejcts({objects: value, name: this.getToolbarTitle}); }
+      get() { return this.arrObjects[`${this.nameArray}`]; },
+      set(value) { this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
     },
-    selectedLength(){
-      return this.arrObjects[`${this.getToolbarTitle}`].length;
+    type() {
+      return this.allType.filter(el => el.type != undefined ? el.type === this.drawType : 1);
     }
   },
   methods: {
-    ...mapActions(['getFeatures', 'postFeature', 'getOneFeature', 'getOneObject', 'deleteObject']),
+    ...mapActions(['getAllObject', 'getOneObject', 'deleteObject', 'putObject', 'filterForFeature']),
     ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts']),
 
     async showCard(obj) {
@@ -95,31 +106,35 @@ export default {
         }
       }
     },
-    // selectAllobject({ items, value }) {
-    //   if (value) {
-    //     this.updateSelectedObejcts(items);
-    //   }
-    //   else {
-    //     this.updateSelectedObejcts([]);
-    //   }
-    //   console.log(this.arrObjects);
-
-    // },
-    // selectOneObject({ item, value }) {
-    //   console.log(this.selected);
-    //   if (value) {
-    //     this.addSelectedObject(item);
-    //   }
-    //   else {
-    //     let newArr = this.arrObjects.filter(element => element != item)
-    //     this.updateSelectedObejcts(newArr);
-    //   }
-    //   console.log(this.arrObjects)
-    // },
-    deleteObjects() {
-      this.arrObjects.forEach(element => {
+    resetSelected() {
+      this.arrObjects[`${this.nameArray}`] = [];
+    },
+    async deleteObjects() {
+      for (const element of this.arrObjects[`${this.nameArray}`]) {
         this.deleteObject(element.id);
-      });
+      }
+      await this.filterForFeature();
+      this.getAllObject();
+      this.resetSelected();
+    },
+    async moveObject(type) {
+      for (const element of this.arrObjects[`${this.nameArray}`]) {
+        await this.getOneObject(element.id);
+        console.log(this.getObjectForCard);
+        if (type.type != undefined) {
+          this.getObjectForCard.name = type.id;
+        }
+        else {
+          this.getObjectForCard.groups = [`${type.name}`];
+        }
+        this.putObject(this.getObjectForCard);
+      }
+
+      if (type.type != undefined) {
+        await this.filterForFeature();
+      }
+      this.getAllObject();
+      this.resetSelected();
     }
   },
   async mounted() {
@@ -134,6 +149,8 @@ export default {
 
 .sub_tittle {
   display: flex;
+  justify-content: space-between;
+  width: 50%;
   /* min-width: 100%; */
   /* width: 50%; */
 }
@@ -143,7 +160,7 @@ export default {
   padding-top: 1% !important;
   width: 50%;
   display: inline-block; */
-  margin: 20px;
+  margin: 20px 5px 20px 20px;
   color: #787878;
   font-weight: 500;
 }
