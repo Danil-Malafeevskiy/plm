@@ -169,13 +169,15 @@ export default {
         ...mapGetters(['getTypeId', 'filterFeature', 'getFeature', 'getObjectForCard', 'emptyObject', 'oneType']),
     },
     methods: {
-        ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject']),
+        ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject']),
         ...mapMutations(['updateFunction']),
         async addNewFeature() {
             if (this.emptyObject.name != null) {
                 this.emptyObject.name = this.getTypeId;
                 console.log(this.emptyObject)
                 await this.postObject([this.emptyObject]);
+                this.filterForFeature();
+                this.getAllObject();
             }
             else {
                 await this.postObject(this.emptyObject.properties);
@@ -185,6 +187,10 @@ export default {
         },
         async editObject() {
             await this.putObject(this.getObjectForCard);
+            if(this.getObjectForCard.anme != null){
+                this.filterForFeature();
+                this.getAllObject();
+            }
             this.getOneObject(this.getObjectForCard.id);
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;

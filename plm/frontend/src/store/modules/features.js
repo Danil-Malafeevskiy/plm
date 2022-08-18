@@ -26,20 +26,18 @@ export default {
             }).catch(error => console.log(error));
         },
 
-        async putFeature({ dispatch }, feature,) {
+        async putFeature(ctx, feature) {
             await axios.put('/tower', feature).then((response) => {
                 const feature = response.data;
                 console.log(feature);
-                dispatch('getFeatures');
             }).catch(error => console.log(error));
         },
 
-        async deleteFeature({ dispatch }, id) {
+        async deleteFeature(ctx, id) {
             await axios.delete(`/tower/${id}`).then((response) => {
                 const feature = response.data;
                 console.log(feature);
             }).catch(error => console.log(error));
-            dispatch('getFeatures');
         },
         async filterForFeature({ commit, state }, typeId = state.featureTypeId){
             state.featureTypeId = typeId;

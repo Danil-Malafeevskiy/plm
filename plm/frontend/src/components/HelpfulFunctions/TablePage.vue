@@ -13,8 +13,21 @@
         </a>
       </div>
       <div style="margin-top: 20px;" v-if="selected.length != 0">
+        <v-menu offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn depressed class="ma-0" color="#E5E5E5" v-bind="attrs" v-on="on">
+              <span style="color: #787878">Переместить в </span>
+              <v-icon color="#787878">mdi-chevron-down</v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item v-for="(item, index) in type" :key="index" link @click="moveObject(item)">
+              <v-list-item-title>{{ item.name }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <v-btn color="#E5E5E5" depressed class="ma-0" @click="deleteObjects">
-          <span style="color: #787878; justify-content: end;">Удалить</span>
+          <span style="color: #787878">Удалить</span>
         </v-btn>
       </div>
     </div>
@@ -59,25 +72,25 @@ export default {
     allFeatures: function () {
       this.features = this.allFeatures;
     },
-    arrObjects: {
-      handler() {
-        console.log(this.arrObjects[this.nameArray])
-      },
-      deep: true
-    }
+    // arrObjects: {
+    //   handler() {
+    //     console.log(this.arrObjects[this.nameArray])
+    //   },
+    //   deep: true
+    // }
   },
   computed: {
-    ...mapGetters(['allFeatures', 'getFeature', 'allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray']),
+    ...mapGetters(['allFeatures', 'getFeature', 'allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray', 'allType', 'drawType']),
     selected: {
       get() { return this.arrObjects[`${this.nameArray}`]; },
       set(value) { this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
     },
-    selectedLength() {
-      return this.arrObjects[`${this.nameArray}`].length;
+    type() {
+      return this.allType.filter(el => el.type != undefined ? el.type === this.drawType : 1);
     }
   },
   methods: {
-    ...mapActions(['getFeatures', 'postFeature', 'getOneFeature', 'getOneObject', 'deleteObject']),
+    ...mapActions(['getAllObject', 'getOneObject', 'deleteObject', 'putObject', 'filterForFeature']),
     ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts']),
 
     async showCard(obj) {
@@ -96,31 +109,31 @@ export default {
     resetSelected() {
       this.arrObjects[`${this.nameArray}`] = [];
     },
-    // selectAllobject({ items, value }) {
-    //   if (value) {
-    //     this.updateSelectedObejcts(items);
-    //   }
-    //   else {
-    //     this.updateSelectedObejcts([]);
-    //   }
-    //   console.log(this.arrObjects);
-
-    // },
-    // selectOneObject({ item, value }) {
-    //   console.log(this.selected);
-    //   if (value) {
-    //     this.addSelectedObject(item);
-    //   }
-    //   else {
-    //     let newArr = this.arrObjects.filter(element => element != item)
-    //     this.updateSelectedObejcts(newArr);
-    //   }
-    //   console.log(this.arrObjects)
-    // },
-    deleteObjects() {
+    async deleteObjects() {
       for (const element of this.arrObjects[`${this.nameArray}`]) {
         this.deleteObject(element.id);
       }
+      await this.filterForFeature();
+      this.getAllObject();
+      this.resetSelected();
+    },
+    async moveObject(type) {
+      for (const element of this.arrObjects[`${this.nameArray}`]) {
+        await this.getOneObject(element.id);
+        console.log(this.getObjectForCard);
+        if (type.type != undefined) {
+          this.getObjectForCard.name = type.id;
+        }
+        else {
+          this.getObjectForCard.groups = [`${type.name}`];
+        }
+        this.putObject(this.getObjectForCard);
+      }
+
+      if (type.type != undefined) {
+        await this.filterForFeature();
+      }
+      this.getAllObject();
       this.resetSelected();
     }
   },
