@@ -6,7 +6,6 @@
     <v-main>
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0;">
         <v-toolbar-title>{{ getToolbarTitle }}</v-toolbar-title>
-
         <template v-slot:extension>
 
           <v-tabs v-model="tab" align-with-title color="#E93030">
@@ -49,6 +48,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 import TablePage from './components/HelpfulFunctions/TablePage.vue';
 import MapArea from './components/Map/MapArea.vue';
 import CardInfo from './components/HelpfulFunctions/Card.vue';
@@ -85,9 +85,9 @@ export default {
       this.feature = this.getFeature;
     },
   },
-  computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject']),
+  computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'user']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'getOneUser']),
     ...mapMutations(['updateFeature', 'updateList']),
     visableCard() {
       this.cardVisable.data = true;
@@ -102,8 +102,12 @@ export default {
       btn.classList.remove('v-btn--disabled');
     },
   },
-  mounted() {
-    this.getUser();
+  async mounted() {
+    axios.options('/group').then((response) =>{
+      console.log(response.data)
+    })
+    await this.getUser();
+    this.getOneUser(this.user.id);
     this.getFeatures();
   }
 }

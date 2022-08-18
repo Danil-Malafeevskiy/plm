@@ -43,13 +43,12 @@ export default {
                 commit('updateObjectForCard', user);
             })
         },
-        async postUser({ dispatch, getters }, newUser) {
-            console.log(newUser);
+
+        async postUser({ dispatch }, newUser) {
+
             await axios.post('/user/admin', newUser).then((response) => {
                 console.log(response.data)
                 newUser.id = response.data.id;
-                newUser.groups = [getters.currentGroup.name];
-                newUser.user_permissions = [];
                 delete newUser.password
                 dispatch('putUser', newUser);
             })
