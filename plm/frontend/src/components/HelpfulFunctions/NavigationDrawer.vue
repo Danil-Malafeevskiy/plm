@@ -68,6 +68,9 @@ export default {
                             properties: {
                                 username: "",
                                 password: "",
+                                groups: [],
+                                user_permissions: [],
+
                             }
                         }
                         this.upadateEmptyObject(object);
