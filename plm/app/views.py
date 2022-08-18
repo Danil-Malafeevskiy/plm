@@ -188,7 +188,7 @@ class UserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response(User_Perm_Serializer(request.user).data)
+        return Response(User_Perm_Admin_Serializer(request.user).data)
 
 class UserAdminView(APIView):
     authentication_classes = [SessionAuthentication]
