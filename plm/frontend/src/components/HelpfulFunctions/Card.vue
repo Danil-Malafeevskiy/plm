@@ -125,9 +125,64 @@
                                                             " 
                                                             :label="f">
                                                         </v-checkbox>
-                                                        <p>{{getObjectForCard.avaible_group}}</p>
                                                     </v-col>
                                                 </v-row>
+                                            </v-expansion-panel-content>
+
+                                        </v-expansion-panel>
+
+
+                                        <v-expansion-panel  class="pa-0 ma-0" @click="groupsPermissions()">
+                                            <v-expansion-panel-header class="pa-2">
+                                                Права
+                                            </v-expansion-panel-header>
+                                            
+                                            <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                <v-expansion-panels flat class="pa-0 ma-0">
+                                                    <v-expansion-panel v-for="el in groups" :key="el" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+
+                                                        <v-expansion-panel-header class="pa-2">
+                                                            {{el}}
+                                                        </v-expansion-panel-header>
+
+                                                        <v-expansion-panel-content  class="ma-0 pa-0">
+                                                            <div v-for="name in getObjectForCard.user_permissions" :key="name">
+                                                                <v-checkbox 
+                                                                    v-if="name.includes(el)"
+                                                                    :v-model="getObjectForCard.user_permissions[index]"
+                                                                    class="ma-2"
+                                                                    color="#E93030"
+                                                                    disabled
+                                                                    :input-value="name === name"  
+                                                                    style="
+                                                                        min-height: 37.53% !important; 
+                                                                        max-height: 37.53% !important;
+                                                                    " 
+                                                                    :label="name">
+                                                                </v-checkbox>
+                                                            </div>
+                                                            <div v-for="name in getObjectForCard.avaible_user_permission" :key="name">
+                                                                <v-checkbox 
+                                                                    v-if="name.includes(el)"
+                                                                    :v-model="getObjectForCard.user_permissions[index]"
+                                                                    class="ma-2"
+                                                                    color="#E93030"
+                                                                    disabled
+                                                                    :input-value="name != name"  
+                                                                    style="
+                                                                        min-height: 37.53% !important; 
+                                                                        max-height: 37.53% !important;
+                                                                    " 
+                                                                    :label="name">
+                                                                </v-checkbox>
+                                                            </div>
+                                                            
+                                                            
+                                                        </v-expansion-panel-content>
+
+                                                    </v-expansion-panel>
+                                                </v-expansion-panels>
+                                                
                                             </v-expansion-panel-content>
 
                                         </v-expansion-panel>
@@ -170,33 +225,76 @@
 
                                             <v-expansion-panel-content class="ma-0 pa-0">
                                                 <v-row class="pa-2 ma-0">
-                                                    <v-col v-for="(f, index) in getObjectForCard.groups" v-show="index != 'id'" :key="f.username" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                    <v-col v-for="(f, index) in userGroups" :key="f" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                        
                                                         <v-checkbox 
-                                                            :v-model="getObjectForCard.groups[index]"
+                                                            v-model="getObjectForCard.groups"
+                                                            :label="f"
+                                                            :value="userGroups[index]"
                                                             class="ma-2"
                                                             color="#E93030"
-                                                            :input-value="f === f" 
+                                                            
                                                             style="
                                                                 min-height: 37.53% !important; 
                                                                 max-height: 37.53% !important;
                                                             " 
-                                                            :label="f">
-                                                        </v-checkbox>
-                                                    </v-col>
-                                                    <v-col v-for="(f, index) in getObjectForCard.avaible_group" v-show="index != 'id'" :key="f.username" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                                        <v-checkbox 
-                                                            :v-model="getObjectForCard.avaible_group[index]"
-                                                            class="ma-2"
-                                                            color="#E93030"
-                                                            :input-value="f != f"  
-                                                            style="
-                                                                min-height: 37.53% !important; 
-                                                                max-height: 37.53% !important;
-                                                            " 
-                                                            :label="f">
+                                                            >
                                                         </v-checkbox>
                                                     </v-col>
                                                 </v-row>
+                                            </v-expansion-panel-content>
+
+                                        </v-expansion-panel>
+
+                                        <v-expansion-panel  class="pa-0 ma-0" @click="groupsPermissions()">
+                                            <v-expansion-panel-header class="pa-2">
+                                                Права
+                                            </v-expansion-panel-header>
+                                            
+                                            <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                <v-expansion-panels flat class="pa-0 ma-0">
+                                                    <v-expansion-panel v-for="el in groups" :key="el" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+
+                                                        <v-expansion-panel-header class="pa-2">
+                                                            {{el}}
+                                                        </v-expansion-panel-header>
+
+                                                        <v-expansion-panel-content  class="ma-0 pa-0">
+                                                            <div v-for="(name, index) in permissionList" :key="name">
+                                                                <v-checkbox 
+                                                                    v-if="name.includes(el)"
+                                                                    v-model="getObjectForCard.user_permissions"
+                                                                    class="ma-2"
+                                                                    color="#E93030"
+                                                                    :value="permissionList[index]"
+                                                                    style="
+                                                                        min-height: 37.53% !important; 
+                                                                        max-height: 37.53% !important;
+                                                                    " 
+                                                                    :label="name">
+                                                                </v-checkbox>
+                                                            </div>
+                                                            <!-- <div v-for="name in getObjectForCard.avaible_user_permission" :key="name">
+                                                                <v-checkbox 
+                                                                    v-if="name.includes(el)"
+                                                                    v-model="getObjectForCard.avaible_user_permission"
+                                                                    :value="getObjectForCard.avaible_user_permission[index]"
+                                                                    class="ma-2"
+                                                                    color="#E93030"
+                                                                    style="
+                                                                        min-height: 37.53% !important; 
+                                                                        max-height: 37.53% !important;
+                                                                    " 
+                                                                    :label="name">
+                                                                </v-checkbox>
+                                                            </div> -->
+                                                            
+                                                            
+                                                        </v-expansion-panel-content>
+
+                                                    </v-expansion-panel>
+                                                </v-expansion-panels>
+                                                
                                             </v-expansion-panel-content>
 
                                         </v-expansion-panel>
@@ -239,6 +337,10 @@ export default {
             editCardOn_: this.editCardOn,
             feature: this.getFeature,
             icon: mdiImagePlusOutline,
+            groups: [],         // Группы прав
+            userGroups: [],
+            permissionList: [], // список всех прав 
+            
         }
     },
     watch: {
@@ -258,6 +360,12 @@ export default {
         getFeature: function () {
             this.feature = this.getFeature;
         },
+        getObjectForCard: {
+            handler(){
+                this.userGroups = [...this.getObjectForCard.groups, ...this.getObjectForCard.avaible_group]
+                this.permissionList = [...this.getObjectForCard.user_permissions, ...this.getObjectForCard.avaible_user_permission]
+            }
+        }
     },
     computed: {
         ...mapGetters(['getTypeId', 'filterFeature', 'getFeature', 'getObjectForCard', 'emptyObject', 'oneType']),
@@ -282,7 +390,15 @@ export default {
             this.getOneObject(this.getObjectForCard.id);
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
-            console.log(this.getObjectForCard)
+        },
+        groupsPermissions() {
+            for(let i =0; i < this.getObjectForCard.user_permissions.length; ++i){
+                this.groups.push(this.getObjectForCard.user_permissions[i].split(" ").pop());
+            }
+            for (let i = 0; i < this.getObjectForCard.avaible_user_permission.length; ++i) {
+                this.groups.push(this.getObjectForCard.avaible_user_permission[i].split(" ").pop());
+            }
+            this.groups = [...new Set(this.groups)]
         }
     },
 
