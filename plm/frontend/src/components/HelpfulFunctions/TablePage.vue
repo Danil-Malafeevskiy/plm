@@ -80,13 +80,13 @@ export default {
     // }
   },
   computed: {
-    ...mapGetters(['allFeatures', 'getFeature', 'allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray', 'allType', 'drawType']),
+    ...mapGetters(['allFeatures', 'getFeature', 'allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray', 'allType', 'drawType', 'getToolbarTitle']),
     selected: {
       get() { return this.arrObjects[`${this.nameArray}`]; },
       set(value) { this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
     },
     type() {
-      return this.allType.filter(el => el.type != undefined ? el.type === this.drawType : 1);
+      return this.allType.filter(el => el.type != undefined ? el.type === this.drawType && el.name != this.getToolbarTitle : el.name != this.getToolbarTitle);
     }
   },
   methods: {
