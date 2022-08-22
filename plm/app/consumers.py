@@ -19,10 +19,6 @@ class FeatureConsumer(AsyncAPIConsumer):
                 await self.model_change.subscribe(group=group)
             await self.accept()
 
-    async def disconnect(self, code):
-        for group in list(self.scope["user"].groups.values_list("name", flat=True)):
-            await self.model_change.unsubscribe(group=group)
-
     @model_observer(Feature)
     async def model_change(self, message, **kwargs):
         await  self.send_json(message)
