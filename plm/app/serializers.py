@@ -14,7 +14,7 @@ class FeatureSerializer(serializers.ModelSerializer):
     class Meta:
         geo_field = 'geometry'
         model = Feature
-        fields = ('id', 'name', 'type', 'properties', 'geometry', 'group')
+        fields = ('id', 'name', 'type', 'properties', 'geometry')
 
 class FileSerializer(serializers.Serializer):
     file = serializers.FileField()
@@ -102,6 +102,7 @@ class UserRegSerializer(serializers.ModelSerializer):
         return super(UserRegSerializer, self).update(instance, validated_data)
 
 class DatasetSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Dataset
         fields = ('id', 'name', 'type', 'headers', 'group')
@@ -111,3 +112,24 @@ class DatasetSerializer(serializers.ModelSerializer):
                 fields=['name']
             )
         ]
+
+
+class DatasetSerializerAdmin(serializers.ModelSerializer):
+    group = serializers.SerializerMethodField()
+    avaible_group = serializers.SerializerMethodField()
+    class Meta:
+        model = Dataset
+        fields = ('id', 'name', 'type', 'headers', 'group', 'avaible_group')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Dataset.objects.all(),
+                fields=['name']
+            )
+        ]
+
+    def get_group(self, obj):
+        return Group.objects.get(id=obj.group_id).name
+
+    def get_avaible_group(self, obj):
+        return [per for per in Group.objects.all().values_list('name', flat=True)
+                if (per != Group.objects.get(id=obj.group_id).name)]
