@@ -34,9 +34,9 @@
                             <div v-for="(f, index) in emptyObject.properties" :key="f.number_support"
                                 v-show="index != 'id'" class="ma-1" style="width: 100%">
                                 <div v-if="index === 'username'">
-                                    <v-expansion-panels flat class="pa-0 ma-0">
+                                    <v-expansion-panels  accordion flat class="pa-0 ma-0">
                                         <v-expansion-panel class="pa-0 ma-0">
-                                            <v-expansion-panel-header class="pa-2">
+                                            <v-expansion-panel-header class="pa-0 ma-0">
                                                 Группы 
                                             </v-expansion-panel-header>
 
@@ -64,22 +64,22 @@
                                         </v-expansion-panel>
 
                                         <v-expansion-panel  class="pa-0 ma-0" >
-                                            <v-expansion-panel-header class="pa-2">
+                                            <v-expansion-panel-header class="pa-2" >
                                                 Права
                                             </v-expansion-panel-header>
                                             
                                             <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                                <v-expansion-panels flat class="pa-0 ma-0">
-                                                    <v-expansion-panel v-for="el in groups" :key="el" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                <v-expansion-panels  accordion flat class="pa-0 ma-0">
+                                                    <v-expansion-panel v-for="el in groups" id="permission" :key="el" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
 
-                                                        <v-expansion-panel-header class="pa-2">
+                                                        <v-expansion-panel-header class="pa-0 ma-0" style="margin-left: 0.5em !important;">
                                                             {{el}}
                                                         </v-expansion-panel-header>
 
                                                         <v-expansion-panel-content  class="ma-0 pa-0">
-                                                            <div v-for="(name, index) in permissionList" :key="name">
+                                                            <div v-for="(name, index) in permissionList" :key="name" class="pa-0 ma-0">
                                                                 <v-checkbox 
-                                                                    v-if="name.includes(el)"
+                                                                    v-if="name.includes(el[0].toLowerCase() + el.slice(1))"
                                                                     v-model="emptyObject.properties.user_permissions"
                                                                     class="ma-2"
                                                                     color="#E93030"
@@ -165,7 +165,7 @@
                             <div v-for="(f, index) in getObjectForCard.properties" :key="f.number_support"
                                 v-show="index != 'id'" class="ma-1" style="width: 100%">
                                 <div v-if="index === 'username'">
-                                    <v-expansion-panels flat class="pa-0 ma-0">
+                                    <v-expansion-panels  accordion flat class="pa-0 ma-0">
                                         <v-expansion-panel class="pa-0 ma-0">
                                             <v-expansion-panel-header class="pa-2">
                                                 Группы 
@@ -178,7 +178,7 @@
                                                             :v-model="getObjectForCard.groups[index]"
                                                             class="ma-2"
                                                             color="#E93030"
-                                                            disabled
+                                                            readonly
                                                             :input-value="f === f" 
                                                             style="
                                                                 min-height: 37.53% !important; 
@@ -192,7 +192,7 @@
                                                             :v-model="getObjectForCard.avaible_group[index]"
                                                             class="ma-2"
                                                             color="#E93030"
-                                                            disabled
+                                                            readonly
                                                             :input-value="f != f"  
                                                             style="
                                                                 min-height: 37.53% !important; 
@@ -213,21 +213,21 @@
                                             </v-expansion-panel-header>
                                             
                                             <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                                <v-expansion-panels flat class="pa-0 ma-0">
-                                                    <v-expansion-panel v-for="el in groups" :key="el" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                <v-expansion-panels accordion flat class="pa-0 ma-0">
+                                                    <v-expansion-panel v-for="el in groups" id="permission" :key="el" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
 
-                                                        <v-expansion-panel-header class="pa-2">
+                                                        <v-expansion-panel-header class="pa-0 ma-0" style="margin-left: 0.5em !important;">
                                                             {{el}}
                                                         </v-expansion-panel-header>
 
                                                         <v-expansion-panel-content  class="ma-0 pa-0">
                                                             <div v-for="name in getObjectForCard.user_permissions" :key="name">
                                                                 <v-checkbox 
-                                                                    v-if="name.includes(el)"
+                                                                    v-if="name.includes(el[0].toLowerCase() + el.slice(1))"
                                                                     :v-model="getObjectForCard.user_permissions[index]"
                                                                     class="ma-2"
                                                                     color="#E93030"
-                                                                    disabled
+                                                                    readonly
                                                                     :input-value="name === name"  
                                                                     style="
                                                                         min-height: 37.53% !important; 
@@ -238,11 +238,11 @@
                                                             </div>
                                                             <div v-for="name in getObjectForCard.avaible_user_permission" :key="name">
                                                                 <v-checkbox 
-                                                                    v-if="name.includes(el)"
+                                                                    v-if="name.includes(el[0].toLowerCase() + el.slice(1))"
                                                                     :v-model="getObjectForCard.user_permissions[index]"
                                                                     class="ma-2"
                                                                     color="#E93030"
-                                                                    disabled
+                                                                    readonly
                                                                     :input-value="name != name"  
                                                                     style="
                                                                         min-height: 37.53% !important; 
@@ -292,7 +292,7 @@
                             <div v-for="(f, index) in getObjectForCard.properties" :key="f.number_support"
                                 v-show="index != 'id'" class="ma-1" style="width: 100%">
                                 <div v-if="index === 'username'">
-                                    <v-expansion-panels flat class="pa-0 ma-0">
+                                    <v-expansion-panels  accordion flat class="pa-0 ma-0">
                                         <v-expansion-panel class="pa-0 ma-0">
                                             <v-expansion-panel-header class="pa-2">
                                                 Группы 
@@ -327,17 +327,17 @@
                                             </v-expansion-panel-header>
                                             
                                             <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                                <v-expansion-panels flat class="pa-0 ma-0">
-                                                    <v-expansion-panel v-for="el in groups" :key="el" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                                                <v-expansion-panels  accordion flat class="pa-0 ma-0">
+                                                    <v-expansion-panel v-for="el in groups" :key="el" id="permission" cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
 
-                                                        <v-expansion-panel-header class="pa-2">
+                                                        <v-expansion-panel-header class="pa-0 ma-0" style="margin-left: 0.5em !important;">
                                                             {{el}}
                                                         </v-expansion-panel-header>
 
                                                         <v-expansion-panel-content  class="ma-0 pa-0">
                                                             <div v-for="(name, index) in permissionList" :key="name">
                                                                 <v-checkbox 
-                                                                    v-if="name.includes(el)"
+                                                                    v-if="name.includes(el[0].toLowerCase() + el.slice(1))"
                                                                     v-model="getObjectForCard.user_permissions"
                                                                     class="ma-2"
                                                                     color="#E93030"
@@ -435,11 +435,11 @@ export default {
         getFeature: function () {
             this.feature = this.getFeature;
         },
-        getObjectForCard: {
+        user: {
             handler(){
-                console.log(this.getObjectForCard.avaible_group)
-                this.userGroups = [...this.getObjectForCard.groups, ...this.getObjectForCard.avaible_group]
-                this.permissionList = [...this.getObjectForCard.user_permissions, ...this.getObjectForCard.avaible_user_permission]
+                console.log(this.user.avaible_group)
+                this.userGroups = [...this.user.groups, ...this.user.avaible_group]
+                this.permissionList = [...this.user.user_permissions, ...this.user.avaible_user_permission]
                 this.groupsPermissions()
             },
             deep: true,
@@ -477,7 +477,9 @@ export default {
         },
         groupsPermissions() {
             for(let i =0; i < this.permissionList.length; ++i){
-                this.groups.push(this.permissionList[i].split(" ").pop());
+                let el = this.permissionList[i].split(" ").pop();
+                el = el[0].toUpperCase() + el.slice(1);
+                this.groups.push(el);
             }
             // for (let i = 0; i < this.getObjectForCard.avaible_user_permission.length; ++i) {
             //     this.groups.push(this.getObjectForCard.avaible_user_permission[i].split(" ").pop());
@@ -495,7 +497,10 @@ export default {
 
 <style>
 
-
+#permission{
+    margin-top: 0 !important;
+    margin-left: 1em !important;
+}
 
 .v-expansion-panel-content__wrap{
     padding: 0 !important;

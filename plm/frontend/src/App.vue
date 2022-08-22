@@ -48,7 +48,6 @@
 </template>
 
 <script>
-import axios from 'axios';
 import TablePage from './components/HelpfulFunctions/TablePage.vue';
 import MapArea from './components/Map/MapArea.vue';
 import CardInfo from './components/HelpfulFunctions/Card.vue';
@@ -85,9 +84,9 @@ export default {
       this.feature = this.getFeature;
     },
   },
-  computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'user']),
+  computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'getOneUser']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser']),
     ...mapMutations(['updateFeature', 'updateList']),
     visableCard() {
       this.cardVisable.data = true;
@@ -102,12 +101,8 @@ export default {
       btn.classList.remove('v-btn--disabled');
     },
   },
-  async mounted() {
-    axios.options('/group').then((response) =>{
-      console.log(response.data)
-    })
-    await this.getUser();
-    this.getOneUser(this.user.id);
+  mounted() {
+    this.getUser();
     this.getFeatures();
   }
 }
