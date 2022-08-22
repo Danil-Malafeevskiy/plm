@@ -25,7 +25,7 @@ export default {
         },
         async getOneUser({ commit }, idUser) {
             await axios.get(`/user/admin/${idUser}`).then((response) => {
-                console.log(response.data);
+                //console.log(response.data);
                 let user = response.data;
                 user.properties = { ...user };
                 delete user.properties.id;
@@ -43,19 +43,26 @@ export default {
                 commit('updateObjectForCard', user);
             })
         },
-        async postUser({ dispatch }, newUser){
+
+        async postUser({ dispatch }, newUser) {
+
             await axios.post('/user/admin', newUser).then((response) => {
-                console.log(response.data);
-                dispatch('getUser')
+                console.log(response.data)
+                newUser.id = response.data.id;
+                delete newUser.password
+                dispatch('putUser', newUser);
             })
         },
-        async putUser({ dispatch }, user) {
-            user = { ...user, ...user.properties };
+        async putUser({ dispatch, state }, user) {
+            user = { ...user, ...user.properties};
             delete user.properties;
-            console.log(JSON.stringify(user));
+            console.log(user);
             await axios.put('/user/admin', user).then((response) => {
                 console.log(response.data);
                 dispatch('getUsersOfGroup');
+                if (user.id === state.user.id){
+                    dispatch('getUser');
+                }
             })
         },
         async deleteUser({ dispatch }, idUser) {
@@ -73,7 +80,7 @@ export default {
         updateUser(state, user) {
             state.user = user;
         },
-        updateAllUsers(state, users){
+        updateAllUsers(state, users) {
             state.allUsers = users;
         }
     },

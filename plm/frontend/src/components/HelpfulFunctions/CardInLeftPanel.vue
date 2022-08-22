@@ -46,7 +46,7 @@ export default {
     watch: {
         selectedItem: {
             async handler() {
-                this.filterForFeature(null);
+                this.updatefilterForFeature([]);
                 if (this.selectedItem != null) {
                     if ((this.selectedItem != 3 && this.user.is_staff) || (this.selectedItem != 0 && this.user.is_active)) {
                         setTimeout(() => {
@@ -55,6 +55,7 @@ export default {
                     }
                     switch (this.selectedItem) {
                         case 0: {
+                            this.updateNameForArray('Пользователи');
                             this.updateListType([]);
                             let headers = [
                                 {
@@ -86,6 +87,7 @@ export default {
                             break;
                         }
                         case 1: {
+                            this.updateNameForArray('Типы объектов');
                             let object = {
                                 properties: {
                                     name: '',
@@ -121,6 +123,7 @@ export default {
                             break;
                         }
                         case 2:
+                            this.updateNameForArray('База объектов');
                             this.updateListType([]);
                             this.getTypeObject();
                             this.updateAction({
@@ -140,8 +143,8 @@ export default {
     computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType']),
     methods: {
         ...mapActions(['logOut', 'getAllGroups', 'getTypeObject']),
-        ...mapMutations(['filterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
-            'updateAction', 'updateHeaders', 'updateListType']),
+        ...mapMutations(['updatefilterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
+            'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray']),
         logOutAndResolve() {
             this.logOut();
             location.reload();

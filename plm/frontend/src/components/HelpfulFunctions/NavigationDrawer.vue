@@ -60,23 +60,60 @@ export default {
         };
     },
     watch: {
-
         selectedItem: {
             handler() {
                 if (this.selectedItem != null) {
-                    const domItem = document.querySelector(".object__data").childNodes[this.selectedItem];
-                    this.filterForFeature(domItem.childNodes[0].innerText);
-
                     if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
+                        const object = {
+                            properties: {
+                                username: "",
+                                password: "",
+                                groups: [],
+                                user_permissions: [],
+
+                            }
+                        }
+                        this.upadateEmptyObject(object);
                         this.updateAction({
                             actionGet: 'getUsersOfGroup',
-                            actionPost: 'postAuth',
+                            actionPost: 'postUser',
                             actionOneGet: 'getOneUser',
                             actionPut: 'putUser',
                             actionDelete: 'deleteUser',
                         });
                     }
                 }
+                // else {
+                //     this.updateNameForArray('Пользователи');
+                //     this.updateListType([]);
+                //     let headers = [
+                //         {
+                //             "text": "id",
+                //             "align": "start",
+                //             "value": "id",
+                //             "sortable": false
+                //         },
+                //         {
+                //             "text": "name",
+                //             "value": "name"
+                //         }
+                //     ];
+                //     let object = {
+                //         properties: {
+                //             name: '',
+                //         }
+                //     }
+                //     this.upadateEmptyObject(object);
+                //     this.updateHeaders(headers);
+                //     this.updateAction({
+                //         actionGet: 'getAllGroups',
+                //         actionPost: 'postGroup',
+                //         actionOneGet: 'getGroup',
+                //         actionPut: 'putGroup',
+                //         actionDelete: 'deleteGroup',
+                //     });
+                //     this.getAllGroups();
+                // }
             }
         },
 
@@ -87,22 +124,22 @@ export default {
 
         },
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject']) },
+    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'arrObjects']) },
     async mounted() {
         await this.getTypeObject();
     },
 
     methods: {
-        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup']),
-        ...mapMutations(['filterForFeature', 'upadateEmptyObject', 'updateFeatureNameType', 
-                         'updateHeaders', 'updateDrawType', 'updateAction', 'updateGroupId']),
+        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getAllGroups']),
+        ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle', 
+                        'addArrayFromSelectedObject', 'updateNameForArray', 'updateListType']),
         getOneGroup(id) {
             this.getGroup(id);
         },
 
-        changeObject(objectType) {
+        async changeObject(objectType) {
             const domItem = document.querySelector('.text_in_span').innerHTML;
-
+            this.upadateTitle(objectType.name);
             if (domItem === "Пользователи") {
                 const headers = [
                     {
@@ -117,15 +154,15 @@ export default {
                     }
                 ];
                 this.updateHeaders(headers);
-                this.getUsersOfGroup(objectType.id);
+                this.getUsersOfGroup(objectType);
             }
             else {
                 this.updateHeaders(objectType.headers);
                 this.updateDrawType(objectType.type)
-                this.filterForFeature(objectType.name);
+                await this.filterForFeature(objectType.id);
 
                 for (let i in this.allFeatures) {
-                    if (this.allFeatures[i].name === objectType.name) {
+                    if (this.allFeatures[i].name === objectType.id) {
                         this.upadateEmptyObject(this.allFeatures[i]);
                         break;
                     }
@@ -135,7 +172,7 @@ export default {
 
         resetSelectItem() {
             this.selectedItem = null;
-            setTimeout(() => {this.showCard = !this.showCard;});
+            setTimeout(() => { this.showCard = !this.showCard; });
         }
 
         // clear() {

@@ -1,3 +1,5 @@
+import Vue from "vue";
+
 export default {
     actions: {
         async getAllObject({ dispatch, state }) {
@@ -64,6 +66,19 @@ export default {
         },
         updateDrawType(state, drawType) {
             state.drawType = drawType;
+        },
+        upadateTitle(state, title){
+            state.toolbarTitle = title;
+            this.commit('updateNameForArray', title);
+        },
+        updateSelectedObejcts(state, {objects, name}){
+            state.selectedObjects[`${name}`] = objects;
+        },
+        updateNameForArray(state, name){
+            state.nameForArray = name;
+            if(!(name in state.selectedObjects)){
+                Vue.set(state.selectedObjects, name, []);
+            }
         }
     },
     getters: {
@@ -87,6 +102,15 @@ export default {
         },
         drawType(state) {
             return state.drawType;
+        },
+        getToolbarTitle(state){
+            return state.toolbarTitle;
+        },
+        arrObjects(state){
+            return state.selectedObjects;
+        },
+        nameArray(state){
+            return state.nameForArray;
         }
     },
     state: {
@@ -101,5 +125,8 @@ export default {
         emptyObject: {},
         headers: {},
         drawType: '',
+        toolbarTitle: null,
+        nameForArray: null,
+        selectedObjects: {},
     },
 }
