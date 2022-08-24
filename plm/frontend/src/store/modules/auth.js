@@ -56,7 +56,7 @@ export default {
         async putUser({ dispatch, state }, user) {
             user = { ...user, ...user.properties};
             delete user.properties;
-            console.log(user);
+            console.log(JSON.stringify(user));
             await axios.put('/user/admin', user).then(() => {
                 //console.log(response.data);
                 dispatch('getUsersOfGroup');

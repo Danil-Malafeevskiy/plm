@@ -7,12 +7,8 @@
             <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                 <v-card-text class="pa-0">
                     <v-form>
-                        <v-row justify="start" v-if="infoCardOn_.data">
-                            <v-col cols="2" sm="6" md="5" lg="6">
-                                <v-card-text v-if="objectForCard.name != undefined" class="pa-0"
-                                    style="font-size: 24px;">
-                                    {{ oneType }}
-                                </v-card-text>
+                        <v-row justify="start" >
+                            <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text v-if="objectForCard.properties.username != undefined" class="pa-0"
                                     style="font-size: 24px;">{{
                                             objectForCard.properties.username
@@ -23,39 +19,29 @@
                                 }}
                                 </v-card-text>
                             </v-col>
-                            <v-col class="pa-0" cols="2" sm="6" md="5" lg="6">
+                            <v-col class="pa-0" cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text class="pa-0"
                                     style="font-size: 24px; display: flex; justify-content: flex-end;">
-                                    <v-btn
-                                        @click="editCardOn_.data = !editCardOn_.data; infoCardOn_.data = !infoCardOn_.data;"
-                                        class="ma-0" fab small elevation="0" color="white">
+                                    <v-btn @click="
+                                        editCardOn_.data = !editCardOn_.data;
+                                    infoCardOn_.data = !infoCardOn_.data;" class="ma-0" fab small elevation="0"
+                                        color="white">
                                         <v-icon>
                                             mdi-pencil
                                         </v-icon>
                                     </v-btn>
-                                    <v-btn
-                                        @click="deleteObject(getObjectForCard.id); infoCardOn_.data = !infoCardOn_.data; notVisableCard()"
-                                        class="ma-0" fab small elevation="0" color="white">
+                                    <v-btn @click="deleteObjectOnCard(objectForCard.id)" class="ma-0" fab small
+                                        elevation="0" color="white">
                                         <v-icon>
                                             mdi-delete-outline
                                         </v-icon>
                                     </v-btn>
                                 </v-card-text>
                             </v-col>
-
-                            <v-col v-for="(f, index) in objectForCard.properties" :key="index" cols="2" sm="6" md="5"
-                                lg="6" v-show="typeof (f) != 'object' && 1">
-                                <v-text-field v-model="objectForCard.properties[index]"
-                                    :value="objectForCard.properties[index]" hide-details :label="index"
-                                    :placeholder="index" readonly filled>
-                                </v-text-field>
-                            </v-col>
-                       </v-row>
-                        <v-row justify="start" v-else>
-                            <v-col cols="2" sm="6" md="5" lg="6" v-if="addCardOn_.data">
+                            <v-col cols="2" sm="6" md="5" lg="6" v-else-if="addCardOn_.data">
                                 <v-card-text style="font-size: 24px; padding: 16px 0;">Создание объекта</v-card-text>
                             </v-col>
-                            <v-col class="pa-0" cols="2" sm="6" md="5" lg="6" v-else>
+                            <v-col cols="2" sm="6" md="5" lg="6" v-else>
                                 <v-card-text style="font-size: 24px; padding: 16px 0;">Редактирование</v-card-text>
                             </v-col>
 
@@ -63,12 +49,11 @@
                                 lg="6" v-show="typeof (f) != 'object' && 1">
                                 <v-text-field v-model="objectForCard.properties[index]"
                                     :value="objectForCard.properties[index]" hide-details :label="index"
-                                    :placeholder="index" filled>
+                                    :placeholder="index" filled :readonly="infoCardOn_.data">
                                 </v-text-field>
                             </v-col>
                         </v-row>
-
-                        <div class="ma-1"
+                        <div style="margin: 24px"
                             v-if="'properties' in objectForCard && 'username' in objectForCard.properties">
                             <v-expansion-panels accordion flat class="pa-0 ma-0">
                                 <v-expansion-panel class="pa-0 ma-0">
@@ -167,6 +152,7 @@
 <script>
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiImagePlusOutline } from '@mdi/js'
+import * as icons from '@mdi/js'
 
 export default {
     name: 'CardInfo',
@@ -198,6 +184,12 @@ export default {
                     // }
                 }
             }, deep: true
+        },
+        addCardOn: {
+            handler() {
+                this.objectForCard = this.emptyObject;
+            },
+            deep: true,
         },
         getFeature: function () {
             this.feature = this.getFeature;
@@ -235,8 +227,9 @@ export default {
                 this.getAllObject();
             }
             else {
-                if('groups' in this.objectForCard){
+                if ('groups' in this.objectForCard) {
                     this.objectForCard.properties = { ...this.objectForCard, ...this.objectForCard.properties }
+                    delete this.objectForCard.properties.properties;
                 }
                 console.log(this.objectForCard);
                 await this.postObject(this.objectForCard.properties);
@@ -245,7 +238,6 @@ export default {
             this.notVisableCard();
         },
         async editObject() {
-            console.log(JSON.stringify(this.objectForCard));
             await this.putObject(this.objectForCard);
             if (this.objectForCard.name != undefined) {
                 this.filterForFeature();
@@ -254,6 +246,15 @@ export default {
             this.getOneObject(this.objectForCard.id);
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
+        },
+        async deleteObjectOnCard(id) {
+            await this.deleteObject(id);
+            this.infoCardOn_.data = !this.infoCardOn_.data;
+            this.notVisableCard();
+            if (this.objectForCard.name != undefined) {
+                this.filterForFeature();
+                this.getAllObject();
+            }
         },
         groupsPermissions() {
             for (let i = 0; i < this.permissionList.length; ++i) {
@@ -267,6 +268,9 @@ export default {
             this.groups = [...new Set(this.groups)]
         }
     },
+    mounted() {
+        console.log(Object.keys(icons).length);
+    }
 }
 </script>
 
