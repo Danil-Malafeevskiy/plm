@@ -13,7 +13,8 @@
               <span>{{ item }}</span>
             </v-tab>
           </v-tabs>
-          <v-btn class="show__card" height="28px" width="80px" depressed color="#EE5E5E"
+          <v-btn :class="{ 'v-btn--disabled': cardVisable.data }" :disable="cardVisable.data" class="show__card"
+            height="28px" width="80px" depressed color="#EE5E5E"
             @click="addCardOn.data = !addCardOn.data; visableCard();">
             <v-icon color="white !default" dark>
               mdi-plus
@@ -90,15 +91,9 @@ export default {
     ...mapMutations(['updateFeature', 'updateList']),
     visableCard() {
       this.cardVisable.data = true;
-      let btn = document.querySelector('.show__card');
-      btn.setAttribute('disabled', true);
-      btn.classList.add('v-btn--disabled');
     },
     notVisableCard() {
       this.cardVisable.data = false;
-      let btn = document.querySelector('.show__card');
-      btn.removeAttribute('disabled', false);
-      btn.classList.remove('v-btn--disabled');
     },
   },
   mounted() {
