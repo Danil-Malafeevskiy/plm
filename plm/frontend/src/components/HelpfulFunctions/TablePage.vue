@@ -13,7 +13,7 @@
         </a>
       </div>
       <div style="margin-top: 20px;" v-if="selected.length != 0">
-        <v-menu offset-y>
+        <v-menu offset-y v-if="type.length != 0">
           <template v-slot:activator="{ on, attrs }">
             <v-btn depressed class="ma-0" color="#E5E5E5" v-bind="attrs" v-on="on">
               <span style="color: #787878">Переместить в </span>
