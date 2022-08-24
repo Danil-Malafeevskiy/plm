@@ -32,7 +32,7 @@
                             </v-col>
 
                             <div v-for="(f, index) in emptyObject.properties" :key="f.number_support"
-                                v-show="index != 'id'" class="ma-1" style="width: 100%">
+                                v-show="index === 'username'" class="ma-1" style="width: 100%">
                                 <div v-if="index === 'username'">
                                     <v-expansion-panels  accordion flat class="pa-0 ma-0">
                                         <v-expansion-panel class="pa-0 ma-0">
@@ -103,6 +103,7 @@
                                     </v-expansion-panels>
 
                                 </div>
+                                <div v-else style="display: none;"></div>
                             </div>
                             
                         </v-row>
@@ -163,7 +164,7 @@
 
                             </v-col>
                             <div v-for="(f, index) in getObjectForCard.properties" :key="f.number_support"
-                                v-show="index != 'id'" class="ma-1" style="width: 100%">
+                                v-show="index === 'username'" class="ma-1" style="width: 100%">
                                 <div v-if="index === 'username'">
                                     <v-expansion-panels  accordion flat class="pa-0 ma-0">
                                         <v-expansion-panel class="pa-0 ma-0">
@@ -264,6 +265,7 @@
                                     </v-expansion-panels>
 
                                 </div>
+                                <div v-else style="display: none;"></div>
                             </div>
                             
                         </v-row>
@@ -290,7 +292,7 @@
                                 </v-text-field> -->
                             </v-col>
                             <div v-for="(f, index) in getObjectForCard.properties" :key="f.number_support"
-                                v-show="index != 'id'" class="ma-1" style="width: 100%">
+                                v-show="index === 'username'" class="ma-1" style="width: 100%">
                                 <div v-if="index === 'username'">
                                     <v-expansion-panels  accordion flat class="pa-0 ma-0">
                                         <v-expansion-panel class="pa-0 ma-0">
@@ -376,6 +378,7 @@
                                     </v-expansion-panels>
 
                                 </div>
+                                <div v-else style="display: none;"></div>
                             </div>
                         </v-row>
                     </v-form>
