@@ -13,4 +13,3 @@ class Feature(models.Model):
     type = models.CharField(max_length=100, blank=True, default="Feature")
     properties = models.JSONField()
     geometry = models.GeometryField()
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, default=1)

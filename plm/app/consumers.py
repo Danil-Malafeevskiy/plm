@@ -3,7 +3,7 @@ from djangochannelsrestframework.consumers import AsyncAPIConsumer
 from djangochannelsrestframework.decorators import action
 from djangochannelsrestframework.observer import model_observer
 
-from app.models import Feature
+from app.models import Feature, Dataset
 
 from app.serializers import FeatureSerializer
 
@@ -15,16 +15,9 @@ class FeatureConsumer(AsyncAPIConsumer):
     async def connect(self):
         if self.scope["user"] is not AnonymousUser:
             self.user_id = self.scope["user"].id
-            await self.channel_layer.group_add(self.scope["user"].groups.values_list("name", flat=True).first(), self.channel_name)
+            for group in list(self.scope["user"].groups.values_list("name", flat=True)):
+                await self.model_change.subscribe(group=group)
             await self.accept()
-
-    async def accept(self, **kwargs):
-        await super().accept(**kwargs)
-        await self.model_change.subscribe(group=self.scope["user"].groups.values_list("name", flat=True).first())
-
-    async def disconnect(self, code):
-        group_name = self.scope["user"].groups.values_list("name", flat=True).first()
-        await self.channel_layer.group_discard(group_name, self.channel_name)
 
     @model_observer(Feature)
     async def model_change(self, message, **kwargs):
@@ -36,7 +29,8 @@ class FeatureConsumer(AsyncAPIConsumer):
 
     @model_change.groups_for_signal
     def model_change(self, instance: Feature, **kwargs):
-        yield f'-group__{instance.group}'
+        group = Group.objects.get(id=Dataset.objects.get(id=instance.name_id).group_id).name
+        yield f'-group__{group}'
 
     @model_change.groups_for_consumer
     def model_change(self, group=None, **kwargs):

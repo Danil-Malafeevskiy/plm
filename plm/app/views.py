@@ -16,7 +16,7 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from app.models import Feature, Dataset
 from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, Group_Perm_Serializer, UserSerializer, \
-    User_Perm_Serializer, User_Perm_Admin_Serializer, UserRegSerializer, DatasetSerializer
+    User_Perm_Serializer, User_Perm_Admin_Serializer, UserRegSerializer, DatasetSerializer, DatasetSerializerAdmin
 from rest_framework.response import Response
 
 class TowerAPI(APIView):
@@ -27,20 +27,17 @@ class TowerAPI(APIView):
     def get(self, request, id=0):
         if id == 0:
             ff = DjangoFilterBackend()
-            filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(group=request.user.groups.values_list('id', flat=True).first()),self)
+            filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(name__in=
+                list(Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True))).values_list('id', flat=True))), self)
 
-            if filtered_queryset.exists():
-                feature_serializer = FeatureSerializer(filtered_queryset, many=True)
-                return Response(feature_serializer.data)
-            return Response([])
+            feature_serializer = FeatureSerializer(filtered_queryset, many=True)
+            return Response(feature_serializer.data)
         else:
-            feature = Feature.objects.filter(id=id, group=request.user.groups.values_list('id', flat=True).first())
+            feature = Feature.objects.filter(id=id)
             feature_serializer = FeatureSerializer(feature, many=True)
             return Response(feature_serializer.data)
 
     def post(self, request):
-        for obj in request.data:
-            obj['group'] = request.user.groups.values_list('id', flat=True).first()
         feature_serializer = FeatureSerializer(data=request.data, many=True)
         if feature_serializer.is_valid():
             feature_serializer.save()
@@ -48,7 +45,7 @@ class TowerAPI(APIView):
         return Response(feature_serializer.errors)
 
     def put(self, request):
-        feature = Feature.objects.get(id=request.data['id'], group=request.user.groups.values_list('id', flat=True).first())
+        feature = Feature.objects.get(id=request.data['id'])
         feature_serializer = FeatureSerializer(feature, data=request.data)
         if feature_serializer.is_valid():
             feature_serializer.save()
@@ -56,11 +53,7 @@ class TowerAPI(APIView):
         return Response(feature_serializer.errors)
 
     def delete(self, request, id):
-        try:
-           feature = Feature.objects.get(id=id, group=request.user.groups.values_list('id', flat=True).first())
-        except Exception:
-            return Response("There is no access to this object!")
-        feature.delete()
+        Feature.objects.get(id=id).delete()
         return Response("SUCCESS DEL")
 
 class FileUploadView(APIView):
@@ -102,7 +95,6 @@ class FileUploadView(APIView):
                     continue
 
                 dict_1['properties'][key] = value[key]
-            dict_1['group'] = request.user.groups.values_list('id', flat=True).first()
             lis.append(json.dumps(dict_1))
 
         for i in range(len(lis)):
@@ -250,14 +242,26 @@ class DatasetView(APIView):
 
     def get(self, request, id=0):
         if id==0:
-            dataset = Dataset.objects.filter(group=request.user.groups.values_list('id', flat=True).first())
+            dataset = Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
             return Response(DatasetSerializer(dataset, many=True).data)
 
-        dataset = Dataset.objects.get(id=id, group=request.user.groups.values_list('id', flat=True).first())
+        dataset = Dataset.objects.get(id=id)
         return Response(DatasetSerializer(dataset).data)
 
+class DatasetAdminView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, id=0):
+        if id==0:
+            dataset = Dataset.objects.all()
+            return Response(DatasetSerializer(dataset, many=True).data)
+
+        dataset = Dataset.objects.get(id=id)
+        return Response(DatasetSerializerAdmin(dataset).data)
+
     def post(self, request):
-        request.data['group'] = request.user.groups.values_list('id', flat=True).first()
+        request.data['group'] = Group.objects.get(name=request.data['group']).id
         dataset_serializer = DatasetSerializer(data=request.data)
         if dataset_serializer.is_valid():
             dataset_serializer.save()
@@ -265,7 +269,8 @@ class DatasetView(APIView):
         return Response(dataset_serializer.errors)
 
     def put(self, request):
-        dataset = Dataset.objects.get(id=request.data['id'], group=request.user.groups.values_list('id', flat=True).first())
+        dataset = Dataset.objects.get(id=request.data['id'])
+        request.data['group'] = Group.objects.get(name=request.data['group']).id
         dataset_serializer = DatasetSerializer(dataset, data=request.data)
         if dataset_serializer.is_valid():
             dataset_serializer.save()
@@ -273,11 +278,7 @@ class DatasetView(APIView):
         return Response(dataset_serializer.errors)
 
     def delete(self, request, id):
-        try:
-            dataset = Dataset.objects.get(id=id, group=request.user.groups.values_list('id', flat=True).first())
-        except Exception:
-            return Response("There is no access to this object!")
-        dataset.delete()
+        Dataset.objects.get(id=id).delete()
         return Response("SUCCESS DEL")
 
 def room(request):
