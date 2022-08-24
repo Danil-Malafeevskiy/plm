@@ -21,7 +21,7 @@
 
                 Типы {{ fiteredAllTypes.length }}
 
-                <v-autocomplete @click:clear="clear" clearable v-click-outside="clear" id='search' dense append-icon
+                <v-autocomplete @click:clear="clear" multiple clearable id='search' dense append-icon
                     hide-details hint="Поиск" hide-no-data solo label="Поиск" @update:search-input="search">
                 </v-autocomplete>
 
