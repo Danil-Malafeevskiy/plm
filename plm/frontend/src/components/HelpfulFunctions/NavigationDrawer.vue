@@ -21,9 +21,21 @@
 
                 Типы {{ allType.length }}
 
-                <v-autocomplete @click:clear="clear()" id='search' dense append-icon hide-details hint="Поиск"
-                    hide-no-data clearable solo label="Поиск">
-                </v-autocomplete>
+                    <v-autocomplete
+                        @click:clear="clear()" 
+                        id='search'
+                        dense 
+                        append-icon 
+                        hide-details 
+                        hint="Поиск" 
+                        hide-no-data
+                        clearabl e
+                        solo 
+                        :value="value"
+                        label="Поиск"
+                        @update:search-input="search()"
+                    >
+                    </v-autocomplete>
 
 
             </p>
@@ -43,7 +55,7 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex';
-//import $ from 'jquery'
+import $ from 'jquery'
 
 import CardInLeftPanel from './CardInLeftPanel.vue';
 
@@ -172,30 +184,36 @@ export default {
         resetSelectItem() {
             this.selectedItem = null;
             setTimeout(() => { this.showCard = !this.showCard; });
+        },
+
+        clear() {
+            this.allType.forEach(element => {
+                console.log('help')
+                // $(".test:contains(" + element.name + ")").show();
+                // $("div:contains(" + element.name + "):last").parent().show()
+                // $(".v-list-item:contains(" + element.name + "):last").show()
+                $("div:contains(" + element.name + "):last").parent().show()
+                $(".v-list-item:contains(" + element.name + "):last").show()
+
+            });
+        },
+
+        search() {
+            const value = document.getElementById('search').value;
+
+            this.allType.forEach(element => {
+
+                if (!element.name.toLowerCase().includes(value.toLowerCase())) {
+                    $("div:contains(" + element.name + "):last").parent().hide()
+                    $(".v-list-item:contains(" + element.name + "):last").hide()
+                }
+
+                else {
+                    $("div:contains(" + element.name + "):last").parent().show()
+                    $(".v-list-item:contains(" + element.name + "):last").show()
+                }
+            });
         }
-
-        // clear() {
-        //     this.getList.forEach(element => {
-        //         $(".test:contains(" + element + "):hidden").show()
-        //     });
-        // },
-
-        // search() {
-        //     const value = document.getElementById('search').value;
-
-        //     this.getList.forEach(element => {
-
-        //         if (!element.toLowerCase().includes(value.toLowerCase())) {
-        //             $("div:contains(" + element + "):last").parent().hide()
-        //             $(".v-list-item:contains(" + element + "):last").hide()
-        //         }
-
-        //         else {
-        //             $("div:contains(" + element + "):last").parent().show()
-        //             $(".v-list-item:contains(" + element + "):last").show()
-        //         }
-        //     });
-        // }
     },
     components: { CardInLeftPanel }
 }

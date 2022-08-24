@@ -50,7 +50,7 @@
                                     :placeholder="index" readonly filled>
                                 </v-text-field>
                             </v-col>
-                        </v-row>
+                       </v-row>
                         <v-row justify="start" v-else>
                             <v-col cols="2" sm="6" md="5" lg="6" v-if="addCardOn_.data">
                                 <v-card-text style="font-size: 24px; padding: 16px 0;">Создание объекта</v-card-text>
