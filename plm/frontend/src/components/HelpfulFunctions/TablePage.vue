@@ -37,13 +37,15 @@
         {{ allListItem.length }} объекта </span>
       <span class="object" v-else>{{ allListItem.length }} объектов </span>
     </div>
-    <v-data-table @click:row="showCard" :headers="headers" v-model="selected" show-select :item-key="headers[0].text"
-      :items="allListItem" :items-per-page="10" class="pa-0" style="
+    <v-data-table @click:row="showCard" :headers="headers" v-model="selected"  show-select :item-key="headers[0].text"
+      :items="allListItem" :items-per-page="10" class="pa-0"
+        @toggle-select-all="showAll()"
+        style="
         height: 100% !important;
         width: 50% !important; 
         background-color: #E5E5E5; 
         box-shadow: none !important;
-        margin-left: 2% !important;;
+        margin-left: 2% !important;
       "></v-data-table>
   </div>
 </template>
@@ -104,6 +106,13 @@ export default {
           this.infoCardOn_.data = false;
           this.notVisableCard();
         }
+      }
+    },
+    showAll(){
+      if (JSON.stringify(this.selected) === JSON.stringify(this.allListItem)) {
+        this.selected = [] ;
+      } else {
+        this.selected = this.allListItem;
       }
     },
     resetSelected() {
