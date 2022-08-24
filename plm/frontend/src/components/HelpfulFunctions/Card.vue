@@ -103,7 +103,7 @@
                                     </v-expansion-panels>
 
                                 </div>
-                                <div v-else style="display: none;"></div>
+
                             </div>
                             
                         </v-row>
@@ -265,7 +265,7 @@
                                     </v-expansion-panels>
 
                                 </div>
-                                <div v-else style="display: none;"></div>
+
                             </div>
                             
                         </v-row>
@@ -378,7 +378,7 @@
                                     </v-expansion-panels>
 
                                 </div>
-                                <div v-else style="display: none;"></div>
+
                             </div>
                         </v-row>
                     </v-form>
