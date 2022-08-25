@@ -1,7 +1,7 @@
 <template>
   <v-app>
 
-    <NavigationDrawer />
+    <NavigationDrawer :addCardOn="addCardOn"/>
 
     <v-main>
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0;">
@@ -13,7 +13,7 @@
               <span>{{ item }}</span>
             </v-tab>
           </v-tabs>
-          <v-btn :class="{ 'v-btn--disabled': cardVisable.data }" :disable="cardVisable.data" class="show__card"
+          <v-btn :disabled="cardVisable.data" class="show__card"
             height="28px" width="80px" depressed color="#EE5E5E"
             @click="addCardOn.data = !addCardOn.data; visableCard();">
             <v-icon color="white !default" dark>
@@ -34,7 +34,7 @@
             <Auth v-if="getAuth === false" />
 
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" />
+              :addCardOn="addCardOn" :editCardOn="editCardOn"/>
           </div>
         </v-tab-item>
         <v-tab-item>
@@ -95,10 +95,14 @@ export default {
     notVisableCard() {
       this.cardVisable.data = false;
     },
+    disabledAddButton(){
+      return !this.cardVisable.data && JSON.stringify(this.emptyObject) === '{}';
+    }
   },
   mounted() {
     this.getUser();
     this.getFeatures();
+    //console.log(cardVisable.data && JSON.stringify(emptyObject) === '{}')
   }
 }
 </script>

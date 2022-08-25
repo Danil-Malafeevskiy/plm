@@ -21,8 +21,8 @@
 
                 Типы {{ fiteredAllTypes.length }}
 
-                <v-autocomplete @click:clear="clear" multiple clearable id='search' dense append-icon
-                    hide-details hint="Поиск" hide-no-data solo label="Поиск" @update:search-input="search">
+                <v-autocomplete @click:clear="clear" multiple clearable id='search' dense append-icon hide-details
+                    hint="Поиск" hide-no-data solo label="Поиск" @update:search-input="search">
                 </v-autocomplete>
 
 
@@ -30,7 +30,7 @@
 
             <v-list-item-group class="object__data" v-model="selectedItem" color="#E93030">
 
-                <v-list-item class="pa-3" v-for="key in fiteredAllTypes" :key="key.id" link @click="changeObject(key)"
+                <v-list-item class="pa-3" v-for="key in fiteredAllTypes" :key="key.id" link
                     style="border-radius: 8px !important;">
 
                     <v-list-item-title class="pa-1">
@@ -53,21 +53,26 @@ export default {
     comments: {
         CardInLeftPanel
     },
+    props: ['addCardOn'],
     data() {
         return {
-            selectedTypeNameFeature: null,
             selectedItem: null,
             showCard: false,
             fiteredAllTypes: [],
+            objectType: null,
         };
     },
     watch: {
         selectedItem: {
             handler() {
                 if (this.selectedItem != null) {
+                    this.changeObject(this.fiteredAllTypes[this.selectedItem]);
                     if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
                         const object = {
                             properties: {
+                                first_name: "",
+                                last_name: "",
+                                email: "",
                                 username: "",
                                 password: "",
                             },
@@ -84,9 +89,46 @@ export default {
                         });
                     }
                 }
+                else {
+                    if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
+                        //this.updateListType([]);
+                        let headers = [
+                            {
+                                "text": "id",
+                                "align": "start",
+                                "value": "id",
+                                "sortable": false
+                            },
+                            {
+                                "text": "name",
+                                "value": "name"
+                            }
+                        ];
+                        let object = {
+                            properties: {
+                                name: '',
+                            }
+                        }
+                        this.updateListItem({ items: this.allGroups});
+                        this.upadateEmptyObject(object);
+                        this.updateHeaders(headers);
+                    }
+                }
             }
         },
-
+        addCardOn: {
+            handler() {
+                if (this.objectType != null && this.objectType.type != undefined) {
+                    for (let i in this.allFeatures) {
+                        if (this.allFeatures[i].name === this.objectType.id) {
+                            this.upadateEmptyObject(this.allFeatures[i]);
+                            break;
+                        }
+                    }
+                }
+            },
+            deep: true
+        },
         getList: {
             handler() {
                 this.selectedItem = null;
@@ -105,20 +147,19 @@ export default {
             }
         }
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'arrObjects']) },
-    async mounted() {
-        await this.getTypeObject();
-    },
+    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups']) },
+
 
     methods: {
-        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getAllGroups']),
+        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
-            'addArrayFromSelectedObject', 'updateNameForArray', 'updateListType']),
+                        'updateListType', 'updateListItem']),
         getOneGroup(id) {
             this.getGroup(id);
         },
 
         async changeObject(objectType) {
+            this.objectType = objectType;
             const domItem = document.querySelector('.text_in_span').innerHTML;
             this.upadateTitle(objectType.name);
             if (domItem === "Пользователи") {
@@ -141,13 +182,6 @@ export default {
                 this.updateHeaders(objectType.headers);
                 this.updateDrawType(objectType.type)
                 await this.filterForFeature(objectType.id);
-
-                for (let i in this.allFeatures) {
-                    if (this.allFeatures[i].name === objectType.id) {
-                        this.upadateEmptyObject(this.allFeatures[i]);
-                        break;
-                    }
-                }
             }
         },
 
@@ -158,16 +192,17 @@ export default {
         search(searchText) {
             if (searchText != null) {
                 this.fiteredAllTypes = this.allType.filter(el => el.name.toLowerCase().includes(searchText.toLowerCase()));
-                if (this.fiteredAllTypes.lenght === 0) {
-                    this.clear()
-                }
             }
         },
         clear() {
             this.fiteredAllTypes = this.allType;
         },
     },
-    components: { CardInLeftPanel }
+    components: { CardInLeftPanel },
+    async mounted() {
+        await this.getTypeObject();
+        this.selectedItem = 0;
+    },
 }
 </script>
 

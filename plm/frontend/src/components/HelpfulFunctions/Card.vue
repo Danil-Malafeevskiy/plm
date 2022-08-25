@@ -2,12 +2,22 @@
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
             <p style="display: none">{{ objectForCard }}</p>
-            <v-file-input class="pa-0 ma-0" height="37.53%" color="#EE5E5E" :prepend-icon="icon" hide-input>
+            <v-file-input v-if="!imgURL" v-model="img" @change="test" accept="image/*" class="pa-0 ma-0" height="37.53%"
+                color="#EE5E5E" :prepend-icon="icon" :disabled="infoCardOn_.data" hide-input>
             </v-file-input>
+            <div v-if="imgURL && !infoCardOn_.data" class="background_img"></div>
+            <v-btn v-if="imgURL && !infoCardOn_.data" class="btn_del_img ma-3 pa-0" elevation="0" icon
+                @click="imgURL = ''">
+                <v-icon color="white">
+                    mdi-delete-outline
+                </v-icon>
+            </v-btn>
+            <v-img v-if="imgURL" :src="imgURL" style="position: absolute; border-radius: 12px 12px 0 0;" width="100%"
+                height="37.53%"></v-img>
             <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                 <v-card-text class="pa-0">
                     <v-form>
-                        <v-row justify="start" >
+                        <v-row justify="start">
                             <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text v-if="objectForCard.properties.username != undefined" class="pa-0"
                                     style="font-size: 24px;">{{
@@ -22,10 +32,7 @@
                             <v-col class="pa-0" cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text class="pa-0"
                                     style="font-size: 24px; display: flex; justify-content: flex-end;">
-                                    <v-btn @click="
-                                        editCardOn_.data = !editCardOn_.data;
-                                    infoCardOn_.data = !infoCardOn_.data;" class="ma-0" fab small elevation="0"
-                                        color="white">
+                                    <v-btn @click="editOn" class="ma-0" fab small elevation="0" color="white">
                                         <v-icon>
                                             mdi-pencil
                                         </v-icon>
@@ -47,7 +54,14 @@
 
                             <v-col v-for="(f, index) in objectForCard.properties" :key="index" cols="2" sm="6" md="5"
                                 lg="6" v-show="typeof (f) != 'object' && 1">
-                                <v-text-field v-model="objectForCard.properties[index]"
+                                <v-text-field v-if="index != 'password'" v-model="objectForCard.properties[index]"
+                                    :value="objectForCard.properties[index]" hide-details :label="index"
+                                    :placeholder="index" filled :readonly="infoCardOn_.data">
+                                </v-text-field>
+                                <v-text-field v-else v-model="objectForCard.properties[index]"
+                                    :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :rules="[rules.min]"
+                                    hint="Минимум 8 символов" :type="showPassword ? 'text' : 'password'"
+                                    @click:append="showPassword = !showPassword"
                                     :value="objectForCard.properties[index]" hide-details :label="index"
                                     :placeholder="index" filled :readonly="infoCardOn_.data">
                                 </v-text-field>
@@ -152,7 +166,6 @@
 <script>
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiImagePlusOutline } from '@mdi/js'
-import * as icons from '@mdi/js'
 
 export default {
     name: 'CardInfo',
@@ -169,6 +182,12 @@ export default {
             userGroups: [],
             permissionList: [], // список всех прав 
             objectForCard: {},
+            img: undefined,
+            imgURL: '',
+            showPassword: false,
+            rules: {
+                min: v => v.length >= 8 || 'Минимум 8 символов',
+            }
         }
     },
     watch: {
@@ -262,14 +281,23 @@ export default {
                 el = el[0].toUpperCase() + el.slice(1);
                 this.groups.push(el);
             }
-            // for (let i = 0; i < this.getObjectForCard.avaible_user_permission.length; ++i) {
-            //     this.groups.push(this.getObjectForCard.avaible_user_permission[i].split(" ").pop());
-            // }
             this.groups = [...new Set(this.groups)]
+        },
+        test(file) {
+            console.log(file);
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                this.imgURL = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        },
+        editOn() {
+            this.editCardOn_.data = !this.editCardOn_.data;
+            this.infoCardOn_.data = !this.infoCardOn_.data; 
         }
     },
     mounted() {
-        console.log(Object.keys(icons).length);
     }
 }
 </script>
@@ -361,7 +389,19 @@ export default {
     border-radius: 12px 12px 0 0;
 }
 
+.btn_del_img {
+    position: absolute;
+    z-index: 2;
+    right: 0;
+}
 
+.background_img {
+    z-index: 1;
+    background-color: #000;
+    opacity: 0.3;
+    min-height: 37.53%;
+    border-radius: 12px 12px 0 0;
+}
 
 .row {
     padding: 24px 24px 12px 24px !important;
