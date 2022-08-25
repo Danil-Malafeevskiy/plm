@@ -15,3 +15,4 @@ class Feature(models.Model):
     type = models.CharField(max_length=100, blank=True, default="Feature")
     properties = models.JSONField()
     geometry = models.GeometryField()
+    image = models.BinaryField()

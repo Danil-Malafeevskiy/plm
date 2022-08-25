@@ -14,7 +14,7 @@ class FeatureSerializer(serializers.ModelSerializer):
     class Meta:
         geo_field = 'geometry'
         model = Feature
-        fields = ('id', 'name', 'type', 'properties', 'geometry')
+        fields = ('id', 'name', 'type', 'properties', 'geometry', 'image')
 
 class FileSerializer(serializers.Serializer):
     file = serializers.FileField()

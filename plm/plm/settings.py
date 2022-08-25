@@ -27,12 +27,13 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-GDAL_LIBRARY_PATH = r'C:\Users\maxkh\AppData\Local\Programs\Python\Python310\Lib\site-packages\osgeo\gdal304.dll'
-GEOS_LIBRARY_PATH = r'C:\Users\maxkh\AppData\Local\Programs\Python\Python310\Lib\site-packages\osgeo\geos_c.dll'
+GDAL_LIBRARY_PATH = r'D:\insTRUEment_verstka\Lib\site-packages\~sgeo\gdal304.dll'
+GEOS_LIBRARY_PATH = r'D:\insTRUEment_verstka\Lib\site-packages\~sgeo\geos_c.dll'
 
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,11 +46,6 @@ INSTALLED_APPS = [
     'app.apps.AppConfig',
 ]
 
-
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100
-}
 
 CORS_ORIGIN_ALLOW_ALL = True
 
@@ -85,7 +81,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'plm.wsgi.application'
-
+ASGI_APPLICATION = 'plm.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
@@ -166,3 +162,12 @@ REST_FRAMEWORK = {
 }
 
 SPATIALITE_LIBRARY_PATH = 'mod_spatialite'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)]
+        },
+    },
+}
