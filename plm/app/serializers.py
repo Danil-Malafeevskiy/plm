@@ -105,7 +105,7 @@ class DatasetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Dataset
-        fields = ('id', 'name', 'type', 'headers', 'group')
+        fields = ('id', 'name', 'type', 'headers', 'properties', 'image', 'group')
         validators = [
             UniqueTogetherValidator(
                 queryset=Dataset.objects.all(),
@@ -119,7 +119,7 @@ class DatasetSerializerAdmin(serializers.ModelSerializer):
     avaible_group = serializers.SerializerMethodField()
     class Meta:
         model = Dataset
-        fields = ('id', 'name', 'type', 'headers', 'group', 'avaible_group')
+        fields = ('id', 'name', 'type', 'headers', 'properties', 'image', 'group', 'avaible_group')
         validators = [
             UniqueTogetherValidator(
                 queryset=Dataset.objects.all(),
