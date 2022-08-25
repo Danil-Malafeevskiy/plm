@@ -45,20 +45,16 @@ export default {
         },
 
         async postUser({ dispatch }, newUser) {
-
             await axios.post('/user/admin', newUser).then((response) => {
-                console.log(response.data)
                 newUser.id = response.data.id;
-                delete newUser.password
+                delete newUser.password;
                 dispatch('putUser', newUser);
             })
         },
         async putUser({ dispatch, state }, user) {
             user = { ...user, ...user.properties};
             delete user.properties;
-            console.log(user);
-            await axios.put('/user/admin', user).then((response) => {
-                console.log(response.data);
+            await axios.put('/user/admin', user).then(() => {
                 dispatch('getUsersOfGroup');
                 if (user.id === state.user.id){
                     dispatch('getUser');

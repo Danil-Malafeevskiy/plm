@@ -13,7 +13,7 @@
         </a>
       </div>
       <div style="margin-top: 20px;" v-if="selected.length != 0">
-        <v-menu offset-y>
+        <v-menu offset-y v-if="type.length != 0">
           <template v-slot:activator="{ on, attrs }">
             <v-btn depressed class="ma-0" color="#E5E5E5" v-bind="attrs" v-on="on">
               <span style="color: #787878">Переместить в </span>
@@ -38,23 +38,26 @@
       <span class="object" v-else>{{ allListItem.length }} объектов </span>
     </div>
     <v-data-table @click:row="showCard" :headers="headers" v-model="selected" show-select :item-key="headers[0].text"
-      :items="allListItem" :items-per-page="10" class="pa-0" style="
+      :items="allListItem" :items-per-page="10" class="pa-0"
+        @toggle-select-all="showAll()"
+        :item-class="classRow"
+        style="
         height: 100% !important;
         width: 50% !important; 
         background-color: #E5E5E5; 
         box-shadow: none !important;
-        margin-left: 2% !important;;
-      "></v-data-table>
+        margin-left: 2% !important;
+      ">
+      </v-data-table>
   </div>
 </template>
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 
-
 export default {
   name: 'TablePage',
-  props: ['infoCardOn', 'visableCard', 'notVisableCard', 'addCardOn'],
+  props: ['infoCardOn', 'visableCard', 'notVisableCard', 'addCardOn', 'editCardOn'],
   data() {
     return {
       features: {
@@ -106,6 +109,13 @@ export default {
         }
       }
     },
+    showAll(){
+      if (JSON.stringify(this.selected) === JSON.stringify(this.allListItem)) {
+        this.selected = [] ;
+      } else {
+        this.selected = this.allListItem;
+      }
+    },
     resetSelected() {
       this.arrObjects[`${this.nameArray}`] = [];
     },
@@ -135,6 +145,11 @@ export default {
       }
       this.getAllObject();
       this.resetSelected();
+    },
+    classRow(item){
+      if(this.getObjectForCard != null && item.id === this.getObjectForCard.id && (this.infoCardOn_.data || this.editCardOn.data)){
+        return 'v-data-table__selected';
+      }
     }
   },
   async mounted() {
