@@ -2,17 +2,17 @@
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
             <p style="display: none">{{ objectForCard }}</p>
-            <v-file-input v-if="!imgURL" v-model="img" @change="test" accept="image/*" class="pa-0 ma-0" height="37.53%"
+            <v-file-input v-if="!objectForCard.image" v-model="img" @change="test" accept="image/*" class="pa-0 ma-0" height="37.53%"
                 color="#EE5E5E" :prepend-icon="icon" :disabled="infoCardOn_.data" hide-input>
             </v-file-input>
-            <div v-if="imgURL && !infoCardOn_.data" class="background_img"></div>
-            <v-btn v-if="imgURL && !infoCardOn_.data" class="btn_del_img ma-3 pa-0" elevation="0" icon
-                @click="imgURL = ''">
+            <div v-if="objectForCard.image && !infoCardOn_.data" class="background_img"></div>
+            <v-btn v-if="objectForCard.image && !infoCardOn_.data" class="btn_del_img ma-3 pa-0" elevation="0" icon
+                @click="objectForCard.image = ''">
                 <v-icon color="white">
                     mdi-delete-outline
                 </v-icon>
             </v-btn>
-            <v-img v-if="imgURL" :src="imgURL" style="position: absolute; border-radius: 12px 12px 0 0;" width="100%"
+            <v-img v-if="this.objectForCard.image" :src="objectForCard.image" style="position: absolute; border-radius: 12px 12px 0 0;" width="100%"
                 height="37.53%"></v-img>
             <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                 <v-card-text class="pa-0">
@@ -235,7 +235,7 @@ export default {
             permissionList: [], // список всех прав 
             objectForCard: {},
             img: undefined,
-            imgURL: '',
+
             showPassword: false,
             rules: {
                 min: v => v.length >= 8 || 'Минимум 8 символов',
@@ -310,6 +310,7 @@ export default {
             this.notVisableCard();
         },
         async editObject() {
+
             await this.putObject(this.objectForCard);
             if (this.objectForCard.name != undefined) {
                 this.filterForFeature();
@@ -341,7 +342,7 @@ export default {
             const reader = new FileReader();
 
             reader.onload = (e) => {
-                this.imgURL = e.target.result;
+                this.objectForCard.image = e.target.result;
             };
             reader.readAsDataURL(file);
         },

@@ -4,13 +4,18 @@ from rest_framework import serializers, exceptions
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_gis.serializers import GeometryField
 import django.contrib.auth.password_validation as validators
-
 from app.models import Feature, Dataset
 
+class BinaryField(serializers.Field):
+    def to_representation(self, value):
+        return bytes(value).decode('utf-8')
+
+    def to_internal_value(self, value):
+         return value.encode('utf-8')
 
 class FeatureSerializer(serializers.ModelSerializer):
-    type = serializers.CharField(required=False, max_length=100, default="Feature")
     geometry = GeometryField()
+    image = BinaryField()
     class Meta:
         geo_field = 'geometry'
         model = Feature

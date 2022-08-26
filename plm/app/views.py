@@ -1,3 +1,6 @@
+import base64
+base64.encodestring = base64.encodebytes
+
 import json
 import os
 import sqlite3
@@ -23,6 +26,7 @@ class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, IsOwner]
     filterset_fields = ['name']
+    serializer_class = FeatureSerializer
 
     def get(self, request, id=0):
         if id == 0:
@@ -40,8 +44,9 @@ class TowerAPI(APIView):
     def post(self, request):
         feature_serializer = FeatureSerializer(data=request.data, many=True)
         if feature_serializer.is_valid():
+            print(feature_serializer.data)
             feature_serializer.save()
-            return Response("Success new")
+            return Response("Success new qqq")
         return Response(feature_serializer.errors)
 
     def put(self, request):
