@@ -97,6 +97,7 @@ export default {
     ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts']),
 
     async showCard(obj) {
+      //console.log(obj);
       if (!this.addCardOn.data) {
         if (this.getObjectForCard === null || this.getObjectForCard.id != obj.id || !this.infoCardOn_.data) {
           await this.getOneObject(obj.id);
