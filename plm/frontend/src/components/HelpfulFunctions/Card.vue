@@ -2,31 +2,37 @@
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
             <p style="display: none">{{ objectForCard }}</p>
-            <v-file-input v-if="!objectForCard.image" v-model="img" @change="test" accept="image/*" class="pa-0 ma-0" height="37.53%"
-                color="#EE5E5E" :prepend-icon="icon" :disabled="infoCardOn_.data" hide-input>
+            <v-file-input v-if="!objectForCard.image" v-model="img" @change="fileToBase64" accept="image/*" class="pa-0 ma-0"
+                height="37.53%" color="#EE5E5E" :prepend-icon="icon" :disabled="infoCardOn_.data" hide-input>
             </v-file-input>
-            <div v-if="objectForCard.image && !infoCardOn_.data" class="background_img"></div>
-            <v-btn v-if="objectForCard.image && !infoCardOn_.data" class="btn_del_img ma-3 pa-0" elevation="0" icon
-                @click="objectForCard.image = ''">
-                <v-icon color="white">
-                    mdi-delete-outline
-                </v-icon>
-            </v-btn>
-            <v-img v-if="this.objectForCard.image" :src="objectForCard.image" style="position: absolute; border-radius: 12px 12px 0 0;" width="100%"
-                height="37.53%"></v-img>
+            <template v-else-if="objectForCard.image && !infoCardOn_.data">
+                <div class="background_img"></div>
+                <v-btn class="btn_del_img ma-3 pa-0" elevation="0" icon @click="objectForCard.image = ''">
+                    <v-icon color="white">
+                        mdi-delete-outline
+                    </v-icon>
+                </v-btn>
+            </template>
+            <v-img v-if="objectForCard.image" :src="objectForCard.image" :class="{
+                'one_picture': infoCardOn_.data,
+                'not_one_picture': !infoCardOn_.data,
+            }" width="100%" height="37.53%"></v-img>
             <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                 <v-card-text class="pa-0">
                     <v-form>
+                        <p v-for="item in allFeature" :key="item.id">
+                            {{ item.image }}
+                        </p>
                         <v-row justify="start">
                             <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text v-if="objectForCard.properties.username != undefined" class="pa-0"
                                     style="font-size: 24px;">{{
-                                    objectForCard.properties.username
+                                            objectForCard.properties.username
                                     }}
                                 </v-card-text>
                                 <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
-                                    objectForCard.properties.name
-                                    }}
+                                        objectForCard.properties.name
+                                }}
                                 </v-card-text>
                             </v-col>
                             <v-col class="pa-0" cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
@@ -80,15 +86,9 @@
                                             <v-col v-for="(f, index) in userGroups" :key="f" cols="2" sm="6" md="5"
                                                 lg="6" class="pa-0 ma-0">
 
-                                                <v-checkbox v-if="infoCardOn_.data" v-model="objectForCard.groups"
-                                                    :label="f" :value="userGroups[index]" readonly class="ma-2"
+                                                <v-checkbox v-model="objectForCard.groups" :label="f"
+                                                    :value="userGroups[index]" :readonly="infoCardOn_.data" class="ma-2"
                                                     color="#E93030" style="
-                                                                min-height: 37.53% !important; 
-                                                                max-height: 37.53% !important;
-                                                            ">
-                                                </v-checkbox>
-                                                <v-checkbox v-else v-model="objectForCard.groups" :label="f"
-                                                    :value="userGroups[index]" class="ma-2" color="#E93030" style="
                                                                 min-height: 37.53% !important; 
                                                                 max-height: 37.53% !important;
                                                             ">
@@ -119,17 +119,9 @@
                                                         <v-col v-for="(name, index) in permissionList" :key="name"
                                                             cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
                                                             <v-checkbox
-                                                                v-if="name.includes(el[0].toLowerCase() + el.slice(1)) && infoCardOn_.data"
-                                                                v-model="objectForCard.user_permissions" readonly
-                                                                class="ma-2" color="#E93030"
-                                                                :value="permissionList[index]" style="
-                                                                        min-height: 37.53% !important; 
-                                                                        max-height: 37.53% !important;
-                                                                    " :label="name">
-                                                            </v-checkbox>
-                                                            <v-checkbox
-                                                                v-else-if="name.includes(el[0].toLowerCase() + el.slice(1))"
-                                                                v-model="objectForCard.user_permissions" class="ma-2"
+                                                                v-if="name.includes(el[0].toLowerCase() + el.slice(1))"
+                                                                v-model="objectForCard.user_permissions"
+                                                                :readonly="infoCardOn_.data" class="ma-2"
                                                                 color="#E93030" :value="permissionList[index]" style="
                                                                         min-height: 37.53% !important; 
                                                                         max-height: 37.53% !important;
@@ -145,7 +137,7 @@
                             </v-expansion-panels>
                         </div>
                         <div style="margin: 24px"
-                            v-if="'id' in objectForCard.properties && 'name' in objectForCard.properties && !('type' in objectForCard.properties)">
+                            v-if="'properties' in objectForCard && 'permissions' in objectForCard.properties">
 
                             <v-expansion-panels accordion flat class="pa-0 ma-0">
                                 <v-expansion-panel>
@@ -169,17 +161,9 @@
                                                         <v-col v-for="(name, index) in permissionList" :key="name"
                                                             cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
                                                             <v-checkbox
-                                                                v-if="name.includes(el[0].toLowerCase() + el.slice(1)) && infoCardOn_.data"
-                                                                v-model="objectForCard.properties.permissions" readonly
-                                                                class="ma-2" color="#E93030"
-                                                                :value="permissionList[index]" style="
-                                                                        min-height: 37.53% !important; 
-                                                                        max-height: 37.53% !important;
-                                                                    " :label="name">
-                                                            </v-checkbox>
-                                                            <v-checkbox
-                                                                v-else-if="name.includes(el[0].toLowerCase() + el.slice(1))"
-                                                                v-model="objectForCard.properties.permissions" class="ma-2"
+                                                                v-if="name.includes(el[0].toLowerCase() + el.slice(1))"
+                                                                v-model="objectForCard.properties.permissions"
+                                                                :readonly="infoCardOn_.data" class="ma-2"
                                                                 color="#E93030" :value="permissionList[index]" style="
                                                                         min-height: 37.53% !important; 
                                                                         max-height: 37.53% !important;
@@ -235,7 +219,7 @@ export default {
             permissionList: [], // список всех прав 
             objectForCard: {},
             img: undefined,
-
+            imgURL: '',
             showPassword: false,
             rules: {
                 min: v => v.length >= 8 || 'Минимум 8 символов',
@@ -280,12 +264,11 @@ export default {
         getObjectForCard: {
             handler() {
                 this.objectForCard = this.getObjectForCard;
-                console.log(this.objectForCard)
             }
         }
     },
     computed: {
-        ...mapGetters(['getTypeId', 'filterFeature', 'getFeature', 'getObjectForCard', 'emptyObject', 'oneType', 'user']),
+        ...mapGetters(['getTypeId', 'filterFeature', 'getFeature', 'getObjectForCard', 'emptyObject', 'oneType', 'user', 'allFeature']),
     },
     methods: {
         ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature']),
@@ -293,7 +276,6 @@ export default {
         async addNewFeature() {
             if (this.objectForCard.name != null) {
                 this.objectForCard.name = this.getTypeId;
-                console.log(this.objectForCard)
                 await this.postObject([this.objectForCard]);
                 this.filterForFeature();
                 this.getAllObject();
@@ -303,14 +285,12 @@ export default {
                     this.objectForCard.properties = { ...this.objectForCard, ...this.objectForCard.properties }
                     delete this.objectForCard.properties.properties;
                 }
-                console.log(this.objectForCard);
                 await this.postObject(this.objectForCard.properties);
             }
             this.addCardOn_.data = !this.addCardOn_.data;
             this.notVisableCard();
         },
         async editObject() {
-
             await this.putObject(this.objectForCard);
             if (this.objectForCard.name != undefined) {
                 this.filterForFeature();
@@ -337,8 +317,7 @@ export default {
             }
             this.groups = [...new Set(this.groups)]
         },
-        test(file) {
-            console.log(file);
+        fileToBase64(file) {
             const reader = new FileReader();
 
             reader.onload = (e) => {
@@ -348,7 +327,7 @@ export default {
         },
         editOn() {
             this.editCardOn_.data = !this.editCardOn_.data;
-            this.infoCardOn_.data = !this.infoCardOn_.data; 
+            this.infoCardOn_.data = !this.infoCardOn_.data;
         }
     },
     mounted() {
@@ -413,6 +392,7 @@ export default {
     top: 0;
     bottom: 0;
     min-width: 100%;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -449,11 +429,22 @@ export default {
     right: 0;
 }
 
+.one_picture {
+    position: relative !important;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.not_one_picture {
+    position: absolute !important;
+    border-radius: 12px 12px 0 0 !important;
+}
+
 .background_img {
     z-index: 1;
     background-color: #000;
     opacity: 0.3;
     min-height: 37.53%;
+    max-height: 37.53%;
     border-radius: 12px 12px 0 0;
 }
 

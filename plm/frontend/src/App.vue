@@ -99,10 +99,10 @@ export default {
       return !this.cardVisable.data && JSON.stringify(this.emptyObject) === '{}';
     }
   },
-  mounted() {
+  async mounted() {
     this.getUser();
-    this.getFeatures();
-    //console.log(cardVisable.data && JSON.stringify(emptyObject) === '{}')
+    await this.getFeatures();
+    
   }
 }
 </script>
