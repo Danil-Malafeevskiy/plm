@@ -44,8 +44,6 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex';
-//import $ from 'jquery'
-
 import CardInLeftPanel from './CardInLeftPanel.vue';
 
 export default {
