@@ -122,6 +122,8 @@ class DatasetSerializer(serializers.ModelSerializer):
 class DatasetSerializerAdmin(serializers.ModelSerializer):
     group = serializers.SerializerMethodField()
     avaible_group = serializers.SerializerMethodField()
+    properties = serializers.JSONField(required=False, default=[])
+    image = serializers.CharField(required=False, default="")
     class Meta:
         model = Dataset
         fields = ('id', 'name', 'type', 'headers', 'properties', 'image', 'group', 'avaible_group')
