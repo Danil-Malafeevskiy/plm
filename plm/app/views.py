@@ -196,7 +196,7 @@ class UserAdminView(APIView):
                                                                                           'last_login', 'date_joined'])
             return Response(user_serializer.data)
 
-        user_serializer = UserSerializer(User.objects.get(id=id),  remove_fields=['password'])
+        user_serializer = UserSerializer(User.objects.get(id=id))
         return Response(user_serializer.data)
 
     def post(self, request):
