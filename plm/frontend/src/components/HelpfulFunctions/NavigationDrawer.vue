@@ -145,11 +145,11 @@ export default {
             }
         }
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups']) },
+    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType']) },
 
 
     methods: {
-        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature']),
+        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObject']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
                         'updateListType', 'updateListItem']),
         getOneGroup(id) {
@@ -158,6 +158,7 @@ export default {
 
         async changeObject(objectType) {
             this.objectType = objectType;
+            //console.log(objectType)
             const domItem = document.querySelector('.text_in_span').innerHTML;
             this.upadateTitle(objectType.name);
             if (domItem === "Пользователи") {
@@ -177,8 +178,11 @@ export default {
                 this.getUsersOfGroup(objectType);
             }
             else {
-                this.updateHeaders(objectType.headers);
-                this.updateDrawType(objectType.type)
+                await this.getOneTypeObject(objectType.id);
+                //console.log(this.oneType)
+                this.objectType = this.oneType;
+                this.updateHeaders(this.objectType.headers);
+                this.updateDrawType(this.objectType.type)
                 await this.filterForFeature(objectType.id);
             }
         },
