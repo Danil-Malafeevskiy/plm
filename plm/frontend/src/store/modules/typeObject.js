@@ -14,13 +14,14 @@ export default {
         },
         async getOneTypeObject({ commit }, id) {
             await axios.get(`/dataset/${id}`).then((response) => {
-                let result = response.data;
+                let result = { ...response.data};
                 result.properties = { ...result };
                 for (let i in result) {
                     if (i != 'properties' && i != 'id') {
                         delete result[i];
                     }
                 }
+                ///console.log(response.data)
                 commit('updateObjectForCard', result);
                 commit('updateOneType', response.data);
             });
