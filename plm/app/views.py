@@ -15,8 +15,7 @@ from rest_framework.views import APIView
 
 from rest_framework.parsers import MultiPartParser
 from app.models import Feature, Dataset
-from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, Group_Perm_Serializer, UserSerializer, \
-    User_Perm_Serializer, User_Perm_Admin_Serializer, UserRegSerializer, DatasetSerializer, DatasetSerializerAdmin
+from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, DatasetSerializer
 from rest_framework.response import Response
 
 class TowerAPI(APIView):
@@ -31,7 +30,7 @@ class TowerAPI(APIView):
             filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(name__in=
                 list(Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True))).values_list('id', flat=True))), self)
 
-            feature_serializer = FeatureSerializer(filtered_queryset, many=True)
+            feature_serializer = FeatureSerializer(filtered_queryset, many=True, remove_fields=['image'])
             return Response(feature_serializer.data)
         else:
             feature = Feature.objects.filter(id=id)
@@ -141,34 +140,29 @@ class GroupView(APIView):
     def get(self, request, id=0):
         if id==0:
             groups = Group.objects.all()
-            group = GroupSerializer(groups, many=True)
+            group = GroupSerializer(groups, many=True, remove_fields=['permissions', 'avaible_permissions'])
             return Response(group.data)
 
         group = Group.objects.get(id=id)
-        groups = Group_Perm_Serializer(group)
+        groups = GroupSerializer(group)
         return Response(groups.data)
 
     def options(self, request, *args, **kwargs):
         return Response(Permission.objects.all().values_list('name', flat=True))
 
     def post(self, request):
-        group_serializer = GroupSerializer(data=request.data)
+        group_serializer = GroupSerializer(data=request.data, context={'permissions': request.data['permissions']})
         if group_serializer.is_valid():
-            new_group = group_serializer.save()
-            for perm in request.data['permissions']:
-                new_group.permissions.add(Permission.objects.get(name=perm))
+            group_serializer.save()
             return Response("Success new group!")
 
         return Response(group_serializer.errors)
 
     def put(self, request):
         change_group = Group.objects.get(id=request.data['id'])
-        group_serializer = GroupSerializer(change_group, data=request.data)
+        group_serializer = GroupSerializer(change_group, data=request.data, context={'permissions': request.data['permissions']})
         if group_serializer.is_valid():
-            change_group = group_serializer.save()
-            change_group.permissions.clear()
-            for perm in request.data['permissions']:
-                change_group.permissions.add(Permission.objects.get(name=perm))
+            group_serializer.save()
             return Response("Success up group!")
         return Response(group_serializer.errors)
 
@@ -181,7 +175,7 @@ class UserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response(User_Perm_Admin_Serializer(request.user).data)
+        return Response(UserSerializer(request.user, remove_fields=['password']).data)
 
 class UserAdminView(APIView):
     authentication_classes = [SessionAuthentication]
@@ -193,44 +187,37 @@ class UserAdminView(APIView):
             ff = DjangoFilterBackend()
             filtered_queryset = ff.filter_queryset(request, User.objects.all(), self)
 
-            if filtered_queryset.exists():
-                user_serializer = UserSerializer(filtered_queryset, many=True)
-                return Response(user_serializer.data)
-            else:
-                return Response("Не данных удовлетворяющих запросу")
 
-        user_serializer = User_Perm_Admin_Serializer(User.objects.get(id=id))
+            user_serializer = UserSerializer(filtered_queryset, many=True, remove_fields=['password', 'first_name', 'last_name', 'email',
+                                                                                          'is_superuser', 'is_staff', 'is_active',
+                                                                                          'groups', 'avaible_group',
+                                                                                          'user_permissions',
+                                                                                          'avaible_user_permission',
+                                                                                          'last_login', 'date_joined'])
+            return Response(user_serializer.data)
+
+        user_serializer = UserSerializer(User.objects.get(id=id),  remove_fields=['password'])
         return Response(user_serializer.data)
 
     def post(self, request):
-        reg = UserRegSerializer(data=request.data)
+        reg = UserSerializer(data=request.data)
         if reg.is_valid():
             reg.save()
             return Response({"id": reg.data['id']})
         return Response(reg.errors)
 
     def put(self, request):
-        if 'password' in request.data.keys():
-            user = User.objects.get(username=request.data['username'])
-            user_serializer = UserRegSerializer(user, data=request.data)
-            if user_serializer.is_valid():
-                user_serializer.save()
-                return Response("Success up password!")
-            return Response(user_serializer.errors)
+        user = User.objects.get(id=request.data['id'])
+        if 'password' not in request.data.keys():
+            user_serializer = UserSerializer(user, data=request.data, remove_fields=['password'],
+                                             context={'user_permissions': request.data['user_permissions'],
+                                                                                                       'groups': request.data['groups']})
+        else:
+            user_serializer = UserSerializer(user, data=request.data)
 
-        change_user = User.objects.get(id=request.data['id'])
-        user_serializer = User_Perm_Serializer(change_user, data=request.data)
         if user_serializer.is_valid():
-            change_user = user_serializer.save()
-            change_user.user_permissions.clear()
-            change_user.groups.clear()
-            for perm in request.data['user_permissions']:
-                change_user.user_permissions.add(Permission.objects.get(name=perm))
-
-            for group in request.data['groups']:
-                change_user.groups.add(Group.objects.get(name=group))
-
-            return Response("Success up group!")
+            user_serializer.save()
+            return Response("Success up!")
         return Response(user_serializer.errors)
 
     def delete(self, request, id):
@@ -244,10 +231,11 @@ class DatasetView(APIView):
     def get(self, request, id=0):
         if id==0:
             dataset = Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
-            return Response(DatasetSerializer(dataset, many=True).data)
+            return Response(DatasetSerializer(dataset, many=True, remove_fields=['type', 'headers',
+                                                                                 'properties', 'image', 'group', 'avaible_group']).data)
 
         dataset = Dataset.objects.get(id=id)
-        return Response(DatasetSerializer(dataset).data)
+        return Response(DatasetSerializer(dataset, remove_fields=['group', 'avaible_group']).data)
 
 class DatasetAdminView(APIView):
     authentication_classes = [SessionAuthentication]
@@ -256,14 +244,14 @@ class DatasetAdminView(APIView):
     def get(self, request, id=0):
         if id==0:
             dataset = Dataset.objects.all()
-            return Response(DatasetSerializer(dataset, many=True).data)
+            return Response(DatasetSerializer(dataset, many=True, remove_fields=['type', 'headers',
+                                                                                 'properties', 'image', 'group', 'avaible_group']).data)
 
         dataset = Dataset.objects.get(id=id)
-        return Response(DatasetSerializerAdmin(dataset).data)
+        return Response(DatasetSerializer(dataset).data)
 
     def post(self, request):
-        request.data['group'] = Group.objects.get(name=request.data['group']).id
-        dataset_serializer = DatasetSerializer(data=request.data)
+        dataset_serializer = DatasetSerializer(data=request.data, context={'group': request.data['group']})
         if dataset_serializer.is_valid():
             dataset_serializer.save()
             return Response("Success new dataset!")
@@ -271,8 +259,7 @@ class DatasetAdminView(APIView):
 
     def put(self, request):
         dataset = Dataset.objects.get(id=request.data['id'])
-        request.data['group'] = Group.objects.get(name=request.data['group']).id
-        dataset_serializer = DatasetSerializer(dataset, data=request.data)
+        dataset_serializer = DatasetSerializer(dataset, data=request.data, context={'group': request.data['group']})
         if dataset_serializer.is_valid():
             dataset_serializer.save()
             return Response("Success update dataset!")
