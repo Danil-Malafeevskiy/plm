@@ -74,14 +74,14 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     groups = serializers.SerializerMethodField()
-    user_permissions = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
     avaible_group = serializers.SerializerMethodField()
-    avaible_user_permission = serializers.SerializerMethodField()
+    avaible_permission = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff', 'is_active', 'groups', 'avaible_group',
-                  'user_permissions', 'avaible_user_permission', 'last_login', 'date_joined')
+                  'permissions', 'avaible_permission', 'last_login', 'date_joined')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -94,7 +94,7 @@ class UserSerializer(serializers.ModelSerializer):
     def get_groups(self, obj):
         return list(obj.groups.values_list('name', flat=True))
 
-    def get_user_permissions(self, obj):
+    def get_permissions(self, obj):
         return list(obj.user_permissions.values_list('name', flat=True))
 
     def get_avaible_group(self, obj):
@@ -102,7 +102,7 @@ class UserSerializer(serializers.ModelSerializer):
         return [per for per in Group.objects.all().values_list('name', flat=True)
                 if per not in perm]
 
-    def get_avaible_user_permission(self, obj):
+    def get_avaible_permission(self, obj):
         perm = list(obj.user_permissions.values_list('name', flat=True))
         return [per for per in Permission.objects.all().values_list('name', flat=True)
                 if per not in perm]
@@ -119,23 +119,26 @@ class UserSerializer(serializers.ModelSerializer):
         return super(UserSerializer, self).validate(data)
 
     def create(self, validated_data):
-        if 'password' in validated_data.keys():
-            validated_data['password'] = make_password(validated_data.get('password'))
+        validated_data['password'] = make_password(validated_data.get('password'))
 
         user = super(UserSerializer, self).create(validated_data)
+
+        for perm in self.context['permissions']:
+            user.user_permissions.add(Permission.objects.get(name=perm))
+
+        for group in self.context['groups']:
+            user.groups.add(Group.objects.get(name=group))
 
         return user
 
     def update(self, instance, validated_data):
-        if 'password' in validated_data.keys():
-            validated_data['password'] = make_password(validated_data.get('password'))
-            return super(UserSerializer, self).update(instance, validated_data)
+        validated_data['password'] = make_password(validated_data.get('password'))
 
         user = super(UserSerializer, self).update(instance, validated_data)
 
         user.user_permissions.clear()
         user.groups.clear()
-        for perm in self.context['user_permissions']:
+        for perm in self.context['permissions']:
             user.user_permissions.add(Permission.objects.get(name=perm))
 
         for group in self.context['groups']:

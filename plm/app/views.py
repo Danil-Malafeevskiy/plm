@@ -191,8 +191,8 @@ class UserAdminView(APIView):
             user_serializer = UserSerializer(filtered_queryset, many=True, remove_fields=['password', 'first_name', 'last_name', 'email',
                                                                                           'is_superuser', 'is_staff', 'is_active',
                                                                                           'groups', 'avaible_group',
-                                                                                          'user_permissions',
-                                                                                          'avaible_user_permission',
+                                                                                          'permissions',
+                                                                                          'avaible_permission',
                                                                                           'last_login', 'date_joined'])
             return Response(user_serializer.data)
 
@@ -200,7 +200,7 @@ class UserAdminView(APIView):
         return Response(user_serializer.data)
 
     def post(self, request):
-        reg = UserSerializer(data=request.data)
+        reg = UserSerializer(data=request.data, context={'permissions': request.data['permissions'], 'groups': request.data['groups']})
         if reg.is_valid():
             reg.save()
             return Response({"id": reg.data['id']})
@@ -208,12 +208,8 @@ class UserAdminView(APIView):
 
     def put(self, request):
         user = User.objects.get(id=request.data['id'])
-        if 'password' not in request.data.keys():
-            user_serializer = UserSerializer(user, data=request.data, remove_fields=['password'],
-                                             context={'user_permissions': request.data['user_permissions'],
-                                                                                                       'groups': request.data['groups']})
-        else:
-            user_serializer = UserSerializer(user, data=request.data)
+        user_serializer = UserSerializer(user, data=request.data,
+                                             context={'permissions': request.data['permissions'], 'groups': request.data['groups']})
 
         if user_serializer.is_valid():
             user_serializer.save()
