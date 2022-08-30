@@ -60,7 +60,7 @@ export default {
             state.filteredFeature = arrFeature;
             let items = [];
             state.filteredFeature.forEach(element => {
-                let item = JSON.parse(JSON.stringify(element.properties));
+                let item = { ...element.properties };
                 item.id = element.id;
                 items.push(item);
             });
