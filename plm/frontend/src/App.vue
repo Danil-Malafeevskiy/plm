@@ -101,11 +101,6 @@ export default {
     }
   },
   watch: {
-    // oneType: {
-    //   handler() {
-    //     console.log(this.oneType);
-    //   }
-    // },
     editMode: {
       handler(){
         if(!this.editMode){
