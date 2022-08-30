@@ -196,7 +196,7 @@ class UserAdminView(APIView):
                                                                                           'last_login', 'date_joined'])
             return Response(user_serializer.data)
 
-        user_serializer = UserSerializer(User.objects.get(id=id))
+        user_serializer = UserSerializer(User.objects.get(id=id), remove_fields=['password'])
         return Response(user_serializer.data)
 
     def post(self, request):
@@ -208,8 +208,12 @@ class UserAdminView(APIView):
 
     def put(self, request):
         user = User.objects.get(id=request.data['id'])
-        user_serializer = UserSerializer(user, data=request.data,
-                                             context={'permissions': request.data['permissions'], 'groups': request.data['groups']})
+        if 'password' in request.data.keys():
+            user_serializer = UserSerializer(user, data=request.data)
+        else:
+            user_serializer = UserSerializer(user, data=request.data, remove_fields=['password'],
+                                             context={'permissions': request.data['permissions'],
+                                                      'groups': request.data['groups']})
 
         if user_serializer.is_valid():
             user_serializer.save()
