@@ -39,7 +39,7 @@ export default {
                 console.log(feature);
             }).catch(error => console.log(error));
         },
-        async filterForFeature({ commit, state }, typeId = state.featureTypeId){
+        async filterForFeature({ commit, state }, typeId = state.featureTypeId) {
             state.featureTypeId = typeId;
             await axios.get(`/tower?name=${typeId}`).then((response) => {
                 commit('updatefilterForFeature', response.data);
@@ -66,8 +66,46 @@ export default {
             });
             this.commit('updateListItem', { items }, { root: true });
         },
-        updatefeatureTypeId(state, nameType){
+        updatefeatureTypeId(state, nameType) {
             state.featureTypeId = nameType;
+        },
+        updateArrayEditMode(state, { item, type }) {
+            switch (type) {
+                case 'put':
+                    if (state.arrayEditMode.put.filter(el => el.id === item.id).length === 0) {
+                        state.arrayEditMode[type].push(item);
+                    }
+                    else {
+                        for (let key in state.arrayEditMode.put) {
+                            if (state.arrayEditMode.put[key].id === item.id) {
+                                state.arrayEditMode.put[key] = item;
+                            }
+                        }
+                    }
+                    break;
+                case 'delete':
+                    if (state.arrayEditMode.delete.filter(el => el.id === item.id).length === 0) {
+                        state.arrayEditMode[type].push(item);
+                    }
+                    else {
+                        state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
+                    }
+                    break;
+            }
+
+
+
+
+
+
+
+        },
+        resetArrayEditMode(state) {
+            state.arrayEditMode = {
+                put: [],
+                post: [],
+                delete: [],
+            }
         }
     },
     getters: {
@@ -83,8 +121,11 @@ export default {
         getFeature(state) {
             return state.feature;
         },
-        getTypeId(state){
+        getTypeId(state) {
             return state.featureTypeId;
+        },
+        arrayEditMode(state) {
+            return state.arrayEditMode;
         }
     },
     state: {
@@ -96,5 +137,10 @@ export default {
             keyerties: {},
             geometry: {},
         },
+        arrayEditMode: {
+            put: [],
+            post: [],
+            delete: [],
+        }
     },
 }
