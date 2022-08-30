@@ -158,7 +158,6 @@ export default {
 
         async changeObject(objectType) {
             this.objectType = objectType;
-            //console.log(objectType)
             const domItem = document.querySelector('.text_in_span').innerHTML;
             this.upadateTitle(objectType.name);
             if (domItem === "Пользователи") {

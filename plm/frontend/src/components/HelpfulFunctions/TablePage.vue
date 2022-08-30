@@ -1,5 +1,5 @@
   <template>
-  <div class="child" v-if="allListItem.length != 0">
+  <div v-if="allListItem.length != 0">
     <div class="sub_tittle" v-if="selected.length != 0">
       <div style="margin: 20px 0;">
         <span class="object" v-if="selected.length % 10 === 1">{{  selected.length  }} объект </span>
@@ -46,6 +46,7 @@
         box-shadow: none !important;
         margin-left: 2% !important;
       ">
+
     </v-data-table>
   </div>
 </template>
@@ -64,10 +65,41 @@ export default {
     }
   },
   watch: {
+    allListItem: {
+      handler() {
+        if (this.arrayEditMode.put.length != 0) {
+          this.allListItem.forEach(element => {
+            this.arrayEditMode.put.forEach(elem => {
+              if (element.id === elem.id) {
+                for (let key in element) {
+                  if (key != 'id') {
+                    element[key] = elem.properties[key];
+                  }
+                }
+              }
+            })
+          });
+        }
+
+        if (this.arrayEditMode.delete.length != 0) {
+          this.allListItem.forEach(element => {
+            this.arrayEditMode.delete.forEach(elem => {
+              if (element.id === elem.id) {
+                for (let key in element) {
+                  if (key != 'id') {
+                    element[key] = elem.properties[key];
+                  }
+                }
+              }
+            })
+          });
+        }
+      }
+    }
   },
   computed: {
-    ...mapGetters(['allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray', 
-                  'allType', 'drawType', 'getToolbarTitle', 'typeForFeature', 'typeForFeature']),
+    ...mapGetters(['allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray',
+      'allType', 'drawType', 'getToolbarTitle', 'typeForFeature', 'typeForFeature', 'arrayEditMode']),
     selected: {
       get() { return this.arrObjects[`${this.nameArray}`]; },
       set(value) { this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
@@ -86,12 +118,18 @@ export default {
   },
   methods: {
     ...mapActions(['getAllObject', 'getOneObject', 'deleteObject', 'putObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
-    ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts', 'updateOneType']),
+    ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts', 'updateOneType', 'updateObjectForCard']),
 
     async showCard(obj) {
       if (!this.addCardOn.data) {
         if (this.getObjectForCard === null || this.getObjectForCard.id != obj.id || !this.infoCardOn_.data) {
-          await this.getOneObject(obj.id);
+          const object = this.arrayEditMode.put.filter(el => el.id === obj.id);
+          if (object.length === 0) {
+            await this.getOneObject(obj.id);
+          }
+          else {
+            this.updateObjectForCard(object[0]);
+          }
           this.visableCard();
           this.infoCardOn_.data = true;
           this.editCardOn_.data = false;
@@ -121,6 +159,7 @@ export default {
       this.resetSelected();
     },
     async moveObject(type) {
+      console.log(type, this.nameArray)
       for (const element of this.arrObjects[`${this.nameArray}`]) {
         await this.getOneObject(element.id);
         console.log(this.getObjectForCard);
@@ -140,12 +179,26 @@ export default {
       this.resetSelected();
     },
     classRow(item) {
+      let classForItem = ''
       if (this.getObjectForCard != null && item.id === this.getObjectForCard.id && (this.infoCardOn_.data || this.editCardOn.data)) {
-        return 'v-data-table__selected';
+        classForItem += 'v-data-table__selected';
       }
+      for (let key in this.arrayEditMode.put) {
+        if (this.arrayEditMode.put[key].id === item.id) {
+          classForItem += ' text_color_red';
+          break;
+        }
+      }
+      for (let key in this.arrayEditMode.delete) {
+        if (this.arrayEditMode.delete[key].id === item.id) {
+          classForItem += ' text_color_gray';
+          break;
+        }
+      }
+      return classForItem;
     }
   },
-  async mounted() {
+  mounted() {
   },
 }
 </script>
@@ -159,15 +212,9 @@ export default {
   display: flex;
   justify-content: space-between;
   width: 50%;
-  /* min-width: 100%; */
-  /* width: 50%; */
 }
 
 .object {
-  /* padding-left: 2% !important;
-  padding-top: 1% !important;
-  width: 50%;
-  display: inline-block; */
   margin: 20px 5px 20px 20px;
   color: #787878;
   font-weight: 500;
@@ -199,6 +246,14 @@ export default {
   opacity: 0;
   animation: ani 1.5s forwards;
 
+}
+
+.text_color_red {
+  color: #D7153A;
+}
+
+.text_color_gray{
+  color: gray;
 }
 
 .v-data-table__wrapper {

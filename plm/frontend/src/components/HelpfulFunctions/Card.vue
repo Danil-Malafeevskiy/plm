@@ -43,13 +43,16 @@
                             <v-col class="pa-0" cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text class="pa-0"
                                     style="font-size: 24px; display: flex; justify-content: flex-end;">
-                                    <v-btn @click="editOn" class="ma-0" fab small elevation="0" color="white">
+                                    <v-btn @click="editOn" depressed class="ma-0 btn" fab small elevation="0"
+                                        style="background-color: white !important" color="white" :disabled="!editMode"
+                                        :class="{ 'btn_disabled': !editMode }">
                                         <v-icon>
                                             mdi-pencil
                                         </v-icon>
                                     </v-btn>
-                                    <v-btn @click="deleteObjectOnCard(objectForCard.id)" class="ma-0" fab small
-                                        elevation="0" color="white">
+                                    <v-btn @click="deleteObjectOnCard()" class="ma-0 btn" fab small
+                                        elevation="0" :disabled="!editMode" style="background-color: white !important"
+                                        :class="{ 'btn_disabled': !editMode }">
                                         <v-icon>
                                             mdi-delete-outline
                                         </v-icon>
@@ -87,10 +90,10 @@
                                 </v-col>
                             </template>
                         </v-row>
-                        
+
                         <FormForDynamicField :objectForCard="objectForCard" :infoCardOn="infoCardOn" />
 
-                        <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="infoCardOn"/>
+                        <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="infoCardOn" />
 
                     </v-form>
                 </v-card-text>
@@ -120,10 +123,10 @@ import FormForDynamicField from './FormForDynamicField.vue';
 export default {
     name: 'CardInfo',
     components: {
-    ExpansionPanelForCard,
-    FormForDynamicField
-},
-    props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'visableCard', 'notVisableCard'],
+        ExpansionPanelForCard,
+        FormForDynamicField
+    },
+    props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'visableCard', 'notVisableCard', 'editMode'],
     data() {
         return {
             cardVisable_: this.cardVisable,
@@ -148,7 +151,7 @@ export default {
             }, deep: true
         },
         addCardOn: {
-            handler() { 
+            handler() {
                 if (this.addCardOn.data) {
                     this.objectForCard = this.emptyObject;
                 }
@@ -200,17 +203,18 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature']),
+        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem']),
     },
     methods: {
         ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature']),
-        ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType']),
+        ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode']),
         async addNewFeature() {
             if (this.objectForCard.name != null) {
                 this.objectForCard.name = this.getTypeId;
                 await this.postObject([this.objectForCard]);
                 this.filterForFeature();
                 this.getAllObject();
+                //this.updateArrayEditMode({ data: this.objectForCard, type: 'post' })
             }
             else {
                 if ('groups' in this.objectForCard) {
@@ -218,28 +222,41 @@ export default {
                     delete this.objectForCard.properties.properties;
                 }
                 await this.postObject(this.objectForCard.properties);
+                //this.updateArrayEditMode({ data: this.objectForCard.properties, type: 'post' })
             }
             this.addCardOn_.data = !this.addCardOn_.data;
             this.notVisableCard();
         },
         async editObject() {
-            await this.putObject(this.objectForCard);
-            if (this.objectForCard.name != undefined) {
-                this.filterForFeature();
-                this.getAllObject();
-            }
-            this.getOneObject(this.objectForCard.id);
+            this.updateArrayEditMode({ item: this.objectForCard, type: 'put' })
+            this.allListItem.forEach(element => {
+
+                if(element.id === this.objectForCard.id){
+                    for(let el in element){
+                        if(el != 'id'){
+                            element[el] = this.objectForCard.properties[el];
+                        }
+                    }
+                }
+            });
+            // await this.putObject(this.objectForCard);
+            // if (this.objectForCard.name != undefined) {
+            //     this.filterForFeature();
+            //     this.getAllObject();
+            // }
+            // this.getOneObject(this.objectForCard.id);
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
         },
-        async deleteObjectOnCard(id) {
-            await this.deleteObject(id);
+        async deleteObjectOnCard() {
+            //await this.deleteObject(id);
+            this.updateArrayEditMode({ item: this.objectForCard, type: 'delete' })
             this.infoCardOn_.data = !this.infoCardOn_.data;
             this.notVisableCard();
-            if (this.objectForCard.name != undefined) {
-                this.filterForFeature();
-                this.getAllObject();
-            }
+            // if (this.objectForCard.name != undefined) {
+            //     this.filterForFeature();
+            //     this.getAllObject();
+            // }
         },
         fileToBase64(file) {
             const reader = new FileReader();
@@ -252,6 +269,10 @@ export default {
         editOn() {
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
+        },
+        setClassFromBtn() {
+            console.log(1);
+            return 'test';
         },
     },
     mounted() {
@@ -280,6 +301,14 @@ export default {
 
 .v-window__container {
     min-height: 100%;
+}
+
+.btn {
+    background-color: white !important;
+}
+
+.btn_disabled {
+    opacity: 0.5;
 }
 
 .card_of_object {
@@ -343,7 +372,6 @@ export default {
 .v-file-input {
     min-height: 37.53%;
     max-height: 37.53%;
-    /*background-color: #EE5E5E;*/
     border-radius: 12px 12px 0 0;
 }
 
@@ -359,11 +387,6 @@ export default {
     position: absolute;
     z-index: 2;
     right: 0;
-}
-
-.btn_on_card {
-    height: 50px !important;
-    border-radius: 8px !important;
 }
 
 .one_picture {
@@ -391,11 +414,5 @@ export default {
 
 .card_from_block {
     height: 100%;
-}
-
-.attributes {
-    font-size: 16px;
-    padding-left: 25px;
-    color: #787878;
 }
 </style>
