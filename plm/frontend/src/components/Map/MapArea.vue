@@ -17,6 +17,13 @@ import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 
 
+// import Feature from 'ol/Feature';
+// import Point from 'ol/geom/Point';
+// import Text from 'ol/style/Text';
+import {Icon, Style} from 'ol/style';
+// import { mdiTransmissionTower as Tower } from '@mdi/js';
+
+
 export default {
   components: {
   },
@@ -29,7 +36,12 @@ export default {
         features: this.allFeatures,
       },
       feature: this.getFeature,
-      vectorLayer: null,
+      featurePoint: {},
+      featureLine: {},
+      featurePolygon: {},
+      vectorLayerPoint: null,
+      vectorLayerLine: null,
+      vectorLayerPolygon: null,
       map: null,
       drawLayer: null,
       interactionId: null,
@@ -39,29 +51,40 @@ export default {
       addCardOn_: this.addCardOn,
       infoCardOn_: this.infoCardOn,
       editCardOn_: this.editCardOn,
+      imageType: this.typeForFeature,
     }
   },
   watch: {
-    allFeatures: function () {
-      this.features = {
-        type: 'FeatureCollection',
-        features: this.allFeatures,
-      }
+    allFeatures: {
+      handler() {
+        this.features = {
+          type: 'FeatureCollection',
+          features: this.allFeatures,
+        }
 
-      if (this.map != null) {
-        this.map.removeLayer(this.vectorLayer);
+        if (this.map != null) {
+          let removedLayers = [...this.map.getLayers().getArray()]
+          removedLayers.forEach((layer) => {
+            this.map.removeLayer(layer)
+          })
 
-        this.vectorLayer = new VectorLayer({
-          source: new VectorSource({
-            features: new GeoJSON().readFeatures(this.features, {
-              featureProjection: 'EPSG:3857'
+          this.drawLayer = new VectorLayer({
+            source: new VectorSource({
+              features: []
             }),
-          }),
-        });
+          });
 
-        this.map.addLayer(this.vectorLayer);
-      }
-    },
+          this.map.addLayer(
+            new TileLayer({
+              source: new OSM()
+            })
+          )
+          this.map.addLayer(this.drawLayer);
+
+          this.addNewLayers();
+        }
+
+    }},
     getFeature: function () {
       this.feature = this.getFeature;
     },
@@ -93,12 +116,17 @@ export default {
         }
       },
       deep: true
-    }
+    },
   },
-  computed: mapGetters(['drawType']),
+  computed: mapGetters(['drawType', 'allType', 'typeForFeature']),
   methods: {
     ...mapMutations(['updateOneFeature']),
-    ...mapActions(['getOneFeature']),
+    ...mapActions(['getOneFeature', 'getOneTypeObjectForFeature']),
+
+
+    // async getType(el){
+    //   await this.getOneTypeObjectForFeature({id: el, forFeature: true})
+    // },
 
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
@@ -176,24 +204,52 @@ export default {
         if (this.map.getSize()[1] === 0)
           this.resizeMap();
       }, 400);
+    },
+
+    addNewLayers() {
+      this.allType.forEach(async element => {
+        let features = {
+          type: 'FeatureCollection',
+          features: this.features.features.filter(el => el.name === element.id),
+        };
+
+        await this.getOneTypeObjectForFeature({ id: element.id, forFeature: true })
+        console.log(this.typeForFeature)
+
+        let layer = new VectorLayer({
+          source: new VectorSource({
+            features: new GeoJSON().readFeatures(features,
+              {
+                featureProjection: 'EPSG:3857'
+              }),
+          }),
+        });
+        this.map.addLayer(layer)
+
+        if (features.features[0].geometry.type === 'Point') {
+          let style = new Style({
+            image: new Icon({
+              anchor: [0.5, 0, 5],
+              anchorXUnits: 'fraction',
+              anchorYUnits: 'pixels',
+              src: `static/${this.typeForFeature.image}`,
+            }),
+          });
+          layer.setStyle(style)
+        }
+      });
     }
+
   },
 
   mounted() {
-
     this.drawLayer = new VectorLayer({
       source: new VectorSource({
         features: []
       }),
     });
 
-    this.vectorLayer = new VectorLayer({
-      source: new VectorSource({
-        features: new GeoJSON().readFeatures(this.features, {
-          featureProjection: 'EPSG:3857'
-        }),
-      }),
-    });
+
 
     this.map = new Map({
       target: 'map_content',
@@ -201,15 +257,16 @@ export default {
         new TileLayer({
           source: new OSM()
         }),
-        this.vectorLayer,
-        this.drawLayer
+        this.drawLayer,
       ],
       view: new View({
         zoom: 13,
-        center: fromLonLat([54, 56]),
+        center: fromLonLat([56.177483, 54.924307]),
         constrainResolution: true,
       })
     });
+
+    this.addNewLayers();
 
     this.modify = new Modify({
       source: this.drawLayer.getSource(),
@@ -223,6 +280,7 @@ export default {
       this.addInteraction();
     }
     this.resizeMap();
+
   }
 }
 </script>
