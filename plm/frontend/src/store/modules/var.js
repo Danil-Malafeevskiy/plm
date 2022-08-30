@@ -37,29 +37,7 @@ export default {
             state.objectForCard = object;
         },
         upadateEmptyObject(state, object) {
-            state.emptyObject = JSON.parse(JSON.stringify(object));
-            delete state.emptyObject.id;
-            this.commit('updateFieldEmptyObject');
-        },
-        updateFieldEmptyObject(state, object = state.emptyObject) {
-            for (let i in object) {
-                if (i != 'headers') {
-                    switch (typeof object[i]) {
-                        case 'string':
-                            object[i] = '';
-                            break;
-                        case 'boolean':
-                            object[i] = false;
-                            break;
-                        case 'object':
-                            this.commit('updateFieldEmptyObject', object[i]);
-                            break;
-                        default:
-                            object[i] = 0;
-                            break;
-                    }
-                }
-            }
+            state.emptyObject = { ...object };
         },
         updateHeaders(state, headers) {
             state.headers = headers;

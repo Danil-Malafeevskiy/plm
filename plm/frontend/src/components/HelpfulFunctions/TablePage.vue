@@ -2,11 +2,11 @@
   <div class="child" v-if="allListItem.length != 0">
     <div class="sub_tittle" v-if="selected.length != 0">
       <div style="margin: 20px 0;">
-        <span class="object" v-if="selected.length % 10 === 1">{{ selected.length }} объект </span>
+        <span class="object" v-if="selected.length % 10 === 1">{{  selected.length  }} объект </span>
         <span class="object" v-else-if="selected.length % 10 > 1 && selected.length % 10 < 5">
-          {{ selected.length }} объекта </span>
+          {{  selected.length  }} объекта </span>
 
-        <span class="object" v-else>{{ selected.length }} объектов </span>
+        <span class="object" v-else>{{  selected.length  }} объектов </span>
 
         <a style="margin: 20px 0" @click="resetSelected()">
           <v-icon v-if="selected.length != 0" small>mdi-close</v-icon>
@@ -22,7 +22,7 @@
           </template>
           <v-list>
             <v-list-item v-for="(item, index) in type" :key="index" link @click="moveObject(item)">
-              <v-list-item-title>{{ item.name }}</v-list-item-title>
+              <v-list-item-title>{{  item.name  }}</v-list-item-title>
             </v-list-item>
           </v-list>
         </v-menu>
@@ -32,23 +32,21 @@
       </div>
     </div>
     <div class="sub_tittle" v-else>
-      <span class="object" v-if="allListItem.length % 10 === 1">{{ allListItem.length }} объект </span>
+      <span class="object" v-if="allListItem.length % 10 === 1">{{  allListItem.length  }} объект </span>
       <span class="object" v-else-if="allListItem.length % 10 > 1 && allListItem.length % 10 < 5">
-        {{ allListItem.length }} объекта </span>
-      <span class="object" v-else>{{ allListItem.length }} объектов </span>
+        {{  allListItem.length  }} объекта </span>
+      <span class="object" v-else>{{  allListItem.length  }} объектов </span>
     </div>
     <v-data-table @click:row="showCard" :headers="headers" v-model="selected" show-select :item-key="headers[0].text"
-      :items="allListItem" :items-per-page="10" class="pa-0"
-        @toggle-select-all="showAll()"
-        :item-class="classRow"
-        style="
+      :items="allListItem" :items-per-page="10" class="pa-0" @toggle-select-all="showAll()" :item-class="classRow"
+      style="
         height: 100% !important;
         width: 50% !important; 
         background-color: #E5E5E5; 
         box-shadow: none !important;
         margin-left: 2% !important;
       ">
-      </v-data-table>
+    </v-data-table>
   </div>
 </template>
 
@@ -60,49 +58,43 @@ export default {
   props: ['infoCardOn', 'visableCard', 'notVisableCard', 'addCardOn', 'editCardOn'],
   data() {
     return {
-      features: {
-        features: this.allFeatures
-      },
-      feature: this.getFeature,
       infoCardOn_: this.infoCardOn,
       addCardOn_: this.addCardOn,
+      editCardOn_: this.editCardOn,
     }
   },
   watch: {
-    getFeature: function () {
-      this.feature = this.getFeature;
-    },
-    allFeatures: function () {
-      this.features = this.allFeatures;
-    },
-    // arrObjects: {
-    //   handler() {
-    //     console.log(this.arrObjects[this.nameArray])
-    //   },
-    //   deep: true
-    // }
   },
   computed: {
-    ...mapGetters(['allFeatures', 'getFeature', 'allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray', 'allType', 'drawType', 'getToolbarTitle']),
+    ...mapGetters(['allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray', 
+                  'allType', 'drawType', 'getToolbarTitle', 'typeForFeature', 'typeForFeature']),
     selected: {
       get() { return this.arrObjects[`${this.nameArray}`]; },
       set(value) { this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
     },
     type() {
-      return this.allType.filter(el => el.type != undefined ? el.type === this.drawType && el.name != this.getToolbarTitle : el.name != this.getToolbarTitle);
+      return this.allType.filter(el => el.name != this.getToolbarTitle);
+      //   if (el.name === this.getToolbarTitle) {
+      //     console.log(el);
+      //     return false;
+      //   }
+      //   await this.getOneTypeObjectForFeature({ id: el.id, forFeature: true });
+      //   console.log(this.typeForFeature.type === this.drawType);
+      //   return this.typeForFeature.type === this.drawType
+      // });
     }
   },
   methods: {
-    ...mapActions(['getAllObject', 'getOneObject', 'deleteObject', 'putObject', 'filterForFeature']),
-    ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts']),
+    ...mapActions(['getAllObject', 'getOneObject', 'deleteObject', 'putObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
+    ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts', 'updateOneType']),
 
     async showCard(obj) {
-      //console.log(obj);
       if (!this.addCardOn.data) {
         if (this.getObjectForCard === null || this.getObjectForCard.id != obj.id || !this.infoCardOn_.data) {
           await this.getOneObject(obj.id);
           this.visableCard();
           this.infoCardOn_.data = true;
+          this.editCardOn_.data = false;
         }
         else {
           this.infoCardOn_.data = false;
@@ -110,9 +102,9 @@ export default {
         }
       }
     },
-    showAll(){
+    showAll() {
       if (JSON.stringify(this.selected) === JSON.stringify(this.allListItem)) {
-        this.selected = [] ;
+        this.selected = [];
       } else {
         this.selected = this.allListItem;
       }
@@ -147,8 +139,8 @@ export default {
       this.getAllObject();
       this.resetSelected();
     },
-    classRow(item){
-      if(this.getObjectForCard != null && item.id === this.getObjectForCard.id && (this.infoCardOn_.data || this.editCardOn.data)){
+    classRow(item) {
+      if (this.getObjectForCard != null && item.id === this.getObjectForCard.id && (this.infoCardOn_.data || this.editCardOn.data)) {
         return 'v-data-table__selected';
       }
     }
