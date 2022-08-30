@@ -47,6 +47,7 @@ export default {
         selectedItem: {
             async handler() {
                 this.updatefilterForFeature([]);
+                this.upadateTitle('');
                 if (this.selectedItem != null) {
                     if ((this.selectedItem != 3 && this.user.is_staff) || (this.selectedItem != 0 && this.user.is_active)) {
                         setTimeout(() => {
@@ -72,7 +73,8 @@ export default {
                             let object = {
                                 properties: {
                                     name: '',
-                                }
+                                },
+                                permissions: [],
                             }
                             this.upadateEmptyObject(object);
                             this.updateHeaders(headers);
@@ -92,6 +94,8 @@ export default {
                                 properties: {
                                     name: '',
                                     type: '',
+                                    headers: [],
+                                    properties: [],
                                 }
                             }
                             let headers = [
@@ -144,7 +148,7 @@ export default {
     methods: {
         ...mapActions(['logOut', 'getAllGroups', 'getTypeObject']),
         ...mapMutations(['updatefilterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
-            'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray']),
+            'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray', 'updateOneType', 'upadateTitle']),
         logOutAndResolve() {
             this.logOut();
             location.reload();

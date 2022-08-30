@@ -9,14 +9,10 @@ export default {
         },
         async getGroup({ commit }, id) {
             await axios.get(`/group/${id}`).then((response) => {
-                let group = response.data;
-                group.properties = { ...group };
-                for (let i in group) {
-                    if (i != 'properties' && i != 'id') {
-                        delete group[i];
-                    }
-                }
-                commit('updateObjectForCard', response.data);
+                let group = { ...response.data };
+                group.properties = { name: group.name };
+                delete group.name;
+                commit('updateObjectForCard', group);
             })
         },
         async getUsersOfGroup({ commit, state }, group = state.group) {

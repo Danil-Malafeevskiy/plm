@@ -1,9 +1,11 @@
 <template>
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
-            <p style="display: none">{{ objectForCard }}</p>
-            <v-file-input v-if="!objectForCard.image" v-model="img" @change="fileToBase64" accept="image/*" class="pa-0 ma-0"
-                height="37.53%" color="#EE5E5E" :prepend-icon="icon" :disabled="infoCardOn_.data" hide-input>
+            <p style="display: none">{{  objectForCard  }}</p>
+            <v-file-input v-if="!objectForCard.image" @change="fileToBase64" accept="image/*" :class="{
+                'background_color_red': !('properties' in objectForCard && 'username' in objectForCard.properties),
+                'background_color_gray': ('properties' in objectForCard && 'username' in objectForCard.properties)
+            }" class="pa-0 ma-0" height="37.53%" :prepend-icon="icon" :disabled="infoCardOn_.data" hide-input>
             </v-file-input>
             <template v-else-if="objectForCard.image && !infoCardOn_.data">
                 <div class="background_img"></div>
@@ -20,20 +22,23 @@
             <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                 <v-card-text class="pa-0">
                     <v-form>
-                        <p v-for="item in allFeature" :key="item.id">
-                            {{ item.image }}
-                        </p>
                         <v-row justify="start">
                             <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text v-if="objectForCard.properties.username != undefined" class="pa-0"
                                     style="font-size: 24px;">{{
-                                            objectForCard.properties.username
+                                     objectForCard.properties.username 
+                                    }}
+                                </v-card-text>
+                                <v-card-text v-else-if="'name' in objectForCard" class="pa-0" style="font-size: 24px;">
+                                    {{
+                                     typeForFeature.name 
                                     }}
                                 </v-card-text>
                                 <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
-                                        objectForCard.properties.name
-                                }}
+                                     objectForCard.properties.name 
+                                    }}
                                 </v-card-text>
+
                             </v-col>
                             <v-col class="pa-0" cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text class="pa-0"
@@ -57,129 +62,36 @@
                             <v-col cols="2" sm="6" md="5" lg="6" v-else>
                                 <v-card-text style="font-size: 24px; padding: 16px 0;">Редактирование</v-card-text>
                             </v-col>
-
-                            <v-col v-for="(f, index) in objectForCard.properties" :key="index" cols="2" sm="6" md="5"
-                                lg="6" v-show="typeof (f) != 'object' && 1">
-                                <v-text-field v-if="index != 'password'" v-model="objectForCard.properties[index]"
-                                    :value="objectForCard.properties[index]" hide-details :label="index"
-                                    :placeholder="index" filled :readonly="infoCardOn_.data">
-                                </v-text-field>
-                                <v-text-field v-else v-model="objectForCard.properties[index]"
-                                    :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :rules="[rules.min]"
-                                    hint="Минимум 8 символов" :type="showPassword ? 'text' : 'password'"
-                                    @click:append="showPassword = !showPassword"
-                                    :value="objectForCard.properties[index]" hide-details :label="index"
-                                    :placeholder="index" filled :readonly="infoCardOn_.data">
-                                </v-text-field>
-                            </v-col>
+                            <template v-if="!('name' in objectForCard)">
+                                <v-col v-for="(f, index) in objectForCard.properties" :key="index" cols="2" sm="6"
+                                    md="5" lg="6" v-show="typeof (f) != 'object' && index != 'group'">
+                                    <v-text-field v-if="index != 'password'" v-model="objectForCard.properties[index]"
+                                        hide-details :label="index" :placeholder="index" filled
+                                        :readonly="infoCardOn_.data">
+                                    </v-text-field>
+                                    <v-text-field v-else v-model="objectForCard.properties[index]"
+                                        :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :rules="[rules.min]"
+                                        hint="Минимум 8 символов" :type="showPassword ? 'text' : 'password'"
+                                        @click:append="showPassword = !showPassword" hide-details :label="index"
+                                        :placeholder="index" filled :readonly="infoCardOn_.data">
+                                    </v-text-field>
+                                </v-col>
+                            </template>
+                            <template v-else-if="('name' in objectForCard)">
+                                <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="2" sm="6" md="5" lg="6"
+                                    v-show="el.text != 'id'">
+                                    <v-text-field v-if="el.text != 'id'" v-model="objectForCard.properties[el.text]"
+                                        hide-details :label="el.text" :placeholder="el.text" filled
+                                        :readonly="infoCardOn_.data">
+                                    </v-text-field>
+                                </v-col>
+                            </template>
                         </v-row>
-                        <div style="margin: 24px"
-                            v-if="'properties' in objectForCard && 'username' in objectForCard.properties">
-                            <v-expansion-panels accordion flat class="pa-0 ma-0">
-                                <v-expansion-panel class="pa-0 ma-0">
-                                    <v-expansion-panel-header class="pa-0 ma-0">
-                                        Группы
-                                    </v-expansion-panel-header>
+                        
+                        <FormForDynamicField :objectForCard="objectForCard" :infoCardOn="infoCardOn" />
 
-                                    <v-expansion-panel-content class="ma-0 pa-0">
-                                        <v-row class="pa-2 ma-0">
-                                            <v-col v-for="(f, index) in userGroups" :key="f" cols="2" sm="6" md="5"
-                                                lg="6" class="pa-0 ma-0">
+                        <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="infoCardOn"/>
 
-                                                <v-checkbox v-model="objectForCard.groups" :label="f"
-                                                    :value="userGroups[index]" :readonly="infoCardOn_.data" class="ma-2"
-                                                    color="#E93030" style="
-                                                                min-height: 37.53% !important; 
-                                                                max-height: 37.53% !important;
-                                                            ">
-                                                </v-checkbox>
-                                            </v-col>
-                                        </v-row>
-                                    </v-expansion-panel-content>
-
-                                </v-expansion-panel>
-
-                                <v-expansion-panel class="pa-0 ma-0">
-                                    <v-expansion-panel-header class="pa-0 ma-0">
-                                        Права
-                                    </v-expansion-panel-header>
-
-                                    <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                        <v-expansion-panels accordion flat class="pa-0 ma-0">
-                                            <v-expansion-panel v-for="el in groups" id="permission" :key="el" cols="2"
-                                                sm="6" md="5" lg="6" class="pa-0 ma-0">
-
-                                                <v-expansion-panel-header class="pa-0 ma-0"
-                                                    style="margin-left: 0.5em !important;">
-                                                    {{ el }}
-                                                </v-expansion-panel-header>
-
-                                                <v-expansion-panel-content class="ma-0 pa-0">
-                                                    <v-row class="pa-2 ma-0">
-                                                        <v-col v-for="(name, index) in permissionList" :key="name"
-                                                            cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                                            <v-checkbox
-                                                                v-if="name.includes(el[0].toLowerCase() + el.slice(1))"
-                                                                v-model="objectForCard.user_permissions"
-                                                                :readonly="infoCardOn_.data" class="ma-2"
-                                                                color="#E93030" :value="permissionList[index]" style="
-                                                                        min-height: 37.53% !important; 
-                                                                        max-height: 37.53% !important;
-                                                                    " :label="name">
-                                                            </v-checkbox>
-                                                        </v-col>
-                                                    </v-row>
-                                                </v-expansion-panel-content>
-                                            </v-expansion-panel>
-                                        </v-expansion-panels>
-                                    </v-expansion-panel-content>
-                                </v-expansion-panel>
-                            </v-expansion-panels>
-                        </div>
-                        <div style="margin: 24px"
-                            v-if="'properties' in objectForCard && 'permissions' in objectForCard.properties">
-
-                            <v-expansion-panels accordion flat class="pa-0 ma-0">
-                                <v-expansion-panel>
-
-                                    <v-expansion-panel-header class="pa-0 ma-0">
-                                        Права групп
-                                    </v-expansion-panel-header>
-
-                                    <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                        <v-expansion-panels accordion flat class="pa-0 ma-0">
-                                            <v-expansion-panel v-for="el in groups" id="permission" :key="el" cols="2"
-                                                sm="6" md="5" lg="6" class="pa-0 ma-0">
-
-                                                <v-expansion-panel-header class="pa-0 ma-0"
-                                                    style="margin-left: 0.5em !important;">
-                                                    {{ el }}
-                                                </v-expansion-panel-header>
-
-                                                <v-expansion-panel-content class="ma-0 pa-0">
-                                                    <v-row class="pa-2 ma-0">
-                                                        <v-col v-for="(name, index) in permissionList" :key="name"
-                                                            cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                                            <v-checkbox
-                                                                v-if="name.includes(el[0].toLowerCase() + el.slice(1))"
-                                                                v-model="objectForCard.properties.permissions"
-                                                                :readonly="infoCardOn_.data" class="ma-2"
-                                                                color="#E93030" :value="permissionList[index]" style="
-                                                                        min-height: 37.53% !important; 
-                                                                        max-height: 37.53% !important;
-                                                                    " :label="name">
-                                                            </v-checkbox>
-                                                        </v-col>
-                                                    </v-row>
-                                                </v-expansion-panel-content>
-                                            </v-expansion-panel>
-                                        </v-expansion-panels>
-                                    </v-expansion-panel-content>
-
-                                </v-expansion-panel>
-                            </v-expansion-panels>
-
-                        </div>
                     </v-form>
                 </v-card-text>
             </div>
@@ -202,9 +114,15 @@
 <script>
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiImagePlusOutline } from '@mdi/js'
+import ExpansionPanelForCard from './ExpansionPanelForCard.vue'
+import FormForDynamicField from './FormForDynamicField.vue';
 
 export default {
     name: 'CardInfo',
+    components: {
+    ExpansionPanelForCard,
+    FormForDynamicField
+},
     props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'visableCard', 'notVisableCard'],
     data() {
         return {
@@ -212,14 +130,8 @@ export default {
             addCardOn_: this.addCardOn,
             infoCardOn_: this.infoCardOn,
             editCardOn_: this.editCardOn,
-            feature: this.getFeature,
             icon: mdiImagePlusOutline,
-            groups: [],         // Группы прав
-            userGroups: [],
-            permissionList: [], // список всех прав 
             objectForCard: {},
-            img: undefined,
-            imgURL: '',
             showPassword: false,
             rules: {
                 min: v => v.length >= 8 || 'Минимум 8 символов',
@@ -231,48 +143,68 @@ export default {
             handler() {
                 this.cardVisable_ = this.cardVisable;
                 if (this.cardVisable_.data) {
-                    // if (document.querySelector('.v-navigation-drawer').clientWidth * 100 / 1920 < 18) {
                     document.querySelector('.card_of_object').style.cssText = 'width: 38.05% !important; left: 60.28% !important;';
-                    // }
-                    // else {
-                    //     document.querySelector('.card_of_object').style.cssText = 'width: 31.91% !important; left: 67.22% !important;';
-                    // }
                 }
             }, deep: true
         },
         addCardOn: {
-            handler() {
-                this.objectForCard = this.emptyObject;
+            handler() { 
+                if (this.addCardOn.data) {
+                    this.objectForCard = this.emptyObject;
+                }
             },
             deep: true,
-        },
-        getFeature: function () {
-            this.feature = this.getFeature;
-        },
-        user: {
-            handler() {
-                this.userGroups = [...this.user.groups, ...this.user.avaible_group]
-                this.permissionList = [...this.user.user_permissions, ...this.user.avaible_user_permission]
-                this.groupsPermissions()
-            },
-        },
-        emptyObject: {
-            handler() {
-                this.objectForCard = this.emptyObject;
-            }
         },
         getObjectForCard: {
             handler() {
                 this.objectForCard = this.getObjectForCard;
             }
+        },
+        oneType: {
+            handler() {
+                let emptyObject = {
+                    name: this.oneType.id,
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                        type: this.oneType.type,
+                        coordinates: [],
+                    }
+                };
+                for (const el in this.oneType.headers) {
+                    emptyObject.properties[el.text] = '';
+                }
+                for (const el in this.oneType.properties) {
+                    emptyObject.properties[el] = '';
+                }
+                this.upadateEmptyObject(emptyObject);
+                if (this.addCardOn.data) {
+                    this.updateOneType({ type: this.oneType, forFeature: true });
+                }
+            }
+        },
+        objectForCard: {
+            handler() {
+                if ('name' in this.objectForCard && this.objectForCard.name != this.typeForFeature.id) {
+                    this.updateOneType({ type: this.oneType, forFeature: true });
+                }
+                else if (this.typeForFeature.id != 0 && this.getObjectForCard.name != this.typeForFeature.id) {
+                    const emptyType = {
+                        id: 0,
+                        headers: [],
+                        properties: [],
+                    };
+                    this.updateOneType({ type: emptyType, forFeature: true });
+                }
+            },
         }
     },
     computed: {
-        ...mapGetters(['getTypeId', 'filterFeature', 'getFeature', 'getObjectForCard', 'emptyObject', 'oneType', 'user', 'allFeature']),
+        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature']),
     },
     methods: {
         ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature']),
-        ...mapMutations(['updateFunction']),
+        ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType']),
         async addNewFeature() {
             if (this.objectForCard.name != null) {
                 this.objectForCard.name = this.getTypeId;
@@ -309,14 +241,6 @@ export default {
                 this.getAllObject();
             }
         },
-        groupsPermissions() {
-            for (let i = 0; i < this.permissionList.length; ++i) {
-                let el = this.permissionList[i].split(" ").pop();
-                el = el[0].toUpperCase() + el.slice(1);
-                this.groups.push(el);
-            }
-            this.groups = [...new Set(this.groups)]
-        },
         fileToBase64(file) {
             const reader = new FileReader();
 
@@ -328,7 +252,7 @@ export default {
         editOn() {
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
-        }
+        },
     },
     mounted() {
     }
@@ -419,14 +343,27 @@ export default {
 .v-file-input {
     min-height: 37.53%;
     max-height: 37.53%;
-    background-color: #EE5E5E;
+    /*background-color: #EE5E5E;*/
     border-radius: 12px 12px 0 0;
+}
+
+.background_color_red {
+    background-color: #EE5E5E !important;
+}
+
+.background_color_gray {
+    background-color: #DDDDDD !important;
 }
 
 .btn_del_img {
     position: absolute;
     z-index: 2;
     right: 0;
+}
+
+.btn_on_card {
+    height: 50px !important;
+    border-radius: 8px !important;
 }
 
 .one_picture {
@@ -454,5 +391,11 @@ export default {
 
 .card_from_block {
     height: 100%;
+}
+
+.attributes {
+    font-size: 16px;
+    padding-left: 25px;
+    color: #787878;
 }
 </style>

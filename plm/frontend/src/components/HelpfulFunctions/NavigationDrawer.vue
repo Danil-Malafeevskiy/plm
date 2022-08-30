@@ -62,22 +62,11 @@ export default {
     },
     watch: {
         selectedItem: {
-            handler() {
+            handler(newValue, oldValue) {
+                //console.log(newValue, oldValue)
                 if (this.selectedItem != null) {
                     this.changeObject(this.fiteredAllTypes[this.selectedItem]);
                     if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
-                        const object = {
-                            properties: {
-                                first_name: "",
-                                last_name: "",
-                                email: "",
-                                username: "",
-                                password: "",
-                            },
-                            groups: [],
-                            user_permissions: [],
-                        }
-                        this.upadateEmptyObject(object);
                         this.updateAction({
                             actionGet: 'getUsersOfGroup',
                             actionPost: 'postUser',
@@ -85,12 +74,26 @@ export default {
                             actionPut: 'putUser',
                             actionDelete: 'deleteUser',
                         });
+                        if (oldValue === null) {
+                            const object = {
+                                properties: {
+                                    first_name: "",
+                                    last_name: "",
+                                    email: "",
+                                    username: "",
+                                    password: "",
+                                },
+                                groups: [],
+                                permissions: [],
+                            }
+                            this.upadateEmptyObject(object);
+                        }
                     }
                 }
                 else {
+                    this.upadateTitle('');
                     if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
-                        //this.updateListType([]);
-                        let headers = [
+                        const headers = [
                             {
                                 "text": "id",
                                 "align": "start",
@@ -102,30 +105,27 @@ export default {
                                 "value": "name"
                             }
                         ];
-                        let object = {
-                            properties: {
-                                name: '',
-                            }
-                        }
-                        this.updateListItem({ items: this.allGroups});
-                        this.upadateEmptyObject(object);
+                        this.updateAction({
+                            actionGet: 'getAllGroups',
+                            actionPost: 'postGroup',
+                            actionOneGet: 'getGroup',
+                            actionPut: 'putGroup',
+                            actionDelete: 'deleteGroup',
+                        });
+                        this.updateListItem({ items: this.allGroups });
                         this.updateHeaders(headers);
+                        if (oldValue === null) {
+                            const object = {
+                                properties: {
+                                    name: '',
+                                },
+                                permissions: []
+                            }
+                            this.upadateEmptyObject(object);
+                        }
                     }
                 }
             }
-        },
-        addCardOn: {
-            handler() {
-                if (this.objectType != null && this.objectType.type != undefined) {
-                    for (let i in this.allFeatures) {
-                        if (this.allFeatures[i].name === this.objectType.id) {
-                            this.upadateEmptyObject(this.allFeatures[i]);
-                            break;
-                        }
-                    }
-                }
-            },
-            deep: true
         },
         getList: {
             handler() {
@@ -149,9 +149,9 @@ export default {
 
 
     methods: {
-        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObject']),
+        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
-                        'updateListType', 'updateListItem']),
+            'updateListType', 'updateListItem']),
         getOneGroup(id) {
             this.getGroup(id);
         },
@@ -178,12 +178,11 @@ export default {
                 this.getUsersOfGroup(objectType);
             }
             else {
-                await this.getOneTypeObject(objectType.id);
-                //console.log(this.oneType)
+                await this.getOneTypeObjectForFeature({ id: objectType.id });
                 this.objectType = this.oneType;
                 this.updateHeaders(this.objectType.headers);
                 this.updateDrawType(this.objectType.type)
-                await this.filterForFeature(objectType.id);
+                await this.filterForFeature(this.objectType.id);
             }
         },
 
