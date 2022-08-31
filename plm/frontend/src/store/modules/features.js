@@ -33,8 +33,8 @@ export default {
             }).catch(error => console.log(error));
         },
 
-        async deleteFeature(ctx, id) {
-            await axios.delete(`/tower/${id}`).then((response) => {
+        async deleteFeature(ctx, arr) {
+            await axios.delete(`/tower`, arr).then((response) => {
                 const feature = response.data;
                 console.log(feature);
             }).catch(error => console.log(error));
