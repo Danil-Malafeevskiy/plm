@@ -52,8 +52,8 @@ class TowerAPI(APIView):
             return Response("Success up")
         return Response(feature_serializer.errors)
 
-    def delete(self, request, id):
-        Feature.objects.get(id=id).delete()
+    def delete(self, request):
+        Feature.objects.filter(id__in=request.data).delete()
         return Response("SUCCESS DEL")
 
 class FileUploadView(APIView):
