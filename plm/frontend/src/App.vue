@@ -76,7 +76,6 @@ import CardInfo from './components/HelpfulFunctions/Card.vue';
 import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue';
 import Auth from './components/Auth/Auth.vue';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
-import ConflicWindow from './components/HelpfulFunctions/ConflicWindow.vue';
 
 
 export default {
