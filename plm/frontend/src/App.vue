@@ -52,7 +52,7 @@
           </div>
           <div flat>
             <Auth v-if="getAuth === false" />
-            <ConflicWindow />
+            <!-- <ConflicWindow /> -->
 
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :editCardOn="editCardOn" />
@@ -86,7 +86,6 @@ export default {
     CardInfo,
     NavigationDrawer,
     Auth,
-    ConflicWindow
 },
   data() {
     return {
