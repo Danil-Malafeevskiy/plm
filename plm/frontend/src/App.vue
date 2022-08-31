@@ -4,6 +4,7 @@
     <NavigationDrawer :addCardOn="addCardOn" />
 
     <v-main>
+
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0; box-shadow: none;">
         <v-toolbar-title>{{  getToolbarTitle  }}</v-toolbar-title>
         <template v-slot:extension>
@@ -51,6 +52,7 @@
           </div>
           <div flat>
             <Auth v-if="getAuth === false" />
+            <!-- <ConflicWindow /> -->
 
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :editCardOn="editCardOn" />
@@ -83,7 +85,7 @@ export default {
     CardInfo,
     NavigationDrawer,
     Auth,
-  },
+},
   data() {
     return {
       tab: null,
