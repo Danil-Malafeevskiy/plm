@@ -182,16 +182,18 @@ export default {
                 }
                 this.upadateEmptyObject(emptyObject);
                 if (this.addCardOn.data) {
+                    this.objectForCard = this.emptyObject;
                     this.updateOneType({ type: this.oneType, forFeature: true });
                 }
             }
         },
         objectForCard: {
             handler() {
+                //console.log(this.getObjectForCard)
                 if ('name' in this.objectForCard && this.objectForCard.name != this.typeForFeature.id) {
-                    this.updateOneType({ type: this.oneType, forFeature: true });
+                    this.getOneTypeObjectForFeature({ id: this.objectForCard.name, forFeature: true });
                 }
-                else if (this.typeForFeature.id != 0 && this.getObjectForCard.name != this.typeForFeature.id) {
+                else if (this.typeForFeature.id != 0 && this.objectForCard.name != this.typeForFeature.id) {
                     const emptyType = {
                         id: 0,
                         headers: [],
@@ -206,23 +208,23 @@ export default {
         ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem']),
     },
     methods: {
-        ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature']),
+        ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
         ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode']),
         async addNewFeature() {
             if (this.objectForCard.name != null) {
                 this.objectForCard.name = this.getTypeId;
                 await this.postObject([this.objectForCard]);
+
                 this.filterForFeature();
                 this.getAllObject();
-                //this.updateArrayEditMode({ data: this.objectForCard, type: 'post' })
             }
             else {
                 if ('groups' in this.objectForCard) {
                     this.objectForCard.properties = { ...this.objectForCard, ...this.objectForCard.properties }
                     delete this.objectForCard.properties.properties;
                 }
+
                 await this.postObject(this.objectForCard.properties);
-                //this.updateArrayEditMode({ data: this.objectForCard.properties, type: 'post' })
             }
             this.addCardOn_.data = !this.addCardOn_.data;
             this.notVisableCard();
@@ -239,24 +241,13 @@ export default {
                     }
                 }
             });
-            // await this.putObject(this.objectForCard);
-            // if (this.objectForCard.name != undefined) {
-            //     this.filterForFeature();
-            //     this.getAllObject();
-            // }
-            // this.getOneObject(this.objectForCard.id);
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
         },
         async deleteObjectOnCard() {
-            //await this.deleteObject(id);
             this.updateArrayEditMode({ item: this.objectForCard, type: 'delete' })
             this.infoCardOn_.data = !this.infoCardOn_.data;
             this.notVisableCard();
-            // if (this.objectForCard.name != undefined) {
-            //     this.filterForFeature();
-            //     this.getAllObject();
-            // }
         },
         fileToBase64(file) {
             const reader = new FileReader();
@@ -269,11 +260,7 @@ export default {
         editOn() {
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
-        },
-        setClassFromBtn() {
-            console.log(1);
-            return 'test';
-        },
+        }
     },
     mounted() {
     }

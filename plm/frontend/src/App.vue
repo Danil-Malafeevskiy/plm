@@ -108,11 +108,16 @@ export default {
           this.filterForFeature(this.oneType.id);
         }
       }
-    }
+    },
+    // emptyObject: {
+    //   handler(){
+    //     //console.log(this.emptyObject)
+    //   }
+    // }
   },
   computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getOneTypeObject']),
     ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode']),
     visableCard() {
       this.cardVisable.data = true;
@@ -167,6 +172,7 @@ export default {
 
     this.getUser();
     this.getFeatures();
+    this.getOneTypeObject({ id: 2, test: true })
   }
 }
 </script>
