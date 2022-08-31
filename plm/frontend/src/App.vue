@@ -152,13 +152,15 @@ export default {
     },
     editObjects(){
       let arrPut = this.arrayEditMode.put;
-      let arrDel = this.arrayEditMode.delete;
+      let arrDel = { id: [] };
+      for(let key in this.arrayEditMode.delete){
+        arrDel.id.push(this.arrayEditMode.delete[key].id)
+      }
+      console.log(arrDel)
       arrPut.forEach(element => {
         this.putFeature(element);
       });
-      arrDel.forEach(element => {
-        this.deleteFeature(element.id);
-      });
+      this.deleteFeature(arrDel);
       this.resetArrayEditMode();
       this.editMode = !this.editMode;
     }
