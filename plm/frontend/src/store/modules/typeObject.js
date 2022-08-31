@@ -13,7 +13,6 @@ export default {
             });
         },
         async getOneTypeObject({ commit }, id) {
-            console.log(id);
             switch (typeof id) {
                 case 'number': {
                     await axios.get(`/dataset/admin/${id}`).then((response) => {

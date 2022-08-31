@@ -3,13 +3,13 @@
         <v-dialog v-model="dialog" width="500" overlay-color="white" overlay-opacity="0.8" persistent
             no-click-animation style="filter: blur(1px) !important; backdrop-filter: blur(4px) !important;">
             <v-card class="title">
-                <div class="text-h6" style="text-align: center; padding-top: 2em;">
+                <div class="text-h6" style="text-align: center; padding: 44px 0;">
                     Здраствуйте!
                 </div>
 
 
                 <v-card-text>
-                    <v-form @submit.prevent="onSubmit">
+                    <v-form @submit.prevent="onSubmit" style="padding: 0 50px">
                         <v-row>
                             <v-col cols="2" sm="6" md="5" lg="6">
                                 <v-text-field background-color="#F1F1F1" v-model="userData.username"
@@ -27,8 +27,8 @@
                             </v-col>
 
                         </v-row>
-                        <div class="pa-0 btn">
-                            <v-btn color="#EE5E5E" type="submit" style="width: 100%; color: white !important;">
+                        <div class="btn">
+                            <v-btn class="pa-0 ma-0" color="#EE5E5E" type="submit" style="width: 100%; height: 45px; color: white !important;">
                                 ВОЙТИ
                             </v-btn>
                         </div>
@@ -93,14 +93,15 @@ export default {
 .title,
 .v-card,
 .v-sheet {
-    min-height: 38.9% !important;
-    max-width: 51.85% !important;
+    min-height: 37% !important;
+    max-width: 47.85% !important;
     background-color: #DDDDDD;
     position: absolute !important;
     left: 50% !important;
     top: 50% !important;
     transform: translate(-50%, -50%) !important;
     box-shadow: none !important;
+    border-radius: 12px !important;
 }
 
 .v-btn {
@@ -108,9 +109,12 @@ export default {
     max-height: 15% !important;
 }
 
+.text_centre{
+    border-radius: 12px;
+}
+
 .btn {
-    padding-left: 3% !important;
-    padding-right: 3% !important;
+    padding-top: 12px
 }
 
 .v-overlay{

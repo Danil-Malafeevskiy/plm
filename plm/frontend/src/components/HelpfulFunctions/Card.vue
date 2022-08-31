@@ -22,7 +22,7 @@
             <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                 <v-card-text class="pa-0">
                     <v-form>
-                        <v-row justify="start">
+                        <v-row justify="start" style="padding-bottom: 0 !important;">
                             <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text v-if="objectForCard.properties.username != undefined" class="pa-0"
                                     style="font-size: 24px;">{{
@@ -50,8 +50,8 @@
                                             mdi-pencil
                                         </v-icon>
                                     </v-btn>
-                                    <v-btn @click="deleteObjectOnCard()" class="ma-0 btn" fab small
-                                        elevation="0" :disabled="!editMode" style="background-color: white !important"
+                                    <v-btn @click="deleteObjectOnCard()" class="ma-0 btn" fab small elevation="0"
+                                        :disabled="!editMode" style="background-color: white !important"
                                         :class="{ 'btn_disabled': !editMode }">
                                         <v-icon>
                                             mdi-delete-outline
@@ -233,9 +233,9 @@ export default {
             this.updateArrayEditMode({ item: this.objectForCard, type: 'put' })
             this.allListItem.forEach(element => {
 
-                if(element.id === this.objectForCard.id){
-                    for(let el in element){
-                        if(el != 'id'){
+                if (element.id === this.objectForCard.id) {
+                    for (let el in element) {
+                        if (el != 'id') {
                             element[el] = this.objectForCard.properties[el];
                         }
                     }
@@ -267,7 +267,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 #permission {
     margin-top: 0 !important;
     margin-left: 1em !important;
@@ -343,15 +343,6 @@ export default {
     align-items: flex-start;
 }
 
-.v-input__icon,
-.v-icon--link {
-    min-width: 100% !important;
-    height: 100% !important;
-    min-height: 100% !important;
-    justify-content: center !important;
-    align-items: center !important;
-}
-
 .v-icon--link::after {
     background-color: rgba(255, 255, 255, 0) !important;
 }
@@ -401,5 +392,16 @@ export default {
 
 .card_from_block {
     height: 100%;
+}
+</style>
+
+<style>
+.v-input__icon,
+.v-icon--link {
+    min-width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 </style>
