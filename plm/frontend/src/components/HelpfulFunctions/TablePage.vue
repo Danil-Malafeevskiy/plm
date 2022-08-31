@@ -64,39 +64,7 @@ export default {
       editCardOn_: this.editCardOn,
     }
   },
-  watch: {
-    allListItem: {
-      handler() {
-        if (this.arrayEditMode.put.length != 0) {
-          this.allListItem.forEach(element => {
-            this.arrayEditMode.put.forEach(elem => {
-              if (element.id === elem.id) {
-                for (let key in element) {
-                  if (key != 'id') {
-                    element[key] = elem.properties[key];
-                  }
-                }
-              }
-            })
-          });
-        }
-
-        if (this.arrayEditMode.delete.length != 0) {
-          this.allListItem.forEach(element => {
-            this.arrayEditMode.delete.forEach(elem => {
-              if (element.id === elem.id) {
-                for (let key in element) {
-                  if (key != 'id') {
-                    element[key] = elem.properties[key];
-                  }
-                }
-              }
-            })
-          });
-        }
-      }
-    }
-  },
+  watch: {},
   computed: {
     ...mapGetters(['allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray',
       'allType', 'drawType', 'getToolbarTitle', 'typeForFeature', 'typeForFeature', 'arrayEditMode']),
@@ -159,10 +127,8 @@ export default {
       this.resetSelected();
     },
     async moveObject(type) {
-      console.log(type, this.nameArray)
       for (const element of this.arrObjects[`${this.nameArray}`]) {
         await this.getOneObject(element.id);
-        console.log(this.getObjectForCard);
         if (type.type != undefined) {
           this.getObjectForCard.name = type.id;
         }
@@ -178,25 +144,33 @@ export default {
       this.getAllObject();
       this.resetSelected();
     },
+    changeItemFromTable(item, object){
+      for(let key in item){
+        if(key != 'id'){
+          item[key] = object[key]; 
+        }
+      }
+    },
     classRow(item) {
       let classForItem = ''
       if (this.getObjectForCard != null && item.id === this.getObjectForCard.id && (this.infoCardOn_.data || this.editCardOn.data)) {
         classForItem += 'v-data-table__selected';
       }
-      for (let key in this.arrayEditMode.put) {
-        if (this.arrayEditMode.put[key].id === item.id) {
-          classForItem += ' text_color_red';
-          break;
-        }
+
+      const putObject = this.arrayEditMode.put.filter(el => el.id === item.id);
+      const deleteObject = this.arrayEditMode.delete.filter(el => el.id === item.id);
+
+      if (putObject.length != 0) {
+        classForItem += ' text_color_red';
+        this.changeItemFromTable(item, putObject[0].properties)
       }
-      for (let key in this.arrayEditMode.delete) {
-        if (this.arrayEditMode.delete[key].id === item.id) {
-          classForItem += ' text_color_gray';
-          break;
-        }
+      if (deleteObject.length != 0) {
+        classForItem += ' text_color_gray';
+        this.changeItemFromTable(item, deleteObject[0].properties);
       }
+
       return classForItem;
-    }
+    },
   },
   mounted() {
   },
@@ -252,7 +226,7 @@ export default {
   color: #D7153A;
 }
 
-.text_color_gray{
+.text_color_gray {
   color: gray;
 }
 
