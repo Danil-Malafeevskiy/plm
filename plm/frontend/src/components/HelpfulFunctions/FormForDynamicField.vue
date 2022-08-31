@@ -76,7 +76,7 @@ export default {
             }
         }
     },
-    computed: mapGetters(['typeForFeature']),
+    computed: mapGetters(['typeForFeature', 'allListItem']),
     methods: {
         addMainAttribute() {
             this.objectForCard_.properties.headers.push({});
@@ -102,5 +102,14 @@ export default {
 </script>
 
 <style>
+.attributes {
+    font-size: 16px;
+    padding-left: 25px;
+    color: #787878;
+}
 
+.btn_on_card {
+    height: 50px !important;
+    border-radius: 8px !important;
+}
 </style>
