@@ -13,18 +13,31 @@ export default {
             });
         },
         async getOneTypeObject({ commit }, id) {
-            await axios.get(`/dataset/admin/${id}`).then((response) => {
-                let result = { ...response.data };
-                result.properties = { ...result };
-                delete result.properties.id;
-                delete result.properties.image;
-                for (let i in result) {
-                    if (i != 'properties' && i != 'id' && i != 'image') {
-                        delete result[i];
-                    }
+            switch (typeof id) {
+                case 'number': {
+                    await axios.get(`/dataset/admin/${id}`).then((response) => {
+                        let result = { ...response.data };
+                        result.properties = { ...result };
+
+                        delete result.properties.id;
+                        delete result.properties.image;
+
+                        for (let i in result) {
+                            if (i != 'properties' && i != 'id' && i != 'image') {
+                                delete result[i];
+                            }
+                        }
+                        commit('updateObjectForCard', result);
+                    })
+                    break;
                 }
-                commit('updateObjectForCard', result);
-            });
+                case 'object': {
+                    await axios.get(`/dataset/admin/${id.id}`).then((response) => {
+                        commit('updateTypeForLayer', response.data);
+                    })
+                    break;
+                }
+            }
         },
         async getOneTypeObjectForFeature({ commit }, { id, forFeature = false }) {
             await axios.get(`/dataset/${id}`).then((response) => {
@@ -63,6 +76,9 @@ export default {
             else {
                 state.type = type;
             }
+        },
+        updateTypeForLayer(state, type){
+            state.typeForLayer = type;
         }
     },
     getters: {
@@ -74,6 +90,9 @@ export default {
         },
         typeForFeature(state) {
             return state.typeForFeature;
+        },
+        typeForLayer(state){
+            return state.typeForLayer;
         }
     },
     state: {
@@ -84,5 +103,6 @@ export default {
             headers: [],
             properties: [],
         },
+        typeForLayer: {},
     },
 }

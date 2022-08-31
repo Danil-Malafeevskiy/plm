@@ -93,12 +93,6 @@ export default {
                     break;
             }
 
-
-
-
-
-
-
         },
         resetArrayEditMode(state) {
             state.arrayEditMode = {

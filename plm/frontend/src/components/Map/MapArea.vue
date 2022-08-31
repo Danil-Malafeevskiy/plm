@@ -51,7 +51,6 @@ export default {
       addCardOn_: this.addCardOn,
       infoCardOn_: this.infoCardOn,
       editCardOn_: this.editCardOn,
-      imageType: this.typeForFeature,
     }
   },
   watch: {
@@ -118,15 +117,10 @@ export default {
       deep: true
     },
   },
-  computed: mapGetters(['drawType', 'allType', 'typeForFeature']),
+  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard']),
   methods: {
-    ...mapMutations(['updateOneFeature']),
-    ...mapActions(['getOneFeature', 'getOneTypeObjectForFeature']),
-
-
-    // async getType(el){
-    //   await this.getOneTypeObjectForFeature({id: el, forFeature: true})
-    // },
+    ...mapMutations(['updateOneFeature', 'upadateEmptyObject']),
+    ...mapActions(['getOneFeature', 'getOneTypeObject']),
 
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
@@ -163,11 +157,11 @@ export default {
 
     async getFeature_(event) {
       this.updateCoordinates();
-
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
 
       if (feature_ != null && !this.addCardOn_.data) {
         await this.getOneFeature(feature_.id_);
+        //await this.getOneTypeObjectForFeature({ id: this.getObjectForCard.name, forFeature: true });
         this.infoCardOn_.data = true;
         this.visableCard();
       }
@@ -213,8 +207,7 @@ export default {
           features: this.features.features.filter(el => el.name === element.id),
         };
 
-        await this.getOneTypeObjectForFeature({ id: element.id, forFeature: true })
-        console.log(this.typeForFeature)
+        await this.getOneTypeObject({ id: element.id, forFeature: true });
 
         let layer = new VectorLayer({
           source: new VectorSource({
@@ -232,7 +225,7 @@ export default {
               anchor: [0.5, 0, 5],
               anchorXUnits: 'fraction',
               anchorYUnits: 'pixels',
-              src: `static/${this.typeForFeature.image}`,
+              src: `static/${this.typeForLayer.image}`,
             }),
           });
           layer.setStyle(style)
