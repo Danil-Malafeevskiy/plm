@@ -53,7 +53,7 @@ class TowerAPI(APIView):
         return Response(feature_serializer.errors)
 
     def delete(self, request):
-        Feature.objects.filter(id__in=request.data).delete()
+        Feature.objects.filter(id__in=request.data['id']).delete()
         return Response("SUCCESS DEL")
 
 class FileUploadView(APIView):
