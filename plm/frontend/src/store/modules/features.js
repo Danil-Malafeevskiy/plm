@@ -27,9 +27,9 @@ export default {
         },
 
         async putFeature(ctx, feature) {
-            await axios.put('/tower', feature).then((response) => {
-                const feature = response.data;
-                console.log(feature);
+            await axios.put('/tower', feature).then(() => {
+                //const feature = response.data;
+                //console.log(feature);
             }).catch(error => console.log(error));
         },
 
@@ -73,7 +73,7 @@ export default {
         updateArrayEditMode(state, { item, type }) {
             switch (type) {
                 case 'put':
-                    if (state.arrayEditMode.put.filter(el => el.id === item.id).length === 0) {
+                    if (!(state.arrayEditMode.put.filter(el => el.id === item.id).length)) {
                         state.arrayEditMode[type].push(item);
                     }
                     else {
@@ -101,6 +101,15 @@ export default {
                 post: [],
                 delete: [],
             }
+        },
+        updateNewData(state, item){
+            state.newData.push(item);
+        },
+        deleteItemFromNewData(state, item){
+            state.newData = state.newData.filter(el => el.id != item.id);
+        },
+        resetNewData(state){
+            state.newData = [];
         }
     },
     getters: {
@@ -121,6 +130,9 @@ export default {
         },
         arrayEditMode(state) {
             return state.arrayEditMode;
+        },
+        newData(state){
+            return state.newData;
         }
     },
     state: {
@@ -136,6 +148,7 @@ export default {
             put: [],
             post: [],
             delete: [],
-        }
+        },
+        newData: [],
     },
 }

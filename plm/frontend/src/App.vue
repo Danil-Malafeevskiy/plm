@@ -3,14 +3,14 @@
     <NavigationDrawer :addCardOn="addCardOn" />
 
     <v-main>
-      
+
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0; box-shadow: none;">
-        <v-toolbar-title>{{  getToolbarTitle  }}</v-toolbar-title>
+        <v-toolbar-title>{{ getToolbarTitle }}</v-toolbar-title>
         <template v-slot:extension>
 
           <v-tabs v-model="tab" align-with-title color="#E93030">
             <v-tab v-for="item in items" :key="item" class="ma-0">
-              <span>{{  item  }}</span>
+              <span>{{ item }}</span>
             </v-tab>
           </v-tabs>
           <v-btn @click="editMode = !editMode" class="pa-0" style="margin: 0 10px 0 0 !important" fab small
@@ -19,8 +19,8 @@
               mdi-pencil
             </v-icon>
           </v-btn>
-          <v-btn :disabled="cardVisable.data" class="show__card" height="28px" width="80px" depressed
-            color="#EE5E5E" @click="addCardOn.data = !addCardOn.data; visableCard();">
+          <v-btn :disabled="cardVisable.data" class="show__card" height="28px" width="80px" depressed color="#EE5E5E"
+            @click="addCardOn.data = !addCardOn.data; visableCard();">
             <v-icon color="white !default" dark>
               mdi-plus
             </v-icon>
@@ -30,28 +30,30 @@
       </v-toolbar>
 
       <v-tabs-items v-model="tab" style="height: 89.7%">
-        
+
         <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
           :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
 
         <v-tab-item>
           <div v-if="editMode" class="edit_line">
             <div>
-              <a @click="editMode = !editMode" style="margin: 5px 20px">
+              <a @click="closeEditMode" style="margin: 5px 20px">
                 <v-icon small>mdi-close</v-icon>
               </a>
               <span style="color: #454545;">Редактирование</span>
             </div>
             <div>
-              <span style="color: #454545; margin-right: 20px">{{ arrayEditMode.put.length + arrayEditMode.post.length + arrayEditMode.delete.length }} объектов</span>
-              <v-btn @click="editObjects" plain class="pa-0" style="margin: 0 10px 0 0">
+              <span style="color: #454545; margin-right: 20px">{{ arrayEditMode.put.length + arrayEditMode.post.length +
+                  arrayEditMode.delete.length
+              }} объектов</span>
+              <v-btn @click="editObjects" text class="pa-0" style="margin: 0 10px 0 0">
                 <span style="color: #454545;">применить</span>
               </v-btn>
             </div>
           </div>
           <div flat>
             <Auth v-if="getAuth === false" />
-            <ConflicWindow v-if="test_" />
+            <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
 
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :editCardOn="editCardOn" />
@@ -86,7 +88,7 @@ export default {
     NavigationDrawer,
     Auth,
     ConflicWindow
-},
+  },
   data() {
     return {
       tab: null,
@@ -101,28 +103,29 @@ export default {
       editMode: false,
       test: null,
       feature: this.getFeature,
-      test_: false,
+      isConflict: false,
     }
   },
   watch: {
-    editMode: {
-      handler(){
-        if(!this.editMode){
-          this.resetArrayEditMode();
-          this.filterForFeature(this.oneType.id);
+    newData: {
+      handler() {
+        ///console.log(e, a);
+        if (this.newData.length === 1) {
+          this.isConflict = true;
         }
       }
-    },
+    }
     // emptyObject: {
     //   handler(){
     //     //console.log(this.emptyObject)
     //   }
     // }
   },
-  computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode']),
+  computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
+    'newData']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getOneTypeObject']),
-    ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode']),
+    ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData']),
     visableCard() {
       this.cardVisable.data = true;
     },
@@ -139,13 +142,17 @@ export default {
         this.filterForFeature(this.oneType.id);
       }
       switch (data.action) {
-        case "update":
-          console.log(data.data)
-          console.log("Success update!")
+        case "update": {
+          let editObject = this.arrayEditMode.put.filter(el => el.id === data.data.id);
+
+          if (this.editMode && editObject.length && this.searchConflict(editObject[0], data.data)) {
+            this.updateNewData(data.data);
+          }
           break;
+        }
         case "create":
-          console.log(data.data)
-          console.log("Success create!")
+          console.log(data.data);
+          console.log("Success create!");
           break;
         case 'delete':
           console.log(data.data);
@@ -154,19 +161,45 @@ export default {
           break;
       }
     },
-    editObjects(){
+    editObjects() {
+      if(this.newData.length){
+        this.isConflict = true;
+        return;
+      }
       let arrPut = this.arrayEditMode.put;
       let arrDel = { id: [] };
-      for(let key in this.arrayEditMode.delete){
+      for (let key in this.arrayEditMode.delete) {
         arrDel.id.push(this.arrayEditMode.delete[key].id)
       }
-      console.log(arrDel)
       arrPut.forEach(element => {
         this.putFeature(element);
       });
-      this.deleteFeature(arrDel);
+      if (arrDel.id.length) {
+        this.deleteFeature(arrDel);
+      }
       this.resetArrayEditMode();
       this.editMode = !this.editMode;
+    },
+    offConflictWindow() {
+      this.isConflict = false;
+    },
+    searchConflict(itemFirst, itemSecond) {
+      let result = false;
+      for (let key in itemFirst) {
+        if (typeof itemFirst[key] === 'object') {
+          result = result || this.searchConflict(itemFirst[key], itemSecond[key])
+        }
+        else if (itemFirst[key] != itemSecond[key]) {
+          return true;
+        }
+      }
+      return result;
+    },
+    closeEditMode() {
+      this.editMode = !this.editMode;
+      this.resetNewData();
+      this.resetArrayEditMode();
+      this.filterForFeature(this.oneType.id);
     }
   },
   mounted() {
@@ -269,6 +302,7 @@ export default {
   padding: 4px 20px !important;
   margin: 16px 24px 16px 0 !important;
   font-size: 14px;
+  border-radius: 8px;
 }
 
 .v-toolbar__content {
@@ -312,6 +346,10 @@ html {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.blur {
+  filter: blur(3px) !important;
 }
 </style>
 

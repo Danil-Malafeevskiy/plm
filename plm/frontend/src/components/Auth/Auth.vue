@@ -116,24 +116,6 @@ export default {
 .btn {
     padding-top: 12px
 }
-
-.v-overlay{
-    filter: blur(1px) !important;
-    backdrop-filter: blur(4px) !important;
-}
-
-:global(.v-overlay){
-  filter: blur(1px) !important;
-  backdrop-filter: blur(3px) !important;
-}
-
-</style>
-
-<style>
-.v-overlay{
-  filter: blur(1px) !important;
-  backdrop-filter: blur(3px) !important;
-}
 </style>
 
 
