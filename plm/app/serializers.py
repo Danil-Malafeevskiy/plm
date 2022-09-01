@@ -13,10 +13,25 @@ class BinaryField(serializers.Field):
     def to_internal_value(self, value):
          return value.encode('utf-8')
 
+class FeatureListSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+
+        feature_old = {feature.id: feature for feature in instance}
+        feature_new = {feature['id']: feature for feature in validated_data}
+
+        ret = []
+        for feature_id, data in feature_new.items():
+            feature = feature_old.get(feature_id, None)
+            ret.append(self.child.update(feature, data))
+
+        return ret
+
 class FeatureSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()
     geometry = GeometryField()
     image = BinaryField(required=False)
     class Meta:
+        list_serializer_class = FeatureListSerializer
         geo_field = 'geometry'
         model = Feature
         fields = ('id', 'name', 'type', 'properties', 'geometry', 'image')
