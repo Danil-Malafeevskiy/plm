@@ -21,10 +21,6 @@ from app.models import Feature, Dataset
 from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, DatasetSerializer
 from rest_framework.response import Response
 
-class GeometryType(Func):
-    function = "GeometryType"
-    output_field = CharField()
-
 class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, IsOwner]
