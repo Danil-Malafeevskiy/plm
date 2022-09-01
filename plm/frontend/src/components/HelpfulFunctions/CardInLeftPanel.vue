@@ -54,97 +54,25 @@ export default {
                             document.querySelector('.text_in_span').innerHTML = document.querySelector('.v-item--active .v-list-item__title').innerText;
                         })
                     }
+                    this.resetSelectItem();
                     switch (this.selectedItem) {
                         case 0: {
-                            this.updateNameForArray('Пользователи');
-                            this.updateListType([]);
-                            let headers = [
-                                {
-                                    "text": "id",
-                                    "align": "start",
-                                    "value": "id",
-                                    "sortable": false
-                                },
-                                {
-                                    "text": "name",
-                                    "value": "name"
-                                }
-                            ];
-                            let object = {
-                                properties: {
-                                    name: '',
-                                },
-                                permissions: [],
-                            }
-                            this.upadateEmptyObject(object);
-                            this.updateHeaders(headers);
-                            this.updateAction({
-                                actionGet: 'getAllGroups',
-                                actionPost: 'postGroup',
-                                actionOneGet: 'getGroup',
-                                actionPut: 'putGroup',
-                                actionDelete: 'deleteGroup',
-                            });
-                            this.getAllGroups();
+                            this.onUsers();
                             break;
                         }
                         case 1: {
-                            this.updateNameForArray('Типы объектов');
-                            let object = {
-                                properties: {
-                                    name: '',
-                                    type: '',
-                                    headers: [],
-                                    properties: [],
-                                }
-                            }
-                            let headers = [
-                                {
-                                    "text": "name",
-                                    "align": "start",
-                                    "value": "name",
-                                    "sortable": false
-                                },
-                                {
-                                    "text": "type",
-                                    "value": "type"
-                                }
-                            ];
-                            this.updateHeaders(headers);
-                            this.updateAction({
-                                actionGet: 'getTypeObject',
-                                actionPost: 'postTypeObject',
-                                actionOneGet: 'getOneTypeObject',
-                                actionPut: 'putTypeObject',
-                                actionDelete: 'deleteTypeObject',
-                            });
-                            if (this.allType != []) {
-                                await this.getTypeObject();
-                            }
-                            this.updateListItem({ items: this.allType });
-                            this.updateListType([]);
-                            this.upadateEmptyObject(object);
+                            this.onDataSet();
                             break;
                         }
                         case 2:
-                            this.updateNameForArray('База объектов');
-                            this.updateListType([]);
-                            this.getTypeObject();
-                            this.updateAction({
-                                actionGet: 'getFeatures',
-                                actionOneGet: 'getOneFeature',
-                                actionPost: 'postFeature',
-                                actionPut: 'putFeature',
-                                actionDelete: 'deleteFeature',
-                            });
+                            this.onFeatures();
                             break;
                     }
-                    this.resetSelectItem();
                 }
             }
         }
     },
-    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType']),
+    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType', 'actions']),
     methods: {
         ...mapActions(['logOut', 'getAllGroups', 'getTypeObject']),
         ...mapMutations(['updatefilterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
@@ -153,8 +81,91 @@ export default {
             this.logOut();
             location.reload();
         },
+        onFeatures() {
+            this.updateNameForArray('База объектов');
+            this.updateListType([]);
+            this.getTypeObject();
+            this.updateAction({
+                actionGet: 'getFeatures',
+                actionOneGet: 'getOneFeature',
+                actionPost: 'postFeature',
+                actionPut: 'putFeature',
+                actionDelete: 'deleteFeature',
+            });
+        },
+        async onDataSet() {
+            this.updateNameForArray('Типы объектов');
+            let object = {
+                properties: {
+                    name: '',
+                    type: '',
+                    headers: [],
+                    properties: [],
+                }
+            }
+            let headers = [
+                {
+                    "text": "name",
+                    "align": "start",
+                    "value": "name",
+                    "sortable": false
+                },
+                {
+                    "text": "type",
+                    "value": "type"
+                }
+            ];
+            this.updateHeaders(headers);
+            this.updateAction({
+                actionGet: 'getTypeObject',
+                actionPost: 'postTypeObject',
+                actionOneGet: 'getOneTypeObject',
+                actionPut: 'putTypeObject',
+                actionDelete: 'deleteTypeObject',
+            });
+            if (this.allType != []) {
+                await this.getTypeObject();
+            }
+            this.updateListItem({ items: this.allType });
+            this.updateListType([]);
+            this.upadateEmptyObject(object);
+        },
+        onUsers() {
+            this.updateNameForArray('Пользователи');
+            this.updateListType([]);
+            let headers = [
+                {
+                    "text": "id",
+                    "align": "start",
+                    "value": "id",
+                    "sortable": false
+                },
+                {
+                    "text": "name",
+                    "value": "name"
+                }
+            ];
+            let object = {
+                properties: {
+                    name: '',
+                },
+                permissions: [],
+            }
+            this.upadateEmptyObject(object);
+            this.updateHeaders(headers);
+            this.updateAction({
+                actionGet: 'getAllGroups',
+                actionPost: 'postGroup',
+                actionOneGet: 'getGroup',
+                actionPut: 'putGroup',
+                actionDelete: 'deleteGroup',
+            });
+            this.getAllGroups();
+        }
     },
     mounted() {
+        
+    console.log(this.actions)
     }
 }
 </script>
@@ -179,6 +190,5 @@ export default {
     z-index: 1 !important;
     border-radius: 4px !important;
     box-shadow: 0px 8px 10px rgba(0, 0, 0, 0.14), 0px 3px 14px rgba(0, 0, 0, 0.12), 0px 5px 5px rgba(0, 0, 0, 0.2);
-    }
-
+}
 </style>

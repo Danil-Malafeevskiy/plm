@@ -20,7 +20,7 @@ import 'ol/ol.css';
 // import Feature from 'ol/Feature';
 // import Point from 'ol/geom/Point';
 // import Text from 'ol/style/Text';
-import {Icon, Style} from 'ol/style';
+import { Icon, Style } from 'ol/style';
 // import { mdiTransmissionTower as Tower } from '@mdi/js';
 
 
@@ -62,28 +62,11 @@ export default {
         }
 
         if (this.map != null) {
-          let removedLayers = [...this.map.getLayers().getArray()]
-          removedLayers.forEach((layer) => {
-            this.map.removeLayer(layer)
-          })
-
-          this.drawLayer = new VectorLayer({
-            source: new VectorSource({
-              features: []
-            }),
-          });
-
-          this.map.addLayer(
-            new TileLayer({
-              source: new OSM()
-            })
-          )
-          this.map.addLayer(this.drawLayer);
-
           this.addNewLayers();
         }
 
-    }},
+      }
+    },
     getFeature: function () {
       this.feature = this.getFeature;
     },
@@ -201,14 +184,13 @@ export default {
     },
 
     addNewLayers() {
+
       this.allType.forEach(async element => {
         let features = {
           type: 'FeatureCollection',
           features: this.features.features.filter(el => el.name === element.id),
         };
-
         await this.getOneTypeObject({ id: element.id, forFeature: true });
-
         let layer = new VectorLayer({
           source: new VectorSource({
             features: new GeoJSON().readFeatures(features,
@@ -217,6 +199,8 @@ export default {
               }),
           }),
         });
+        layer.set('name', 'feature')
+
         this.map.addLayer(layer)
 
         if (features.features[0].geometry.type === 'Point') {
@@ -225,56 +209,56 @@ export default {
               anchor: [0.5, 0, 5],
               anchorXUnits: 'fraction',
               anchorYUnits: 'pixels',
-              src: `static/${this.typeForLayer.image}`,
-            }),
-          });
-          layer.setStyle(style)
-        }
-      });
+              src: `static/${ this.typeForLayer.image }`,
+      }),
+        });
+      layer.setStyle(style)
     }
+  });
+},
 
   },
 
-  mounted() {
-    this.drawLayer = new VectorLayer({
-      source: new VectorSource({
-        features: []
+mounted() {
+  this.drawLayer = new VectorLayer({
+    source: new VectorSource({
+      features: []
+    }),
+  });
+
+
+
+  this.map = new Map({
+    target: 'map_content',
+    layers: [
+      new TileLayer({
+        source: new OSM()
       }),
-    });
+      this.drawLayer,
+    ],
+    view: new View({
+      zoom: 13,
+      center: fromLonLat([56.177483, 54.924307]),
+      constrainResolution: true,
+    })
+  });
 
+  this.addNewLayers();
 
+  this.modify = new Modify({
+    source: this.drawLayer.getSource(),
+  });
 
-    this.map = new Map({
-      target: 'map_content',
-      layers: [
-        new TileLayer({
-          source: new OSM()
-        }),
-        this.drawLayer,
-      ],
-      view: new View({
-        zoom: 13,
-        center: fromLonLat([56.177483, 54.924307]),
-        constrainResolution: true,
-      })
-    });
+  this.modify.on('modifyend', this.changeCoordinates);
 
-    this.addNewLayers();
+  this.map.on('click', this.getFeature_);
 
-    this.modify = new Modify({
-      source: this.drawLayer.getSource(),
-    });
-
-    this.modify.on('modifyend', this.changeCoordinates);
-
-    this.map.on('click', this.getFeature_);
-
-    if (this.addCardOn_.data) {
-      this.addInteraction();
-    }
-    this.resizeMap();
-
+  if (this.addCardOn_.data) {
+    this.addInteraction();
   }
+  this.resizeMap();
+
+}
 }
 </script>
 
