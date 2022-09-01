@@ -1,10 +1,9 @@
 <template>
   <v-app>
-
     <NavigationDrawer :addCardOn="addCardOn" />
 
     <v-main>
-
+      
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0; box-shadow: none;">
         <v-toolbar-title>{{  getToolbarTitle  }}</v-toolbar-title>
         <template v-slot:extension>
@@ -31,7 +30,7 @@
       </v-toolbar>
 
       <v-tabs-items v-model="tab" style="height: 89.7%">
-
+        
         <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
           :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
 
@@ -52,7 +51,7 @@
           </div>
           <div flat>
             <Auth v-if="getAuth === false" />
-            <!-- <ConflicWindow /> -->
+            <!-- <ConflicWindow v-if="test_" /> -->
 
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :editCardOn="editCardOn" />
@@ -76,6 +75,7 @@ import CardInfo from './components/HelpfulFunctions/Card.vue';
 import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue';
 import Auth from './components/Auth/Auth.vue';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
+// import ConflicWindow from './components/HelpfulFunctions/ConflicWindow.vue';
 
 
 export default {
@@ -85,6 +85,7 @@ export default {
     CardInfo,
     NavigationDrawer,
     Auth,
+    // ConflicWindow
 },
   data() {
     return {
@@ -100,6 +101,7 @@ export default {
       editMode: false,
       test: null,
       feature: this.getFeature,
+      test_: false,
     }
   },
   watch: {

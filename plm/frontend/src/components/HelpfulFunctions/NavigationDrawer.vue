@@ -63,7 +63,6 @@ export default {
     watch: {
         selectedItem: {
             handler(newValue, oldValue) {
-                //console.log(newValue, oldValue)
                 if (this.selectedItem != null) {
                     this.changeObject(this.fiteredAllTypes[this.selectedItem]);
                     if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
@@ -92,7 +91,9 @@ export default {
                 }
                 else {
                     this.upadateTitle('');
-                    if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
+                    let domItem;
+                    setTimeout(() => domItem = document.querySelector('.text_in_span').innerHTML)
+                    if (domItem === "Пользователи") {
                         const headers = [
                             {
                                 "text": "id",

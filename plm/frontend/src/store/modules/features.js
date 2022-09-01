@@ -34,7 +34,7 @@ export default {
         },
 
         async deleteFeature(ctx, arr) {
-            console.log(arr)
+            console.log(JSON.stringify(arr))
             await axios.delete(`/tower`, arr).then((response) => {
                 const feature = response.data;
                 console.log(feature);
