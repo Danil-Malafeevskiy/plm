@@ -4,8 +4,10 @@ import sqlite3
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import Group, Permission, User
+
 from django.shortcuts import render
 from rest_framework.authentication import SessionAuthentication
+
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend
 from app.permissions import IsOwner, FileUploadPerm
@@ -45,15 +47,17 @@ class TowerAPI(APIView):
         return Response(feature_serializer.errors)
 
     def put(self, request):
-        feature = Feature.objects.get(id=request.data['id'])
-        feature_serializer = FeatureSerializer(feature, data=request.data)
+        feature = Feature.objects.filter(id__in=request.query_params.get('id').split(','))
+        print(list(feature))
+        feature_serializer = FeatureSerializer(feature, data=request.data, many=True)
         if feature_serializer.is_valid():
             feature_serializer.save()
             return Response("Success up")
         return Response(feature_serializer.errors)
 
-    def delete(self, request, id):
-        Feature.objects.get(id=id).delete()
+    def delete(self, request):
+        id = request.query_params.get('id')
+        Feature.objects.filter(id__in=id.split(',')).delete()
         return Response("SUCCESS DEL")
 
 class FileUploadView(APIView):
@@ -166,8 +170,9 @@ class GroupView(APIView):
             return Response("Success up group!")
         return Response(group_serializer.errors)
 
-    def delete(self, request, id):
-        Group.objects.get(id=id).delete()
+    def delete(self, request):
+        id = request.query_params.get('id')
+        Group.objects.filter(id__in=id.split(',')).delete()
         return Response("SUCCESS DEL GROUP!")
 
 class UserView(APIView):
@@ -220,17 +225,20 @@ class UserAdminView(APIView):
             return Response("Success up!")
         return Response(user_serializer.errors)
 
-    def delete(self, request, id):
-        User.objects.get(id=id).delete()
+    def delete(self, request):
+        id = request.query_params.get('id')
+        User.objects.filter(id__in=id.split(',')).delete()
         return Response("SUCCESS DEL USER!")
 
 class DatasetView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
+    filterset_fields = ['type']
 
     def get(self, request, id=0):
         if id==0:
-            dataset = Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
+            ff = DjangoFilterBackend()
+            dataset = ff.filter_queryset(request, Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True))), self)
             return Response(DatasetSerializer(dataset, many=True, remove_fields=['type', 'headers',
                                                                                  'properties', 'image', 'group', 'avaible_group']).data)
 
@@ -240,10 +248,12 @@ class DatasetView(APIView):
 class DatasetAdminView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAdminUser]
+    filterset_fields = ['type']
 
     def get(self, request, id=0):
         if id==0:
-            dataset = Dataset.objects.all()
+            ff = DjangoFilterBackend()
+            dataset = ff.filter_queryset(request, Dataset.objects.all(), self)
             return Response(DatasetSerializer(dataset, many=True, remove_fields=['type', 'headers',
                                                                                  'properties', 'image', 'group', 'avaible_group']).data)
 
@@ -265,9 +275,10 @@ class DatasetAdminView(APIView):
             return Response("Success update dataset!")
         return Response(dataset_serializer.errors)
 
-    def delete(self, request, id):
-        Dataset.objects.get(id=id).delete()
+    def delete(self, request):
+        id = request.query_params.get('id')
+        Dataset.objects.filter(id__in=id.split(',')).delete()
         return Response("SUCCESS DEL")
 
 def room(request):
-    return render(request, 'D:/python/PLM/plm/templates/test.html')
+    return render(request, 'E:/KT/plm/plm/templates/test.html')
