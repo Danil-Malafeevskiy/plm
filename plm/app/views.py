@@ -4,7 +4,6 @@ import sqlite3
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import Group, Permission, User
-from django.db.models import Func, CharField
 
 from django.shortcuts import render
 from rest_framework.authentication import SessionAuthentication
