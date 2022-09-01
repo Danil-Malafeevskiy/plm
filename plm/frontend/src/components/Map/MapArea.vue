@@ -16,11 +16,11 @@ import { Draw, Modify } from 'ol/interaction';
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 
-
+import {Icon, Style} from 'ol/style';
 // import Feature from 'ol/Feature';
 // import Point from 'ol/geom/Point';
 // import Text from 'ol/style/Text';
-import {Icon, Style} from 'ol/style';
+// import Collection from 'ol/Collection';
 // import { mdiTransmissionTower as Tower } from '@mdi/js';
 
 
@@ -61,28 +61,15 @@ export default {
           features: this.allFeatures,
         }
 
+        // this.map.getLayers().getArray()
+        //   .filter(layer => layer.get('name') === 'feature')
+        //   .forEach(layer => {
+        //     this.map.removeLayer(layer)
+        //   });
+
         if (this.map != null) {
-          let removedLayers = [...this.map.getLayers().getArray()]
-          removedLayers.forEach((layer) => {
-            this.map.removeLayer(layer)
-          })
-
-          this.drawLayer = new VectorLayer({
-            source: new VectorSource({
-              features: []
-            }),
-          });
-
-          this.map.addLayer(
-            new TileLayer({
-              source: new OSM()
-            })
-          )
-          this.map.addLayer(this.drawLayer);
-
           this.addNewLayers();
         }
-
     }},
     getFeature: function () {
       this.feature = this.getFeature;
@@ -103,7 +90,6 @@ export default {
     addCardOn: {
       handler() {
         this.addCardOn_ = this.addCardOn;
-
         if (this.addCardOn.data) {
           this.map.removeInteraction(this.draw);
           this.addInteraction();
@@ -121,17 +107,14 @@ export default {
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject']),
     ...mapActions(['getOneFeature', 'getOneTypeObject']),
-
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
       this.feature.properties['Широта'] = cord[0];
     },
-
     updateCoordinates() {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
         this.map.removeInteraction(this.draw);
         this.coord = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
-
         if (typeof this.coord[0] === 'object') {
           for (let i in this.coord) {
             if (typeof this.coord[i][0] === 'object') {
@@ -154,11 +137,9 @@ export default {
         this.feature.geometry.type = this.drawType;
       }
     },
-
     async getFeature_(event) {
       this.updateCoordinates();
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
-
       if (feature_ != null && !this.addCardOn_.data) {
         await this.getOneFeature(feature_.id_);
         //await this.getOneTypeObjectForFeature({ id: this.getObjectForCard.name, forFeature: true });
@@ -171,23 +152,19 @@ export default {
         this.notVisableCard();
       }
     },
-
     changeCoordinates(event) {
       this.feature.geometry = {
         coordinates: toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
       };
-
       this.feature.properties['Широта'] = this.feature.geometry.coordinates[1];
       this.feature.properties['Долгота'] = this.feature.geometry.coordinates[0];
     },
-
     addInteraction() {
       this.drawLayer.getSource().refresh();
       this.draw = new Draw({
         source: this.drawLayer.getSource(),
         type: this.drawType,
       });
-
       this.map.addInteraction(this.draw);
       this.map.addInteraction(this.modify);
       this.interactionId = this.map.getInteractions().getArray().length - 1;
@@ -199,16 +176,13 @@ export default {
           this.resizeMap();
       }, 400);
     },
-
     addNewLayers() {
       this.allType.forEach(async element => {
         let features = {
           type: 'FeatureCollection',
           features: this.features.features.filter(el => el.name === element.id),
         };
-
         await this.getOneTypeObject({ id: element.id, forFeature: true });
-
         let layer = new VectorLayer({
           source: new VectorSource({
             features: new GeoJSON().readFeatures(features,
@@ -217,6 +191,8 @@ export default {
               }),
           }),
         });
+        layer.set('name', 'feature')
+
         this.map.addLayer(layer)
 
         if (features.features[0].geometry.type === 'Point') {
@@ -231,19 +207,15 @@ export default {
           layer.setStyle(style)
         }
       });
-    }
-
+    },
+    
   },
-
   mounted() {
     this.drawLayer = new VectorLayer({
       source: new VectorSource({
         features: []
       }),
     });
-
-
-
     this.map = new Map({
       target: 'map_content',
       layers: [
@@ -266,14 +238,11 @@ export default {
     });
 
     this.modify.on('modifyend', this.changeCoordinates);
-
     this.map.on('click', this.getFeature_);
-
     if (this.addCardOn_.data) {
       this.addInteraction();
     }
     this.resizeMap();
-
   }
 }
 </script>
@@ -283,7 +252,6 @@ export default {
   padding-left: 5em;
   display: flex;
 }
-
 #card {
   background: white;
   border: 1px solid grey;
@@ -293,7 +261,6 @@ export default {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-shadow: 0 0 10px rgba(128, 128, 128, 0.5);
 }
-
 .edit {
   border: 1px solid grey;
   padding: 2px;
@@ -301,17 +268,14 @@ export default {
   border-radius: 7px;
   transition: .3s;
 }
-
 .edit:hover {
   border: 1px solid #EF5350;
   box-shadow: 0 0 10px rgba(239, 83, 80, 0.5);
 }
-
 .add {
   min-width: 5em;
   max-height: 2.5em;
 }
-
 .add_window,
 .edit_window {
   padding-left: 1em;
@@ -319,31 +283,24 @@ export default {
   border-left: 1px solid black;
   transition: all 1s;
 }
-
 .edit_window {
   min-height: 800px;
 }
-
 .slow {
   max-height: 2000px;
 }
-
 .save {
   margin-left: 1em;
 }
-
 .v_content {
   min-width: 100%;
 }
-
 .animation-enter-active {
   transition: all 1s;
 }
-
 .animation-leave-active {
   transition: all 1s;
 }
-
 .animation-enter,
 .animation-leave-to {
   right: 100px;
