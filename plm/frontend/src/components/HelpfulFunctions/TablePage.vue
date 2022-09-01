@@ -38,7 +38,7 @@
       <span class="object" v-else>{{ allListItem.length }} объектов </span>
     </div>
     <v-data-table @click:row="showCard" :headers="headers" v-model="selected" show-select :item-key="headers[0].text"
-      :items="allListItem" :items-per-page="10" class="pa-0" @toggle-select-all="showAll()" :item-class="classRow"
+      :items="allListItem" :items-per-page="5" class="pa-0" @toggle-select-all="showAll()" :item-class="classRow"
       style="
         height: 100% !important;
         width: 50% !important; 
@@ -96,7 +96,7 @@ export default {
             await this.getOneObject(obj.id);
           }
           else {
-            this.updateObjectForCard(object[0]);
+            this.updateObjectForCard(JSON.parse(JSON.stringify(object[0])));
           }
           this.visableCard();
           this.infoCardOn_.data = true;

@@ -2,7 +2,7 @@
     <v-row justify="start">
         <template v-if="'properties' in objectForCard && 'type' in objectForCard.properties">
             <p class="attributes ma-0">Основные атрибуты</p>
-            <v-col v-for="(el, index) in objectForCard.properties.headers" :key="index" cols="2" sm="6" md="5" lg="6"
+            <v-col v-for="(el, index) in objectForCard.properties.headers" :key="el.text" cols="2" sm="6" md="5" lg="6"
                 v-show="el.text != 'id'">
                 <v-text-field v-model="objectForCard_.properties.headers[index].text" hide-details
                     :label="objectForCard.properties.headers[index].text"
@@ -23,8 +23,8 @@
         <template v-if="'properties' in objectForCard && 'type' in objectForCard.properties">
             <p class="attributes ma-0">Допольнительные атрибуты</p>
 
-            <v-col v-for="(el, index) in objectForCard.properties.properties" :key="index" cols="2" sm="6" md="5" lg="6"
-                v-show="el.text != 'id'">
+            <v-col v-for="(el, index) in objectForCard.properties.properties" :key="el" cols="2" sm="6" md="5" lg="6"
+                v-show="el != 'id'">
                 <v-text-field v-model="objectForCard_.properties.properties[index]" hide-details
                     :label="objectForCard.properties.properties[index]"
                     :placeholder="objectForCard.properties.properties[index]" filled :readonly="infoCardOn.data"
@@ -43,10 +43,15 @@
         <template v-if="'name' in objectForCard">
             <p v-if="typeForFeature.properties.length" class="attributes ma-0">Допольнительные атрибуты
             </p>
-            <v-col v-for="(el, index) in typeForFeature.properties" :key="index" cols="2" sm="6" md="5" lg="6"
-                v-show="el.text != 'id'">
-                <v-text-field v-model="objectForCard_.properties[el]" hide-details :label="el" :placeholder="el" filled
-                    :readonly="infoCardOn.data">
+            <v-col v-for="el in typeForFeature.properties" :key="el" cols="2" sm="6" md="5" lg="6"
+                v-show="el != 'id'">
+                <v-text-field v-if="checkEqualityOfFieads(el)" v-model="objectForCard_.properties[el]" hide-details
+                    :label="el" :placeholder="el" filled :readonly="infoCardOn.data">
+                </v-text-field>
+                <v-text-field v-else v-model="objectForCard_.properties[el]" background-color="#C9C8ED"
+                    color="#0F0CA7" hide-details :label="el" :placeholder="el" filled
+                    :readonly="infoCardOn.data" append-icon="mdi-progress-question"
+                    @click:append="changeConflictField(el)">
                 </v-text-field>
             </v-col>
         </template>
@@ -58,7 +63,7 @@ import { mapGetters } from 'vuex';
 
 export default {
     name: 'FormForDynamicField',
-    props: ['objectForCard', 'infoCardOn'],
+    props: ['objectForCard', 'infoCardOn', 'checkEqualityOfFieads', 'changeConflictField'],
     data() {
         return {
             objectForCard_: this.objectForCard,

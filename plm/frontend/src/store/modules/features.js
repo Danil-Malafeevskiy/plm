@@ -2,6 +2,19 @@ import axios from "axios";
 axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 axios.defaults.xsrfCookieName = "csrftoken";
 
+function getStrId(features) {
+    let strId = '';
+    for (let i in features) {
+        if (i != features.length - 1) {
+            strId += `${features[i].id},`;
+        }
+        else {
+            strId += `${features[i].id}`
+        }
+    }
+    return strId;
+}
+
 export default {
     actions: {
         async getFeatures({ commit, state, dispatch }) {
@@ -26,18 +39,15 @@ export default {
             }).catch(error => console.log(error));
         },
 
-        async putFeature(ctx, feature) {
-            await axios.put('/tower', feature).then(() => {
-                //const feature = response.data;
-                //console.log(feature);
+        async putFeature(ctx, features) {
+            await axios.put(`/tower?id=${getStrId(features)}`, features).then((response) => {
+                console.log(response.data);
             }).catch(error => console.log(error));
         },
 
-        async deleteFeature(ctx, arr) {
-            console.log(JSON.stringify(arr))
-            await axios.delete(`/tower`, arr).then((response) => {
-                const feature = response.data;
-                console.log(feature);
+        async deleteFeature(ctx, features) {
+            await axios.delete(`/tower?id=${getStrId(features)}`).then((response) => {
+                console.log(response.data);
             }).catch(error => console.log(error));
         },
         async filterForFeature({ commit, state }, typeId = state.featureTypeId) {
@@ -73,20 +83,20 @@ export default {
         updateArrayEditMode(state, { item, type }) {
             switch (type) {
                 case 'put':
-                    if (!(state.arrayEditMode.put.filter(el => el.id === item.id).length)) {
-                        state.arrayEditMode[type].push(item);
-                    }
-                    else {
+                    if (state.arrayEditMode.put.filter(el => el.id === item.id).length) {
                         for (let key in state.arrayEditMode.put) {
                             if (state.arrayEditMode.put[key].id === item.id) {
                                 state.arrayEditMode.put[key] = item;
                             }
                         }
                     }
+                    else {
+                        state.arrayEditMode.put.push(item);
+                    }
                     break;
                 case 'delete':
                     if (state.arrayEditMode.delete.filter(el => el.id === item.id).length === 0) {
-                        state.arrayEditMode[type].push(item);
+                        state.arrayEditMode.delete.push(item);
                     }
                     else {
                         state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
@@ -102,13 +112,13 @@ export default {
                 delete: [],
             }
         },
-        updateNewData(state, item){
+        updateNewData(state, item) {
             state.newData.push(item);
         },
-        deleteItemFromNewData(state, item){
+        deleteItemFromNewData(state, item) {
             state.newData = state.newData.filter(el => el.id != item.id);
         },
-        resetNewData(state){
+        resetNewData(state) {
             state.newData = [];
         }
     },
@@ -131,7 +141,7 @@ export default {
         arrayEditMode(state) {
             return state.arrayEditMode;
         },
-        newData(state){
+        newData(state) {
             return state.newData;
         }
     },
