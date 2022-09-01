@@ -1,7 +1,7 @@
 <template>
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
-            <p style="display: none">{{  objectForCard  }}</p>
+            <p style="display: none">{{ objectForCard }}</p>
             <v-file-input v-if="!objectForCard.image" @change="fileToBase64" accept="image/*" :class="{
                 'background_color_red': !('properties' in objectForCard && 'username' in objectForCard.properties),
                 'background_color_gray': ('properties' in objectForCard && 'username' in objectForCard.properties)
@@ -26,17 +26,17 @@
                             <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text v-if="objectForCard.properties.username != undefined" class="pa-0"
                                     style="font-size: 24px;">{{
-                                     objectForCard.properties.username 
+                                            objectForCard.properties.username
                                     }}
                                 </v-card-text>
                                 <v-card-text v-else-if="'name' in objectForCard" class="pa-0" style="font-size: 24px;">
                                     {{
-                                     typeForFeature.name 
+                                            typeForFeature.name
                                     }}
                                 </v-card-text>
                                 <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
-                                     objectForCard.properties.name 
-                                    }}
+                                        objectForCard.properties.name
+                                }}
                                 </v-card-text>
 
                             </v-col>
@@ -100,14 +100,22 @@
             </div>
 
             <div class="card__footer" v-if="addCardOn_.data">
-                <v-btn color="white" depressed @click="notVisableCard(); addCardOn_.data = !addCardOn_.data">ОТМЕНА
+                <v-btn text @click="notVisableCard(); addCardOn_.data = !addCardOn_.data">ОТМЕНА
                 </v-btn>
-                <v-btn color="white" depressed @click="addNewFeature()">Создать</v-btn>
+                <v-btn text @click="addNewFeature()">Создать</v-btn>
             </div>
             <div class="card__footer" v-else-if="editCardOn_.data">
-                <v-btn color="white" depressed @click="notVisableCard(); editCardOn_.data = !editCardOn_.data">ОТМЕНА
-                </v-btn>
-                <v-btn color="white" depressed @click="editObject()">Редактирование</v-btn>
+                <div style="margin-left: 20px">
+                    <v-btn @click="changeItem" v-if="newData.filter(el => el.id === objectForCard.id).length" color="#0F0CA7" text>
+                        оригинал
+                    </v-btn>
+                </div>
+                <div>
+                    <v-btn text @click="notVisableCard(); editCardOn_.data = !editCardOn_.data">
+                        ОТМЕНА
+                    </v-btn>
+                    <v-btn text @click="editObject()">Редактирование</v-btn>
+                </div>
             </div>
 
         </div>
@@ -205,11 +213,11 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem']),
+        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEditMode', 'newData']),
     },
     methods: {
         ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
-        ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode']),
+        ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData']),
         async addNewFeature() {
             if (this.objectForCard.name != null) {
                 this.objectForCard.name = this.getTypeId;
@@ -230,7 +238,8 @@ export default {
             this.notVisableCard();
         },
         async editObject() {
-            this.updateArrayEditMode({ item: this.objectForCard, type: 'put' })
+            this.updateArrayEditMode({ item: this.objectForCard, type: 'put' });
+            this.deleteItemFromNewData(this.objectForCard);
             this.allListItem.forEach(element => {
 
                 if (element.id === this.objectForCard.id) {
@@ -260,6 +269,13 @@ export default {
         editOn() {
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
+        },
+        changeItem(){
+            let newPutobject = this.newData.filter(el => el.id === this.objectForCard.id);
+            if(newPutobject[0] === this.objectForCard){
+                newPutobject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id);
+            }
+            this.updateObjectForCard(newPutobject[0]);
         }
     },
     mounted() {
@@ -312,10 +328,10 @@ export default {
 }
 
 .card__footer {
-    align-items: flex-end;
+    /* align-items: flex-end; */
     display: flex;
     bottom: 0px;
-    justify-content: flex-end;
+    justify-content: space-between;
     border-top: 1px solid #E0E0E0;
     border-radius: 0 0 12px 12px !important;
     background-color: white;
