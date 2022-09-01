@@ -14,6 +14,7 @@ class BinaryField(serializers.Field):
          return value.encode('utf-8')
 
 class FeatureListSerializer(serializers.ListSerializer):
+
     def update(self, instance, validated_data):
 
         feature_old = {feature.id: feature for feature in instance}
@@ -27,7 +28,7 @@ class FeatureListSerializer(serializers.ListSerializer):
         return ret
 
 class FeatureSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
+    id = serializers.IntegerField(required=False)
     geometry = GeometryField()
     image = BinaryField(required=False)
     class Meta:

@@ -48,7 +48,6 @@ class TowerAPI(APIView):
 
     def put(self, request):
         feature = Feature.objects.filter(id__in=request.query_params.get('id').split(','))
-        print(list(feature))
         feature_serializer = FeatureSerializer(feature, data=request.data, many=True)
         if feature_serializer.is_valid():
             feature_serializer.save()
