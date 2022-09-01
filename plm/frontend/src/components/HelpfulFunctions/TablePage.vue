@@ -2,11 +2,11 @@
   <div v-if="allListItem.length != 0">
     <div class="sub_tittle" v-if="selected.length != 0">
       <div style="margin: 20px 0;">
-        <span class="object" v-if="selected.length % 10 === 1">{{  selected.length  }} объект </span>
+        <span class="object" v-if="selected.length % 10 === 1">{{ selected.length }} объект </span>
         <span class="object" v-else-if="selected.length % 10 > 1 && selected.length % 10 < 5">
-          {{  selected.length  }} объекта </span>
+          {{ selected.length }} объекта </span>
 
-        <span class="object" v-else>{{  selected.length  }} объектов </span>
+        <span class="object" v-else>{{ selected.length }} объектов </span>
 
         <a style="margin: 20px 0" @click="resetSelected()">
           <v-icon v-if="selected.length != 0" small>mdi-close</v-icon>
@@ -22,7 +22,7 @@
           </template>
           <v-list>
             <v-list-item v-for="(item, index) in type" :key="index" link @click="moveObject(item)">
-              <v-list-item-title>{{  item.name  }}</v-list-item-title>
+              <v-list-item-title>{{ item.name }}</v-list-item-title>
             </v-list-item>
           </v-list>
         </v-menu>
@@ -32,10 +32,10 @@
       </div>
     </div>
     <div class="sub_tittle" v-else>
-      <span class="object" v-if="allListItem.length % 10 === 1">{{  allListItem.length  }} объект </span>
+      <span class="object" v-if="allListItem.length % 10 === 1">{{ allListItem.length }} объект </span>
       <span class="object" v-else-if="allListItem.length % 10 > 1 && allListItem.length % 10 < 5">
-        {{  allListItem.length  }} объекта </span>
-      <span class="object" v-else>{{  allListItem.length  }} объектов </span>
+        {{ allListItem.length }} объекта </span>
+      <span class="object" v-else>{{ allListItem.length }} объектов </span>
     </div>
     <v-data-table @click:row="showCard" :headers="headers" v-model="selected" show-select :item-key="headers[0].text"
       :items="allListItem" :items-per-page="10" class="pa-0" @toggle-select-all="showAll()" :item-class="classRow"
@@ -67,7 +67,7 @@ export default {
   watch: {},
   computed: {
     ...mapGetters(['allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray',
-      'allType', 'drawType', 'getToolbarTitle', 'typeForFeature', 'typeForFeature', 'arrayEditMode']),
+      'allType', 'drawType', 'getToolbarTitle', 'typeForFeature', 'typeForFeature', 'arrayEditMode', 'newData']),
     selected: {
       get() { return this.arrObjects[`${this.nameArray}`]; },
       set(value) { this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
@@ -144,10 +144,10 @@ export default {
       this.getAllObject();
       this.resetSelected();
     },
-    changeItemFromTable(item, object){
-      for(let key in item){
-        if(key != 'id'){
-          item[key] = object[key]; 
+    changeItemFromTable(item, object) {
+      for (let key in item) {
+        if (key != 'id') {
+          item[key] = object[key];
         }
       }
     },
@@ -159,12 +159,18 @@ export default {
 
       const putObject = this.arrayEditMode.put.filter(el => el.id === item.id);
       const deleteObject = this.arrayEditMode.delete.filter(el => el.id === item.id);
+      const newPutObject = this.newData.filter(el => el.id === item.id);
 
-      if (putObject.length != 0) {
-        classForItem += ' text_color_red';
-        this.changeItemFromTable(item, putObject[0].properties)
+      if (newPutObject.length) {
+        classForItem += ' text_color_blue';
+        this.changeItemFromTable(item, putObject[0].properties);
       }
-      if (deleteObject.length != 0) {
+      else if (putObject.length) {
+        classForItem += ' text_color_red';
+        this.changeItemFromTable(item, putObject[0].properties);
+      }
+
+      if (deleteObject.length) {
         classForItem += ' text_color_gray';
         this.changeItemFromTable(item, deleteObject[0].properties);
       }
@@ -228,6 +234,10 @@ export default {
 
 .text_color_gray {
   color: gray;
+}
+
+.text_color_blue {
+  color: #0F0CA7;
 }
 
 .v-data-table__wrapper {
