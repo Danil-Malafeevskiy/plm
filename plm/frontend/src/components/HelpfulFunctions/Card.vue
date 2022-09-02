@@ -2,7 +2,11 @@
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
             <p style="display: none">{{ objectForCard }}</p>
-            <v-file-input v-if="!objectForCard.image" @change="fileToBase64" accept="image/*" :class="{
+            <v-file-input v-if="'properties' in objectForCard && 'type' in objectForCard.properties" accept="image/*"
+                class="pa-0 ma-0 background_color_red" height="37.53%" :prepend-icon="icon" :disabled="infoCardOn_.data"
+                hide-input>
+            </v-file-input>
+            <v-file-input v-else-if="!objectForCard.image" @change="fileToBase64" accept="image/*" :class="{
                 'background_color_red': !('properties' in objectForCard && 'username' in objectForCard.properties),
                 'background_color_gray': ('properties' in objectForCard && 'username' in objectForCard.properties)
             }" class="pa-0 ma-0" height="37.53%" :prepend-icon="icon" :disabled="infoCardOn_.data" hide-input>
@@ -15,10 +19,12 @@
                     </v-icon>
                 </v-btn>
             </template>
-            <v-img v-if="objectForCard.image" :src="objectForCard.image" :class="{
-                'one_picture': infoCardOn_.data,
-                'not_one_picture': !infoCardOn_.data,
-            }" width="100%" height="37.53%"></v-img>
+            <template v-if="!('properties' in objectForCard && 'type' in objectForCard.properties)">
+                <v-img v-if="objectForCard.image" :src="objectForCard.image" :class="{
+                    'one_picture': infoCardOn_.data,
+                    'not_one_picture': !infoCardOn_.data,
+                }" width="100%" height="37.53%"></v-img>
+            </template>
             <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                 <v-card-text class="pa-0">
                     <v-form>
@@ -264,7 +270,7 @@ export default {
                 this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
             }
             else {
-                //console.log(this.objectForCard.properties)
+                console.log(this.objectForCard)
                 this.putObject(this.objectForCard);
             }
             this.editCardOn_.data = !this.editCardOn_.data;
@@ -274,7 +280,7 @@ export default {
             if (this.actions === 'getFeatures') {
                 this.updateArrayEditMode({ item: this.objectForCard, type: 'delete' })
             }
-            else{
+            else {
                 this.deleteObject(this.objectForCard.id)
             }
             this.infoCardOn_.data = !this.infoCardOn_.data;
