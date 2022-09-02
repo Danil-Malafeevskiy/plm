@@ -100,9 +100,9 @@ export default {
       deep: true
     },
   },
-  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard']),
+  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEditMode']),
   methods: {
-    ...mapMutations(['updateOneFeature', 'upadateEmptyObject']),
+    ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard']),
     ...mapActions(['getOneFeature', 'getOneTypeObject']),
 
     updateLonLat(cord) {
@@ -138,13 +138,28 @@ export default {
       }
     },
 
+    findItem(id) {
+      let item = this.arrayEditMode.put.filter(el => el.id === id);
+      if (item.length) {
+        return item[0];
+      }
+      else {
+        return false;
+      }
+    },
+
     async getFeature_(event) {
       this.updateCoordinates();
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
 
       if (feature_ != null && !this.addCardOn_.data) {
-        await this.getOneFeature(feature_.id_);
-        //await this.getOneTypeObjectForFeature({ id: this.getObjectForCard.name, forFeature: true });
+        let item = this.findItem(feature_.id_)
+        if (item) {
+          this.updateObjectForCard(JSON.parse(JSON.stringify(item)));
+        }
+        else {
+          await this.getOneFeature(feature_.id_);
+        }
         this.infoCardOn_.data = true;
         this.visableCard();
       }
@@ -199,66 +214,66 @@ export default {
               }),
           }),
         });
-        layer.set('name', 'feature')
+        layer.set('name', 'feature');
 
-        this.map.addLayer(layer)
+        this.map.addLayer(layer);
 
-        if (features.features[0].geometry.type === 'Point') {
+        if (features.features.length && features.features[0].geometry.type === 'Point') {
           let style = new Style({
             image: new Icon({
               anchor: [0.5, 0, 5],
               anchorXUnits: 'fraction',
               anchorYUnits: 'pixels',
-              src: `static/${ this.typeForLayer.image }`,
-      }),
-        });
-      layer.setStyle(style)
-    }
-  });
-},
+              src: `static/${this.typeForLayer.image}`,
+            }),
+          });
+          layer.setStyle(style)
+        }
+      });
+    },
 
   },
 
-mounted() {
-  this.drawLayer = new VectorLayer({
-    source: new VectorSource({
-      features: []
-    }),
-  });
-
-
-
-  this.map = new Map({
-    target: 'map_content',
-    layers: [
-      new TileLayer({
-        source: new OSM()
+  mounted() {
+    this.drawLayer = new VectorLayer({
+      source: new VectorSource({
+        features: []
       }),
-      this.drawLayer,
-    ],
-    view: new View({
-      zoom: 13,
-      center: fromLonLat([56.177483, 54.924307]),
-      constrainResolution: true,
-    })
-  });
+    });
 
-  this.addNewLayers();
 
-  this.modify = new Modify({
-    source: this.drawLayer.getSource(),
-  });
 
-  this.modify.on('modifyend', this.changeCoordinates);
+    this.map = new Map({
+      target: 'map_content',
+      layers: [
+        new TileLayer({
+          source: new OSM()
+        }),
+        this.drawLayer,
+      ],
+      view: new View({
+        zoom: 13,
+        center: fromLonLat([56.177483, 54.924307]),
+        constrainResolution: true,
+      })
+    });
 
-  this.map.on('click', this.getFeature_);
+    this.addNewLayers();
 
-  if (this.addCardOn_.data) {
-    this.addInteraction();
+    this.modify = new Modify({
+      source: this.drawLayer.getSource(),
+    });
+
+    this.modify.on('modifyend', this.changeCoordinates);
+
+    this.map.on('click', this.getFeature_);
+
+    if (this.addCardOn_.data) {
+      this.addInteraction();
+    }
+    this.resizeMap();
+
   }
-  this.resizeMap();
-
-}
 }
 </script>
 

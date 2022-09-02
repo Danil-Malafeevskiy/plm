@@ -164,8 +164,6 @@ export default {
         }
     },
     mounted() {
-        
-    console.log(this.actions)
     }
 }
 </script>
