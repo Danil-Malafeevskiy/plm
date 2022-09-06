@@ -3,16 +3,28 @@
         <div class="card__window">
             <p style="display: none">{{ objectForCard }}</p>
 
-            <v-file-input v-if="'properties' in objectForCard && 'type' in objectForCard.properties" accept="image/*"
-                class="pa-0 ma-0 background_color_red" height="37.53%" :prepend-icon="icon" :disabled="infoCardOn_.data"
-                hide-input>
-            </v-file-input>
+            <v-card v-if="objectForCard.properties.type === 'Point'" class="one_picture pa-0 ma-0 background_color_gray"
+                tile flat style="width: 100% !important; height: 59.45% !important; overflow-y: scroll !important;">
+                <v-row no-gutters justify="start">
+                    <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
+                        style="max-width: 3em !important; margin-right: 1em !important;" @click="clickImage(el)">
+                        <v-radio-group hide-details class="pa-0 ma-0" v-model="objectForCard.image">
+                            <!-- <v-radio v-if="el === listSelectedIcons[0]" color="#E93030" :on-icon="el" :off-icon="el" :value="listMdiIcons[index]"> -->
 
-            <div v-if="objectForCard.properties.type === 'Point'" class="one_picture" style="width: 100% !important; height: 37.53% !important;">
-                <div v-for="el in listIcons" :key="el">
-                    <v-img :src=el width="10%" height="10%" ></v-img>
-                </div>
-            </div>
+                            <!-- </v-radio>
+                            <v-radio v-else :on-icon="el" :off-icon="el" :value="listMdiIcons[index]"> 
+                            </v-radio> -->
+                            <v-icon size='2em' v-if="(el.slice(4)+'.png') === objectForCard.image" color="red">{{el}}</v-icon>
+                            <v-icon size='2em' v-else>{{el}}</v-icon>
+                        </v-radio-group>
+                    </v-col>
+                </v-row>
+            </v-card>
+
+            <v-file-input v-else-if="'properties' in objectForCard && 'type' in objectForCard.properties"
+                accept="image/*" class="pa-0 ma-0 background_color_red" height="37.53%" :prepend-icon="icon"
+                :disabled="infoCardOn_.data" hide-input>
+            </v-file-input>
 
             <v-file-input v-else-if="!objectForCard.image" @change="fileToBase64" accept="image/*" :class="{
                 'background_color_red': !('properties' in objectForCard && 'username' in objectForCard.properties),
@@ -42,17 +54,17 @@
                             <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text v-if="objectForCard.properties.username != undefined" class="pa-0"
                                     style="font-size: 24px;">{{
-                                            objectForCard.properties.username
+                                    objectForCard.properties.username
                                     }}
                                 </v-card-text>
                                 <v-card-text v-else-if="'name' in objectForCard" class="pa-0" style="font-size: 24px;">
                                     {{
-                                            typeForFeature.name
+                                    typeForFeature.name
                                     }}
                                 </v-card-text>
                                 <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
-                                        objectForCard.properties.name
-                                }}
+                                    objectForCard.properties.name
+                                    }}
                                 </v-card-text>
 
                             </v-col>
@@ -170,7 +182,9 @@ export default {
             icon: mdiImagePlusOutline,
             objectForCard: {},
             showPassword: false,
-            listIcons: [],
+            listIcons: ['static/tower.png', 'static/tree.png', 'static/airplane.png', 'static/apple.png', 'static/biohazard.png', 'static/bluetooth.png', 'static/bottle-wine.png', 'static/bucket.png'],
+            listMdiIcons:['mdi-transmission-tower', 'mdi-pine-tree', 'mdi-airplane', 'mdi-apple', 'mdi-biohazard', 'mdi-bluetooth', 'mdi-bottle-wine', 'mdi-bucket'],
+            listSelectedIcons: [],
             rules: {
                 min: v => v.length >= 8 || 'Минимум 8 символов',
             },
@@ -225,10 +239,9 @@ export default {
         },
         objectForCard: {
             handler() {
-                this.getImage()
                 if ('name' in this.objectForCard && this.objectForCard.name != this.typeForFeature.id) {
                     this.getOneTypeObjectForFeature({ id: this.objectForCard.name, forFeature: true });
-                } 
+                }
                 else if (this.typeForFeature.id != 0 && this.objectForCard.name != this.typeForFeature.id) {
                     const emptyType = {
                         id: 0,
@@ -237,10 +250,7 @@ export default {
                     };
                     this.updateOneType({ type: emptyType, forFeature: true });
                 }
-
-
             },
-            
         }
     },
     computed: {
@@ -248,7 +258,7 @@ export default {
 
     },
     methods: {
-        ...mapActions(['getTypeObject','deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
+        ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
         ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData']),
         async addNewFeature() {
             if (this.objectForCard.name != null) {
@@ -341,7 +351,7 @@ export default {
             }
             return true;
         },
-               changeConflictField(field) {
+        changeConflictField(field) {
             if (!this.infoCardOn.data) {
                 let newPutObject = this.newData.filter(el => el.id === this.objectForCard.id)
                 if (newPutObject[0].properties[field] === this.objectForCard.properties[field]) {
@@ -350,21 +360,13 @@ export default {
                 this.objectForCard.properties[field] = newPutObject[0].properties[field];
             }
         },
-        async getImage() {
-            let arr = ['tower', 'tree', 'airplane']
-            if (this.objectForCard.properties.type === 'Point') {
-                arr.forEach(element => {
-                    if (!this.listIcons.includes('static/' + element + '.png')){
-                        this.listIcons.push('static/' + element + '.png')
-                    }
-                });
-            }
-        }
-        
+        clickImage(element) {
+            this.objectForCard.image = element.slice(4) + '.png'
+        },
     },
 
     mounted() {
-
+        
     }
 }
 </script>
