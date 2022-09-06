@@ -91,8 +91,7 @@ export default {
                 }
                 else {
                     this.upadateTitle('');
-                    let domItem;
-                    setTimeout(() => domItem = document.querySelector('.text_in_span').innerHTML)
+                    let domItem = document.querySelector('.text_in_span').innerHTML;
                     if (domItem === "Пользователи") {
                         const headers = [
                             {
@@ -178,16 +177,16 @@ export default {
                 this.getUsersOfGroup(objectType);
             }
             else {
-                await this.getOneTypeObjectForFeature({ id: objectType.id });
+                this.getOneTypeObjectForFeature({ id: objectType.id });
+                await this.filterForFeature(this.objectType.id);
                 this.objectType = this.oneType;
                 this.updateHeaders(this.objectType.headers);
                 this.updateDrawType(this.objectType.type)
-                await this.filterForFeature(this.objectType.id);
             }
         },
 
         resetSelectItem() {
-            this.selectedItem = null;
+           // this.selectedItem = null;
             setTimeout(() => { this.showCard = !this.showCard; });
         },
         search(searchText) {

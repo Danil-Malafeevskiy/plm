@@ -89,6 +89,9 @@ export default {
         },
         nameArray(state){
             return state.nameForArray;
+        },
+        actions(state){
+            return state.actionGet;
         }
     },
     state: {

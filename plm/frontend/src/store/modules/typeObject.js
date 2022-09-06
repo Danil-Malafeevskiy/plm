@@ -52,7 +52,11 @@ export default {
         },
         async putTypeObject({ dispatch }, type) {
             let putType = { ...type.properties };
-            putType.id = type.id;
+            for(let key in type){
+                if(key != 'properties'){
+                    putType[key] = type[key]
+                }
+            }
             await axios.put('/dataset/admin', putType).then((response) => {
                 console.log(response.data);
                 dispatch('getTypeObject', true);
@@ -62,6 +66,11 @@ export default {
             await axios.delete(`/dataset/admin/${id}`).then((response) => {
                 console.log(response.data);
                 dispatch('getTypeObject', true);
+            })
+        }, 
+        async getSortType({ commit }, drawType){
+            await axios.get(`/dataset?type=${drawType}`).then((response) => {
+                commit('updateSelectedDrawType', response.data);
             })
         }
     },
@@ -79,6 +88,9 @@ export default {
         },
         updateTypeForLayer(state, type){
             state.typeForLayer = type;
+        },
+        updateSelectedDrawType(state, type){
+            state.selectedDrawType = type;
         }
     },
     getters: {
@@ -93,6 +105,9 @@ export default {
         },
         typeForLayer(state){
             return state.typeForLayer;
+        },
+        selectedDrawType(state){
+            return state.selectedDrawType;
         }
     },
     state: {
@@ -104,5 +119,6 @@ export default {
             properties: [],
         },
         typeForLayer: {},
+        selectedDrawType: [],
     },
 }

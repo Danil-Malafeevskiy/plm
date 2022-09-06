@@ -38,7 +38,7 @@
       <span class="object" v-else>{{ allListItem.length }} объектов </span>
     </div>
     <v-data-table @click:row="showCard" :headers="headers" v-model="selected" show-select :item-key="headers[0].text"
-      :items="allListItem" :items-per-page="10" class="pa-0" @toggle-select-all="showAll()" :item-class="classRow"
+      :items="allListItem" :items-per-page="8" class="pa-0" @toggle-select-all="showAll()" :item-class="classRow"
       style="
         height: 100% !important;
         width: 50% !important; 
@@ -64,28 +64,34 @@ export default {
       editCardOn_: this.editCardOn,
     }
   },
-  watch: {},
+  watch: {
+    oneType:{
+      handler(){
+        this.getSortType(this.oneType.type);
+      }
+    },
+    arrObjects: {
+      handler(){
+        //console.log(this.nameArray);
+        console.log(this.arrObjects[`${this.nameArray}`])
+      }
+    }
+  },
   computed: {
     ...mapGetters(['allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray',
-      'allType', 'drawType', 'getToolbarTitle', 'typeForFeature', 'typeForFeature', 'arrayEditMode', 'newData']),
+      'allType', 'drawType', 'getToolbarTitle', 'typeForFeature', 'typeForFeature', 'arrayEditMode', 'newData', 'oneType', 
+      'selectedDrawType', 'actions']),
     selected: {
       get() { return this.arrObjects[`${this.nameArray}`]; },
-      set(value) { this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
+      set(value) { console.log(value);
+         this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
     },
     type() {
-      return this.allType.filter(el => el.name != this.getToolbarTitle);
-      //   if (el.name === this.getToolbarTitle) {
-      //     console.log(el);
-      //     return false;
-      //   }
-      //   await this.getOneTypeObjectForFeature({ id: el.id, forFeature: true });
-      //   console.log(this.typeForFeature.type === this.drawType);
-      //   return this.typeForFeature.type === this.drawType
-      // });
+      return this.selectedDrawType.filter(el => el.name != this.getToolbarTitle);
     }
   },
   methods: {
-    ...mapActions(['getAllObject', 'getOneObject', 'deleteObject', 'putObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
+    ...mapActions(['getAllObject', 'getOneObject', 'deleteObject', 'putObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getSortType']),
     ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts', 'updateOneType', 'updateObjectForCard']),
 
     async showCard(obj) {
@@ -96,7 +102,7 @@ export default {
             await this.getOneObject(obj.id);
           }
           else {
-            this.updateObjectForCard(object[0]);
+            this.updateObjectForCard(JSON.parse(JSON.stringify(object[0])));
           }
           this.visableCard();
           this.infoCardOn_.data = true;
@@ -127,16 +133,18 @@ export default {
       this.resetSelected();
     },
     async moveObject(type) {
+      let arrPut = [];
       for (const element of this.arrObjects[`${this.nameArray}`]) {
         await this.getOneObject(element.id);
-        if (type.type != undefined) {
+        if (this.actions === 'getFeatures') {
           this.getObjectForCard.name = type.id;
         }
         else {
           this.getObjectForCard.groups = [`${type.name}`];
         }
-        this.putObject(this.getObjectForCard);
+        arrPut.push(this.getObjectForCard);
       }
+      this.putObject(arrPut);
 
       if (type.type != undefined) {
         await this.filterForFeature();
