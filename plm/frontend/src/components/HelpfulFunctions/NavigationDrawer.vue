@@ -177,11 +177,11 @@ export default {
                 this.getUsersOfGroup(objectType);
             }
             else {
-                await this.getOneTypeObjectForFeature({ id: objectType.id });
+                this.getOneTypeObjectForFeature({ id: objectType.id });
+                await this.filterForFeature(this.objectType.id);
                 this.objectType = this.oneType;
                 this.updateHeaders(this.objectType.headers);
                 this.updateDrawType(this.objectType.type)
-                await this.filterForFeature(this.objectType.id);
             }
         },
 

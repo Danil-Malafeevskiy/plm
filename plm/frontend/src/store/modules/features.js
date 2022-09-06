@@ -40,6 +40,7 @@ export default {
         },
 
         async putFeature(ctx, features) {
+            console.log(features);
             await axios.put(`/tower?id=${getStrId(features)}`, features).then((response) => {
                 console.log(response.data);
             }).catch(error => console.log(error));
