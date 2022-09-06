@@ -110,26 +110,11 @@ export default {
     }
   },
   watch: {
-    // arrayEditMode: {
-    //   handler(){
-    //     //this.arrPut = [ ...this.arrayEditMode.put ];
-    //     //console.log(this.arrPut);
-    //   },
-    //   deep: true,
-    // },
     newData: {
       handler() {
-        ///console.log(e, a);
-        if (this.newData.length === 1) {
-          this.isConflict = true;
-        }
+
       }
     }
-    // emptyObject: {
-    //   handler(){
-    //     //console.log(this.emptyObject)
-    //   }
-    // }
   },
   computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
     'newData', 'actions']),
@@ -145,18 +130,21 @@ export default {
     disabledAddButton() {
       return !this.cardVisable.data && JSON.stringify(this.emptyObject) === '{}';
     },
-    onmessage(e) {
+    async onmessage(e) {
       const data = JSON.parse(e.data);
       this.getFeatures();
       if (data.data.name === this.oneType.id) {
         this.filterForFeature(this.oneType.id);
       }
       switch (data.action) {
-        case "update": {
+        case "update":  {
           let editObject = this.arrayEditMode.put.filter(el => el.id === data.data.id);
 
           if (this.editMode && editObject.length && this.searchConflict(editObject[0], data.data)) {
-            this.updateNewData(data.data);
+            await this.updateNewData(data.data);
+            if (this.newData.length === 1) {
+              this.isConflict = true;
+            }
           }
           break;
         }

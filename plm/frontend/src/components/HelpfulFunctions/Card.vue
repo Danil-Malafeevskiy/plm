@@ -286,7 +286,6 @@ export default {
                 this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
             }
             else {
-                console.log(this.objectForCard)
                 this.putObject(this.objectForCard);
             }
             this.editCardOn_.data = !this.editCardOn_.data;
