@@ -2,10 +2,18 @@
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
             <p style="display: none">{{ objectForCard }}</p>
+
             <v-file-input v-if="'properties' in objectForCard && 'type' in objectForCard.properties" accept="image/*"
                 class="pa-0 ma-0 background_color_red" height="37.53%" :prepend-icon="icon" :disabled="infoCardOn_.data"
                 hide-input>
             </v-file-input>
+
+            <div v-if="objectForCard.properties.type === 'Point'" class="one_picture" style="width: 100% !important; height: 37.53% !important;">
+                <div v-for="el in listIcons" :key="el">
+                    <v-img :src=el width="10%" height="10%" ></v-img>
+                </div>
+            </div>
+
             <v-file-input v-else-if="!objectForCard.image" @change="fileToBase64" accept="image/*" :class="{
                 'background_color_red': !('properties' in objectForCard && 'username' in objectForCard.properties),
                 'background_color_gray': ('properties' in objectForCard && 'username' in objectForCard.properties)
@@ -19,12 +27,14 @@
                     </v-icon>
                 </v-btn>
             </template>
+
             <template v-if="!('properties' in objectForCard && 'type' in objectForCard.properties)">
                 <v-img v-if="objectForCard.image" :src="objectForCard.image" :class="{
                     'one_picture': infoCardOn_.data,
                     'not_one_picture': !infoCardOn_.data,
                 }" width="100%" height="37.53%"></v-img>
             </template>
+
             <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                 <v-card-text class="pa-0">
                     <v-form>
@@ -160,6 +170,7 @@ export default {
             icon: mdiImagePlusOutline,
             objectForCard: {},
             showPassword: false,
+            listIcons: [],
             rules: {
                 min: v => v.length >= 8 || 'Минимум 8 символов',
             },
@@ -214,9 +225,10 @@ export default {
         },
         objectForCard: {
             handler() {
+                this.getImage()
                 if ('name' in this.objectForCard && this.objectForCard.name != this.typeForFeature.id) {
                     this.getOneTypeObjectForFeature({ id: this.objectForCard.name, forFeature: true });
-                }
+                } 
                 else if (this.typeForFeature.id != 0 && this.objectForCard.name != this.typeForFeature.id) {
                     const emptyType = {
                         id: 0,
@@ -225,14 +237,18 @@ export default {
                     };
                     this.updateOneType({ type: emptyType, forFeature: true });
                 }
+
+
             },
+            
         }
     },
     computed: {
         ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEditMode', 'newData', 'actions']),
+
     },
     methods: {
-        ...mapActions(['deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
+        ...mapActions(['getTypeObject','deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
         ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData']),
         async addNewFeature() {
             if (this.objectForCard.name != null) {
@@ -306,6 +322,7 @@ export default {
             else {
                 newPutobject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id);
             }
+
             this.updateObjectForCard(JSON.parse(JSON.stringify(newPutobject[0])));
         },
         checkEqualityOfFieads(field) {
@@ -324,7 +341,7 @@ export default {
             }
             return true;
         },
-        changeConflictField(field) {
+               changeConflictField(field) {
             if (!this.infoCardOn.data) {
                 let newPutObject = this.newData.filter(el => el.id === this.objectForCard.id)
                 if (newPutObject[0].properties[field] === this.objectForCard.properties[field]) {
@@ -332,9 +349,22 @@ export default {
                 }
                 this.objectForCard.properties[field] = newPutObject[0].properties[field];
             }
+        },
+        async getImage() {
+            let arr = ['tower', 'tree', 'airplane']
+            if (this.objectForCard.properties.type === 'Point') {
+                arr.forEach(element => {
+                    if (!this.listIcons.includes('static/' + element + '.png')){
+                        this.listIcons.push('static/' + element + '.png')
+                    }
+                });
+            }
         }
+        
     },
+
     mounted() {
+
     }
 }
 </script>
