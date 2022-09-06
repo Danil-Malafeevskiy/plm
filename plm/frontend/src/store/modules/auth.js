@@ -65,7 +65,7 @@ export default {
             })
         },
         async deleteUser({ dispatch }, idUser) {
-            await axios.delete(`/user/admin/${idUser}`).then((response) => {
+            await axios.delete(`/user/admin?id=${idUser}`).then((response) => {
                 console.log(response.data);
                 dispatch('getUsersOfGroup');
             })

@@ -91,8 +91,7 @@ export default {
                 }
                 else {
                     this.upadateTitle('');
-                    let domItem;
-                    setTimeout(() => domItem = document.querySelector('.text_in_span').innerHTML)
+                    let domItem = document.querySelector('.text_in_span').innerHTML;
                     if (domItem === "Пользователи") {
                         const headers = [
                             {
@@ -187,7 +186,7 @@ export default {
         },
 
         resetSelectItem() {
-            this.selectedItem = null;
+           // this.selectedItem = null;
             setTimeout(() => { this.showCard = !this.showCard; });
         },
         search(searchText) {

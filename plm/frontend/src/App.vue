@@ -13,8 +13,8 @@
               <span>{{ item }}</span>
             </v-tab>
           </v-tabs>
-          <v-btn @click="editMode = !editMode" class="pa-0" style="margin: 0 10px 0 0 !important" fab small
-            elevation="0" color="#E5E5E5">
+          <v-btn v-if="actions === 'getFeatures'" @click="editMode = !editMode" class="pa-0"
+            style="margin: 0 10px 0 0 !important" fab small elevation="0" color="#E5E5E5">
             <v-icon>
               mdi-pencil
             </v-icon>
@@ -52,10 +52,10 @@
             </div>
           </div>
           <div flat>
-          
+
             <Auth v-if="getAuth === false" />
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
-            
+
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :editCardOn="editCardOn" />
           </div>
@@ -106,9 +106,17 @@ export default {
       test: null,
       feature: this.getFeature,
       isConflict: false,
+      arrPut: [],
     }
   },
   watch: {
+    // arrayEditMode: {
+    //   handler(){
+    //     //this.arrPut = [ ...this.arrayEditMode.put ];
+    //     //console.log(this.arrPut);
+    //   },
+    //   deep: true,
+    // },
     newData: {
       handler() {
         ///console.log(e, a);
@@ -124,7 +132,7 @@ export default {
     // }
   },
   computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
-    'newData']),
+    'newData', 'actions']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getOneTypeObject']),
     ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData']),
@@ -164,21 +172,18 @@ export default {
       }
     },
     editObjects() {
-      if(this.newData.length){
+      if (this.newData.length) {
         this.isConflict = true;
         return;
       }
-      let arrPut = this.arrayEditMode.put;
-      let arrDel = { id: [] };
-      for (let key in this.arrayEditMode.delete) {
-        arrDel.id.push(this.arrayEditMode.delete[key].id)
+
+      if (this.arrayEditMode.put.length) {
+        this.putFeature(this.arrayEditMode.put);
       }
-      arrPut.forEach(element => {
-        this.putFeature(element);
-      });
-      if (arrDel.id.length) {
-        this.deleteFeature(arrDel);
+      if (this.arrayEditMode.delete.length) {
+        this.deleteFeature(this.arrayEditMode.delete);
       }
+
       this.resetArrayEditMode();
       this.editMode = !this.editMode;
     },
@@ -213,7 +218,7 @@ export default {
 
     this.getUser();
     this.getFeatures();
-    this.getOneTypeObject({ id: 2, test: true })
+    this.getOneTypeObject({ id: 2, test: true });
   }
 }
 </script>

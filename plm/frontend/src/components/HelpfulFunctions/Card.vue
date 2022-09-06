@@ -2,11 +2,18 @@
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
             <p style="display: none">{{ objectForCard }}</p>
+
+            <v-file-input v-if="'properties' in objectForCard && 'type' in objectForCard.properties" accept="image/*"
+                class="pa-0 ma-0 background_color_red" height="37.53%" :prepend-icon="icon" :disabled="infoCardOn_.data"
+                hide-input>
+            </v-file-input>
+
             <div v-if="objectForCard.properties.type === 'Point'" class="one_picture" style="width: 100% !important; height: 37.53% !important;">
                 <div v-for="el in listIcons" :key="el">
                     <v-img :src=el width="10%" height="10%" ></v-img>
                 </div>
             </div>
+
             <v-file-input v-else-if="!objectForCard.image" @change="fileToBase64" accept="image/*" :class="{
                 'background_color_red': !('properties' in objectForCard && 'username' in objectForCard.properties),
                 'background_color_gray': ('properties' in objectForCard && 'username' in objectForCard.properties)
@@ -20,10 +27,14 @@
                     </v-icon>
                 </v-btn>
             </template>
-            <v-img v-if="objectForCard.image && !(objectForCard.properties.type === 'Point')" :src="objectForCard.image" :class="{
-                'one_picture': infoCardOn_.data,
-                'not_one_picture': !infoCardOn_.data,
-            }" width="100%" height="37.53%"></v-img>
+
+            <template v-if="!('properties' in objectForCard && 'type' in objectForCard.properties)">
+                <v-img v-if="objectForCard.image" :src="objectForCard.image" :class="{
+                    'one_picture': infoCardOn_.data,
+                    'not_one_picture': !infoCardOn_.data,
+                }" width="100%" height="37.53%"></v-img>
+            </template>
+
             <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                 <v-card-text class="pa-0">
                     <v-form>
@@ -49,15 +60,17 @@
                                 <v-card-text class="pa-0"
                                     style="font-size: 24px; display: flex; justify-content: flex-end;">
                                     <v-btn @click="editOn" depressed class="ma-0 btn" fab small elevation="0"
-                                        style="background-color: white !important" color="white" :disabled="!editMode"
-                                        :class="{ 'btn_disabled': !editMode }">
+                                        style="background-color: white !important" color="white"
+                                        :disabled="!editMode && actions === 'getFeatures'"
+                                        :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
                                         <v-icon>
                                             mdi-pencil
                                         </v-icon>
                                     </v-btn>
                                     <v-btn @click="deleteObjectOnCard()" class="ma-0 btn" fab small elevation="0"
-                                        :disabled="!editMode" style="background-color: white !important"
-                                        :class="{ 'btn_disabled': !editMode }">
+                                        :disabled="!editMode && actions === 'getFeatures'"
+                                        style="background-color: white !important"
+                                        :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
                                         <v-icon>
                                             mdi-delete-outline
                                         </v-icon>
@@ -88,15 +101,22 @@
                             <template v-else-if="('name' in objectForCard)">
                                 <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="2" sm="6" md="5" lg="6"
                                     v-show="el.text != 'id'">
-                                    <v-text-field v-if="el.text != 'id'" v-model="objectForCard.properties[el.text]"
-                                        hide-details :label="el.text" :placeholder="el.text" filled
-                                        :readonly="infoCardOn_.data">
+                                    <v-text-field v-if="el.text != 'id' && checkEqualityOfFieads(el.text)"
+                                        v-model="objectForCard.properties[el.text]" hide-details :label="el.text"
+                                        :placeholder="el.text" filled :readonly="infoCardOn_.data">
+                                    </v-text-field>
+                                    <v-text-field v-else-if="el.text != 'id'"
+                                        v-model="objectForCard.properties[el.text]" background-color="#C9C8ED"
+                                        color="#0F0CA7" hide-details :label="el.text" :placeholder="el.text" filled
+                                        :readonly="infoCardOn_.data" append-icon="mdi-progress-question"
+                                        @click:append="changeConflictField(el.text)">
                                     </v-text-field>
                                 </v-col>
                             </template>
                         </v-row>
 
-                        <FormForDynamicField :objectForCard="objectForCard" :infoCardOn="infoCardOn" />
+                        <FormForDynamicField :objectForCard="objectForCard" :infoCardOn="infoCardOn"
+                            :checkEqualityOfFieads="checkEqualityOfFieads" :changeConflictField="changeConflictField" />
 
                         <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="infoCardOn" />
 
@@ -110,17 +130,18 @@
                 <v-btn text @click="addNewFeature()">Создать</v-btn>
             </div>
             <div class="card__footer" v-else-if="editCardOn_.data">
-                <div style="margin-left: 20px">
-                    <v-btn @click="changeItem" v-if="newData.filter(el => el.id === objectForCard.id).length" color="#0F0CA7" text>
-                        оригинал
-                    </v-btn>
-                </div>
-                <div>
-                    <v-btn text @click="notVisableCard(); editCardOn_.data = !editCardOn_.data">
-                        ОТМЕНА
-                    </v-btn>
-                    <v-btn text @click="editObject()">Редактирование</v-btn>
-                </div>
+                <v-btn @click="changeItem(isOldItem = !isOldItem)"
+                    v-if="newData.filter(el => el.id === objectForCard.id).length" color="#0F0CA7" text
+                    style="margin-right: 15px !important">
+                    оригинал
+                </v-btn>
+
+                <v-btn text @click="notVisableCard(); editCardOn_.data = !editCardOn_.data"
+                    style="margin-right: 15px !important">
+                    ОТМЕНА
+                </v-btn>
+                <v-btn text @click="editObject()">Редактирование</v-btn>
+
             </div>
 
         </div>
@@ -152,7 +173,8 @@ export default {
             listIcons: [],
             rules: {
                 min: v => v.length >= 8 || 'Минимум 8 символов',
-            }
+            },
+            isOldItem: false,
         }
     },
     watch: {
@@ -204,7 +226,6 @@ export default {
         objectForCard: {
             handler() {
                 this.getImage()
-
                 if ('name' in this.objectForCard && this.objectForCard.name != this.typeForFeature.id) {
                     this.getOneTypeObjectForFeature({ id: this.objectForCard.name, forFeature: true });
                 } 
@@ -223,7 +244,8 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEditMode', 'newData', 'allType']),
+        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEditMode', 'newData', 'actions']),
+
     },
     methods: {
         ...mapActions(['getTypeObject','deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
@@ -248,23 +270,35 @@ export default {
             this.notVisableCard();
         },
         async editObject() {
-            this.updateArrayEditMode({ item: this.objectForCard, type: 'put' });
-            this.deleteItemFromNewData(this.objectForCard);
-            this.allListItem.forEach(element => {
+            if (this.actions === 'getFeatures') {
+                this.updateArrayEditMode({ item: this.objectForCard, type: 'put' });
+                this.deleteItemFromNewData(this.objectForCard);
+                this.allListItem.forEach(element => {
 
-                if (element.id === this.objectForCard.id) {
-                    for (let el in element) {
-                        if (el != 'id') {
-                            element[el] = this.objectForCard.properties[el];
+                    if (element.id === this.objectForCard.id) {
+                        for (let el in element) {
+                            if (el != 'id') {
+                                element[el] = this.objectForCard.properties[el];
+                            }
                         }
                     }
-                }
-            });
+                });
+                this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
+            }
+            else {
+                console.log(this.objectForCard)
+                this.putObject(this.objectForCard);
+            }
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
         },
         async deleteObjectOnCard() {
-            this.updateArrayEditMode({ item: this.objectForCard, type: 'delete' })
+            if (this.actions === 'getFeatures') {
+                this.updateArrayEditMode({ item: this.objectForCard, type: 'delete' })
+            }
+            else {
+                this.deleteObject(this.objectForCard.id)
+            }
             this.infoCardOn_.data = !this.infoCardOn_.data;
             this.notVisableCard();
         },
@@ -280,12 +314,41 @@ export default {
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
         },
-        changeItem(){
-            let newPutobject = this.newData.filter(el => el.id === this.objectForCard.id);
-            if(newPutobject[0] === this.objectForCard){
+        changeItem(isOldItem) {
+            let newPutobject;
+            if (isOldItem) {
+                newPutobject = this.newData.filter(el => el.id === this.objectForCard.id);
+            }
+            else {
                 newPutobject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id);
             }
-            this.updateObjectForCard(newPutobject[0]);
+
+            this.updateObjectForCard(JSON.parse(JSON.stringify(newPutobject[0])));
+        },
+        checkEqualityOfFieads(field) {
+            if (this.newData.length) {
+                try {
+                    let newPutObject = this.newData.filter(el => el.id === this.objectForCard.id)[0];
+                    if (newPutObject != undefined) {
+                        let oldPutObject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id)[0];
+                        return newPutObject.properties[field] === oldPutObject.properties[field];
+                    }
+                    return true;
+                }
+                catch (error) {
+                    console.log(error, field);
+                }
+            }
+            return true;
+        },
+               changeConflictField(field) {
+            if (!this.infoCardOn.data) {
+                let newPutObject = this.newData.filter(el => el.id === this.objectForCard.id)
+                if (newPutObject[0].properties[field] === this.objectForCard.properties[field]) {
+                    newPutObject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id);
+                }
+                this.objectForCard.properties[field] = newPutObject[0].properties[field];
+            }
         },
         async getImage() {
             let arr = ['tower', 'tree', 'airplane']
@@ -354,7 +417,7 @@ export default {
     /* align-items: flex-end; */
     display: flex;
     bottom: 0px;
-    justify-content: space-between;
+    justify-content: flex-end;
     border-top: 1px solid #E0E0E0;
     border-radius: 0 0 12px 12px !important;
     background-color: white;

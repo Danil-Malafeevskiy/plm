@@ -52,7 +52,11 @@ export default {
         },
         async putTypeObject({ dispatch }, type) {
             let putType = { ...type.properties };
-            putType.id = type.id;
+            for(let key in type){
+                if(key != 'properties'){
+                    putType[key] = type[key]
+                }
+            }
             await axios.put('/dataset/admin', putType).then((response) => {
                 console.log(response.data);
                 dispatch('getTypeObject', true);

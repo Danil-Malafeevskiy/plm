@@ -30,6 +30,7 @@ ALLOWED_HOSTS = []
 GDAL_LIBRARY_PATH = r'C:\Users\maxkh\AppData\Local\Programs\Python\Python310\Lib\site-packages\osgeo\gdal304.dll'
 GEOS_LIBRARY_PATH = r'C:\Users\maxkh\AppData\Local\Programs\Python\Python310\Lib\site-packages\osgeo\geos_c.dll'
 
+
 # Application definition
 
 INSTALLED_APPS = [
