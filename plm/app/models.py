@@ -1,6 +1,8 @@
 from django.contrib.gis.db import models
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, AbstractUser
 from django.contrib.postgres.fields import ArrayField
+from django.utils import timezone
+
 
 class Dataset(models.Model):
     name = models.CharField(max_length=100, default="")
@@ -16,3 +18,11 @@ class Feature(models.Model):
     properties = models.JSONField()
     geometry = models.GeometryField()
     image = models.BinaryField(blank=True, default="".encode('utf-8'))
+
+class User(AbstractUser):
+    image = models.BinaryField(blank=True, default="".encode('utf-8'))
+
+class VersionControl(models.Model):
+    user = models.TextField(default="admin")
+    date_update = models.DateTimeField(default=timezone.now)
+    version = ArrayField(models.JSONField())

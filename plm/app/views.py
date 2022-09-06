@@ -2,9 +2,8 @@ import json
 import os
 import sqlite3
 
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import Group, Permission, User
-
+from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.shortcuts import render
 from rest_framework.authentication import SessionAuthentication
 
@@ -15,16 +14,14 @@ from plm import settings
 from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
 
-from rest_framework.parsers import MultiPartParser
-from app.models import Feature, Dataset
-from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, DatasetSerializer
+from app.models import Feature, Dataset, VersionControl
+from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, DatasetSerializer, VersionControlSerializer
 from rest_framework.response import Response
 
 class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, IsOwner]
     filterset_fields = ['name']
-    serializer_class = FeatureSerializer
 
     def get(self, request, id=0):
         if id == 0:
@@ -39,28 +36,43 @@ class TowerAPI(APIView):
             feature_serializer = FeatureSerializer(feature, many=True)
             return Response(feature_serializer.data)
 
-    def post(self, request):
+    '''def post(self, request):
         feature_serializer = FeatureSerializer(data=request.data, many=True)
         if feature_serializer.is_valid():
             feature_serializer.save()
             return Response("Success new qqq")
-        return Response(feature_serializer.errors)
+        return Response(feature_serializer.errors)'''
 
     def put(self, request):
-        feature = Feature.objects.filter(id__in=request.query_params.get('id').split(','))
+        ids = []
+        for data in request.data:
+            if 'id' in data.keys():
+                ids.append(data['id'])
+
+        if len(ids) > 0:
+            feature = Feature.objects.filter(id__in=ids)
+            OldVersionSerializer = VersionControlSerializer(
+                data={"user": request.user.username, "version": FeatureSerializer(feature, many=True).data})
+            if OldVersionSerializer.is_valid():
+                OldVersionSerializer.save()
+
+        if 'delete_id' in request.query_params:
+            ids = ids + request.query_params.get('delete_id').split(',')
+
+        feature = Feature.objects.filter(id__in=ids)
         feature_serializer = FeatureSerializer(feature, data=request.data, many=True)
         if feature_serializer.is_valid():
             feature_serializer.save()
-            return Response("Success up")
+            return Response("Success up!")
+
         return Response(feature_serializer.errors)
 
-    def delete(self, request):
+    '''def delete(self, request):
         id = request.query_params.get('id')
         Feature.objects.filter(id__in=id.split(',')).delete()
-        return Response("SUCCESS DEL")
+        return Response("SUCCESS DEL")'''
 
 class FileUploadView(APIView):
-    parser_classes = [MultiPartParser]
     serializer_class = FileSerializer
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, FileUploadPerm]
@@ -189,7 +201,7 @@ class UserAdminView(APIView):
     def get(self, request, id=0):
         if id == 0:
             ff = DjangoFilterBackend()
-            filtered_queryset = ff.filter_queryset(request, User.objects.all(), self)
+            filtered_queryset = ff.filter_queryset(request, get_user_model().objects.all(), self)
 
 
             user_serializer = UserSerializer(filtered_queryset, many=True, remove_fields=['password', 'first_name', 'last_name', 'email',
@@ -197,10 +209,10 @@ class UserAdminView(APIView):
                                                                                           'groups', 'avaible_group',
                                                                                           'permissions',
                                                                                           'avaible_permission',
-                                                                                          'last_login', 'date_joined'])
+                                                                                          'last_login', 'date_joined', 'image'])
             return Response(user_serializer.data)
 
-        user_serializer = UserSerializer(User.objects.get(id=id), remove_fields=['password'])
+        user_serializer = UserSerializer(get_user_model().objects.get(id=id), remove_fields=['password'])
         return Response(user_serializer.data)
 
     def post(self, request):
@@ -211,7 +223,7 @@ class UserAdminView(APIView):
         return Response(reg.errors)
 
     def put(self, request):
-        user = User.objects.get(id=request.data['id'])
+        user = get_user_model().objects.get(id=request.data['id'])
         if 'password' in request.data.keys():
             user_serializer = UserSerializer(user, data=request.data)
         else:
@@ -226,7 +238,7 @@ class UserAdminView(APIView):
 
     def delete(self, request):
         id = request.query_params.get('id')
-        User.objects.filter(id__in=id.split(',')).delete()
+        get_user_model().objects.filter(id__in=id.split(',')).delete()
         return Response("SUCCESS DEL USER!")
 
 class DatasetView(APIView):
@@ -281,3 +293,17 @@ class DatasetAdminView(APIView):
 
 def room(request):
     return render(request, 'E:/KT/plm/plm/templates/test.html')
+
+class VersionControlView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['user']
+
+    def get(self, request, id=0):
+        if id==0:
+            ff = DjangoFilterBackend()
+            version = ff.filter_queryset(request, VersionControl.objects.all(), self)
+            return Response(VersionControlSerializer(version, many=True, remove_fields=['version']).data)
+
+        version = VersionControl.objects.get(id=id)
+        return Response(VersionControlSerializer(version).data)
