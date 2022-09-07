@@ -26,3 +26,4 @@ class VersionControl(models.Model):
     user = models.TextField(default="admin")
     date_update = models.DateTimeField(default=timezone.now)
     version = ArrayField(models.JSONField())
+    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, default=1)

@@ -52,7 +52,7 @@ class TowerAPI(APIView):
         if len(ids) > 0:
             feature = Feature.objects.filter(id__in=ids)
             OldVersionSerializer = VersionControlSerializer(
-                data={"user": request.user.username, "version": FeatureSerializer(feature, many=True).data})
+                data={"user": request.user.username, "version": FeatureSerializer(feature, many=True).data, 'dataset': feature[0].name.id})
             if OldVersionSerializer.is_valid():
                 OldVersionSerializer.save()
 
@@ -292,18 +292,31 @@ class DatasetAdminView(APIView):
         return Response("SUCCESS DEL")
 
 def room(request):
-    return render(request, 'E:/KT/plm/plm/templates/test.html')
+    return render(request, 'D:/plm/plm/templates/test.html')
 
 class VersionControlView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['user']
+    filterset_fields = ['user', 'dataset']
 
     def get(self, request, id=0):
         if id==0:
             ff = DjangoFilterBackend()
-            version = ff.filter_queryset(request, VersionControl.objects.all(), self)
-            return Response(VersionControlSerializer(version, many=True, remove_fields=['version']).data)
+            version = ff.filter_queryset(request, VersionControl.objects.filter(dataset__in=Dataset.objects.filter(group__in=request.user.groups.values_list('id', flat=True))), self)
+            return Response(VersionControlSerializer(version, many=True, remove_fields=['version', 'new_version', 'dataset']).data)
 
         version = VersionControl.objects.get(id=id)
-        return Response(VersionControlSerializer(version).data)
+        return Response(VersionControlSerializer(version, remove_fields=['dataset']).data)
+
+    def put(self, request, id):
+        version_obj = VersionControl.objects.get(id=id)
+        version = VersionControlSerializer(version_obj).data
+        ids = []
+        for obj in version['version']:
+            ids.append(obj['id'])
+        feature_serializer = FeatureSerializer(Feature.objects.filter(id__in=ids), data=version['version'], many=True)
+        if feature_serializer.is_valid():
+            feature_serializer.save()
+            version_obj.delete()
+            return Response("Version Return!")
+        return Response(feature_serializer.errors)

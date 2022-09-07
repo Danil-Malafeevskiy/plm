@@ -1,7 +1,9 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import Group, Permission
 from django.utils import timezone
+
 from rest_framework import serializers, exceptions
+from rest_framework.response import Response
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_gis.serializers import GeometryField
 import django.contrib.auth.password_validation as validators
@@ -213,10 +215,11 @@ class DatasetSerializer(serializers.ModelSerializer):
 
 class VersionControlSerializer(serializers.ModelSerializer):
     date_update = serializers.DateTimeField(required=False, default=timezone.now)
+    new_version = serializers.SerializerMethodField()
 
     class Meta:
         model = VersionControl
-        fields = ('id', 'user', 'date_update', 'version')
+        fields = ('id', 'user', 'date_update', 'version', 'dataset', 'new_version')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -225,3 +228,6 @@ class VersionControlSerializer(serializers.ModelSerializer):
         if remove_fields:
             for field_name in remove_fields:
                 self.fields.pop(field_name)
+
+    def get_new_version(self, obj):
+        return FeatureSerializer(Feature.objects.filter(id__in=[feature['id'] for feature in obj.version]), many=True).data
