@@ -5,14 +5,9 @@ axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 axios.defaults.xsrfCookieName = "csrftoken";
 
 function getStrId(features) {
-    let strId = '';
+    let strId = [];
     for (let i in features) {
-        if (i != features.length - 1) {
-            strId += `${features[i].id},`;
-        }
-        else {
-            strId += `${features[i].id}`
-        }
+        strId.push(features[i].id);
     }
     return strId;
 }
@@ -43,16 +38,9 @@ export default {
 
         async putFeature(ctx, features) {
             //delete features.post[0].id_;
-            if (features.delete.length) {
-                await axios.put(`/tower?delete_id=${getStrId(features.delete)}`, [...features.put, ...features.post]).then((response) => {
-                    console.log(response.data);
-                }).catch(error => console.log(error));
-            }
-            else {
-                await axios.put(`/tower`, [...features.put, ...features.post]).then((response) => {
-                    console.log(response.data);
-                }).catch(error => console.log(error));
-            }
+            await axios.put(`/tower`, [...features.put, ...features.post, getStrId(features.delete)]).then((response) => {
+                console.log(response.data);
+            }).catch(error => console.log(error));
         },
 
         async deleteFeature(ctx, features) {
@@ -65,7 +53,7 @@ export default {
             await axios.get(`/tower?name=${typeId}`).then((response) => {
                 commit('updatefilterForFeature', response.data);
             })
-        }
+        },
     },
     mutations: {
         updateFeatures(state, features) {
@@ -104,7 +92,7 @@ export default {
                         if (state.arrayEditMode.put.filter(el => el.id === item.id).length) {
                             for (let key in state.arrayEditMode.put) {
                                 if (state.arrayEditMode.put[key].id === item.id) {
-                                    state.arrayEditMode.put[key] = item;
+                                    Vue.set(state.arrayEditMode.put, key, item);
                                 }
                             }
                         }
