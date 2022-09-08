@@ -17,6 +17,12 @@ import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 
 import {Icon, Style} from 'ol/style';
+
+// import Fill from 'ol/style/Fill';
+// import Stroke from 'ol/style/Stroke';
+import Select from 'ol/interaction/Select';
+// import Circle from 'ol/geom/Circle';
+
 // import Feature from 'ol/Feature';
 // import Point from 'ol/geom/Point';
 // import Text from 'ol/style/Text';
@@ -36,9 +42,16 @@ export default {
         features: this.allFeatures,
       },
       feature: this.getFeature,
+      featurePoint: {},
+      featureLine: {},
+      featurePolygon: {},
+      vectorLayerPoint: null,
+      vectorLayerLine: null,
+      vectorLayerPolygon: null,
       map: null,
       drawLayer: null,
       interactionId: null,
+      overlayId: null,
       draw: null,
       modify: null,
       addCardOn_: this.addCardOn,
@@ -53,13 +66,18 @@ export default {
           type: 'FeatureCollection',
           features: this.allFeatures,
         }
-
         if (this.map != null) {
           this.addNewLayers();
         }
-
       }
     },
+
+    // editCardOn: {
+    //   handler(){  
+
+    //   },
+    //   deep: true
+    // },
 
     getFeature: function () {
       this.feature = this.getFeature;
@@ -92,6 +110,7 @@ export default {
       },
       deep: true
     },
+
   },
   computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEditMode']),
   methods: {
@@ -128,7 +147,6 @@ export default {
       }
     },
 
-
     findItem(id) {
       let item = this.arrayEditMode.put.filter(el => el.id === id);
       if (item.length) {
@@ -142,6 +160,7 @@ export default {
     async getFeature_(event) {
       this.updateCoordinates();
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
+
       if (feature_ != null && !this.addCardOn_.data) {
         let item = this.findItem(feature_.id_)
         if (item) {
@@ -189,7 +208,7 @@ export default {
           type: 'FeatureCollection',
           features: this.features.features.filter(el => el.name === element.id),
         };
-
+        await this.getOneTypeObject({ id: element.id, forFeature: true });
         let layer = new VectorLayer({
           source: new VectorSource({
             features: new GeoJSON().readFeatures(features,
@@ -198,14 +217,10 @@ export default {
               }),
           }),
         });
-
         layer.set('name', 'feature')
-
         this.map.addLayer(layer)
 
-        await this.getOneTypeObject({ id: element.id, forFeature: true });
-
-        if (features.features.length && features.features[0].geometry.type === 'Point') {
+        if (features.features.length && features.features[0].geometry.type === 'Point' && !(this.typeForLayer.image === '')) {
           let style = new Style({
             image: new Icon({
               anchor: [0.5, 0, 5],
@@ -214,9 +229,30 @@ export default {
               src: `static/${this.typeForLayer.image}`,
             }),
           });
+
           layer.setStyle(style)
+
+          let selectStyle = new Style({
+            image: new Icon({
+              anchor: [0.5, 0, 5],
+              anchorXUnits: 'fraction',
+              anchorYUnits: 'pixels',
+              src: `static/${this.typeForLayer.image.slice(0, -4) + '-selected.png'}`,
+            }),
+          });
+          console.log(this.typeForLayer.image.slice(0, -4) + '-selected.png')
+
+          let selectInteraction = new Select({
+            style: selectStyle,
+            layers: [layer]
+          });
+          this.map.addInteraction(selectInteraction)
+
         }
       });
+
+
+
     },
 
   },
