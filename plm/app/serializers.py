@@ -24,8 +24,9 @@ class FeatureListSerializer(serializers.ListSerializer):
         feature_old = {feature.id: feature for feature in instance}
         feature_update = {feature['id']: feature for feature in validated_data if 'id' in feature.keys()}
 
-        features = [Feature(**feature) for feature in validated_data if 'id' not in feature.keys()]
-        Feature.objects.bulk_create(features)
+        features = [feature for feature in validated_data if 'id' not in feature.keys()]
+        for feature in features:
+            self.child.create(feature)
 
         for feature_id, data in feature_update.items():
             feature = feature_old.get(feature_id)
