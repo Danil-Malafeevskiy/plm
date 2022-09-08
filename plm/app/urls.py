@@ -18,4 +18,6 @@ urlpatterns = [
     re_path(r'^dataset/admin/([0-9]+)$',views.DatasetAdminView.as_view()),
     re_path(r'^dataset/admin$',views.DatasetAdminView.as_view()),
     re_path(r'^test$',views.room),
+    re_path(r'^version$', views.VersionControlView.as_view()),
+    re_path(r'^version/([0-9]+)$', views.VersionControlView.as_view()),
 ]

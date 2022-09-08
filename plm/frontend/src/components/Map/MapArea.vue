@@ -36,16 +36,9 @@ export default {
         features: this.allFeatures,
       },
       feature: this.getFeature,
-      featurePoint: {},
-      featureLine: {},
-      featurePolygon: {},
-      vectorLayerPoint: null,
-      vectorLayerLine: null,
-      vectorLayerPolygon: null,
       map: null,
       drawLayer: null,
       interactionId: null,
-      overlayId: null,
       draw: null,
       modify: null,
       addCardOn_: this.addCardOn,
@@ -196,7 +189,7 @@ export default {
           type: 'FeatureCollection',
           features: this.features.features.filter(el => el.name === element.id),
         };
-        await this.getOneTypeObject({ id: element.id, forFeature: true });
+
         let layer = new VectorLayer({
           source: new VectorSource({
             features: new GeoJSON().readFeatures(features,
@@ -210,6 +203,7 @@ export default {
 
         this.map.addLayer(layer)
 
+        await this.getOneTypeObject({ id: element.id, forFeature: true });
 
         if (features.features.length && features.features[0].geometry.type === 'Point') {
           let style = new Style({

@@ -58,8 +58,10 @@
                                     }}
                                 </v-card-text>
                                 <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
+
                                     objectForCard.properties.name
                                     }}
+
                                 </v-card-text>
 
                             </v-col>
@@ -126,7 +128,9 @@
                             :checkEqualityOfFieads="checkEqualityOfFieads" :changeConflictField="changeConflictField" />
 
                         <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="infoCardOn" />
-
+                        <v-snackbar v-model="snackbar" timeout="2000" color="red accent-2">
+                            Не может быть атрибутов с одинаковыми именами
+                        </v-snackbar>
                     </v-form>
                 </v-card-text>
             </div>
@@ -184,6 +188,7 @@ export default {
                 min: v => v.length >= 8 || 'Минимум 8 символов',
             },
             isOldItem: false,
+            snackbar: false,
         }
     },
     watch: {
@@ -257,16 +262,20 @@ export default {
         ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData']),
         async addNewFeature() {
             if (this.objectForCard.name != null) {
-                this.objectForCard.name = this.getTypeId;
-                await this.postObject([this.objectForCard]);
-
-                this.filterForFeature();
-                this.getAllObject();
+                this.objectForCard.id_ = this.arrayEditMode.post.length + 1;
+                this.updateArrayEditMode({ item: this.objectForCard, type: 'post' });
             }
             else {
                 if ('groups' in this.objectForCard) {
                     this.objectForCard.properties = { ...this.objectForCard, ...this.objectForCard.properties }
                     delete this.objectForCard.properties.properties;
+                }
+
+                else if ('headers' in this.objectForCard.properties) {
+                    if (this.checkDoubleFields(this.objectForCard.properties)) {
+                        this.snackbar = true;
+                        return;
+                    }
                 }
 
                 await this.postObject(this.objectForCard.properties);
@@ -291,7 +300,12 @@ export default {
                 this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
             }
             else {
-                console.log(this.objectForCard)
+                if ('headers' in this.objectForCard.properties) {
+                    if (this.checkDoubleFields(this.objectForCard.properties)) {
+                        this.snackbar = true;
+                        return;
+                    }
+                }
                 this.putObject(this.objectForCard);
             }
             this.editCardOn_.data = !this.editCardOn_.data;
@@ -355,9 +369,26 @@ export default {
                 this.objectForCard.properties[field] = newPutObject[0].properties[field];
             }
         },
+
         clickImage(element) {
             this.objectForCard.image = element.slice(4) + '.png'
         },
+
+        checkDoubleFields(type) {
+            let arrayOfFeilds = [];
+            for (let i in type.headers) {
+                arrayOfFeilds.push(type.headers[i].text.trim());
+            }
+            for (let i in type.properties) {
+                arrayOfFeilds.push(type.properties[i].trim());
+            }
+            arrayOfFeilds = [...new Set(arrayOfFeilds)];
+            if (arrayOfFeilds.length != type.headers.length + type.properties.length) {
+                return true;
+            }
+            return false;
+        }
+
     },
 
     mounted() {

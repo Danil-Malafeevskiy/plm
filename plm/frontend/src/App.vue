@@ -19,7 +19,7 @@
               mdi-pencil
             </v-icon>
           </v-btn>
-          <v-btn :disabled="cardVisable.data" class="show__card" height="28px" width="80px" depressed color="#EE5E5E"
+          <v-btn :disabled="(cardVisable.data || !editMode) && actions === 'getFeatures'" class="show__card" height="28px" width="80px" depressed color="#EE5E5E"
             @click="addCardOn.data = !addCardOn.data; visableCard();">
             <v-icon color="white !default" dark>
               mdi-plus
@@ -110,31 +110,16 @@ export default {
     }
   },
   watch: {
-    // arrayEditMode: {
-    //   handler(){
-    //     //this.arrPut = [ ...this.arrayEditMode.put ];
-    //     //console.log(this.arrPut);
-    //   },
-    //   deep: true,
-    // },
     newData: {
       handler() {
-        ///console.log(e, a);
-        if (this.newData.length === 1) {
-          this.isConflict = true;
-        }
+
       }
     }
-    // emptyObject: {
-    //   handler(){
-    //     //console.log(this.emptyObject)
-    //   }
-    // }
   },
   computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
     'newData', 'actions']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getOneTypeObject']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature']),
     ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData']),
     visableCard() {
       this.cardVisable.data = true;
@@ -145,24 +130,26 @@ export default {
     disabledAddButton() {
       return !this.cardVisable.data && JSON.stringify(this.emptyObject) === '{}';
     },
-    onmessage(e) {
+    async onmessage(e) {
       const data = JSON.parse(e.data);
+      console.log(1);
       this.getFeatures();
-      if (data.data.name === this.oneType.id) {
-        this.filterForFeature(this.oneType.id);
-      }
       switch (data.action) {
         case "update": {
           let editObject = this.arrayEditMode.put.filter(el => el.id === data.data.id);
-
+          console.log(data.data);
           if (this.editMode && editObject.length && this.searchConflict(editObject[0], data.data)) {
-            this.updateNewData(data.data);
+            await this.updateNewData(data.data);
+            if (this.newData.length === 1) {
+              this.isConflict = true;
+            }
           }
           break;
         }
         case "create":
-          console.log(data.data);
-          console.log("Success create!");
+          if (data.data.name === this.oneType.id) {
+            this.filterForFeature(this.oneType.id);
+          }
           break;
         case 'delete':
           console.log(data.data);
@@ -177,13 +164,7 @@ export default {
         return;
       }
 
-      if (this.arrayEditMode.put.length) {
-        this.putFeature(this.arrayEditMode.put);
-      }
-      if (this.arrayEditMode.delete.length) {
-        this.deleteFeature(this.arrayEditMode.delete);
-      }
-
+      this.putFeature(this.arrayEditMode);
       this.resetArrayEditMode();
       this.editMode = !this.editMode;
     },
@@ -211,14 +192,13 @@ export default {
   },
   mounted() {
     const chatSocket = new WebSocket("ws://localhost:8000/test");
-    const webSocket = new WebSocket("ws://127.0.0.1:8000/test")
+    // const webSocket = new WebSocket("ws://127.0.0.1:8000/test")
 
-    webSocket.onmessage = this.onmessage;
+    // webSocket.onmessage = this.onmessage;
     chatSocket.onmessage = this.onmessage;
 
     this.getUser();
     this.getFeatures();
-    this.getOneTypeObject({ id: 2, test: true });
   }
 }
 </script>

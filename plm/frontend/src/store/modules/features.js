@@ -1,16 +1,13 @@
 import axios from "axios";
+import Vue from "vue";
+
 axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 axios.defaults.xsrfCookieName = "csrftoken";
 
 function getStrId(features) {
-    let strId = '';
+    let strId = [];
     for (let i in features) {
-        if (i != features.length - 1) {
-            strId += `${features[i].id},`;
-        }
-        else {
-            strId += `${features[i].id}`
-        }
+        strId.push(features[i].id);
     }
     return strId;
 }
@@ -40,7 +37,8 @@ export default {
         },
 
         async putFeature(ctx, features) {
-            await axios.put(`/tower?id=${getStrId(features)}`, features).then((response) => {
+            //delete features.post[0].id_;
+            await axios.put(`/tower`, [...features.put, ...features.post, getStrId(features.delete)]).then((response) => {
                 console.log(response.data);
             }).catch(error => console.log(error));
         },
@@ -55,7 +53,7 @@ export default {
             await axios.get(`/tower?name=${typeId}`).then((response) => {
                 commit('updatefilterForFeature', response.data);
             })
-        }
+        },
     },
     mutations: {
         updateFeatures(state, features) {
@@ -82,24 +80,39 @@ export default {
         },
         updateArrayEditMode(state, { item, type }) {
             switch (type) {
+                case 'post':
+                    Vue.set(state.arrayEditMode.post, state.arrayEditMode.post.length, item);
+                    break;
+
                 case 'put':
-                    if (state.arrayEditMode.put.filter(el => el.id === item.id).length) {
-                        for (let key in state.arrayEditMode.put) {
-                            if (state.arrayEditMode.put[key].id === item.id) {
-                                state.arrayEditMode.put[key] = item;
+                    if ('id_' in item) {
+                        Vue.set(state.arrayEditMode.post, item.id_ - 1, item);
+                    }
+                    else {
+                        if (state.arrayEditMode.put.filter(el => el.id === item.id).length) {
+                            for (let key in state.arrayEditMode.put) {
+                                if (state.arrayEditMode.put[key].id === item.id) {
+                                    Vue.set(state.arrayEditMode.put, key, item);
+                                }
                             }
                         }
-                    }
-                    else {
-                        state.arrayEditMode.put.push(item);
+                        else {
+                            state.arrayEditMode.put.push(item);
+                        }
                     }
                     break;
+
                 case 'delete':
-                    if (state.arrayEditMode.delete.filter(el => el.id === item.id).length === 0) {
-                        state.arrayEditMode.delete.push(item);
+                    if ('id_' in item) {
+                        state.arrayEditMode.post.filter(el => el.id_ != item.id_);
                     }
                     else {
-                        state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
+                        if (state.arrayEditMode.delete.filter(el => el.id === item.id).length === 0) {
+                            state.arrayEditMode.delete.push(item);
+                        }
+                        else {
+                            state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
+                        }
                     }
                     break;
             }

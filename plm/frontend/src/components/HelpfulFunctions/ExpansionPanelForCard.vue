@@ -23,9 +23,9 @@
                                 </v-col>
                             </template>
                             <template v-else>
-                                <v-col v-for="(f, index) in groupsForType" :key="f" cols="2" sm="6" md="5" lg="6"
+                                <v-col v-for="(f, index) in groupsForType" :key="index" cols="2" sm="6" md="5" lg="6"
                                     class="pa-0 ma-0">
-                                    <v-radio-group class="ma-0 pa-0" v-model="objectForCard_.properties.group">
+                                    <v-radio-group hide-details class="ma-0 pa-0" v-model="objectForCard_.properties.group">
                                         <v-radio :label="f" :value="groupsForType[index]" :readonly="infoCardOn.data"
                                             class="ma-2" color="#E93030" on-icon="mdi-checkbox-marked"
                                             off-icon="mdi-checkbox-blank-outline" style="

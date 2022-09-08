@@ -1,10 +1,13 @@
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import Group, Permission, User
+from django.contrib.auth.models import Group, Permission
+from django.utils import timezone
+
 from rest_framework import serializers, exceptions
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_gis.serializers import GeometryField
 import django.contrib.auth.password_validation as validators
-from app.models import Feature, Dataset
+from app.models import Feature, Dataset, VersionControl
+from django.contrib.auth import get_user_model
 
 class BinaryField(serializers.Field):
     def to_representation(self, value):
@@ -18,14 +21,21 @@ class FeatureListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
 
         feature_old = {feature.id: feature for feature in instance}
-        feature_new = {feature['id']: feature for feature in validated_data}
+        feature_update = {feature['id']: feature for feature in validated_data if 'id' in feature.keys()}
 
-        ret = []
-        for feature_id, data in feature_new.items():
-            feature = feature_old.get(feature_id, None)
-            ret.append(self.child.update(feature, data))
+        features = [feature for feature in validated_data if 'id' not in feature.keys()]
+        for feature in features:
+            self.child.create(feature)
 
-        return ret
+        for feature_id, data in feature_update.items():
+            feature = feature_old.get(feature_id)
+            self.child.update(feature, data)
+
+        for feature_id, feature in feature_old.items():
+            if feature_id not in feature_update:
+                feature.delete()
+
+        return features
 
 class FeatureSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
@@ -93,11 +103,12 @@ class UserSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
     avaible_group = serializers.SerializerMethodField()
     avaible_permission = serializers.SerializerMethodField()
+    image = BinaryField(required=False)
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff', 'is_active', 'groups', 'avaible_group',
-                  'permissions', 'avaible_permission', 'last_login', 'date_joined')
+                  'permissions', 'avaible_permission', 'last_login', 'date_joined', 'image')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -201,3 +212,22 @@ class DatasetSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data['group'] = Group.objects.get(name=self.context['group'])
         return super(DatasetSerializer, self).update(instance, validated_data)
+
+class VersionControlSerializer(serializers.ModelSerializer):
+    date_update = serializers.DateTimeField(required=False, default=timezone.now)
+    new_version = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VersionControl
+        fields = ('id', 'user', 'date_update', 'version', 'dataset', 'new_version')
+
+    def __init__(self, *args, **kwargs):
+        remove_fields = kwargs.pop('remove_fields', None)
+        super(VersionControlSerializer, self).__init__(*args, **kwargs)
+
+        if remove_fields:
+            for field_name in remove_fields:
+                self.fields.pop(field_name)
+
+    def get_new_version(self, obj):
+        return FeatureSerializer(Feature.objects.filter(id__in=[feature['id'] for feature in obj.version]), many=True).data

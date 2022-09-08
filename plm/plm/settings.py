@@ -27,8 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-GDAL_LIBRARY_PATH = r'C:\Users\maxkh\AppData\Local\Programs\Python\Python310\Lib\site-packages\osgeo\gdal304.dll'
-GEOS_LIBRARY_PATH = r'C:\Users\maxkh\AppData\Local\Programs\Python\Python310\Lib\site-packages\osgeo\geos_c.dll'
+GDAL_LIBRARY_PATH = r'D:\insTRUEment_verstka\Lib\site-packages\~sgeo\gdal304.dll'
+GEOS_LIBRARY_PATH = r'D:\insTRUEment_verstka\Lib\site-packages\~sgeo\geos_c.dll'
 
 
 # Application definition
@@ -97,7 +97,7 @@ DATABASES = {
     }
 }
 
-
+AUTH_USER_MODEL = 'app.User'
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
 

@@ -1,4 +1,4 @@
-  <template>
+<template>
   <div v-if="allListItem.length != 0">
     <div class="sub_tittle" v-if="selected.length != 0">
       <div style="margin: 20px 0;">
@@ -32,14 +32,14 @@
       </div>
     </div>
     <div class="sub_tittle" v-else>
-      <span class="object" v-if="allListItem.length % 10 === 1">{{ allListItem.length }} объект </span>
-      <span class="object" v-else-if="allListItem.length % 10 > 1 && allListItem.length % 10 < 5">
-        {{ allListItem.length }} объекта </span>
-      <span class="object" v-else>{{ allListItem.length }} объектов </span>
+      <span class="object" v-if="tableArrayItems.length % 10 === 1">{{ tableArrayItems.length }} объект </span>
+      <span class="object" v-else-if="tableArrayItems.length % 10 > 1 && tableArrayItems.length % 10 < 5">
+        {{ tableArrayItems.length }} объекта </span>
+      <span class="object" v-else>{{ tableArrayItems.length }} объектов </span>
     </div>
-    <v-data-table @click:row="showCard" :headers="headers" v-model="selected" show-select :item-key="headers[0].text"
-      :items="allListItem" :items-per-page="5" class="pa-0" @toggle-select-all="showAll()" :item-class="classRow"
-      style="
+    <v-data-table @click:row="showCard" :headers="headers" v-model="arrObjects[`${nameArray}`]" show-select
+      :item-key="headers[0].text" :items="tableArrayItems" :items-per-page="8" class="pa-0"
+      @toggle-select-all="showAll()" :item-class="classRow" style="
         height: 100% !important;
         width: 50% !important; 
         background-color: #E5E5E5; 
@@ -62,41 +62,81 @@ export default {
       infoCardOn_: this.infoCardOn,
       addCardOn_: this.addCardOn,
       editCardOn_: this.editCardOn,
+      tableArrayItems: [],
     }
   },
-  watch: {},
+  watch: {
+    oneType: {
+      handler() {
+        this.getSortType(this.oneType.type);
+      }
+    },
+    allListItem: {
+      handler() {
+        this.tableArrayItems = [...this.allListItem];
+        if (this.arrayEditMode.post.length) {
+          for (let i in this.arrayEditMode.post) {
+            this.tableArrayItems.push({ ...this.arrayEditMode.post[i].properties, id_: this.arrayEditMode.post[i].id_ });
+          }
+        }
+      }
+    },
+    arrayEditMode: {
+      handler() {
+        this.tableArrayItems = [...this.allListItem];
+        if (this.arrayEditMode.post.length) {
+          for (let i in this.arrayEditMode.post) {
+            this.tableArrayItems.push({ ...this.arrayEditMode.post[i].properties, id_: this.arrayEditMode.post[i].id_ });
+          }
+        }
+        if(this.arrayEditMode.put.length){
+          for(let i in this.arrayEditMode.put){
+            console.log(this.tableArrayItems.find(el => el.id === this.arrayEditMode.put[i].id));
+            this.tableArrayItems.find(el => el.id === this.arrayEditMode.put[i].id) = this.arrayEditMode.put[i];
+            console.log(this.tableArrayItems.find(el => el.id === this.arrayEditMode.put[i].id));
+          }
+        }
+      },
+      deep: true,
+    }
+  },
   computed: {
     ...mapGetters(['allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray',
-      'allType', 'drawType', 'getToolbarTitle', 'typeForFeature', 'typeForFeature', 'arrayEditMode', 'newData']),
+      'allType', 'drawType', 'getToolbarTitle', 'typeForFeature', 'typeForFeature', 'arrayEditMode', 'newData', 'oneType',
+      'selectedDrawType', 'actions', 'allGroups']),
     selected: {
-      get() { return this.arrObjects[`${this.nameArray}`]; },
+      get() {
+        return this.arrObjects[`${this.nameArray}`];
+      },
       set(value) { this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
     },
     type() {
-      return this.allType.filter(el => el.name != this.getToolbarTitle);
-      //   if (el.name === this.getToolbarTitle) {
-      //     console.log(el);
-      //     return false;
-      //   }
-      //   await this.getOneTypeObjectForFeature({ id: el.id, forFeature: true });
-      //   console.log(this.typeForFeature.type === this.drawType);
-      //   return this.typeForFeature.type === this.drawType
-      // });
+      if ('username' in this.arrObjects[`${this.nameArray}`][0]) {
+        return this.allGroups.filter(el => el.name != this.getToolbarTitle)
+      }
+      else {
+        return this.selectedDrawType.filter(el => el.name != this.getToolbarTitle);
+      }
     }
   },
   methods: {
-    ...mapActions(['getAllObject', 'getOneObject', 'deleteObject', 'putObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
+    ...mapActions(['getAllObject', 'getOneObject', 'deleteObject', 'putObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getSortType']),
     ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts', 'updateOneType', 'updateObjectForCard']),
 
     async showCard(obj) {
       if (!this.addCardOn.data) {
         if (this.getObjectForCard === null || this.getObjectForCard.id != obj.id || !this.infoCardOn_.data) {
-          const object = this.arrayEditMode.put.filter(el => el.id === obj.id);
-          if (object.length === 0) {
-            await this.getOneObject(obj.id);
+          if ('id_' in obj) {
+            this.updateObjectForCard(JSON.parse(JSON.stringify(this.arrayEditMode.post[obj.id_ - 1])));
           }
           else {
-            this.updateObjectForCard(JSON.parse(JSON.stringify(object[0])));
+            const object = this.arrayEditMode.put.filter(el => el.id === obj.id);
+            if (object.length) {
+              this.updateObjectForCard(JSON.parse(JSON.stringify(object[0])));
+            }
+            else {
+              await this.getOneObject(obj.id);
+            }
           }
           this.visableCard();
           this.infoCardOn_.data = true;
@@ -127,16 +167,18 @@ export default {
       this.resetSelected();
     },
     async moveObject(type) {
+      let arrPut = [];
       for (const element of this.arrObjects[`${this.nameArray}`]) {
         await this.getOneObject(element.id);
-        if (type.type != undefined) {
+        if (this.actions === 'getFeatures') {
           this.getObjectForCard.name = type.id;
         }
         else {
           this.getObjectForCard.groups = [`${type.name}`];
         }
-        this.putObject(this.getObjectForCard);
+        arrPut.push(this.getObjectForCard);
       }
+      this.putObject(arrPut);
 
       if (type.type != undefined) {
         await this.filterForFeature();
@@ -155,6 +197,10 @@ export default {
       let classForItem = ''
       if (this.getObjectForCard != null && item.id === this.getObjectForCard.id && (this.infoCardOn_.data || this.editCardOn.data)) {
         classForItem += 'v-data-table__selected';
+      }
+
+      if(item.id_){
+        classForItem += ' text_color_purple';
       }
 
       const putObject = this.arrayEditMode.put.filter(el => el.id === item.id);
@@ -238,6 +284,10 @@ export default {
 
 .text_color_blue {
   color: #0F0CA7;
+}
+
+.text_color_purple{
+  color: #cc1dcf;
 }
 
 .v-data-table__wrapper {

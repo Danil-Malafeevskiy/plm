@@ -53,6 +53,7 @@ export default {
             })
         },
         async putUser({ dispatch, state }, user) {
+            console.log(user);
             user = { ...user, ...user.properties};
             delete user.properties;
             //delete user.password;
