@@ -1,4 +1,6 @@
 import axios from "axios";
+import Vue from "vue";
+
 axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 axios.defaults.xsrfCookieName = "csrftoken";
 
@@ -40,10 +42,17 @@ export default {
         },
 
         async putFeature(ctx, features) {
-            console.log(features);
-            await axios.put(`/tower?id=${getStrId(features)}`, features).then((response) => {
-                console.log(response.data);
-            }).catch(error => console.log(error));
+            //delete features.post[0].id_;
+            if (features.delete.length) {
+                await axios.put(`/tower?delete_id=${getStrId(features.delete)}`, [...features.put, ...features.post]).then((response) => {
+                    console.log(response.data);
+                }).catch(error => console.log(error));
+            }
+            else {
+                await axios.put(`/tower`, [...features.put, ...features.post]).then((response) => {
+                    console.log(response.data);
+                }).catch(error => console.log(error));
+            }
         },
 
         async deleteFeature(ctx, features) {
@@ -83,24 +92,39 @@ export default {
         },
         updateArrayEditMode(state, { item, type }) {
             switch (type) {
+                case 'post':
+                    Vue.set(state.arrayEditMode.post, state.arrayEditMode.post.length, item);
+                    break;
+
                 case 'put':
-                    if (state.arrayEditMode.put.filter(el => el.id === item.id).length) {
-                        for (let key in state.arrayEditMode.put) {
-                            if (state.arrayEditMode.put[key].id === item.id) {
-                                state.arrayEditMode.put[key] = item;
+                    if ('id_' in item) {
+                        Vue.set(state.arrayEditMode.post, item.id_ - 1, item);
+                    }
+                    else {
+                        if (state.arrayEditMode.put.filter(el => el.id === item.id).length) {
+                            for (let key in state.arrayEditMode.put) {
+                                if (state.arrayEditMode.put[key].id === item.id) {
+                                    state.arrayEditMode.put[key] = item;
+                                }
                             }
                         }
-                    }
-                    else {
-                        state.arrayEditMode.put.push(item);
+                        else {
+                            state.arrayEditMode.put.push(item);
+                        }
                     }
                     break;
+
                 case 'delete':
-                    if (state.arrayEditMode.delete.filter(el => el.id === item.id).length === 0) {
-                        state.arrayEditMode.delete.push(item);
+                    if ('id_' in item) {
+                        state.arrayEditMode.post.filter(el => el.id_ != item.id_);
                     }
                     else {
-                        state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
+                        if (state.arrayEditMode.delete.filter(el => el.id === item.id).length === 0) {
+                            state.arrayEditMode.delete.push(item);
+                        }
+                        else {
+                            state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
+                        }
                     }
                     break;
             }

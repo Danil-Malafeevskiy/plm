@@ -63,7 +63,7 @@ export default {
             });
         },
         async deleteTypeObject({ dispatch }, id) {
-            await axios.delete(`/dataset/admin/${id}`).then((response) => {
+            await axios.delete(`/dataset/admin?id=${id}`).then((response) => {
                 console.log(response.data);
                 dispatch('getTypeObject', true);
             })
