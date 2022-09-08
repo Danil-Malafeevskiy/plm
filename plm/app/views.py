@@ -45,6 +45,8 @@ class TowerAPI(APIView):
 
     def put(self, request):
         ids = []
+        delete_mas = request.data.pop(-1)
+        print(delete_mas, request.data)
         for data in request.data:
             if 'id' in data.keys():
                 ids.append(data['id'])
@@ -56,8 +58,7 @@ class TowerAPI(APIView):
             if OldVersionSerializer.is_valid():
                 OldVersionSerializer.save()
 
-        if 'delete_id' in request.query_params:
-            ids = ids + request.query_params.get('delete_id').split(',')
+        ids = ids + delete_mas
 
         feature = Feature.objects.filter(id__in=ids)
         feature_serializer = FeatureSerializer(feature, data=request.data, many=True)
