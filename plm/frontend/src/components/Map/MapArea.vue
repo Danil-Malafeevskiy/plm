@@ -184,7 +184,6 @@ export default {
       }, 400);
     },
     addNewLayers() {
-
       this.allType.forEach(async element => {
         let features = {
           type: 'FeatureCollection',
