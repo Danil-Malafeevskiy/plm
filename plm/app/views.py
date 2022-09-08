@@ -57,6 +57,8 @@ class TowerAPI(APIView):
                 data={"user": request.user.username, "version": FeatureSerializer(feature, many=True).data, 'dataset': feature[0].name.id})
             if OldVersionSerializer.is_valid():
                 OldVersionSerializer.save()
+            else:
+                return Response(OldVersionSerializer.errors)
 
         ids = ids + delete_mas
 
