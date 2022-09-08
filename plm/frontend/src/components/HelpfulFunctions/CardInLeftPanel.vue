@@ -101,7 +101,8 @@ export default {
                     type: '',
                     headers: [],
                     properties: [],
-                }
+                },
+                image: '',
             }
             let headers = [
                 {

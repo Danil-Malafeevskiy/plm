@@ -4,9 +4,10 @@
             <p class="attributes ma-0">Основные атрибуты</p>
             <v-col v-for="(el, index) in objectForCard.properties.headers" :key="index" cols="2" sm="6" md="5" lg="6"
                 v-show="el.text != 'id'">
-                <v-text-field v-model="objectForCard_.properties.headers[index].text" hide-details :label="el.text"
-                    :placeholder="el.text" filled :readonly="infoCardOn.data" @input="textToValue(index)"
-                    append-icon="mdi-delete-outline" @click:append="deleteMainAttribute(el.text)">
+                <v-text-field v-model="objectForCard_.properties.headers[index].text" :label="el.text"
+                    :placeholder="el.text" filled :readonly="infoCardOn.data" :rules="[rules.required]"
+                    @input="textToValue(index)" append-icon="mdi-delete-outline"
+                    @click:append="deleteMainAttribute(index)">
                 </v-text-field>
             </v-col>
             <v-col cols="2" sm="6" md="5" lg="6">
@@ -24,9 +25,9 @@
             <v-col v-for="(el, index) in objectForCard.properties.properties"
                 :key="objectForCard.properties.headers.length + index" cols="2" sm="6" md="5" lg="6"
                 v-show="el != 'id'">
-                <v-text-field v-model="objectForCard_.properties.properties[index]" hide-details :label="el"
-                    :placeholder="el" filled :readonly="infoCardOn.data" append-icon="mdi-delete-outline"
-                    @click:append="deleteAdditionalAttribute(el)">
+                <v-text-field v-model="objectForCard_.properties.properties[index]" :label="el" :placeholder="el" filled
+                    :readonly="infoCardOn.data" append-icon="mdi-delete-outline"
+                    @click:append="deleteAdditionalAttribute(index)" :rules="[rules.required]">
                 </v-text-field>
             </v-col>
             <v-col cols="2" sm="6" md="5" lg="6">
@@ -63,6 +64,9 @@ export default {
     data() {
         return {
             objectForCard_: this.objectForCard,
+            rules: {
+                required: el => this.checkDoubleFields(el) || 'Одинаковые имена атрибутов',
+            },
         }
     },
     watch: {
@@ -75,7 +79,7 @@ export default {
     computed: mapGetters(['typeForFeature', 'allListItem']),
     methods: {
         addMainAttribute() {
-            this.objectForCard_.properties.headers.push({});
+            this.objectForCard_.properties.headers.push({ text: '', value: '' });
         },
         textToValue(index) {
             this.objectForCard_.properties.headers[index].value = this.objectForCard_.properties.headers[index].text;
@@ -83,14 +87,21 @@ export default {
         addAdditionalAttribute() {
             this.objectForCard_.properties.properties.push('');
         },
-        deleteMainAttribute(text) {
+        deleteMainAttribute(index_) {
             if (!this.infoCardOn.data) {
-                this.objectForCard_.properties.headers = this.objectForCard_.properties.headers.filter(el => el.text != text);
+                this.objectForCard_.properties.headers = this.objectForCard_.properties.headers.filter((el, index) => index != index_);
             }
         },
-        deleteAdditionalAttribute(text) {
+        deleteAdditionalAttribute(index_) {
             if (!this.infoCardOn.data) {
-                this.objectForCard_.properties.properties = this.objectForCard_.properties.properties.filter(el => el != text);
+                this.objectForCard_.properties.properties = this.objectForCard_.properties.properties.filter((el, index) => index != index_);
+            }
+        },
+        checkDoubleFields(element) {
+            if (element != undefined) {
+                let arrayOfFields = [...this.objectForCard.properties.headers.filter(el => el.text.trim() === element.trim())];
+                arrayOfFields = [...arrayOfFields, ...this.objectForCard.properties.properties.filter(el => el.trim() === element.trim())];
+                return arrayOfFields.length === 1 || !arrayOfFields.length;
             }
         }
     }
