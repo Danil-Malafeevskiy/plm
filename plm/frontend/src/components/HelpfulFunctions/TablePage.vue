@@ -89,6 +89,13 @@ export default {
             this.tableArrayItems.push({ ...this.arrayEditMode.post[i].properties, id_: this.arrayEditMode.post[i].id_ });
           }
         }
+        if(this.arrayEditMode.put.length){
+          for(let i in this.arrayEditMode.put){
+            console.log(this.tableArrayItems.find(el => el.id === this.arrayEditMode.put[i].id));
+            this.tableArrayItems.find(el => el.id === this.arrayEditMode.put[i].id) = this.arrayEditMode.put[i];
+            console.log(this.tableArrayItems.find(el => el.id === this.arrayEditMode.put[i].id));
+          }
+        }
       },
       deep: true,
     }
