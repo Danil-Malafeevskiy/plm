@@ -9,11 +9,6 @@
                     <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
                         style="max-width: 3em !important; margin-right: 1em !important;" @click="clickImage(el)">
                         <v-radio-group hide-details class="pa-0 ma-0" v-model="objectForCard.image">
-                            <!-- <v-radio v-if="el === listSelectedIcons[0]" color="#E93030" :on-icon="el" :off-icon="el" :value="listMdiIcons[index]"> -->
-
-                            <!-- </v-radio>
-                            <v-radio v-else :on-icon="el" :off-icon="el" :value="listMdiIcons[index]"> 
-                            </v-radio> -->
                             <v-icon size='2em' v-if="(el.slice(4)+'.png') === objectForCard.image" color="red">{{el}}</v-icon>
                             <v-icon size='2em' v-else>{{el}}</v-icon>
                         </v-radio-group>
@@ -366,7 +361,7 @@ export default {
     },
 
     mounted() {
-        
+
     }
 }
 </script>
