@@ -3,6 +3,11 @@
     <NavigationDrawer :addCardOn="addCardOn" />
 
     <v-main>
+      <div style="display: none">
+        <canvas id="2">
+        </canvas>
+        <v-icon color="green">{{test}}</v-icon>
+      </div>
 
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0; box-shadow: none;">
         <v-toolbar-title>{{ getToolbarTitle }}</v-toolbar-title>
@@ -19,7 +24,8 @@
               mdi-pencil
             </v-icon>
           </v-btn>
-          <v-btn :disabled="(cardVisable.data || !editMode) && actions === 'getFeatures'" class="show__card" height="28px" width="80px" depressed color="#EE5E5E"
+          <v-btn :disabled="(cardVisable.data || !editMode) && actions === 'getFeatures'" class="show__card"
+            height="28px" width="80px" depressed color="#EE5E5E"
             @click="addCardOn.data = !addCardOn.data; visableCard();">
             <v-icon color="white !default" dark>
               mdi-plus
@@ -44,7 +50,7 @@
             </div>
             <div>
               <span style="color: #454545; margin-right: 20px">{{ arrayEditMode.put.length + arrayEditMode.post.length +
-                  arrayEditMode.delete.length
+              arrayEditMode.delete.length
               }} объектов</span>
               <v-btn @click="editObjects" text class="pa-0" style="margin: 0 10px 0 0">
                 <span style="color: #454545;">применить</span>
@@ -79,6 +85,8 @@ import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue
 import Auth from './components/Auth/Auth.vue';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 import ConflicWindow from './components/HelpfulFunctions/ConflicWindow.vue';
+import { mdiAirplane } from '@mdi/js';
+import { Canvg } from 'canvg';
 
 
 export default {
@@ -103,7 +111,7 @@ export default {
       infoCardOn: { data: false },
       editCardOn: { data: false },
       editMode: false,
-      test: null,
+      test: mdiAirplane,
       feature: this.getFeature,
       isConflict: false,
       arrPut: [],
@@ -190,7 +198,7 @@ export default {
       this.filterForFeature(this.oneType.id);
     }
   },
-  mounted() {
+  async mounted() {
     const chatSocket = new WebSocket("ws://localhost:8000/test");
     // const webSocket = new WebSocket("ws://127.0.0.1:8000/test")
 
@@ -199,6 +207,17 @@ export default {
 
     this.getUser();
     this.getFeatures();
+
+    let canvas = document.getElementById('2');
+    let svg = document.querySelector('.v-icon__svg');
+    //let span = document.querySelector('.blue--text');
+    canvas.height = 24;
+    canvas.width = 24;
+    canvas.getContext('2d').fillStyle = window.getComputedStyle(svg, null).getPropertyValue('color');
+    let v = await Canvg.from(canvas.getContext('2d'), svg.parentNode.innerHTML.trim());
+    v.start();
+    v.stop();
+    //const img = canvas.toDataURL('image/png');
   }
 }
 </script>
