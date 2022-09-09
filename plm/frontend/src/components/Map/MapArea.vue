@@ -16,6 +16,7 @@ import { Draw, Modify } from 'ol/interaction';
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 
+
 import {Icon, Style} from 'ol/style';
 
 // import Fill from 'ol/style/Fill';
@@ -49,7 +50,9 @@ export default {
       vectorLayerLine: null,
       vectorLayerPolygon: null,
       map: null,
-      drawLayer: null,
+      drawLayer: new VectorLayer({
+        source: new VectorSource()
+      }),
       interactionId: null,
       overlayId: null,
       draw: null,
@@ -112,7 +115,7 @@ export default {
     },
 
   },
-  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEditMode']),
+  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEditMode', 'oneType']),
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard']),
     ...mapActions(['getOneFeature', 'getOneTypeObject']),
@@ -185,12 +188,42 @@ export default {
       this.feature.properties['Широта'] = this.feature.geometry.coordinates[1];
       this.feature.properties['Долгота'] = this.feature.geometry.coordinates[0];
     },
-    addInteraction() {
+    async addInteraction() {
       this.drawLayer.getSource().refresh();
+      await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
+
+      this.drawLayer = new VectorLayer({
+        source: new VectorSource({
+          features: []
+        }),
+      });
+
+      if (this.drawType === 'Point') {
+        this.drawLayer.setStyle(new Style({
+          image: new Icon({
+            anchor: [0.5, 0, 5],
+            anchorXUnits: 'fraction',
+            anchorYUnits: 'pixels',
+            src: document.getElementById('2').toDataURL('image/png'),
+          }),
+        }));
+      }
+      this.modify = new Modify({
+        source: this.drawLayer.getSource(),
+        style: this.drawLayer.getStyle()
+      });
+
+      this.modify.on('modifyend', this.changeCoordinates);
+
       this.draw = new Draw({
         source: this.drawLayer.getSource(),
         type: this.drawType,
+        style: this.drawLayer.getStyle(),
       });
+
+      //this.draw.setStyle(style);
+
+      this.map.addLayer(this.drawLayer);
       this.map.addInteraction(this.draw);
       this.map.addInteraction(this.modify);
       this.interactionId = this.map.getInteractions().getArray().length - 1;
@@ -257,18 +290,12 @@ export default {
 
   },
   mounted() {
-    this.drawLayer = new VectorLayer({
-      source: new VectorSource({
-        features: []
-      }),
-    });
     this.map = new Map({
       target: 'map_content',
       layers: [
         new TileLayer({
           source: new OSM()
         }),
-        this.drawLayer,
       ],
       view: new View({
         zoom: 13,
@@ -279,11 +306,6 @@ export default {
 
     this.addNewLayers();
 
-    this.modify = new Modify({
-      source: this.drawLayer.getSource(),
-    });
-
-    this.modify.on('modifyend', this.changeCoordinates);
     this.map.on('click', this.getFeature_);
     if (this.addCardOn_.data) {
       this.addInteraction();
@@ -298,6 +320,7 @@ export default {
   padding-left: 5em;
   display: flex;
 }
+
 #card {
   background: white;
   border: 1px solid grey;
@@ -307,6 +330,7 @@ export default {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-shadow: 0 0 10px rgba(128, 128, 128, 0.5);
 }
+
 .edit {
   border: 1px solid grey;
   padding: 2px;
@@ -314,14 +338,17 @@ export default {
   border-radius: 7px;
   transition: .3s;
 }
+
 .edit:hover {
   border: 1px solid #EF5350;
   box-shadow: 0 0 10px rgba(239, 83, 80, 0.5);
 }
+
 .add {
   min-width: 5em;
   max-height: 2.5em;
 }
+
 .add_window,
 .edit_window {
   padding-left: 1em;
@@ -329,24 +356,31 @@ export default {
   border-left: 1px solid black;
   transition: all 1s;
 }
+
 .edit_window {
   min-height: 800px;
 }
+
 .slow {
   max-height: 2000px;
 }
+
 .save {
   margin-left: 1em;
 }
+
 .v_content {
   min-width: 100%;
 }
+
 .animation-enter-active {
   transition: all 1s;
 }
+
 .animation-leave-active {
   transition: all 1s;
 }
+
 .animation-enter,
 .animation-leave-to {
   right: 100px;

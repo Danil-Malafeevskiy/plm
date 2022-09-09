@@ -323,7 +323,7 @@ export default {
         },
         fileToBase64(file) {
             const reader = new FileReader();
-
+            
             reader.onload = (e) => {
                 this.objectForCard.image = e.target.result;
             };
