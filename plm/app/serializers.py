@@ -3,7 +3,6 @@ from django.contrib.auth.models import Group, Permission
 from django.utils import timezone
 
 from rest_framework import serializers, exceptions
-from rest_framework.response import Response
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_gis.serializers import GeometryField
 import django.contrib.auth.password_validation as validators
