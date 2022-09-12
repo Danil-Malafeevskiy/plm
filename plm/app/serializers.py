@@ -27,6 +27,7 @@ class FeatureListSerializer(serializers.ListSerializer):
         for feature in features:
             self.child.create(feature)
 
+        res_update = []
         for feature_id, data in feature_update.items():
             feature = feature_old.get(feature_id)
             type = FeatureSerializer(feature).data['geometry']
@@ -38,13 +39,14 @@ class FeatureListSerializer(serializers.ListSerializer):
                     new_line = FeatureSerializer(Feature.objects.get(id=line['id']), data=line)
                     if new_line.is_valid():
                         new_line.save()
+            res_update.append(data)
             self.child.update(feature, data)
 
         for feature_id, feature in feature_old.items():
             if feature_id not in feature_update:
                 feature.delete()
 
-        return features
+        return res_update
 
 class FeatureSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
@@ -66,7 +68,6 @@ class FeatureSerializer(serializers.ModelSerializer):
 
 class FileSerializer(serializers.Serializer):
     file = serializers.FileField()
-    dataset_name = serializers.CharField(max_length=100)
 
 class GroupSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
@@ -227,11 +228,10 @@ class DatasetSerializer(serializers.ModelSerializer):
 
 class VersionControlSerializer(serializers.ModelSerializer):
     date_update = serializers.DateTimeField(required=False, default=timezone.now, format="%Y-%m-%d %H:%M:%S")
-    new_version = serializers.SerializerMethodField()
 
     class Meta:
         model = VersionControl
-        fields = ('id', 'user', 'date_update', 'version', 'comment', 'dataset', 'new_version')
+        fields = ('id', 'user', 'date_update', 'version', 'comment', 'dataset', 'version', 'new_version')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -240,6 +240,3 @@ class VersionControlSerializer(serializers.ModelSerializer):
         if remove_fields:
             for field_name in remove_fields:
                 self.fields.pop(field_name)
-
-    def get_new_version(self, obj):
-        return FeatureSerializer(Feature.objects.filter(id__in=[feature['id'] for feature in obj.version]), many=True).data
