@@ -37,8 +37,14 @@ export default {
         },
 
         async putFeature(ctx, features) {
-            //delete features.post[0].id_;
-            await axios.put(`/tower`, [...features.put, ...features.post, getStrId(features.delete)]).then((response) => {
+            let data;
+            if ('put' in features) {
+                data = [...features.put, ...features.post, getStrId(features.delete)];
+            }
+            else {
+                data = [...features, []]
+            }
+            await axios.put(`/tower`, data).then((response) => {
                 console.log(response.data);
             }).catch(error => console.log(error));
         },
@@ -89,6 +95,8 @@ export default {
                         Vue.set(state.arrayEditMode.post, item.id_ - 1, item);
                     }
                     else {
+                        state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
+
                         if (state.arrayEditMode.put.filter(el => el.id === item.id).length) {
                             for (let key in state.arrayEditMode.put) {
                                 if (state.arrayEditMode.put[key].id === item.id) {
@@ -107,7 +115,9 @@ export default {
                         state.arrayEditMode.post.filter(el => el.id_ != item.id_);
                     }
                     else {
-                        if (state.arrayEditMode.delete.filter(el => el.id === item.id).length === 0) {
+                        state.arrayEditMode.put = state.arrayEditMode.put.filter(el => el.id != item.id);
+
+                        if (!state.arrayEditMode.delete.filter(el => el.id === item.id).length) {
                             state.arrayEditMode.delete.push(item);
                         }
                         else {
