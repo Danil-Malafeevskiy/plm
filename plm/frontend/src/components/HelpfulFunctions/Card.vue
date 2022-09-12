@@ -3,7 +3,7 @@
         <div class="card__window">
             <p style="display: none">{{ objectForCard }}</p>
 
-            <v-card v-if="objectForCard.properties.type === 'Point'" class="one_picture pa-0 ma-0 background_color_gray"
+            <v-card v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'" class="one_picture pa-0 ma-0 background_color_gray"
                 tile flat style="width: 100% !important; height: 59.45% !important; overflow-y: scroll !important;">
                 <v-row no-gutters justify="start">
                     <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
