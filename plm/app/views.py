@@ -36,25 +36,21 @@ class TowerAPI(APIView):
             feature_serializer = FeatureSerializer(feature, many=True)
             return Response(feature_serializer.data)
 
-    '''def post(self, request):
-        feature_serializer = FeatureSerializer(data=request.data, many=True)
-        if feature_serializer.is_valid():
-            feature_serializer.save()
-            return Response("Success new qqq")
-        return Response(feature_serializer.errors)'''
-
     def put(self, request):
         ids = []
+        queryset = []
+        comment = request.data.pop(-1)
         delete_mas = request.data.pop(-1)
-        print(delete_mas, request.data)
         for data in request.data:
             if 'id' in data.keys():
+                if data['geometry']['type'] == "Point" and len(queryset)==0:
+                    queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(name=Dataset.objects.get(id=data['name']))
                 ids.append(data['id'])
 
         if len(ids) > 0:
             feature = Feature.objects.filter(id__in=ids)
             OldVersionSerializer = VersionControlSerializer(
-                data={"user": request.user.username, "version": FeatureSerializer(feature, many=True).data, 'dataset': feature[0].name.id})
+                data={"user": request.user.username, "version": FeatureSerializer(feature, many=True).data, 'dataset': feature[0].name.id, 'comment': comment})
             if OldVersionSerializer.is_valid():
                 OldVersionSerializer.save()
             else:
@@ -63,17 +59,16 @@ class TowerAPI(APIView):
         ids = ids + delete_mas
 
         feature = Feature.objects.filter(id__in=ids)
-        feature_serializer = FeatureSerializer(feature, data=request.data, many=True)
+        feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=FeatureSerializer(queryset, many=True).data)
         if feature_serializer.is_valid():
             feature_serializer.save()
             return Response("Success up!")
 
         return Response(feature_serializer.errors)
 
-    '''def delete(self, request):
-        id = request.query_params.get('id')
-        Feature.objects.filter(id__in=id.split(',')).delete()
-        return Response("SUCCESS DEL")'''
+    def delete(self, request):
+        Feature.objects.all().delete()
+        return Response("aaa")
 
 class FileUploadView(APIView):
     serializer_class = FileSerializer
@@ -100,7 +95,7 @@ class FileUploadView(APIView):
 
         lis = []
         dict_1 = {}
-        dict_1['name'] = Dataset.objects.get(name=filename).id
+        dict_1['name'] = Dataset.objects.get(name=request.data['dataset_name']).id
         dict_1['type'] = 'Feature'
         dict_1['properties'] = {}
         for value in dict_0:
@@ -315,11 +310,14 @@ class VersionControlView(APIView):
         version_obj = VersionControl.objects.get(id=id)
         version = VersionControlSerializer(version_obj).data
         ids = []
+        queryset = []
         for obj in version['version']:
+            if obj['geometry']['type'] == "Point" and len(queryset) == 0:
+                queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                    name=Dataset.objects.get(id=obj['name']))
             ids.append(obj['id'])
-        feature_serializer = FeatureSerializer(Feature.objects.filter(id__in=ids), data=version['version'], many=True)
+        feature_serializer = FeatureSerializer(Feature.objects.filter(id__in=ids), data=version['version'], many=True, context=FeatureSerializer(queryset, many=True).data)
         if feature_serializer.is_valid():
             feature_serializer.save()
-            version_obj.delete()
             return Response("Version Return!")
         return Response(feature_serializer.errors)

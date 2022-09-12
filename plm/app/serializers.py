@@ -29,6 +29,15 @@ class FeatureListSerializer(serializers.ListSerializer):
 
         for feature_id, data in feature_update.items():
             feature = feature_old.get(feature_id)
+            type = FeatureSerializer(feature).data['geometry']
+            if type['type'] == 'Point':
+                for line in self.context:
+                    for lineIndex in range(len(line['geometry']['coordinates'])):
+                        if type['coordinates'] == line['geometry']['coordinates'][lineIndex]:
+                            line['geometry']['coordinates'][lineIndex] = FeatureSerializer(data).data['geometry']['coordinates']
+                    new_line = FeatureSerializer(Feature.objects.get(id=line['id']), data=line)
+                    if new_line.is_valid():
+                        new_line.save()
             self.child.update(feature, data)
 
         for feature_id, feature in feature_old.items():
@@ -57,6 +66,7 @@ class FeatureSerializer(serializers.ModelSerializer):
 
 class FileSerializer(serializers.Serializer):
     file = serializers.FileField()
+    dataset_name = serializers.CharField(max_length=100)
 
 class GroupSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
@@ -74,12 +84,13 @@ class GroupSerializer(serializers.ModelSerializer):
                 self.fields.pop(field_name)
 
     def get_permissions(self, obj):
-        return list(obj.permissions.values_list('name', flat=True))
+        return [per for per in obj.permissions.values_list('name', flat=True)
+                if "change" in per or "view" in per]
 
     def get_avaible_permissions(self, obj):
         perm = list(obj.permissions.values_list('name', flat=True))
         return [per for per in Permission.objects.all().values_list('name', flat=True)
-                if per not in perm]
+                if per not in perm and ("change" in per or "view" in per)]
 
     def create(self, validated_data):
         group = super(GroupSerializer, self).create(validated_data)
@@ -122,7 +133,8 @@ class UserSerializer(serializers.ModelSerializer):
         return list(obj.groups.values_list('name', flat=True))
 
     def get_permissions(self, obj):
-        return list(obj.user_permissions.values_list('name', flat=True))
+        return [per for per in obj.user_permissions.values_list('name', flat=True)
+                if "change" in per or "view" in per]
 
     def get_avaible_group(self, obj):
         perm = list(obj.groups.values_list('name', flat=True))
@@ -132,7 +144,7 @@ class UserSerializer(serializers.ModelSerializer):
     def get_avaible_permission(self, obj):
         perm = list(obj.user_permissions.values_list('name', flat=True))
         return [per for per in Permission.objects.all().values_list('name', flat=True)
-                if per not in perm]
+                if per not in perm or ("change" in per or "view" in per)]
 
     def validate(self, data):
         if 'password' in data.keys():
@@ -179,7 +191,7 @@ class DatasetSerializer(serializers.ModelSerializer):
     group = serializers.SerializerMethodField()
     avaible_group = serializers.SerializerMethodField()
     properties = serializers.JSONField(required=False, default=[""])
-    image = serializers.CharField(required=False, default="", allow_blank=True)
+    image = BinaryField(required=False)
     class Meta:
         model = Dataset
         fields = ('id', 'name', 'type', 'headers', 'properties', 'image', 'group', 'avaible_group')
@@ -214,12 +226,12 @@ class DatasetSerializer(serializers.ModelSerializer):
         return super(DatasetSerializer, self).update(instance, validated_data)
 
 class VersionControlSerializer(serializers.ModelSerializer):
-    date_update = serializers.DateTimeField(required=False, default=timezone.now)
+    date_update = serializers.DateTimeField(required=False, default=timezone.now, format="%Y-%m-%d %H:%M:%S")
     new_version = serializers.SerializerMethodField()
 
     class Meta:
         model = VersionControl
-        fields = ('id', 'user', 'date_update', 'version', 'dataset', 'new_version')
+        fields = ('id', 'user', 'date_update', 'version', 'comment', 'dataset', 'new_version')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
