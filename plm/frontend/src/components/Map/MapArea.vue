@@ -155,8 +155,6 @@ export default {
         this.feature.geometry.coordinates = this.coord;
         this.feature.type = 'Feature';
         this.feature.geometry.type = this.drawType;
-      } else if ( this.selectInteraction.getFeatures() ){
-        this.editFeatures = this.feature.geometry.coordinates
       }
     },
 
@@ -193,11 +191,10 @@ export default {
     },
     changeCoordinates(event) {
       this.feature.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
-      console.log(event.features.getArray()[0])
-      this.feature.geometry.type = 'Point'
-      this.objectForCard.geometry.coordinates = this.feature.geometry.coordinates
-      this.objectForCard.geometry.type = this.feature.geometry.type
-      // console.log(JSON.parse(JSON.stringify(coord)))
+    },
+    changeCoordinatesEdit (event){
+      this.objectForCard.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
+      this.objectForCard.geometry.type = 'Point'
     },
     async addInteraction() {
       this.drawLayer.getSource().refresh();
@@ -298,15 +295,13 @@ export default {
             })
             this.map.addInteraction(this.modifyEdit)
 
-            this.modifyEdit.on('modifyend', 
-              this.changeCoordinates
-            );
+            this.modifyEdit.on('modifyend', this.changeCoordinatesEdit);
           } else {
             this.modifyEdit = new Modify({
               features: this.selectInteraction.getFeatures(),
             })
             this.map.addInteraction(this.modifyEdit)
-            this.modifyEdit.on('modifyend', this.changeCoordinates);
+            this.modifyEdit.on('modifyend', this.changeCoordinatesEdit);
           }
         }
       });
