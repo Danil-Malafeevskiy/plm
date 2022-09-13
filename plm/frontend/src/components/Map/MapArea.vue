@@ -16,19 +16,13 @@ import { Draw, Modify } from 'ol/interaction';
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 
-
 import {Icon, Style} from 'ol/style';
-
-// import Fill from 'ol/style/Fill';
-// import Stroke from 'ol/style/Stroke';
 import Select from 'ol/interaction/Select';
-// import Circle from 'ol/geom/Circle';
+import Stroke from 'ol/style/Stroke';
 
-// import Feature from 'ol/Feature';
-// import Point from 'ol/geom/Point';
-// import Text from 'ol/style/Text';
-// import Collection from 'ol/Collection';
-// import { mdiTransmissionTower as Tower } from '@mdi/js';
+import Feature from 'ol/Feature';
+// import Translate from 'ol/interaction/Translate';
+import LineString from 'ol/geom/LineString';
 
 
 export default {
@@ -50,6 +44,7 @@ export default {
       vectorLayerPoint: null,
       vectorLayerLine: null,
       vectorLayerPolygon: null,
+      selectInteractionLineString: null,
       map: null,
       drawLayer: new VectorLayer({
         source: new VectorSource()
@@ -65,6 +60,8 @@ export default {
       selectInteraction: null,
       editFeatures: null,
       objectForCard: {},
+      editedPointCoordinates: null,
+      editedTypeId: null,
     }
   },
   watch: {
@@ -83,7 +80,6 @@ export default {
     getObjectForCard: {
       handler() {
         this.objectForCard = this.getObjectForCard;
-        console.log(this.objectForCard)
       }
     },
 
@@ -189,13 +185,77 @@ export default {
         this.notVisableCard();
       }
     },
+
     changeCoordinates(event) {
       this.feature.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
     },
-    changeCoordinatesEdit (event){
+
+    changeCoordinatesEdit(event) {
+
+      this.map.getLayers().forEach(element => {
+
+        if (element.get('typeId') != undefined) {
+          element.getSource().getFeatures().forEach(el => {
+            if (el.getGeometry().getType() === 'LineString') {
+
+              el.getGeometry().getCoordinates().forEach((coord, index) => {
+                coord = toLonLat(coord)
+                coord[0] = parseFloat(coord[0].toFixed(6))
+                coord[1] = parseFloat(coord[1].toFixed(6))
+                
+                if (coord.includes(this.editedPointCoordinates[0]) && coord.includes(this.editedPointCoordinates[1])){
+                  this.editedTypeId = element.get('typeId')
+
+                  let feature = el.getGeometry().getCoordinates()
+                  feature[index] = event.features.getArray()[0].getGeometry().getCoordinates()
+                  feature.forEach((element, index) => {
+                    feature[index] = fromLonLat(element)
+                    feature[index][0] = parseFloat(element[0].toFixed(6))
+                    feature[index][1] = parseFloat(element[1].toFixed(6))
+                  });
+
+
+                  const newFeature = new Feature({
+                    geometry: new LineString(feature),
+                  });
+
+                  console.log(feature)
+
+
+                  let features = {
+                    type: 'FeatureCollection',
+                    features: newFeature,
+                  };
+                
+                  let layer = new VectorLayer({
+                    source: new VectorSource({
+                      features: new GeoJSON().readFeatures(features,
+                        {
+                          featureProjection: 'EPSG:3857'
+                        }),
+                    }),
+                  });
+
+                  let arrayOfLayers = this.map.getAllLayers();
+                  arrayOfLayers.forEach(element => {
+                    if (element.get('typeId') === this.editedTypeId) {
+                      this.map.removeLayer(element)
+                    }
+                  })
+                  this.map.addLayer(layer)
+
+                  console.log(this.map.getLayers())
+                }
+              });
+            }
+          });
+        }
+      });
+
       this.objectForCard.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
       this.objectForCard.geometry.type = 'Point'
     },
+
     async addInteraction() {
       this.drawLayer.getSource().refresh();
       await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
@@ -229,13 +289,12 @@ export default {
         style: this.drawLayer.getStyle(),
       });
 
-      //this.draw.setStyle(style);
-
       this.map.addLayer(this.drawLayer);
       this.map.addInteraction(this.draw);
       this.map.addInteraction(this.modify);
       this.interactionId = this.map.getInteractions().getArray().length - 1;
     },
+
     resizeMap() {
       setTimeout(() => {
         this.map.updateSize();
@@ -243,6 +302,8 @@ export default {
           this.resizeMap();
       }, 400);
     },
+
+
     addNewLayers() {
       this.allType.forEach(async element => {
         let features = {
@@ -258,10 +319,32 @@ export default {
               }),
           }),
         });
-        layer.set('name', 'feature')
+        layer.set('typeId', element.id);
+        
+        
         this.map.addLayer(layer)
 
-        if (features.features.length && features.features[0].geometry.type === 'Point' && !(this.typeForLayer.image === '')) {
+        if (features.features.length && features.features[0].geometry.type === 'LineString') {
+          let selectStyle = new Style({
+            stroke: new Stroke({ color: "red" })
+          });
+
+          this.selectInteractionLineString = new Select({
+            style: selectStyle,
+            layers: [layer],
+            multi: true,
+          });
+        
+          this.map.addInteraction(this.selectInteractionLineString) 
+
+          this.modifyEdit = new Modify({
+            features: this.selectInteractionLineString.getFeatures(),
+            style: selectStyle
+          })
+          this.map.addInteraction(this.modifyEdit)
+
+        }
+        else if (features.features.length && features.features[0].geometry.type === 'Point' && !(this.typeForLayer.image === '')) {
           let style = new Style({
             image: new Icon({
               anchor: [0.5, 0, 5],
@@ -270,7 +353,6 @@ export default {
               src: `static/${this.typeForLayer.image}`,
             }),
           });
-
           layer.setStyle(style)
 
           let selectStyle = new Style({
@@ -284,29 +366,43 @@ export default {
 
           this.selectInteraction = new Select({
             style: selectStyle,
-            layers: [layer]
+            layers: [layer], 
+            multi: true,
           });
+
           this.map.addInteraction(this.selectInteraction)
 
-          if (features.features.length && features.features[0].geometry.type === 'Point' && !(this.typeForLayer.image === '')) {
-            this.modifyEdit = new Modify({
-              features: this.selectInteraction.getFeatures(),
-              style: selectStyle
-            })
-            this.map.addInteraction(this.modifyEdit)
-
-            this.modifyEdit.on('modifyend', this.changeCoordinatesEdit);
-          } else {
-            this.modifyEdit = new Modify({
-              features: this.selectInteraction.getFeatures(),
-            })
-            this.map.addInteraction(this.modifyEdit)
-            this.modifyEdit.on('modifyend', this.changeCoordinatesEdit);
-          }
+          this.modifyEdit = new Modify({
+            features: this.selectInteraction.getFeatures(),
+            style: selectStyle
+          })
+          this.map.addInteraction(this.modifyEdit)
+          this.modifyEdit.on('modifyend', this.changeCoordinatesEdit);
+          this.modifyEdit.on('modifystart', this.takeCoordinates)
         }
+        else if (features.features.length && features.features[0].geometry.type === 'Point' && (this.typeForLayer.image === '')) {
+
+          this.selectInteraction = new Select({
+            layers: [layer],
+            multi: true,
+          });
+
+          this.modifyEdit = new Modify({
+            features: this.selectInteraction.getFeatures(),
+          })
+          this.map.addInteraction(this.modifyEdit)
+          this.modifyEdit.on('modifyend', this.changeCoordinatesEdit);
+        }
+
+        console.log(this.map.getLayers())
       });
     },
 
+    takeCoordinates(event){
+      this.editedPointCoordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
+      this.editedPointCoordinates[0] = parseFloat(this.editedPointCoordinates[0].toFixed(6))
+      this.editedPointCoordinates[1] = parseFloat(this.editedPointCoordinates[1].toFixed(6))
+    }, 
   },
   mounted() {
     this.map = new Map({

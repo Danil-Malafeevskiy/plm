@@ -39,10 +39,10 @@ export default {
         async putFeature(ctx, features) {
             let data;
             if ('put' in features) {
-                data = [...features.put, ...features.post, getStrId(features.delete)];
+                data = [...features.put, ...features.post, getStrId(features.delete), ''];
             }
             else {
-                data = [...features, []]
+                data = [...features, [], '']
             }
             await axios.put(`/tower`, data).then((response) => {
                 console.log(response.data);
