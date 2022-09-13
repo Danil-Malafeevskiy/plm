@@ -1,5 +1,5 @@
 <template>
-  <div v-if="allListItem.length != 0">
+  <div>
     <div class="sub_tittle" v-if="selected.length != 0">
       <div style="margin: 20px 0;">
         <span class="object" v-if="selected.length % 10 === 1">{{ selected.length }} объект </span>
@@ -38,7 +38,7 @@
       <span class="object" v-else>{{ tableArrayItems.length }} объектов </span>
     </div>
     <v-data-table @click:row="showCard" :headers="headers" v-model="arrObjects[`${nameArray}`]" show-select
-      :item-key="headers[0].text" :items="tableArrayItems" :items-per-page="8" class="pa-0"
+      :item-key="headers[0].text" :items="tableArrayItems" :items-per-page="5" class="pa-0"
       @toggle-select-all="showAll()" :item-class="classRow" style="
         height: 100% !important;
         width: 50% !important; 
@@ -118,9 +118,10 @@ export default {
 
     async showCard(obj) {
       if (!this.addCardOn.data) {
-        if (this.getObjectForCard === null || this.getObjectForCard.id != obj.id || !this.infoCardOn_.data) {
+        if (this.getObjectForCard === null || this.getObjectForCard.id != obj.id ||
+          (this.getObjectForCard.id == obj.id && !this.checkequalsItems(obj, this.getObjectForCard)) || !this.infoCardOn_.data) {
           if ('id_' in obj) {
-            this.updateObjectForCard(JSON.parse(JSON.stringify(this.arrayEditMode.post[obj.id_ - 1])));
+            this.updateObjectForCard(JSON.parse(JSON.stringify(this.arrayEditMode.post.find(el => el.id_ === obj.id_))));
           }
           else {
             const object = this.arrayEditMode.put.filter(el => el.id === obj.id);
@@ -136,6 +137,7 @@ export default {
           this.editCardOn_.data = false;
         }
         else {
+          console.log(1);
           this.infoCardOn_.data = false;
           this.notVisableCard();
         }
@@ -186,13 +188,31 @@ export default {
         }
       }
     },
+    checkequalsItems(item, object) {
+      let checkObject = { ...object.properties }
+      for (let i in this.headers) {
+        if (this.headers[i].text != 'id_' && this.headers[i].text != 'id' && checkObject[this.headers[i].text] !== item[this.headers[i].text]) {
+          return false;
+        }
+      }
+      return true;
+    },
     classRow(item) {
       let classForItem = ''
-      if (this.getObjectForCard != null && item.id === this.getObjectForCard.id && (this.infoCardOn_.data || this.editCardOn.data)) {
-        classForItem += 'v-data-table__selected';
+      if (this.infoCardOn_.data || this.editCardOn.data) {
+        if ('id_' in this.getObjectForCard) {
+          if (item.id_ === this.getObjectForCard.id_ && this.checkequalsItems(item, this.getObjectForCard)) {
+            classForItem += 'v-data-table__selected';
+          }
+        }
+        else {
+          if (item.id === this.getObjectForCard.id && this.checkequalsItems(item, this.getObjectForCard)) {
+            classForItem += 'v-data-table__selected';
+          }
+        }
       }
 
-      if(item.id_){
+      if (item.id_) {
         classForItem += ' text_color_purple';
       }
 
@@ -279,7 +299,7 @@ export default {
   color: #0F0CA7;
 }
 
-.text_color_purple{
+.text_color_purple {
   color: #cc1dcf;
 }
 

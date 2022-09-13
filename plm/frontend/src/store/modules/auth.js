@@ -25,12 +25,12 @@ export default {
         },
         async getOneUser({ commit }, idUser) {
             await axios.get(`/user/admin/${idUser}`).then((response) => {
-                //console.log(response.data);
                 let user = response.data;
                 user.properties = { ...user };
                 delete user.properties.id;
+                delete user.properties.image;
                 for (let key in user) {
-                    if (key != 'properties' && key != 'id') {
+                    if (key != 'properties' && key != 'id' && key != 'image') {
                         if (typeof user[key] === 'object') {
                             delete user.properties[key];
                         }
@@ -48,15 +48,12 @@ export default {
             await axios.post('/user/admin', newUser).then((response) => {
                 newUser.id = response.data.id;
                 dispatch('getUsersOfGroup');
-                //delete newUser.password;
-                //dispatch('putUser', newUser);
             })
         },
         async putUser({ dispatch, state }, user) {
             console.log(user);
             user = { ...user, ...user.properties};
             delete user.properties;
-            //delete user.password;
             console.log(user);
             await axios.put('/user/admin', user).then(() => {
                 dispatch('getUsersOfGroup');
