@@ -7,9 +7,9 @@ from django.contrib.auth.models import Group, Permission
 from django.shortcuts import render
 from rest_framework.authentication import SessionAuthentication
 
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
-from app.permissions import IsOwner, FileUploadPerm
+from app.permissions import TowerPerm, FileUploadPerm, GroupPerm, UserPerm, DatasetPerm, VersionPerm
 from plm import settings
 from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
@@ -20,14 +20,17 @@ from rest_framework.response import Response
 
 class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated, IsOwner]
+    permission_classes = [IsAuthenticated, TowerPerm]
     filterset_fields = ['name']
 
     def get(self, request, id=0):
         if id == 0:
+            datasets = Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
+            if 'group' in request.query_params:
+                datasets = Dataset.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
             ff = DjangoFilterBackend()
             filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(name__in=
-                list(Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True))).values_list('id', flat=True))), self)
+                list(datasets.values_list('id', flat=True))), self)
 
             feature_serializer = FeatureSerializer(filtered_queryset, many=True, remove_fields=['image'])
             return Response(feature_serializer.data)
@@ -36,44 +39,43 @@ class TowerAPI(APIView):
             feature_serializer = FeatureSerializer(feature, many=True)
             return Response(feature_serializer.data)
 
-    '''def post(self, request):
-        feature_serializer = FeatureSerializer(data=request.data, many=True)
-        if feature_serializer.is_valid():
-            feature_serializer.save()
-            return Response("Success new qqq")
-        return Response(feature_serializer.errors)'''
-
     def put(self, request):
         ids = []
+        queryset = []
+        comment = request.data.pop(-1)
         delete_mas = request.data.pop(-1)
-        print(delete_mas, request.data)
         for data in request.data:
             if 'id' in data.keys():
+                if data['geometry']['type'] == "Point" and len(queryset)==0:
+                    queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(name__in=Dataset.objects.filter(group=Dataset.objects.get(id=data['name']).group))
                 ids.append(data['id'])
 
         if len(ids) > 0:
-            feature = Feature.objects.filter(id__in=ids)
-            OldVersionSerializer = VersionControlSerializer(
-                data={"user": request.user.username, "version": FeatureSerializer(feature, many=True).data, 'dataset': feature[0].name.id})
-            if OldVersionSerializer.is_valid():
-                OldVersionSerializer.save()
-            else:
-                return Response(OldVersionSerializer.errors)
+            feature_2 = FeatureSerializer(Feature.objects.filter(id__in=ids), many=True).data
 
         ids = ids + delete_mas
 
         feature = Feature.objects.filter(id__in=ids)
-        feature_serializer = FeatureSerializer(feature, data=request.data, many=True)
+        feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=FeatureSerializer(queryset, many=True).data)
         if feature_serializer.is_valid():
-            feature_serializer.save()
+            new_version = feature_serializer.save()
+            print(new_version)
+            if feature_2!=None:
+                OldVersionSerializer = VersionControlSerializer(
+                    data={"user": request.user.username, "version": feature_2,
+                          'dataset': feature[0].name.id, 'comment': comment,
+                          'new_version': FeatureSerializer(new_version, many=True).data})
+                if OldVersionSerializer.is_valid():
+                    OldVersionSerializer.save()
+                else:
+                    return Response(OldVersionSerializer.errors)
             return Response("Success up!")
 
         return Response(feature_serializer.errors)
 
-    '''def delete(self, request):
-        id = request.query_params.get('id')
-        Feature.objects.filter(id__in=id.split(',')).delete()
-        return Response("SUCCESS DEL")'''
+    def delete(self, request):
+        Feature.objects.all().delete()
+        return Response("aaa")
 
 class FileUploadView(APIView):
     serializer_class = FileSerializer
@@ -100,10 +102,15 @@ class FileUploadView(APIView):
 
         lis = []
         dict_1 = {}
-        dict_1['name'] = Dataset.objects.get(name=filename).id
+        dataset = Dataset.objects.get(name=filename)
+        dict_1['name'] = dataset.id
         dict_1['type'] = 'Feature'
         dict_1['properties'] = {}
+        properties = []
+        flag = True
         for value in dict_0:
+            if len(properties)!=0:
+                flag=False
             for key in value.keys():
                 if key == 'geometry' or key == 'id':
                     continue
@@ -112,8 +119,14 @@ class FileUploadView(APIView):
                     dict_1['geometry'] = value[key]
                     continue
 
+                if flag:
+                    properties.append(key)
+
                 dict_1['properties'][key] = value[key]
             lis.append(json.dumps(dict_1))
+
+        dataset.properties = properties
+        dataset.save()
 
         for i in range(len(lis)):
             lis[i] = json.loads(lis[i])
@@ -153,7 +166,7 @@ class LogoutView(APIView):
 
 class GroupView(APIView):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [GroupPerm]
 
     def get(self, request, id=0):
         if id==0:
@@ -198,7 +211,7 @@ class UserView(APIView):
 
 class UserAdminView(APIView):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [UserPerm]
     filterset_fields = ['username', 'is_staff', 'groups']
 
     def get(self, request, id=0):
@@ -252,7 +265,10 @@ class DatasetView(APIView):
     def get(self, request, id=0):
         if id==0:
             ff = DjangoFilterBackend()
-            dataset = ff.filter_queryset(request, Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True))), self)
+            datasets = Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
+            if 'group' in request.query_params:
+                datasets = Dataset.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
+            dataset = ff.filter_queryset(request, datasets, self)
             return Response(DatasetSerializer(dataset, many=True, remove_fields=['type', 'headers',
                                                                                  'properties', 'image', 'group', 'avaible_group']).data)
 
@@ -261,7 +277,7 @@ class DatasetView(APIView):
 
 class DatasetAdminView(APIView):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [DatasetPerm]
     filterset_fields = ['type']
 
     def get(self, request, id=0):
@@ -295,17 +311,20 @@ class DatasetAdminView(APIView):
         return Response("SUCCESS DEL")
 
 def room(request):
-    return render(request, 'E:/KT/plm/plm/templates/test.html')
+    return render(request, 'D:/KT/plm/plm/templates/test.html')
 
 class VersionControlView(APIView):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [VersionPerm]
     filterset_fields = ['user', 'dataset']
 
     def get(self, request, id=0):
         if id==0:
             ff = DjangoFilterBackend()
-            version = ff.filter_queryset(request, VersionControl.objects.filter(dataset__in=Dataset.objects.filter(group__in=request.user.groups.values_list('id', flat=True))), self)
+            datasets = Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
+            if 'group' in request.query_params:
+                datasets = Dataset.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
+            version = ff.filter_queryset(request, VersionControl.objects.filter(dataset__in=datasets), self)
             return Response(VersionControlSerializer(version, many=True, remove_fields=['version', 'new_version', 'dataset']).data)
 
         version = VersionControl.objects.get(id=id)
@@ -315,11 +334,19 @@ class VersionControlView(APIView):
         version_obj = VersionControl.objects.get(id=id)
         version = VersionControlSerializer(version_obj).data
         ids = []
+        queryset = []
         for obj in version['version']:
+            if obj['geometry']['type'] == "Point" and len(queryset) == 0:
+                queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                    name__in=Dataset.objects.filter(group=Dataset.objects.get(id=obj['name']).group))
             ids.append(obj['id'])
-        feature_serializer = FeatureSerializer(Feature.objects.filter(id__in=ids), data=version['version'], many=True)
+        if request.data['flag'] == False:
+            feature_serializer = FeatureSerializer(Feature.objects.filter(id__in=ids), data=version['version'], many=True,
+                                                   context=FeatureSerializer(queryset, many=True).data)
+        else:
+            feature_serializer = FeatureSerializer(Feature.objects.filter(id__in=ids), data=version['new_version'],
+                                                   many=True, context=FeatureSerializer(queryset, many=True).data)
         if feature_serializer.is_valid():
             feature_serializer.save()
-            version_obj.delete()
             return Response("Version Return!")
         return Response(feature_serializer.errors)

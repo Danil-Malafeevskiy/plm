@@ -24,6 +24,7 @@ export default {
   data() {
     return {
       coord: [],
+      coordEdit: [],
       features: {
         type: 'FeatureCollection',
         features: this.allFeatures,
@@ -37,9 +38,13 @@ export default {
       overlayId: null,
       draw: null,
       modify: null,
+      modifyEdit: null,
       addCardOn_: this.addCardOn,
       infoCardOn_: this.infoCardOn,
       editCardOn_: this.editCardOn,
+      selectInteraction: null,
+      editFeatures: null,
+      objectForCard: {},
     }
   },
   watch: {
@@ -60,7 +65,7 @@ export default {
       handler() {
         let arraysOfNewObject = this.createSubArrays();
         let arrayOfLayers = this.map.getAllLayers();
-
+        
         for (let i in arraysOfNewObject) {
           let layer = arrayOfLayers.find(el => `${el.get('typeId')}` === i);
           let source = new VectorSource({
@@ -119,6 +124,7 @@ export default {
       this.feature.properties['Долгота'] = cord[1];
       this.feature.properties['Широта'] = cord[0];
     },
+
     updateCoordinates() {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
         this.map.removeInteraction(this.draw);
@@ -139,7 +145,9 @@ export default {
         else {
           this.coord = toLonLat(this.coord);
           this.updateLonLat(this.coord);
+          this.map.removeInteraction(this.modifyEdit)
         }
+
         this.feature.geometry.coordinates = this.coord;
         this.feature.type = 'Feature';
         this.feature.geometry.type = this.drawType;
@@ -285,19 +293,34 @@ export default {
 
           let selectStyle = new Style({
             image: new Icon({
-              anchor: [0.5, 0, 5],
+              anchor: [0.5, 0.5],
               anchorXUnits: 'fraction',
               anchorYUnits: 'pixels',
               src: `static/${this.typeForLayer.image.slice(0, -4) + '-selected.png'}`,
             }),
           });
 
-          let selectInteraction = new Select({
+          this.selectInteraction = new Select({
             style: selectStyle,
             layers: [layer]
           });
-          this.map.addInteraction(selectInteraction)
+          this.map.addInteraction(this.selectInteraction)
 
+          if (features.features.length && features.features[0].geometry.type === 'Point' && !(this.typeForLayer.image === '')) {
+            this.modifyEdit = new Modify({
+              features: this.selectInteraction.getFeatures(),
+              style: selectStyle
+            })
+            this.map.addInteraction(this.modifyEdit)
+
+            this.modifyEdit.on('modifyend', this.changeCoordinatesEdit);
+          } else {
+            this.modifyEdit = new Modify({
+              features: this.selectInteraction.getFeatures(),
+            })
+            this.map.addInteraction(this.modifyEdit)
+            this.modifyEdit.on('modifyend', this.changeCoordinatesEdit);
+          }
         }
       });
     },

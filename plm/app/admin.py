@@ -5,3 +5,4 @@ from django.contrib.auth.admin import UserAdmin
 admin.site.register(Feature)
 admin.site.register(Dataset)
 admin.site.register(User, UserAdmin)
+admin.site.register(VersionControl)

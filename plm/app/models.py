@@ -10,7 +10,7 @@ class Dataset(models.Model):
     headers = ArrayField(models.JSONField())
     properties = ArrayField(models.CharField(max_length=100), blank=True)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, default=1)
-    image = models.CharField(max_length=100, default="", blank=True)
+    image = models.BinaryField(blank=True, default="".encode('utf-8'))
 
 class Feature(models.Model):
     name = models.ForeignKey(Dataset, on_delete=models.CASCADE, default=1)
@@ -26,4 +26,6 @@ class VersionControl(models.Model):
     user = models.TextField(default="admin")
     date_update = models.DateTimeField(default=timezone.now)
     version = ArrayField(models.JSONField())
+    new_version = ArrayField(models.JSONField(), blank=True, null=True)
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, default=1)
+    comment = models.CharField(max_length=100, default="", blank=True)

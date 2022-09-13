@@ -19,6 +19,10 @@
                 </v-list-item>
                 <v-list-item @click="logOutAndResolve()">
                     <v-list-item-title>
+                        <v-avatar color="#72ABEA" size="40">
+                            <span class="white--text text-h6">{{user.first_name.slice(0,1)}}{{user.last_name.slice(0,1)}}</span>
+                        </v-avatar>         
+                        
                         {{ user.username }}
                     </v-list-item-title>
 
@@ -41,6 +45,7 @@ export default {
     data() {
         return {
             selectedItem: 2,
+            initials: null,
         }
     },
     watch: {
@@ -161,6 +166,7 @@ export default {
         }
     },
     mounted() {
+
     }
 }
 </script>
