@@ -38,6 +38,7 @@ export default {
   data() {
     return {
       coord: [],
+      coordEdit: [],
       features: {
         type: 'FeatureCollection',
         features: this.allFeatures,
@@ -57,9 +58,13 @@ export default {
       overlayId: null,
       draw: null,
       modify: null,
+      modifyEdit: null,
       addCardOn_: this.addCardOn,
       infoCardOn_: this.infoCardOn,
       editCardOn_: this.editCardOn,
+      selectInteraction: null,
+      editFeatures: null,
+      objectForCard: {},
     }
   },
   watch: {
@@ -75,12 +80,12 @@ export default {
       }
     },
 
-    // editCardOn: {
-    //   handler(){  
-
-    //   },
-    //   deep: true
-    // },
+    getObjectForCard: {
+      handler() {
+        this.objectForCard = this.getObjectForCard;
+        console.log(this.objectForCard)
+      }
+    },
 
     getFeature: function () {
       this.feature = this.getFeature;
@@ -123,6 +128,7 @@ export default {
       this.feature.properties['Долгота'] = cord[1];
       this.feature.properties['Широта'] = cord[0];
     },
+
     updateCoordinates() {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
         this.map.removeInteraction(this.draw);
@@ -143,7 +149,9 @@ export default {
         else {
           this.coord = toLonLat(this.coord);
           this.updateLonLat(this.coord);
+          this.map.removeInteraction(this.modifyEdit)
         }
+
         this.feature.geometry.coordinates = this.coord;
         this.feature.type = 'Feature';
         this.feature.geometry.type = this.drawType;
@@ -182,11 +190,11 @@ export default {
       }
     },
     changeCoordinates(event) {
-      this.feature.geometry = {
-        coordinates: toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
-      };
-      this.feature.properties['Широта'] = this.feature.geometry.coordinates[1];
-      this.feature.properties['Долгота'] = this.feature.geometry.coordinates[0];
+      this.feature.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
+    },
+    changeCoordinatesEdit (event){
+      this.objectForCard.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
+      this.objectForCard.geometry.type = 'Point'
     },
     async addInteraction() {
       this.drawLayer.getSource().refresh();
@@ -267,25 +275,36 @@ export default {
 
           let selectStyle = new Style({
             image: new Icon({
-              anchor: [0.5, 0, 5],
+              anchor: [0.5, 0.5],
               anchorXUnits: 'fraction',
               anchorYUnits: 'pixels',
               src: `static/${this.typeForLayer.image.slice(0, -4) + '-selected.png'}`,
             }),
           });
-          console.log(this.typeForLayer.image.slice(0, -4) + '-selected.png')
 
-          let selectInteraction = new Select({
+          this.selectInteraction = new Select({
             style: selectStyle,
             layers: [layer]
           });
-          this.map.addInteraction(selectInteraction)
+          this.map.addInteraction(this.selectInteraction)
 
+          if (features.features.length && features.features[0].geometry.type === 'Point' && !(this.typeForLayer.image === '')) {
+            this.modifyEdit = new Modify({
+              features: this.selectInteraction.getFeatures(),
+              style: selectStyle
+            })
+            this.map.addInteraction(this.modifyEdit)
+
+            this.modifyEdit.on('modifyend', this.changeCoordinatesEdit);
+          } else {
+            this.modifyEdit = new Modify({
+              features: this.selectInteraction.getFeatures(),
+            })
+            this.map.addInteraction(this.modifyEdit)
+            this.modifyEdit.on('modifyend', this.changeCoordinatesEdit);
+          }
         }
       });
-
-
-
     },
 
   },
