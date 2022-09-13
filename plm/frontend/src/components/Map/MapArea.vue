@@ -62,6 +62,9 @@ export default {
       addCardOn_: this.addCardOn,
       infoCardOn_: this.infoCardOn,
       editCardOn_: this.editCardOn,
+      selectInteraction: null,
+      editFeatures: null,
+      objectForCard: {},
     }
   },
   watch: {
@@ -77,12 +80,12 @@ export default {
       }
     },
 
-    // editCardOn: {
-    //   handler(){  
-
-    //   },
-    //   deep: true
-    // },
+    getObjectForCard: {
+      handler() {
+        this.objectForCard = this.getObjectForCard;
+        console.log(this.objectForCard)
+      }
+    },
 
     getFeature: function () {
       this.feature = this.getFeature;
@@ -152,8 +155,8 @@ export default {
         this.feature.geometry.coordinates = this.coord;
         this.feature.type = 'Feature';
         this.feature.geometry.type = this.drawType;
-      } else if ( this.modifyEdit ){
-        console.log(this.modifyEdit)
+      } else if ( this.selectInteraction.getFeatures() ){
+        this.editFeatures = this.feature.geometry.coordinates
       }
     },
 
@@ -189,11 +192,12 @@ export default {
       }
     },
     changeCoordinates(event) {
-      this.feature.geometry = {
-        coordinates: toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
-      };
-      this.feature.properties['Широта'] = this.feature.geometry.coordinates[1];
-      this.feature.properties['Долгота'] = this.feature.geometry.coordinates[0];
+      this.feature.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
+      console.log(event.features.getArray()[0])
+      this.feature.geometry.type = 'Point'
+      this.objectForCard.geometry.coordinates = this.feature.geometry.coordinates
+      this.objectForCard.geometry.type = this.feature.geometry.type
+      // console.log(JSON.parse(JSON.stringify(coord)))
     },
     async addInteraction() {
       this.drawLayer.getSource().refresh();
@@ -281,27 +285,25 @@ export default {
             }),
           });
 
-          let selectInteraction = new Select({
+          this.selectInteraction = new Select({
             style: selectStyle,
             layers: [layer]
           });
-          this.map.addInteraction(selectInteraction)
+          this.map.addInteraction(this.selectInteraction)
 
           if (features.features.length && features.features[0].geometry.type === 'Point' && !(this.typeForLayer.image === '')) {
             this.modifyEdit = new Modify({
-              features: selectInteraction.getFeatures(),
+              features: this.selectInteraction.getFeatures(),
               style: selectStyle
             })
             this.map.addInteraction(this.modifyEdit)
 
             this.modifyEdit.on('modifyend', 
-              function (event) {
-                console.log(event.features.getArray()[0].getGeometry().getCoordinates())
-              }
+              this.changeCoordinates
             );
           } else {
             this.modifyEdit = new Modify({
-              features: selectInteraction.getFeatures(),
+              features: this.selectInteraction.getFeatures(),
             })
             this.map.addInteraction(this.modifyEdit)
             this.modifyEdit.on('modifyend', this.changeCoordinates);
