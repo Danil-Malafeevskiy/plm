@@ -14,12 +14,12 @@ function getStrId(features) {
 
 export default {
     actions: {
-        async getFeatures({ commit, state, dispatch }) {
+        async getFeatures({ commit }) {
             await axios.get('/tower').then((response) => {
                 commit('updateFeatures', response.data);
-                if (state.featureTypeId != null) {
-                    dispatch('filterForFeature');
-                }
+                // if (state.featureTypeId != null) {
+                //     dispatch('filterForFeature');
+                // }
             }).catch(error => console.log(error));
         },
 

@@ -3,7 +3,6 @@
 </template>
 
 <script>
-//import { mapGetters, mapActions } from 'vuex';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -15,21 +14,8 @@ import GeoJSON from 'ol/format/GeoJSON';
 import { Draw, Modify } from 'ol/interaction';
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
-
-
-import {Icon, Style} from 'ol/style';
-
-// import Fill from 'ol/style/Fill';
-// import Stroke from 'ol/style/Stroke';
+import { Icon, Style } from 'ol/style';
 import Select from 'ol/interaction/Select';
-// import Circle from 'ol/geom/Circle';
-
-// import Feature from 'ol/Feature';
-// import Point from 'ol/geom/Point';
-// import Text from 'ol/style/Text';
-// import Collection from 'ol/Collection';
-// import { mdiTransmissionTower as Tower } from '@mdi/js';
-
 
 export default {
   components: {
@@ -43,12 +29,6 @@ export default {
         features: this.allFeatures,
       },
       feature: this.getFeature,
-      featurePoint: {},
-      featureLine: {},
-      featurePolygon: {},
-      vectorLayerPoint: null,
-      vectorLayerLine: null,
-      vectorLayerPolygon: null,
       map: null,
       drawLayer: new VectorLayer({
         source: new VectorSource()
@@ -64,24 +44,40 @@ export default {
   },
   watch: {
     allFeatures: {
-      handler() {
+      async handler() {
         this.features = {
           type: 'FeatureCollection',
           features: this.allFeatures,
         }
+
         if (this.map != null) {
+          await this.deleteOldLayers();
           this.addNewLayers();
         }
       }
     },
+    arrayEditMode: {
+      handler() {
+        let arraysOfNewObject = this.createSubArrays();
+        let arrayOfLayers = this.map.getAllLayers();
 
-    // editCardOn: {
-    //   handler(){  
-
-    //   },
-    //   deep: true
-    // },
-
+        for (let i in arraysOfNewObject) {
+          let layer = arrayOfLayers.find(el => `${el.get('typeId')}` === i);
+          let source = new VectorSource({
+            features: new GeoJSON().readFeatures(
+              {
+                type: 'FeatureCollection',
+                features: [...this.allFeatures.filter(el => el.name == layer.get('typeId')), ...arraysOfNewObject[i]]
+              },
+              {
+                featureProjection: 'EPSG:3857'
+              }),
+          });
+          layer.setSource(source);
+        }
+      },
+      deep: true,
+    },
     getFeature: function () {
       this.feature = this.getFeature;
     },
@@ -151,13 +147,19 @@ export default {
     },
 
     findItem(id) {
-      let item = this.arrayEditMode.put.filter(el => el.id === id);
-      if (item.length) {
-        return item[0];
+      let item = this.arrayEditMode.put.find(el => el.id === id);
+
+      if (item === undefined) {
+        item = this.arrayEditMode.delete.find(el => el.id === id);
       }
-      else {
+      if (item === undefined) {
+        item = this.arrayEditMode.post.find(el => el.id_ === id)
+      }
+
+      if (item === undefined) {
         return false;
       }
+      return item;
     },
 
     async getFeature_(event) {
@@ -182,11 +184,21 @@ export default {
       }
     },
     changeCoordinates(event) {
-      this.feature.geometry = {
-        coordinates: toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
-      };
-      this.feature.properties['Широта'] = this.feature.geometry.coordinates[1];
-      this.feature.properties['Долгота'] = this.feature.geometry.coordinates[0];
+      this.feature.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates());
+    },
+    createSubArrays() {
+      let subArrays = {};
+      for (let i in this.allType) {
+        subArrays[`${this.allType[i].id}`] = [];
+        for (let j in this.arrayEditMode.post) {
+          if (this.arrayEditMode.post[j].name == this.allType[i].id) {
+            let obj = JSON.parse(JSON.stringify(this.arrayEditMode.post[j]));
+            obj.id = obj.id_;
+            subArrays[`${this.allType[i].id}`].push(obj);
+          }
+        }
+      }
+      return subArrays;
     },
     async addInteraction() {
       this.drawLayer.getSource().refresh();
@@ -221,8 +233,6 @@ export default {
         style: this.drawLayer.getStyle(),
       });
 
-      //this.draw.setStyle(style);
-
       this.map.addLayer(this.drawLayer);
       this.map.addInteraction(this.draw);
       this.map.addInteraction(this.modify);
@@ -235,13 +245,20 @@ export default {
           this.resizeMap();
       }, 400);
     },
+    deleteOldLayers(){
+      let arrayOfLayers = this.map.getAllLayers();
+      arrayOfLayers.forEach(element => {
+        if(element.get('typeId') !== undefined){
+          this.map.removeLayer(element);
+        }
+      })
+    },
     addNewLayers() {
       this.allType.forEach(async element => {
         let features = {
           type: 'FeatureCollection',
           features: this.features.features.filter(el => el.name === element.id),
         };
-        await this.getOneTypeObject({ id: element.id, forFeature: true });
         let layer = new VectorLayer({
           source: new VectorSource({
             features: new GeoJSON().readFeatures(features,
@@ -250,10 +267,12 @@ export default {
               }),
           }),
         });
-        layer.set('name', 'feature')
-        this.map.addLayer(layer)
 
-        if (features.features.length && features.features[0].geometry.type === 'Point' && !(this.typeForLayer.image === '')) {
+        layer.set('typeId', element.id);
+        this.map.addLayer(layer);
+        await this.getOneTypeObject({ id: element.id, forFeature: true });
+
+        if (this.typeForLayer.type === 'Point' && !(this.typeForLayer.image === '')) {
           let style = new Style({
             image: new Icon({
               anchor: [0.5, 0, 5],
@@ -262,7 +281,6 @@ export default {
               src: `static/${this.typeForLayer.image}`,
             }),
           });
-
           layer.setStyle(style)
 
           let selectStyle = new Style({
@@ -273,7 +291,6 @@ export default {
               src: `static/${this.typeForLayer.image.slice(0, -4) + '-selected.png'}`,
             }),
           });
-          console.log(this.typeForLayer.image.slice(0, -4) + '-selected.png')
 
           let selectInteraction = new Select({
             style: selectStyle,
@@ -283,11 +300,7 @@ export default {
 
         }
       });
-
-
-
     },
-
   },
   mounted() {
     this.map = new Map({
