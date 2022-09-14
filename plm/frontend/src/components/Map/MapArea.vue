@@ -16,13 +16,13 @@ import { Draw, Modify } from 'ol/interaction';
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 
-import {Icon, Style} from 'ol/style';
+import { Icon, Style } from 'ol/style';
 import Select from 'ol/interaction/Select';
 import Stroke from 'ol/style/Stroke';
 
-import Feature from 'ol/Feature';
+// import Feature from 'ol/Feature';
 // import Translate from 'ol/interaction/Translate';
-import LineString from 'ol/geom/LineString';
+// import LineString from 'ol/geom/LineString';
 
 
 export default {
@@ -191,69 +191,26 @@ export default {
     },
 
     changeCoordinatesEdit(event) {
+      this.map.getAllLayers().forEach(element => {
+        if (!(element instanceof TileLayer)) {
+          element.getSource().getFeatures().forEach(geom => {
+            
+            if ( geom.getGeometry().getType() === 'LineString'){
 
-      this.map.getLayers().forEach(element => {
-
-        if (element.get('typeId') != undefined) {
-          element.getSource().getFeatures().forEach(el => {
-            if (el.getGeometry().getType() === 'LineString') {
-
-              el.getGeometry().getCoordinates().forEach((coord, index) => {
-                coord = toLonLat(coord)
-                coord[0] = parseFloat(coord[0].toFixed(6))
-                coord[1] = parseFloat(coord[1].toFixed(6))
-                
-                if (coord.includes(this.editedPointCoordinates[0]) && coord.includes(this.editedPointCoordinates[1])){
-                  this.editedTypeId = element.get('typeId')
-
-                  let feature = el.getGeometry().getCoordinates()
-                  feature[index] = event.features.getArray()[0].getGeometry().getCoordinates()
-                  feature.forEach((element, index) => {
-                    feature[index] = fromLonLat(element)
-                    feature[index][0] = parseFloat(element[0].toFixed(6))
-                    feature[index][1] = parseFloat(element[1].toFixed(6))
-                  });
-
-
-                  const newFeature = new Feature({
-                    geometry: new LineString(feature),
-                  });
-
-                  console.log(feature)
-
-
-                  let features = {
-                    type: 'FeatureCollection',
-                    features: newFeature,
-                  };
-                
-                  let layer = new VectorLayer({
-                    source: new VectorSource({
-                      features: new GeoJSON().readFeatures(features,
-                        {
-                          featureProjection: 'EPSG:3857'
-                        }),
-                    }),
-                  });
-
-                  let arrayOfLayers = this.map.getAllLayers();
-                  arrayOfLayers.forEach(element => {
-                    if (element.get('typeId') === this.editedTypeId) {
-                      this.map.removeLayer(element)
-                    }
-                  })
-                  this.map.addLayer(layer)
-
-                  console.log(this.map.getLayers())
-                }
-              });
+              console.log(geom.getGeometry().getCoordinates()[1].filter(el => el === [6254288.666040863, 7346971.55632672]))
+              
+              // let messi = geom.getGeometry().getCoordinates().findIndex([6254288.666040863, 7346971.55632672])
+              // console.log(messi)
             }
+
           });
         }
-      });
+        // if (element.get('typeId') === 'LineString') {
 
+        // }
+      })
       this.objectForCard.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
-      this.objectForCard.geometry.type = 'Point'
+
     },
 
     async addInteraction() {
@@ -320,8 +277,8 @@ export default {
           }),
         });
         layer.set('typeId', element.id);
-        
-        
+
+
         this.map.addLayer(layer)
 
         if (features.features.length && features.features[0].geometry.type === 'LineString') {
@@ -334,8 +291,8 @@ export default {
             layers: [layer],
             multi: true,
           });
-        
-          this.map.addInteraction(this.selectInteractionLineString) 
+
+          this.map.addInteraction(this.selectInteractionLineString)
 
           this.modifyEdit = new Modify({
             features: this.selectInteractionLineString.getFeatures(),
@@ -366,7 +323,7 @@ export default {
 
           this.selectInteraction = new Select({
             style: selectStyle,
-            layers: [layer], 
+            layers: [layer],
             multi: true,
           });
 
@@ -394,15 +351,14 @@ export default {
           this.modifyEdit.on('modifyend', this.changeCoordinatesEdit);
         }
 
-        console.log(this.map.getLayers())
       });
     },
 
-    takeCoordinates(event){
+    takeCoordinates(event) {
       this.editedPointCoordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
       this.editedPointCoordinates[0] = parseFloat(this.editedPointCoordinates[0].toFixed(6))
       this.editedPointCoordinates[1] = parseFloat(this.editedPointCoordinates[1].toFixed(6))
-    }, 
+    },
   },
   mounted() {
     this.map = new Map({
