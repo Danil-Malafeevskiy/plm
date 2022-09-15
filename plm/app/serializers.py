@@ -31,6 +31,7 @@ class FeatureListSerializer(serializers.ListSerializer):
 
         res_update = []
         for obj_feature in feature_update:
+
             feature = feature_old.get(obj_feature['id'])
             type = FeatureSerializer(feature).data['geometry']
             if type['type'] == 'Point':
@@ -38,6 +39,7 @@ class FeatureListSerializer(serializers.ListSerializer):
                     for lineIndex in range(len(line['geometry']['coordinates'])):
                         if type['coordinates'] == line['geometry']['coordinates'][lineIndex]:
                             line['geometry']['coordinates'][lineIndex] = FeatureSerializer(obj_feature).data['geometry']['coordinates']
+                            break
                     new_line = FeatureSerializer(Feature.objects.get(id=line['id']), data=line)
                     if new_line.is_valid():
                         new_line.save()
