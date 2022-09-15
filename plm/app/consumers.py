@@ -1,11 +1,11 @@
-from django.contrib.auth.models import Group, AnonymousUser, User
+from django.contrib.auth.models import Group, AnonymousUser
 from djangochannelsrestframework.consumers import AsyncAPIConsumer
 from djangochannelsrestframework.decorators import action
 from djangochannelsrestframework.observer import model_observer
 
-from app.models import Feature, Dataset
+from app.models import Feature, Type
 
-from app.serializers import FeatureSerializer, DatasetSerializer
+from app.serializers import FeatureSerializer, TypeSerializer
 
 
 class FeatureConsumer(AsyncAPIConsumer):
@@ -30,23 +30,23 @@ class FeatureConsumer(AsyncAPIConsumer):
 
     @feature_change.groups_for_signal
     def feature_change(self, instance: Feature, **kwargs):
-        group = Group.objects.get(id=Dataset.objects.get(id=instance.name_id).group_id).name
+        group = Group.objects.get(id=Type.objects.get(id=instance.name_id).group_id).name
         yield f'-group__{group}'
 
     @feature_change.groups_for_consumer
     def feature_change(self, group=None, **kwargs):
         yield f'-group__{group}'
 
-    @model_observer(Dataset)
+    @model_observer(Type)
     async def dataset_change(self, message, **kwargs):
         await  self.send_json(message)
 
     @dataset_change.serializer
     def dataset_change(self, instance: Feature, action, **kwargs):
-        return dict(data=DatasetSerializer(instance).data, action=action.value, pk=instance.pk)
+        return dict(data=TypeSerializer(instance).data, action=action.value, pk=instance.pk)
 
     @dataset_change.groups_for_signal
-    def dataset_change(self, instance: Dataset, **kwargs):
+    def dataset_change(self, instance: Type, **kwargs):
         group = Group.objects.get(id=instance.group_id).name
         yield f'-group__{group}'
 
