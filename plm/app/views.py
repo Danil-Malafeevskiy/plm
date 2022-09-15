@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group, Permission
 from django.shortcuts import render
 from django.utils import timezone, dateformat
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.parsers import MultiPartParser, FileUploadParser
 
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
@@ -89,6 +90,7 @@ class FileUploadView(APIView):
     serializer_class = FileSerializer
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, FileUploadPerm]
+    parser_classes = (MultiPartParser, FileUploadParser,)
 
     fs = FileSystemStorage(location=settings.MEDIA_URL)
 
