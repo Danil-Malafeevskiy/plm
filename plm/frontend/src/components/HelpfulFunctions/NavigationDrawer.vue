@@ -18,21 +18,14 @@
         <v-list dense nav>
             <p
                 style="display: flex; font-size: 16px; color: #5E5E5E; justify-content: space-between; align-items: center;">
-
                 Типы {{ fiteredAllTypes.length }}
-
                 <v-autocomplete @click:clear="clear" multiple clearable id='search' dense append-icon hide-details
                     hint="Поиск" hide-no-data solo label="Поиск" @update:search-input="search">
                 </v-autocomplete>
-
-
             </p>
-
             <v-list-item-group class="object__data" v-model="selectedItem" color="#E93030">
-
                 <v-list-item class="pa-3" v-for="key in fiteredAllTypes" :key="key.id" link
                     style="border-radius: 8px !important;">
-
                     <v-list-item-title class="pa-1">
                         {{ key.name }}
                     </v-list-item-title>
@@ -62,7 +55,7 @@ export default {
     },
     watch: {
         selectedItem: {
-            handler(newValue, oldValue) {
+            async handler(newValue, oldValue) {
                 if (this.selectedItem != null) {
                     this.changeObject(this.fiteredAllTypes[this.selectedItem]);
                     if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
@@ -131,7 +124,6 @@ export default {
             handler() {
                 this.selectedItem = null;
             }
-
         },
         allType: {
             handler() {
@@ -146,8 +138,6 @@ export default {
         }
     },
     computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType']) },
-
-
     methods: {
         ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
@@ -177,16 +167,14 @@ export default {
                 this.getUsersOfGroup(objectType);
             }
             else {
-                this.getOneTypeObjectForFeature({ id: objectType.id });
-                await this.filterForFeature(this.objectType.id);
+                await this.getOneTypeObjectForFeature({ id: objectType.id });
                 this.objectType = this.oneType;
                 this.updateHeaders(this.objectType.headers);
-                this.updateDrawType(this.objectType.type)
+                this.updateDrawType(this.objectType.type);
+                await this.filterForFeature(this.objectType.id);
             }
         },
-
         resetSelectItem() {
-           // this.selectedItem = null;
             setTimeout(() => { this.showCard = !this.showCard; });
         },
         search(searchText) {

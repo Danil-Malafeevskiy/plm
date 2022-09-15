@@ -3,7 +3,6 @@
 </template>
 
 <script>
-//import { mapGetters, mapActions } from 'vuex';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -16,6 +15,7 @@ import { Draw, Modify } from 'ol/interaction';
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 
+
 import { Icon, Style } from 'ol/style';
 import Circle from 'ol/geom/Circle';
 import Select from 'ol/interaction/Select';
@@ -23,12 +23,13 @@ import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
 
 
+
 export default {
   components: {
   },
   props: ['allFeatures', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature'],
   data() {
-    return {
+   return {
       coord: [],
       coordEdit: [],
       features: {
@@ -48,7 +49,6 @@ export default {
         source: new VectorSource()
       }),
       interactionId: null,
-      overlayId: null,
       draw: null,
       modify: null,
       modifyEdit: null,
@@ -59,28 +59,52 @@ export default {
       objectForCard: {},
       editedPointCoordinates: null,
       editedLineStringCoordinates: null,
-      modifyLayer: null,
     }
+  },
   },
   watch: {
     allFeatures: {
-      handler() {
+      async handler() {
         this.features = {
           type: 'FeatureCollection',
           features: this.allFeatures,
         }
+
         if (this.map != null) {
+          await this.deleteOldLayers();
           this.addNewLayers();
         }
       }
     },
-
+    arrayEditMode: {
+      handler() {
+        let arraysOfNewObject = this.createSubArrays();
+        let arrayOfLayers = this.map.getAllLayers();
+        
+        for (let i in arraysOfNewObject) {
+          let layer = arrayOfLayers.find(el => `${el.get('typeId')}` === i);
+          let source = new VectorSource({
+            features: new GeoJSON().readFeatures(
+              {
+                type: 'FeatureCollection',
+                features: [...this.allFeatures.filter(el => el.name == layer.get('typeId')), ...arraysOfNewObject[i]]
+              },
+              {
+                featureProjection: 'EPSG:3857'
+              }),
+          });
+          layer.setSource(source);
+        }
+      },
+      deep: true,
+    },
+    
     getObjectForCard: {
       handler() {
         this.objectForCard = this.getObjectForCard;
       }
     },
-
+    
     getFeature: function () {
       this.feature = this.getFeature;
     },
@@ -167,13 +191,19 @@ export default {
     },
 
     findItem(id) {
-      let item = this.arrayEditMode.put.filter(el => el.id === id);
-      if (item.length) {
-        return item[0];
+      let item = this.arrayEditMode.put.find(el => el.id === id);
+
+      if (item === undefined) {
+        item = this.arrayEditMode.delete.find(el => el.id === id);
       }
-      else {
+      if (item === undefined) {
+        item = this.arrayEditMode.post.find(el => el.id_ === id)
+      }
+
+      if (item === undefined) {
         return false;
       }
+      return item;
     },
 
     async getFeature_(event) {
@@ -199,10 +229,10 @@ export default {
     },
 
     changeCoordinates(event) {
-      this.feature.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
+      this.feature.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates());
     },
-
-    changeCoordinatesEdit(event) {
+    
+changeCoordinatesEdit(event) {
       this.map.getAllLayers().forEach(element => {
         if (!(element instanceof TileLayer)) {
           element.getSource().getFeatures().forEach(geom => {
@@ -219,6 +249,20 @@ export default {
         }
       })
       this.objectForCard.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
+    },
+    createSubArrays() {
+      let subArrays = {};
+      for (let i in this.allType) {
+        subArrays[`${this.allType[i].id}`] = [];
+        for (let j in this.arrayEditMode.post) {
+          if (this.arrayEditMode.post[j].name == this.allType[i].id) {
+            let obj = JSON.parse(JSON.stringify(this.arrayEditMode.post[j]));
+            obj.id = obj.id_;
+            subArrays[`${this.allType[i].id}`].push(obj);
+          }
+        }
+      }
+      return subArrays;
     },
 
     async addInteraction() {
@@ -268,13 +312,21 @@ export default {
       }, 400);
     },
 
+    deleteOldLayers(){
+      let arrayOfLayers = this.map.getAllLayers();
+      arrayOfLayers.forEach(element => {
+        if(element.get('typeId') !== undefined){
+          this.map.removeLayer(element);
+        }
+      })
+    },
+
     addNewLayers() {
       this.allType.forEach(async element => {
         let features = {
           type: 'FeatureCollection',
           features: this.features.features.filter(el => el.name === element.id),
         };
-        await this.getOneTypeObject({ id: element.id, forFeature: true });
         let layer = new VectorLayer({
           source: new VectorSource({
             features: new GeoJSON().readFeatures(features,
@@ -283,15 +335,18 @@ export default {
               }),
           }),
         });
+
         layer.set('typeId', element.id);
 
         this.map.addLayer(layer)
+        await this.getOneTypeObject({ id: element.id, forFeature: true });
 
         this.addModify(features, layer)
       });
     },
 
-    takeCoordinates(event) {
+
+takeCoordinates(event) {
       this.editedPointCoordinates = event.features.getArray()[0].getGeometry().getCoordinates()
     },
 

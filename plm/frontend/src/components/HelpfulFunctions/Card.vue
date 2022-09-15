@@ -2,20 +2,22 @@
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
             <p style="display: none">{{ objectForCard }}</p>
+            <v-card
+                v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'"
+                class="one_picture pa-0 ma-0 background_color_gray" tile flat
+                style="width: 100% !important; height: 59.45% !important; overflow-y: scroll !important;">
 
-            <v-card v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'" class="one_picture pa-0 ma-0 background_color_gray"
-                tile flat style="width: 100% !important; height: 59.45% !important; overflow-y: scroll !important;">
                 <v-row no-gutters justify="start">
                     <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
                         style="max-width: 3em !important; margin-right: 1em !important;" @click="clickImage(el)">
                         <v-radio-group hide-details class="pa-0 ma-0" v-model="objectForCard.image">
-                            <v-icon size='2em' v-if="(el.slice(4)+'.png') === objectForCard.image" color="red">{{el}}</v-icon>
+                            <v-icon size='2em' v-if="(el.slice(4)+'.png') === objectForCard.image" color="red">{{el}}
+                            </v-icon>
                             <v-icon size='2em' v-else>{{el}}</v-icon>
                         </v-radio-group>
                     </v-col>
                 </v-row>
             </v-card>
-
             <v-file-input v-else-if="'properties' in objectForCard && 'type' in objectForCard.properties"
                 accept="image/*" class="pa-0 ma-0 background_color_red" height="37.53%" :prepend-icon="icon"
                 :disabled="infoCardOn_.data" hide-input>
@@ -58,9 +60,9 @@
                                     }}
                                 </v-card-text>
                                 <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
-
-                                    objectForCard.properties.name
-                                    }}
+                                
+                                objectForCard.properties.name
+                                }}
 
                                 </v-card-text>
 
@@ -164,6 +166,7 @@ import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiImagePlusOutline } from '@mdi/js'
 import ExpansionPanelForCard from './ExpansionPanelForCard.vue'
 import FormForDynamicField from './FormForDynamicField.vue';
+import { v4 as uuidv4 } from 'uuid';
 
 export default {
     name: 'CardInfo',
@@ -182,7 +185,7 @@ export default {
             objectForCard: {},
             showPassword: false,
             listIcons: ['static/tower.png', 'static/tree.png', 'static/airplane.png', 'static/apple.png', 'static/biohazard.png', 'static/bluetooth.png', 'static/bottle-wine.png', 'static/bucket.png'],
-            listMdiIcons:['mdi-transmission-tower', 'mdi-pine-tree', 'mdi-airplane', 'mdi-apple', 'mdi-biohazard', 'mdi-bluetooth', 'mdi-bottle-wine', 'mdi-bucket'],
+            listMdiIcons: ['mdi-transmission-tower', 'mdi-pine-tree', 'mdi-airplane', 'mdi-apple', 'mdi-biohazard', 'mdi-bluetooth', 'mdi-bottle-wine', 'mdi-bucket'],
             listSelectedIcons: [],
             rules: {
                 min: v => v.length >= 8 || 'Минимум 8 символов',
@@ -262,8 +265,8 @@ export default {
         ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData']),
         async addNewFeature() {
             if (this.objectForCard.name != null) {
-                this.objectForCard.id_ = this.arrayEditMode.post.length + 1;
-                this.updateArrayEditMode({ item: this.objectForCard, type: 'post' });
+                this.objectForCard.id_ = uuidv4();
+                this.updateArrayEditMode({ item: JSON.parse(JSON.stringify(this.objectForCard)), type: 'post' });
             }
             else {
                 if ('groups' in this.objectForCard) {
@@ -323,7 +326,7 @@ export default {
         },
         fileToBase64(file) {
             const reader = new FileReader();
-            
+
             reader.onload = (e) => {
                 this.objectForCard.image = e.target.result;
             };
@@ -522,6 +525,10 @@ export default {
 
 .card_from_block {
     height: 100%;
+}
+
+.v-icon::after{
+    background-color: none !important;
 }
 </style>
 

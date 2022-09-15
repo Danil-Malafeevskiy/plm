@@ -59,7 +59,7 @@ export default {
                             document.querySelector('.text_in_span').innerHTML = document.querySelector('.v-item--active .v-list-item__title').innerText;
                         })
                     }
-                    this.resetSelectItem();
+                    await this.resetSelectItem();
                     switch (this.selectedItem) {
                         case 0: {
                             this.onUsers();
@@ -116,10 +116,6 @@ export default {
                     "value": "name",
                     "sortable": false
                 },
-                {
-                    "text": "type",
-                    "value": "type"
-                }
             ];
             this.updateHeaders(headers);
             this.updateAction({
