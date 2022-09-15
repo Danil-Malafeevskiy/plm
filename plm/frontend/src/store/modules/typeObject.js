@@ -50,6 +50,7 @@ export default {
             });
         },
         async postTypeObject({ dispatch }, newType) {
+            console.log(newType);
             await axios.post('/dataset/admin', newType).then((response) => {
                 console.log(response.data);
                 dispatch('getTypeObject', true);

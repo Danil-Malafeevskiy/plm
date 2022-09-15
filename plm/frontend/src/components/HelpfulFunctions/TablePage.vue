@@ -137,9 +137,8 @@ export default {
           this.editCardOn_.data = false;
         }
         else {
-          console.log(1);
-          this.infoCardOn_.data = false;
-          this.notVisableCard();
+          await this.notVisableCard();
+          setTimeout(() => this.infoCardOn_.data = false, 500);
         }
       }
     },

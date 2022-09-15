@@ -24,14 +24,17 @@
                     hint="Поиск" hide-no-data solo label="Поиск" @update:search-input="search">
                 </v-autocomplete>
             </p>
-            <v-list-item-group class="object__data" v-model="selectedItem" color="#E93030">
-                <v-list-item class="pa-3" v-for="key in fiteredAllTypes" :key="key.id" link
-                    style="border-radius: 8px !important;">
-                    <v-list-item-title class="pa-1">
-                        {{ key.name }}
-                    </v-list-item-title>
-                </v-list-item>
-            </v-list-item-group>
+            <v-slide-y-transition>
+                <v-list-item-group v-if="fiteredAllTypes.length" class="object__data" v-model="selectedItem"
+                    color="#E93030">
+                    <v-list-item class="pa-3" v-for="key in fiteredAllTypes" :key="key.id" link
+                        style="border-radius: 8px !important;">
+                        <v-list-item-title class="pa-1">
+                            {{ key.name }}
+                        </v-list-item-title>
+                    </v-list-item>
+                </v-list-item-group>
+            </v-slide-y-transition>
         </v-list>
     </v-navigation-drawer>
 </template>

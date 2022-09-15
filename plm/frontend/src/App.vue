@@ -33,8 +33,9 @@
             <v-icon color="white !default" dark>
               mdi-plus
             </v-icon>
-          </v-btn>
 
+          </v-btn>
+          <v-file-input hide-input prepend-icon="mdi-file-upload" @change="uploadFile"></v-file-input>
         </template>
       </v-toolbar>
 
@@ -44,22 +45,26 @@
           :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
 
         <v-tab-item>
-          <div v-if="editMode && actions === 'getFeatures'" class="edit_line">
-            <div>
-              <a @click="closeEditMode" style="margin: 5px 20px">
-                <v-icon small>mdi-close</v-icon>
-              </a>
-              <span style="color: #454545;">Редактирование</span>
+
+          <v-slide-y-transition>
+            <div v-if="editMode && actions === 'getFeatures'" class="edit_line">
+              <div>
+                <a @click="closeEditMode" style="margin: 5px 20px">
+                  <v-icon small>mdi-close</v-icon>
+                </a>
+                <span style="color: #454545;">Редактирование</span>
+              </div>
+              <div>
+                <span style="color: #454545; margin-right: 20px">{{ arrayEditMode.put.length + arrayEditMode.post.length
+                +
+                arrayEditMode.delete.length
+                }} объектов</span>
+                <v-btn @click="editObjects" text class="pa-0" style="margin: 0 10px 0 0">
+                  <span style="color: #454545;">применить</span>
+                </v-btn>
+              </div>
             </div>
-            <div>
-              <span style="color: #454545; margin-right: 20px">{{ arrayEditMode.put.length + arrayEditMode.post.length +
-              arrayEditMode.delete.length
-              }} объектов</span>
-              <v-btn @click="editObjects" text class="pa-0" style="margin: 0 10px 0 0">
-                <span style="color: #454545;">применить</span>
-              </v-btn>
-            </div>
-          </div>
+          </v-slide-y-transition>
           <div flat>
 
             <Auth v-if="getAuth === false" />
@@ -90,7 +95,6 @@ import { mapActions, mapGetters, mapMutations } from 'vuex';
 import ConflicWindow from './components/HelpfulFunctions/ConflicWindow.vue';
 import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
-
 
 export default {
   components: {
@@ -141,7 +145,7 @@ export default {
   computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
     'newData', 'actions', 'typeForLayer']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'uploadFileWithFeature']),
     ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData']),
     visableCard() {
       this.cardVisable.data = true;
@@ -156,6 +160,7 @@ export default {
       const data = JSON.parse(e.data);
       this.getFeatures();
       switch (data.action) {
+
         case "update": {
           if (this.editMode) {
             let editObject = this.arrayEditMode.put.filter(el => el.id === data.data.id);
@@ -217,14 +222,19 @@ export default {
       this.resetNewData();
       this.resetArrayEditMode();
       this.filterForFeature(this.oneType.id);
+    },
+    uploadFile(file) {
+      let formData = new FormData();
+      formData.append("file", file);
+      this.uploadFileWithFeature(formData);
     }
   },
-  async mounted() {
+  mounted() {
     const chatSocket = new WebSocket("ws://localhost:8000/test");
     chatSocket.onmessage = this.onmessage;
 
-    this.getUser();
     this.getFeatures();
+    this.getUser();
   }
 }
 </script>
