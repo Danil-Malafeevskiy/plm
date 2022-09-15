@@ -12,6 +12,11 @@ export default {
                 }
             });
         },
+        async getAllType({commit}){
+            await axios.get('/dataset').then((response) => {
+                commit('updateAllTypeForMap', response.data);
+            })
+        },
         async getOneTypeObject({ commit }, id) {
             switch (typeof id) {
                 case 'number': {
@@ -91,6 +96,9 @@ export default {
         },
         updateSelectedDrawType(state, type){
             state.selectedDrawType = type;
+        },
+        updateAllTypeForMap(state, types){
+            state.allTypeForMap = types;
         }
     },
     getters: {
@@ -108,10 +116,14 @@ export default {
         },
         selectedDrawType(state){
             return state.selectedDrawType;
+        },
+        allTypeForMap(state){
+            return state.allTypeForMap;
         }
     },
     state: {
         listType: [],
+        allTypeForMap: [],
         type: null,
         typeForFeature: {
             id: 0,

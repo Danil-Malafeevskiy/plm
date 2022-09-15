@@ -4,9 +4,12 @@
 
     <v-main>
       <div style="display: none">
-        <canvas id="2">
+        <canvas id="png_icon_of_type">
         </canvas>
-        <v-icon color="yellow">{{test}}</v-icon>
+        <v-icon id="svg_icon_of_type" color="#E93030" v-if="typeForLayer">{{typeForLayer.image}}</v-icon>
+        <canvas id="png_icon_of_one_type">
+        </canvas>
+        <v-icon id="svg_icon_of_one_type" color="#E93030" v-if="oneType">{{oneType.image}}</v-icon>
       </div>
 
       <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0; box-shadow: none;">
@@ -118,9 +121,25 @@ export default {
     }
   },
   watch: {
+    oneType: {
+      handler() {
+        if (this.oneType.image) {
+          setTimeout(async () => {
+            let canvas = document.getElementById('png_icon_of_one_type');
+            let svg = document.querySelector('#svg_icon_of_one_type svg');
+            canvas.height = 24;
+            canvas.width = 24;
+            let v = await Canvg.from(canvas.getContext('2d'), svg.parentNode.innerHTML.trim());
+            v.start();
+            v.stop();
+          });
+        }
+      },
+      deep: true,
+    }
   },
   computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
-    'newData', 'actions']),
+    'newData', 'actions', 'typeForLayer']),
   methods: {
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature']),
     ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData']),
@@ -138,8 +157,6 @@ export default {
       this.getFeatures();
       switch (data.action) {
         case "update": {
-          console.log(data.data);
-
           if (this.editMode) {
             let editObject = this.arrayEditMode.put.filter(el => el.id === data.data.id);
 
@@ -161,7 +178,7 @@ export default {
           }
           break;
         case 'delete':
-          console.log(data.data);
+          // console.log(data.data);
           if (data.data.name === this.oneType.id) {
             this.filterForFeature(this.oneType.id);
           }
@@ -208,15 +225,6 @@ export default {
 
     this.getUser();
     this.getFeatures();
-
-    let canvas = document.getElementById('2');
-    let svg = document.querySelector('.v-icon__svg');
-    canvas.height = 24;
-    canvas.width = 24;
-    canvas.getContext('2d').fillStyle = window.getComputedStyle(svg, null).getPropertyValue('color');
-    let v = await Canvg.from(canvas.getContext('2d'), svg.parentNode.innerHTML.trim());
-    v.start();
-    v.stop();
   }
 }
 </script>

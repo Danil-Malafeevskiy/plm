@@ -16,6 +16,7 @@ import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 import { Icon, Style } from 'ol/style';
 import Select from 'ol/interaction/Select';
+import { Canvg } from 'canvg';
 
 export default {
   components: {
@@ -45,6 +46,8 @@ export default {
       selectInteraction: null,
       editFeatures: null,
       objectForCard: {},
+      canvas: document.getElementById('png_icon_of_type'),
+      svg: document.querySelector('#svg_icon_of_type svg'),
     }
   },
   watch: {
@@ -65,18 +68,20 @@ export default {
       handler() {
         let arraysOfNewObject = this.createSubArrays();
         let arrayOfLayers = this.map.getAllLayers();
-        
+
         for (let i in arraysOfNewObject) {
-          let layer = arrayOfLayers.find(el => `${el.get('typeId')}` === i);
-          let source = new VectorSource({
-            features: new GeoJSON().readFeatures(
+          const layer = arrayOfLayers.find(el => `${el.get('typeId')}` === i);
+          let feature = layer.getSource().getFeatures();
+          feature = this.deleteNewObjectFromMap(feature, arraysOfNewObject[i]);
+          const source = new VectorSource({
+            features: [...feature, ...new GeoJSON().readFeatures(
               {
                 type: 'FeatureCollection',
-                features: [...this.allFeatures.filter(el => el.name == layer.get('typeId')), ...arraysOfNewObject[i]]
+                features: arraysOfNewObject[i]
               },
               {
                 featureProjection: 'EPSG:3857'
-              }),
+              })],
           });
           layer.setSource(source);
         }
@@ -86,45 +91,45 @@ export default {
     getFeature: function () {
       this.feature = this.getFeature;
     },
-    drawType: {
+    oneType: {
       handler() {
-        if (this.addCardOn.data) {
-          this.map.removeInteraction(this.draw);
-          this.addInteraction();
-        }
-        else {
-          this.map.removeInteraction(this.draw);
-          this.drawLayer.getSource().refresh();
-          this.map.removeInteraction(this.modify);
-        }
+        this.resetInteractions();
       }
     },
     addCardOn: {
       handler() {
         this.addCardOn_ = this.addCardOn;
-        if (this.addCardOn.data) {
-          this.map.removeInteraction(this.draw);
-          this.addInteraction();
-        }
-        else {
-          this.map.removeInteraction(this.draw);
-          this.drawLayer.getSource().refresh();
-          this.map.removeInteraction(this.modify);
-        }
+        this.resetInteractions();
       },
       deep: true
     },
 
   },
-  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEditMode', 'oneType']),
+  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEditMode', 'oneType', 'allTypeForMap']),
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard']),
-    ...mapActions(['getOneFeature', 'getOneTypeObject']),
+    ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType']),
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
       this.feature.properties['Широта'] = cord[0];
     },
-
+    deleteNewObjectFromMap(feature, arr) {
+      feature = feature.filter(function (element) {
+        return !(element != undefined && typeof element.id_ === 'string' && !arr.filter(el => el.id_ === element.id_).length);
+      })
+      return feature;
+    },
+    resetInteractions() {
+      if (this.addCardOn.data) {
+        this.map.removeInteraction(this.draw);
+        this.addInteraction();
+      }
+      else {
+        this.map.removeInteraction(this.draw);
+        this.drawLayer.getSource().refresh();
+        this.map.removeInteraction(this.modify);
+      }
+    },
     updateCoordinates() {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
         this.map.removeInteraction(this.draw);
@@ -209,6 +214,7 @@ export default {
       return subArrays;
     },
     async addInteraction() {
+      this.map.removeInteraction(this.modify);
       this.drawLayer.getSource().refresh();
       await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
 
@@ -224,7 +230,7 @@ export default {
             anchor: [0.5, 0, 5],
             anchorXUnits: 'fraction',
             anchorYUnits: 'pixels',
-            src: document.getElementById('2').toDataURL('image/png'),
+            src:  document.getElementById('png_icon_of_one_type').toDataURL('image/png')
           }),
         }));
       }
@@ -253,20 +259,25 @@ export default {
           this.resizeMap();
       }, 400);
     },
-    deleteOldLayers(){
+    deleteOldLayers() {
       let arrayOfLayers = this.map.getAllLayers();
       arrayOfLayers.forEach(element => {
-        if(element.get('typeId') !== undefined){
+        if (element.get('typeId') !== undefined) {
           this.map.removeLayer(element);
         }
       })
     },
+    updataDomElements() {
+      this.canvas = document.getElementById('png_icon_of_type');
+      this.svg = document.querySelector('#svg_icon_of_type svg');
+    },
     addNewLayers() {
-      this.allType.forEach(async element => {
+      this.allTypeForMap.forEach(async element => {
         let features = {
           type: 'FeatureCollection',
           features: this.features.features.filter(el => el.name === element.id),
         };
+
         let layer = new VectorLayer({
           source: new VectorSource({
             features: new GeoJSON().readFeatures(features,
@@ -275,18 +286,33 @@ export default {
               }),
           }),
         });
-
         layer.set('typeId', element.id);
         this.map.addLayer(layer);
         await this.getOneTypeObject({ id: element.id, forFeature: true });
 
         if (this.typeForLayer.type === 'Point' && !(this.typeForLayer.image === '')) {
+          this.updataDomElements()
+
+          this.canvas.height = 24;
+          this.canvas.width = 24;
+
+          let v = await Canvg.from(this.canvas.getContext('2d'), this.svg.parentNode.innerHTML.trim());
+          v.start();
+          v.stop();
+          let blackIcon = this.canvas.toDataURL('image/png');
+
+          this.canvas.getContext("2d").fillStyle = window.getComputedStyle(this.svg, null).getPropertyValue('color');
+          v = await Canvg.from(this.canvas.getContext('2d'), this.svg.parentNode.innerHTML.trim());
+          v.start();
+          v.stop();
+          let redIcon = this.canvas.toDataURL('image/png');
+
           let style = new Style({
             image: new Icon({
               anchor: [0.5, 0, 5],
               anchorXUnits: 'fraction',
               anchorYUnits: 'pixels',
-              src: `static/${this.typeForLayer.image}`,
+              src: blackIcon,
             }),
           });
           layer.setStyle(style)
@@ -296,7 +322,7 @@ export default {
               anchor: [0.5, 0.5],
               anchorXUnits: 'fraction',
               anchorYUnits: 'pixels',
-              src: `static/${this.typeForLayer.image.slice(0, -4) + '-selected.png'}`,
+              src: redIcon,
             }),
           });
 
@@ -325,7 +351,8 @@ export default {
       });
     },
   },
-  mounted() {
+  async mounted() {
+    await this.getAllType();
     this.map = new Map({
       target: 'map_content',
       layers: [

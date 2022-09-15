@@ -1,7 +1,6 @@
 <template>
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
-            <p>{{objectForCard.geometry}}</p>
             <p style="display: none">{{ objectForCard }}</p>
             <v-card
                 v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'"
@@ -10,11 +9,14 @@
 
                 <v-row no-gutters justify="start">
                     <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
-                        style="max-width: 3em !important; margin-right: 1em !important;" @click="clickImage(el)">
+                        style="max-width: 48px !important" class="ma-0">
                         <v-radio-group hide-details class="pa-0 ma-0" v-model="objectForCard.image">
-                            <v-icon size='2em' v-if="(el.slice(4)+'.png') === objectForCard.image" color="red">{{el}}
-                            </v-icon>
-                            <v-icon size='2em' v-else>{{el}}</v-icon>
+                            <v-radio :value="el" :readonly="infoCardOn.data" class="ma-2"
+                                color="#E93030" :on-icon="el" :off-icon="el"
+                                style="
+                                    min-height: 2em !important; 
+                                    min-width: 2em !important;
+                                "></v-radio>
                         </v-radio-group>
                     </v-col>
                 </v-row>
@@ -164,7 +166,7 @@
 
 <script>
 import { mapActions, mapGetters, mapMutations } from 'vuex';
-import { mdiImagePlusOutline } from '@mdi/js'
+import { mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket } from '@mdi/js'
 import ExpansionPanelForCard from './ExpansionPanelForCard.vue'
 import FormForDynamicField from './FormForDynamicField.vue';
 import { v4 as uuidv4 } from 'uuid';
@@ -186,7 +188,7 @@ export default {
             objectForCard: {},
             showPassword: false,
             listIcons: ['static/tower.png', 'static/tree.png', 'static/airplane.png', 'static/apple.png', 'static/biohazard.png', 'static/bluetooth.png', 'static/bottle-wine.png', 'static/bucket.png'],
-            listMdiIcons: ['mdi-transmission-tower', 'mdi-pine-tree', 'mdi-airplane', 'mdi-apple', 'mdi-biohazard', 'mdi-bluetooth', 'mdi-bottle-wine', 'mdi-bucket'],
+            listMdiIcons: [mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket],
             listSelectedIcons: [],
             rules: {
                 min: v => v.length >= 8 || 'Минимум 8 символов',
@@ -528,7 +530,7 @@ export default {
     height: 100%;
 }
 
-.v-icon::after{
+.v-icon::after {
     background-color: none !important;
 }
 </style>
