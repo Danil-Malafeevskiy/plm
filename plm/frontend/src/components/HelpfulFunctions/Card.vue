@@ -11,9 +11,8 @@
                     <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
                         style="max-width: 48px !important" class="ma-0">
                         <v-radio-group hide-details class="pa-0 ma-0" v-model="objectForCard.image">
-                            <v-radio :value="el" :readonly="infoCardOn.data" class="ma-2"
-                                color="#E93030" :on-icon="el" :off-icon="el"
-                                style="
+                            <v-radio :value="el" :readonly="infoCardOn.data" class="ma-2" color="#E93030" :on-icon="el"
+                                :off-icon="el" style="
                                     min-height: 2em !important; 
                                     min-width: 2em !important;
                                 "></v-radio>
@@ -49,7 +48,7 @@
 
             <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                 <v-card-text class="pa-0">
-                    <v-form>
+                    <v-form v-if="allListItem[0] != user">
                         <v-row justify="start" style="padding-bottom: 0 !important;">
                             <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                 <v-card-text v-if="objectForCard.properties.username != undefined" class="pa-0"
@@ -75,14 +74,14 @@
                                     style="font-size: 24px; display: flex; justify-content: flex-end;">
                                     <v-btn @click="editOn" depressed class="ma-0 btn" fab small elevation="0"
                                         style="background-color: white !important" color="white"
-                                        :disabled="!editMode && actions === 'getFeatures'"
+                                        :disabled="!editMode && 'type' in this.objectForCard"
                                         :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
                                         <v-icon>
                                             mdi-pencil
                                         </v-icon>
                                     </v-btn>
                                     <v-btn @click="deleteObjectOnCard()" class="ma-0 btn" fab small elevation="0"
-                                        :disabled="!editMode && actions === 'getFeatures'"
+                                        :disabled="!editMode && 'type' in this.objectForCard"
                                         style="background-color: white !important"
                                         :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
                                         <v-icon>
@@ -137,6 +136,18 @@
                             Не может быть атрибутов с одинаковыми именами
                         </v-snackbar>
                     </v-form>
+                    <v-form v-else>
+                        <v-row justify="start" style="padding-bottom: 0 !important;">
+                            <v-col cols="2" sm="6" md="5" lg="6">
+                                <v-text-field v-model="objectForCard.properties.password" hide-details label="password"
+                                    :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                                    hint="Минимум 8 символов" placeholder="Пароль"
+                                    :type="showPassword ? 'text' : 'password'" filled
+                                    @click:append="showPassword = !showPassword">>
+                                </v-text-field>
+                            </v-col>
+                        </v-row>
+                    </v-form>
                 </v-card-text>
             </div>
 
@@ -187,12 +198,8 @@ export default {
             icon: mdiImagePlusOutline,
             objectForCard: {},
             showPassword: false,
-            listIcons: ['static/tower.png', 'static/tree.png', 'static/airplane.png', 'static/apple.png', 'static/biohazard.png', 'static/bluetooth.png', 'static/bottle-wine.png', 'static/bucket.png'],
             listMdiIcons: [mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket],
             listSelectedIcons: [],
-            rules: {
-                min: v => v.length >= 8 || 'Минимум 8 символов',
-            },
             isOldItem: false,
             snackbar: false,
         }
@@ -260,7 +267,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEditMode', 'newData', 'actions']),
+        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEditMode', 'newData', 'actions', 'user']),
 
     },
     methods: {
@@ -290,7 +297,7 @@ export default {
             this.notVisableCard();
         },
         async editObject() {
-            if (this.actions === 'getFeatures') {
+            if ('type' in this.objectForCard) {
                 this.updateArrayEditMode({ item: this.objectForCard, type: 'put' });
                 this.deleteItemFromNewData(this.objectForCard);
                 this.allListItem.forEach(element => {

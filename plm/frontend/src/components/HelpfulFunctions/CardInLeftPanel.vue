@@ -17,7 +17,7 @@
                         База объектов
                     </v-list-item-title>
                 </v-list-item>
-                <v-list-item @click="logOutAndResolve()">
+                <v-list-item>
                     <v-list-item-title>
                         <v-avatar color="#72ABEA" size="40">
                             <span
@@ -27,7 +27,7 @@
                         {{ user.username }}
                     </v-list-item-title>
 
-                    <v-list-item-icon>
+                    <v-list-item-icon @click="logOutAndResolve()">
                         <v-icon>mdi-logout-variant</v-icon>
                     </v-list-item-icon>
 
@@ -42,11 +42,12 @@ import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 export default {
     name: 'CardInLeftPanel',
-    props: ['resetSelectItem'],
+    props: ['resetSelectItem', 'visableCard', 'editCardOn'],
     data() {
         return {
             selectedItem: 2,
             initials: null,
+            editCardOn_: this.editCardOn,
         }
     },
     watch: {
@@ -73,19 +74,37 @@ export default {
                         case 2:
                             this.onFeatures();
                             break;
+                        case 3:
+                            this.onUser();
+                            break;
                     }
                 }
             }
         }
     },
-    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType', 'actions']),
+    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType', 'actions', 'getObjectForCard']),
     methods: {
-        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject']),
+        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject', 'getOneObject']),
         ...mapMutations(['updatefilterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
             'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray', 'updateOneType', 'upadateTitle']),
         logOutAndResolve() {
             this.logOut();
             location.reload();
+        },
+        async onUser() {
+            this.updateAction({
+                actionGet: 'getUsersOfGroup',
+                actionPost: 'postUser',
+                actionOneGet: 'getOneUser',
+                actionPut: 'putUser',
+                actionDelete: 'deleteUser',
+            });
+            await this.getOneObject(this.user.id);
+            console.log(this.getObjectForCard);
+            this.updateListType([]);
+            this.updateListItem({ items: [this.user] })
+            this.editCardOn_.data = true;
+            this.visableCard();
         },
         onFeatures() {
             this.updateNameForArray('База объектов');

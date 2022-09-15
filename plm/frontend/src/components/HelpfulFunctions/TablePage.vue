@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="allListItem[0] !== user">
     <div class="sub_tittle" v-if="selected.length != 0">
       <div style="margin: 20px 0;">
         <span class="object" v-if="selected.length % 10 === 1">{{ selected.length }} объект </span>
@@ -95,8 +95,8 @@ export default {
   },
   computed: {
     ...mapGetters(['allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray',
-      'allType', 'drawType', 'getToolbarTitle', 'typeForFeature', 'typeForFeature', 'arrayEditMode', 'newData', 'oneType',
-      'selectedDrawType', 'actions', 'allGroups']),
+      'drawType', 'getToolbarTitle', 'arrayEditMode', 'newData', 'oneType',
+      'selectedDrawType', 'actions', 'allGroups', 'user']),
     selected: {
       get() {
         return this.arrObjects[`${this.nameArray}`];
