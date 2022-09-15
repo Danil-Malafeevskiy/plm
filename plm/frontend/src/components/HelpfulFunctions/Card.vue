@@ -1,178 +1,183 @@
 <template>
-    <v-card class="card_of_object" v-show="cardVisable_.data === true">
-        <div class="card__window">
-            <p style="display: none">{{ objectForCard }}</p>
-            <v-card
-                v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'"
-                class="one_picture pa-0 ma-0 background_color_gray" tile flat
-                style="width: 100% !important; height: 59.45% !important; overflow-y: scroll !important;">
+    <v-scroll-x-reverse-transition>
+        <v-card class="card_of_object" v-show="cardVisable_.data === true">
+            <div class="card__window">
+                <p style="display: none">{{ objectForCard }}</p>
+                <v-card
+                    v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'"
+                    class="one_picture pa-0 ma-0 background_color_gray" tile flat
+                    style="width: 100% !important; height: 59.45% !important; overflow-y: scroll !important;">
 
-                <v-row no-gutters justify="start">
-                    <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
-                        style="max-width: 48px !important" class="ma-0">
-                        <v-radio-group hide-details class="pa-0 ma-0" v-model="objectForCard.image">
-                            <v-radio :value="el" :readonly="infoCardOn.data" class="ma-2" color="#E93030" :on-icon="el"
-                                :off-icon="el" style="
+                    <v-row no-gutters justify="start">
+                        <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
+                            style="max-width: 48px !important" class="ma-0">
+                            <v-radio-group hide-details class="pa-0 ma-0" v-model="objectForCard.image">
+                                <v-radio :value="el" :readonly="infoCardOn.data" class="ma-2" color="#E93030"
+                                    :on-icon="el" :off-icon="el" style="
                                     min-height: 2em !important; 
                                     min-width: 2em !important;
                                 "></v-radio>
-                        </v-radio-group>
-                    </v-col>
-                </v-row>
-            </v-card>
-            <v-file-input v-else-if="'properties' in objectForCard && 'type' in objectForCard.properties"
-                accept="image/*" class="pa-0 ma-0 background_color_red" height="37.53%" :prepend-icon="icon"
-                :disabled="infoCardOn_.data" hide-input>
-            </v-file-input>
+                            </v-radio-group>
+                        </v-col>
+                    </v-row>
+                </v-card>
+                <v-file-input v-else-if="'properties' in objectForCard && 'type' in objectForCard.properties"
+                    accept="image/*" class="pa-0 ma-0 background_color_red" height="37.53%" :prepend-icon="icon"
+                    :disabled="infoCardOn_.data" hide-input>
+                </v-file-input>
 
-            <v-file-input v-else-if="!objectForCard.image" @change="fileToBase64" accept="image/*" :class="{
-                'background_color_red': !('properties' in objectForCard && 'username' in objectForCard.properties),
-                'background_color_gray': ('properties' in objectForCard && 'username' in objectForCard.properties)
-            }" class="pa-0 ma-0" height="37.53%" :prepend-icon="icon" :disabled="infoCardOn_.data" hide-input>
-            </v-file-input>
-            <template v-else-if="objectForCard.image && !infoCardOn_.data">
-                <div class="background_img"></div>
-                <v-btn class="btn_del_img ma-3 pa-0" elevation="0" icon @click="objectForCard.image = ''">
-                    <v-icon color="white">
-                        mdi-delete-outline
-                    </v-icon>
-                </v-btn>
-            </template>
+                <v-file-input v-else-if="!objectForCard.image" @change="fileToBase64" accept="image/*" :class="{
+                    'background_color_red': !('properties' in objectForCard && 'username' in objectForCard.properties),
+                    'background_color_gray': ('properties' in objectForCard && 'username' in objectForCard.properties)
+                }" class="pa-0 ma-0" height="37.53%" :prepend-icon="icon" :disabled="infoCardOn_.data" hide-input>
+                </v-file-input>
+                <template v-else-if="objectForCard.image && !infoCardOn_.data">
+                    <div class="background_img"></div>
+                    <v-btn class="btn_del_img ma-3 pa-0" elevation="0" icon @click="objectForCard.image = ''">
+                        <v-icon color="white">
+                            mdi-delete-outline
+                        </v-icon>
+                    </v-btn>
+                </template>
 
-            <template v-if="!('properties' in objectForCard && 'type' in objectForCard.properties)">
-                <v-img v-if="objectForCard.image" :src="objectForCard.image" :class="{
-                    'one_picture': infoCardOn_.data,
-                    'not_one_picture': !infoCardOn_.data,
-                }" width="100%" height="37.53%"></v-img>
-            </template>
+                <template v-if="!('properties' in objectForCard && 'type' in objectForCard.properties)">
+                    <v-img v-if="objectForCard.image" :src="objectForCard.image" :class="{
+                        'one_picture': infoCardOn_.data,
+                        'not_one_picture': !infoCardOn_.data,
+                    }" width="100%" height="37.53%"></v-img>
+                </template>
 
-            <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
-                <v-card-text class="pa-0">
-                    <v-form v-if="allListItem[0] != user">
-                        <v-row justify="start" style="padding-bottom: 0 !important;">
-                            <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
-                                <v-card-text v-if="objectForCard.properties.username != undefined" class="pa-0"
-                                    style="font-size: 24px;">{{
-                                    objectForCard.properties.username
+                <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
+                    <v-card-text class="pa-0">
+                        <v-form v-if="allListItem[0] != user">
+                            <v-row justify="start" style="padding-bottom: 0 !important;">
+                                <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
+                                    <v-card-text v-if="objectForCard.properties.username != undefined" class="pa-0"
+                                        style="font-size: 24px;">{{
+                                        objectForCard.properties.username
+                                        }}
+                                    </v-card-text>
+                                    <v-card-text v-else-if="'name' in objectForCard" class="pa-0"
+                                        style="font-size: 24px;">
+                                        {{
+                                        typeForFeature.name
+                                        }}
+                                    </v-card-text>
+                                    <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
+                                    
+                                    objectForCard.properties.name
                                     }}
-                                </v-card-text>
-                                <v-card-text v-else-if="'name' in objectForCard" class="pa-0" style="font-size: 24px;">
-                                    {{
-                                    typeForFeature.name
-                                    }}
-                                </v-card-text>
-                                <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
-                                
-                                objectForCard.properties.name
-                                }}
 
-                                </v-card-text>
+                                    </v-card-text>
 
-                            </v-col>
-                            <v-col class="pa-0" cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
-                                <v-card-text class="pa-0"
-                                    style="font-size: 24px; display: flex; justify-content: flex-end;">
-                                    <v-btn @click="editOn" depressed class="ma-0 btn" fab small elevation="0"
-                                        style="background-color: white !important" color="white"
-                                        :disabled="!editMode && 'type' in this.objectForCard"
-                                        :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
-                                        <v-icon>
-                                            mdi-pencil
-                                        </v-icon>
-                                    </v-btn>
-                                    <v-btn @click="deleteObjectOnCard()" class="ma-0 btn" fab small elevation="0"
-                                        :disabled="!editMode && 'type' in this.objectForCard"
-                                        style="background-color: white !important"
-                                        :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
-                                        <v-icon>
-                                            mdi-delete-outline
-                                        </v-icon>
-                                    </v-btn>
-                                </v-card-text>
-                            </v-col>
-                            <v-col cols="2" sm="6" md="5" lg="6" v-else-if="addCardOn_.data">
-                                <v-card-text style="font-size: 24px; padding: 16px 0;">Создание объекта</v-card-text>
-                            </v-col>
-                            <v-col cols="2" sm="6" md="5" lg="6" v-else>
-                                <v-card-text style="font-size: 24px; padding: 16px 0;">Редактирование</v-card-text>
-                            </v-col>
-                            <template v-if="!('name' in objectForCard)">
-                                <v-col v-for="(f, index) in objectForCard.properties" :key="index" cols="2" sm="6"
-                                    md="5" lg="6" v-show="typeof (f) != 'object' && index != 'group'">
-                                    <v-text-field v-if="index != 'password'" v-model="objectForCard.properties[index]"
-                                        hide-details :label="index" :placeholder="index" filled
-                                        :readonly="infoCardOn_.data">
-                                    </v-text-field>
-                                    <v-text-field v-else v-model="objectForCard.properties[index]"
-                                        :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :rules="[rules.min]"
-                                        hint="Минимум 8 символов" :type="showPassword ? 'text' : 'password'"
-                                        @click:append="showPassword = !showPassword" hide-details :label="index"
-                                        :placeholder="index" filled :readonly="infoCardOn_.data">
+                                </v-col>
+                                <v-col class="pa-0" cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
+                                    <v-card-text class="pa-0"
+                                        style="font-size: 24px; display: flex; justify-content: flex-end;">
+                                        <v-btn @click="editOn" depressed class="ma-0 btn" fab small elevation="0"
+                                            style="background-color: white !important" color="white"
+                                            :disabled="!editMode && 'type' in this.objectForCard"
+                                            :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
+                                            <v-icon>
+                                                mdi-pencil
+                                            </v-icon>
+                                        </v-btn>
+                                        <v-btn @click="deleteObjectOnCard()" class="ma-0 btn" fab small elevation="0"
+                                            :disabled="!editMode && 'type' in this.objectForCard"
+                                            style="background-color: white !important"
+                                            :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
+                                            <v-icon>
+                                                mdi-delete-outline
+                                            </v-icon>
+                                        </v-btn>
+                                    </v-card-text>
+                                </v-col>
+                                <v-col cols="2" sm="6" md="5" lg="6" v-else-if="addCardOn_.data">
+                                    <v-card-text style="font-size: 24px; padding: 16px 0;">Создание объекта
+                                    </v-card-text>
+                                </v-col>
+                                <v-col cols="2" sm="6" md="5" lg="6" v-else>
+                                    <v-card-text style="font-size: 24px; padding: 16px 0;">Редактирование</v-card-text>
+                                </v-col>
+                                <template v-if="!('name' in objectForCard)">
+                                    <v-col v-for="(f, index) in objectForCard.properties" :key="index" cols="2" sm="6"
+                                        md="5" lg="6" v-show="typeof (f) != 'object' && index != 'group'">
+                                        <v-text-field v-if="index != 'password'"
+                                            v-model="objectForCard.properties[index]" hide-details :label="index"
+                                            :placeholder="index" filled :readonly="infoCardOn_.data">
+                                        </v-text-field>
+                                        <v-text-field v-else v-model="objectForCard.properties[index]"
+                                            :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :rules="[rules.min]"
+                                            hint="Минимум 8 символов" :type="showPassword ? 'text' : 'password'"
+                                            @click:append="showPassword = !showPassword" hide-details :label="index"
+                                            :placeholder="index" filled :readonly="infoCardOn_.data">
+                                        </v-text-field>
+                                    </v-col>
+                                </template>
+                                <template v-else-if="('name' in objectForCard)">
+                                    <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="2" sm="6" md="5"
+                                        lg="6" v-show="el.text != 'id'">
+                                        <v-text-field v-if="el.text != 'id' && checkEqualityOfFieads(el.text)"
+                                            v-model="objectForCard.properties[el.text]" hide-details :label="el.text"
+                                            :placeholder="el.text" filled :readonly="infoCardOn_.data">
+                                        </v-text-field>
+                                        <v-text-field v-else-if="el.text != 'id'"
+                                            v-model="objectForCard.properties[el.text]" background-color="#C9C8ED"
+                                            color="#0F0CA7" hide-details :label="el.text" :placeholder="el.text" filled
+                                            :readonly="infoCardOn_.data" append-icon="mdi-progress-question"
+                                            @click:append="changeConflictField(el.text)">
+                                        </v-text-field>
+                                    </v-col>
+                                </template>
+                            </v-row>
+
+                            <FormForDynamicField :objectForCard="objectForCard" :infoCardOn="infoCardOn"
+                                :checkEqualityOfFieads="checkEqualityOfFieads"
+                                :changeConflictField="changeConflictField" />
+
+                            <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="infoCardOn" />
+                            <v-snackbar v-model="snackbar" timeout="2000" color="red accent-2">
+                                Не может быть атрибутов с одинаковыми именами
+                            </v-snackbar>
+                        </v-form>
+                        <v-form v-else-if="allListItem[0] === user">
+                            <v-row justify="start" style="padding-bottom: 0 !important;">
+                                <v-col cols="2" sm="6" md="5" lg="6">
+                                    <v-text-field v-model="objectForCard.properties.password" hide-details
+                                        label="password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                                        hint="Минимум 8 символов" placeholder="Пароль"
+                                        :type="showPassword ? 'text' : 'password'" filled
+                                        @click:append="showPassword = !showPassword">>
                                     </v-text-field>
                                 </v-col>
-                            </template>
-                            <template v-else-if="('name' in objectForCard)">
-                                <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="2" sm="6" md="5" lg="6"
-                                    v-show="el.text != 'id'">
-                                    <v-text-field v-if="el.text != 'id' && checkEqualityOfFieads(el.text)"
-                                        v-model="objectForCard.properties[el.text]" hide-details :label="el.text"
-                                        :placeholder="el.text" filled :readonly="infoCardOn_.data">
-                                    </v-text-field>
-                                    <v-text-field v-else-if="el.text != 'id'"
-                                        v-model="objectForCard.properties[el.text]" background-color="#C9C8ED"
-                                        color="#0F0CA7" hide-details :label="el.text" :placeholder="el.text" filled
-                                        :readonly="infoCardOn_.data" append-icon="mdi-progress-question"
-                                        @click:append="changeConflictField(el.text)">
-                                    </v-text-field>
-                                </v-col>
-                            </template>
-                        </v-row>
+                            </v-row>
+                        </v-form>
+                    </v-card-text>
+                </div>
 
-                        <FormForDynamicField :objectForCard="objectForCard" :infoCardOn="infoCardOn"
-                            :checkEqualityOfFieads="checkEqualityOfFieads" :changeConflictField="changeConflictField" />
+                <div class="card__footer" v-if="addCardOn_.data">
+                    <v-btn text @click="notVisableCard(); addCardOn_.data = !addCardOn_.data">ОТМЕНА
+                    </v-btn>
+                    <v-btn text @click="addNewFeature()">Создать</v-btn>
+                </div>
+                <div class="card__footer" v-else-if="editCardOn_.data">
+                    <v-btn @click="changeItem(isOldItem = !isOldItem)"
+                        v-if="newData.filter(el => el.id === objectForCard.id).length" color="#0F0CA7" text
+                        style="margin-right: 15px !important">
+                        оригинал
+                    </v-btn>
 
-                        <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="infoCardOn" />
-                        <v-snackbar v-model="snackbar" timeout="2000" color="red accent-2">
-                            Не может быть атрибутов с одинаковыми именами
-                        </v-snackbar>
-                    </v-form>
-                    <v-form v-else>
-                        <v-row justify="start" style="padding-bottom: 0 !important;">
-                            <v-col cols="2" sm="6" md="5" lg="6">
-                                <v-text-field v-model="objectForCard.properties.password" hide-details label="password"
-                                    :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                                    hint="Минимум 8 символов" placeholder="Пароль"
-                                    :type="showPassword ? 'text' : 'password'" filled
-                                    @click:append="showPassword = !showPassword">>
-                                </v-text-field>
-                            </v-col>
-                        </v-row>
-                    </v-form>
-                </v-card-text>
-            </div>
+                    <v-btn text @click="notVisableCard(); editCardOn_.data = !editCardOn_.data"
+                        style="margin-right: 15px !important">
+                        ОТМЕНА
+                    </v-btn>
+                    <v-btn text @click="editObject()">Редактирование</v-btn>
 
-            <div class="card__footer" v-if="addCardOn_.data">
-                <v-btn text @click="notVisableCard(); addCardOn_.data = !addCardOn_.data">ОТМЕНА
-                </v-btn>
-                <v-btn text @click="addNewFeature()">Создать</v-btn>
-            </div>
-            <div class="card__footer" v-else-if="editCardOn_.data">
-                <v-btn @click="changeItem(isOldItem = !isOldItem)"
-                    v-if="newData.filter(el => el.id === objectForCard.id).length" color="#0F0CA7" text
-                    style="margin-right: 15px !important">
-                    оригинал
-                </v-btn>
-
-                <v-btn text @click="notVisableCard(); editCardOn_.data = !editCardOn_.data"
-                    style="margin-right: 15px !important">
-                    ОТМЕНА
-                </v-btn>
-                <v-btn text @click="editObject()">Редактирование</v-btn>
+                </div>
 
             </div>
-
-        </div>
-    </v-card>
+        </v-card>
+    </v-scroll-x-reverse-transition>
 </template>
 
 <script>
@@ -186,7 +191,7 @@ export default {
     name: 'CardInfo',
     components: {
         ExpansionPanelForCard,
-        FormForDynamicField
+        FormForDynamicField,
     },
     props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'visableCard', 'notVisableCard', 'editMode'],
     data() {
@@ -289,6 +294,7 @@ export default {
                         this.snackbar = true;
                         return;
                     }
+                    this.objectForCard.properties.image = this.objectForCard.image;
                 }
 
                 await this.postObject(this.objectForCard.properties);

@@ -75,6 +75,7 @@ export default {
             state.authBool = bool;
         },
         updateUser(state, user) {
+            console.log(user);
             state.user = user;
         },
         updateAllUsers(state, users) {
