@@ -104,7 +104,7 @@ export default {
         actionDelete: 'deleteFeature',
         objectForCard: null,
         emptyObject: {},
-        headers: {},
+        headers: [{ text: '' }],
         drawType: '',
         toolbarTitle: null,
         nameForArray: null,
