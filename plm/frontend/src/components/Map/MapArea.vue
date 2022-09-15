@@ -21,7 +21,6 @@ import { Canvg } from 'canvg';
 import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
 
-
 export default {
   components: {
   },
@@ -59,6 +58,13 @@ export default {
       svg: document.querySelector('#svg_icon_of_type svg'),
       editedPointCoordinates: null,
       editedLineStringCoordinates: null,
+      noEditedCoord: null,
+      noEditedLineStringIndex: null,
+      noEditedLayer: {
+        data: null,
+      },
+      noEditedLayerId: null,
+      counter: 0,
     }
   },
 
@@ -124,14 +130,47 @@ export default {
     },
 
     editCardOn: {
-      handler() {
-        console.log(this.map.getInteractions().getArray()[12])
+
+      async handler() {
+
         this.editCardOn_ = this.editCardOn
+        console.log(1)
         this.map.getInteractions().getArray().forEach(element => {
           if (element instanceof Modify) {
             element.setActive(!element.getActive())
+            if (!element.getActive() && !this.infoCardOn.data) {
+              this.map.getAllLayers().forEach(element => {
+                if (!(element instanceof TileLayer)) {
+                  element.getSource().getFeatures().forEach(geom => {
+                    if (geom.getGeometry().getType() === 'LineString') {
+                      if (element.get('typeId') === this.noEditedLayerId) {
+                        this.editedLineStringCoordinates[this.noEditedLineStringIndex] = this.noEditedCoord
+                        geom.getGeometry().setCoordinates(this.editedLineStringCoordinates)
+                      }
+                    }
+                  });
+                }
+              })
+            }
           }
         });
+        if (!this.editCardOn.data && !this.infoCardOn.data) {
+          await this.getOneObject(this.objectForCard.id);
+          const layer = this.map.getAllLayers().find(el => el.get('typeId') === this.objectForCard.name);
+          let features = layer.getSource().getFeatures();
+          features = features.filter(el => el.id_ != this.objectForCard.id);
+          const source = new VectorSource({
+            features: [...features, ...new GeoJSON().readFeatures(
+              {
+                type: 'FeatureCollection',
+                features: [this.objectForCard]
+              },
+              {
+                featureProjection: 'EPSG:3857'
+              })],
+          });
+          layer.setSource(source);
+        }
       },
       deep: true
     },
@@ -141,7 +180,7 @@ export default {
   computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEditMode', 'oneType', 'allTypeForMap']),
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard']),
-    ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType']),
+    ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject']),
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
       this.feature.properties['Широта'] = cord[0];
@@ -167,6 +206,7 @@ export default {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
         this.map.removeInteraction(this.draw);
         this.coord = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
+
         if (typeof this.coord[0] === 'object') {
           for (let i in this.coord) {
             if (typeof this.coord[i][0] === 'object') {
@@ -242,8 +282,12 @@ export default {
               geom.getGeometry().getCoordinates().forEach((coord, index) => {
                 if (coord[0] === this.editedPointCoordinates[0] && coord[1] === this.editedPointCoordinates[1]) {
                   this.editedLineStringCoordinates = geom.getGeometry().getCoordinates()
+                  this.noEditedCoord = coord
+                  this.noEditedLayer.data = geom
+                  this.noEditedLineStringIndex = index
                   this.editedLineStringCoordinates[index] = event.features.getArray()[0].getGeometry().getCoordinates()
                   geom.getGeometry().setCoordinates(this.editedLineStringCoordinates)
+                  this.noEditedLayerId = element.get('typeId')
                 }
               });
             }
