@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <NavigationDrawer :addCardOn="addCardOn" />
+    <NavigationDrawer :addCardOn="addCardOn" :visableCard="visableCard" :editCardOn="editCardOn" />
 
     <v-main>
       <div style="display: none">
@@ -27,7 +27,7 @@
               mdi-pencil
             </v-icon>
           </v-btn>
-          <v-btn :disabled="(cardVisable.data || !editMode) && actions === 'getFeatures'" class="show__card"
+          <v-btn :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')" class="show__card"
             height="28px" width="80px" depressed color="#EE5E5E"
             @click="addCardOn.data = !addCardOn.data; visableCard();">
             <v-icon color="white !default" dark>
@@ -44,7 +44,7 @@
           :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
 
         <v-tab-item>
-          <div v-if="editMode" class="edit_line">
+          <div v-if="editMode && actions === 'getFeatures'" class="edit_line">
             <div>
               <a @click="closeEditMode" style="margin: 5px 20px">
                 <v-icon small>mdi-close</v-icon>
