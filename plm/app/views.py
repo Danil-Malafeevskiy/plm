@@ -10,7 +10,7 @@ from rest_framework.authentication import SessionAuthentication
 
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
-from app.permissions import TowerPerm, FileUploadPerm, GroupPerm, UserPerm, DatasetPerm, VersionPerm
+from app.permissions import TowerPerm, FileUploadPerm, GroupPerm, UserPerm, TypePerm, VersionPerm
 from plm import settings
 from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
@@ -265,7 +265,7 @@ class UserAdminView(APIView):
         get_user_model().objects.filter(id__in=id.split(',')).delete()
         return Response("SUCCESS DEL USER!")
 
-class DatasetView(APIView):
+class TypeView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
     filterset_fields = ['type']
@@ -283,9 +283,9 @@ class DatasetView(APIView):
         dataset = Type.objects.get(id=id)
         return Response(TypeSerializer(dataset, remove_fields=['group', 'avaible_group']).data)
 
-class DatasetAdminView(APIView):
+class TypeAdminView(APIView):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [DatasetPerm]
+    permission_classes = [TypePerm]
     filterset_fields = ['type']
 
     def get(self, request, id=0):

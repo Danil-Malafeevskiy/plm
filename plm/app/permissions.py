@@ -33,7 +33,7 @@ class UserPerm(permissions.BasePermission):
         if request.method == 'PUT' or request.method == 'POST' or request.method == 'DELETE':
             return "Can change user" in request.user.user_permissions.values_list('name', flat=True)
 
-class DatasetPerm(permissions.BasePermission):
+class TypePerm(permissions.BasePermission):
     message = "You don't have enough rights to do this!"
 
     def has_permission(self, request, view):
