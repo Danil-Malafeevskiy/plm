@@ -154,9 +154,7 @@ export default {
       this.arrObjects[`${this.nameArray}`] = [];
     },
     async deleteObjects() {
-      for (const element of this.arrObjects[`${this.nameArray}`]) {
-        this.deleteObject(element.id);
-      }
+      this.deleteObject(this.arrObjects[`${this.nameArray}`]);
       await this.filterForFeature();
       this.getAllObject();
       this.resetSelected();

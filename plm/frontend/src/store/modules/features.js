@@ -44,13 +44,15 @@ export default {
             else {
                 data = [...features, [], '']
             }
+            console.log(data);
             await axios.put(`/tower`, data).then((response) => {
                 console.log(response.data);
             }).catch(error => console.log(error));
         },
 
         async deleteFeature(ctx, features) {
-            await axios.delete(`/tower?id=${getStrId(features)}`).then((response) => {
+            console.log(getStrId(features));
+            await axios.put(`/tower`, [getStrId(features), '']).then((response) => {
                 console.log(response.data);
             }).catch(error => console.log(error));
         },
@@ -112,7 +114,7 @@ export default {
 
                 case 'delete':
                     if ('id_' in item) {
-                        state.arrayEditMode.post.filter(el => el.id_ != item.id_);
+                        state.arrayEditMode.post = state.arrayEditMode.post.filter(el => el.id_ != item.id_);
                     }
                     else {
                         state.arrayEditMode.put = state.arrayEditMode.put.filter(el => el.id != item.id);
