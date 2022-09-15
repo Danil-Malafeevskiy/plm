@@ -100,9 +100,10 @@ export default {
     watch: {
         user: {
             handler() {
-                this.groupsForType = [...this.user.groups]
-                this.userGroups = [...this.user.groups, ...this.user.avaible_group]
-                this.permissionList = [...this.user.permissions, ...this.user.avaible_permission]
+                this.groupsForType = [...this.user.groups];
+                this.userGroups = [...this.user.groups, ...this.user.avaible_group];
+                this.permissionList = [...this.user.permissions, ...this.user.avaible_permission];
+                console.log(this.groupsForType);
                 this.groupsPermissions();
             },
         },

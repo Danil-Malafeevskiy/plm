@@ -14,12 +14,12 @@ function getStrId(features) {
 
 export default {
     actions: {
-        async getFeatures({ commit, state, dispatch }) {
+        async getFeatures({ commit }) {
             await axios.get('/tower').then((response) => {
                 commit('updateFeatures', response.data);
-                if (state.featureTypeId != null) {
-                    dispatch('filterForFeature');
-                }
+                // if (state.featureTypeId != null) {
+                //     dispatch('filterForFeature');
+                // }
             }).catch(error => console.log(error));
         },
 
@@ -39,18 +39,20 @@ export default {
         async putFeature(ctx, features) {
             let data;
             if ('put' in features) {
-                data = [...features.put, ...features.post, getStrId(features.delete)];
+                data = [...features.put, ...features.post, getStrId(features.delete), ''];
             }
             else {
-                data = [...features, []]
+                data = [...features, [], '']
             }
+            console.log(data);
             await axios.put(`/tower`, data).then((response) => {
                 console.log(response.data);
             }).catch(error => console.log(error));
         },
 
         async deleteFeature(ctx, features) {
-            await axios.delete(`/tower?id=${getStrId(features)}`).then((response) => {
+            console.log(getStrId(features));
+            await axios.put(`/tower`, [getStrId(features), '']).then((response) => {
                 console.log(response.data);
             }).catch(error => console.log(error));
         },
@@ -112,7 +114,7 @@ export default {
 
                 case 'delete':
                     if ('id_' in item) {
-                        state.arrayEditMode.post.filter(el => el.id_ != item.id_);
+                        state.arrayEditMode.post = state.arrayEditMode.post.filter(el => el.id_ != item.id_);
                     }
                     else {
                         state.arrayEditMode.put = state.arrayEditMode.put.filter(el => el.id != item.id);

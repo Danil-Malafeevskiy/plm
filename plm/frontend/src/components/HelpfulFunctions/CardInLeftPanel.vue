@@ -20,9 +20,10 @@
                 <v-list-item @click="logOutAndResolve()">
                     <v-list-item-title>
                         <v-avatar color="#72ABEA" size="40">
-                            <span class="white--text text-h6">{{user.first_name.slice(0,1)}}{{user.last_name.slice(0,1)}}</span>
-                        </v-avatar>         
-                        
+                            <span
+                                class="white--text text-h6">{{user.first_name.slice(0,1)}}{{user.last_name.slice(0,1)}}</span>
+                        </v-avatar>
+
                         {{ user.username }}
                     </v-list-item-title>
 
@@ -59,7 +60,7 @@ export default {
                             document.querySelector('.text_in_span').innerHTML = document.querySelector('.v-item--active .v-list-item__title').innerText;
                         })
                     }
-                    this.resetSelectItem();
+                    await this.resetSelectItem();
                     switch (this.selectedItem) {
                         case 0: {
                             this.onUsers();
@@ -106,6 +107,7 @@ export default {
                     type: '',
                     headers: [],
                     properties: [],
+                    group: null,
                 },
                 image: '',
             }
@@ -116,10 +118,6 @@ export default {
                     "value": "name",
                     "sortable": false
                 },
-                {
-                    "text": "type",
-                    "value": "type"
-                }
             ];
             this.updateHeaders(headers);
             this.updateAction({
