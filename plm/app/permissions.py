@@ -38,9 +38,9 @@ class DatasetPerm(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
-            return "Can view dataset" in request.user.user_permissions.values_list('name', flat=True)
+            return "Can view type" in request.user.user_permissions.values_list('name', flat=True)
         if request.method == 'PUT' or request.method == 'POST' or request.method == 'DELETE':
-            return "Can change dataset" in request.user.user_permissions.values_list('name', flat=True)
+            return "Can change type" in request.user.user_permissions.values_list('name', flat=True)
 
 class VersionPerm(permissions.BasePermission):
     message = "You don't have enough rights to do this!"
