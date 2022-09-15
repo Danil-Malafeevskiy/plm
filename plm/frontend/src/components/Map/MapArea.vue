@@ -284,7 +284,7 @@ export default {
             anchor: [0.5, 0, 5],
             anchorXUnits: 'fraction',
             anchorYUnits: 'pixels',
-            src:  document.getElementById('png_icon_of_one_type').toDataURL('image/png')
+            src: document.getElementById('png_icon_of_one_type').toDataURL('image/png')
           }),
         }));
       }
@@ -346,51 +346,23 @@ export default {
         this.map.addLayer(layer)
         await this.getOneTypeObject({ id: element.id, forFeature: true });
 
-        if (this.typeForLayer.type === 'Point' && !(this.typeForLayer.image === '')) {
-          this.updataDomElements()
+        this.canvas.height = 24;
+        this.canvas.width = 24;
 
-          this.canvas.height = 24;
-          this.canvas.width = 24;
-
-          let v = await Canvg.from(this.canvas.getContext('2d'), this.svg.parentNode.innerHTML.trim());
-          v.start();
-          v.stop();
-          let blackIcon = this.canvas.toDataURL('image/png');
-
-          this.canvas.getContext("2d").fillStyle = window.getComputedStyle(this.svg, null).getPropertyValue('color');
-          v = await Canvg.from(this.canvas.getContext('2d'), this.svg.parentNode.innerHTML.trim());
-          v.start();
-          v.stop();
-          let redIcon = this.canvas.toDataURL('image/png');
-
-          let style = new Style({
-            image: new Icon({
-              anchor: [0.5, 0, 5],
-              anchorXUnits: 'fraction',
-              anchorYUnits: 'pixels',
-              src: blackIcon,
-            }),
-          });
-          layer.setStyle(style)
-
-          let selectStyle = new Style({
-            image: new Icon({
-              anchor: [0.5, 0.5],
-              anchorXUnits: 'fraction',
-              anchorYUnits: 'pixels',
-              src: redIcon,
-            }),
-          });
-        this.addModify(features, layer)
+        this.addModify(layer);
       });
     },
 
     takeCoordinates(event) {
       this.editedPointCoordinates = event.features.getArray()[0].getGeometry().getCoordinates()
     },
-
-    addModify(features, layer) {
-      if (features.features.length && features.features[0].geometry.type === 'LineString') {
+    async svgToSpan() {
+      let v = await Canvg.from(this.canvas.getContext('2d'), this.svg.parentNode.innerHTML.trim());
+      v.start();
+      v.stop();
+    },
+    async addModify(layer) {
+      if (this.typeForLayer.type === 'LineString') {
         let selectStyle = new Style({
           stroke: new Stroke({ color: "red" })
         });
@@ -408,13 +380,22 @@ export default {
         })
         this.map.addInteraction(this.modifyEdit)
       }
-      else if (features.features.length && features.features[0].geometry.type === 'Point' && !(this.typeForLayer.image === '')) {
+      else if (this.typeForLayer.type === 'Point' && !(this.typeForLayer.image === '')) {
+        this.updataDomElements();
+
+        await this.svgToSpan();
+        let blackIcon = this.canvas.toDataURL('image/png');
+
+        this.canvas.getContext("2d").fillStyle = window.getComputedStyle(this.svg, null).getPropertyValue('color');
+        await this.svgToSpan();
+        let redIcon = this.canvas.toDataURL('image/png');
+
         let style = new Style({
           image: new Icon({
             anchor: [0.5, 0, 5],
             anchorXUnits: 'fraction',
             anchorYUnits: 'pixels',
-            src: `static/${this.typeForLayer.image}`,
+            src: blackIcon,
           }),
         });
         layer.setStyle(style)
@@ -424,7 +405,7 @@ export default {
             anchor: [0.5, 0.5],
             anchorXUnits: 'fraction',
             anchorYUnits: 'pixels',
-            src: `static/${this.typeForLayer.image.slice(0, -4) + '-selected.png'}`,
+            src: redIcon,
           }),
         });
 
@@ -444,7 +425,7 @@ export default {
         this.modifyEdit.on('modifystart', this.takeCoordinates)
         this.modifyEdit.on('modifyend', this.changeCoordinatesEdit)
       }
-      else if (features.features.length && features.features[0].geometry.type === 'Point' && (this.typeForLayer.image === '')) {
+      else if (this.typeForLayer.type === 'Point' && (this.typeForLayer.image === '')) {
         let selectStyle = new Style({
           image: new Circle({
             stroke: new Stroke({ color: "red" }),
