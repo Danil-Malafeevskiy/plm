@@ -5,6 +5,7 @@ import sqlite3
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.shortcuts import render
+from django.utils import timezone, dateformat
 from rest_framework.authentication import SessionAuthentication
 
 from rest_framework.permissions import IsAuthenticated
@@ -14,8 +15,8 @@ from plm import settings
 from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
 
-from app.models import Feature, Dataset, VersionControl
-from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, DatasetSerializer, VersionControlSerializer
+from app.models import Feature, Type, VersionControl
+from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, TypeSerializer, VersionControlSerializer
 from rest_framework.response import Response
 
 class TowerAPI(APIView):
@@ -25,9 +26,9 @@ class TowerAPI(APIView):
 
     def get(self, request, id=0):
         if id == 0:
-            datasets = Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
+            datasets = Type.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
             if 'group' in request.query_params:
-                datasets = Dataset.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
+                datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
             ff = DjangoFilterBackend()
             filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(name__in=
                 list(datasets.values_list('id', flat=True))), self)
@@ -44,12 +45,16 @@ class TowerAPI(APIView):
         queryset = []
         comment = request.data.pop(-1)
         delete_mas = request.data.pop(-1)
+        if len(delete_mas)!=0:
+            queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                name__in=Type.objects.filter(group=Type.objects.get(id=Feature.objects.get(id=delete_mas[0]).name.id).group))
         for data in request.data:
             if 'id' in data.keys():
                 if data['geometry']['type'] == "Point" and len(queryset)==0:
-                    queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(name__in=Dataset.objects.filter(group=Dataset.objects.get(id=data['name']).group))
+                    queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(name__in=Type.objects.filter(group=Type.objects.get(id=data['name']).group))
                 ids.append(data['id'])
 
+        feature_2 = None
         if len(ids) > 0:
             feature_2 = FeatureSerializer(Feature.objects.filter(id__in=ids), many=True).data
 
@@ -59,11 +64,14 @@ class TowerAPI(APIView):
         feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=FeatureSerializer(queryset, many=True).data)
         if feature_serializer.is_valid():
             new_version = feature_serializer.save()
-            print(new_version)
             if feature_2!=None:
+                try:
+                    VersionControl.objects.filter(date_update__gte=VersionControl.objects.get(flag=True, dataset=feature[0].name.group.id).date_update, dataset=feature[0].name.group.id).delete()
+                except Exception as e:
+                    print("Ваша версия максимальна!")
                 OldVersionSerializer = VersionControlSerializer(
                     data={"user": request.user.username, "version": feature_2,
-                          'dataset': feature[0].name.id, 'comment': comment,
+                          'dataset': feature[0].name.group.id, 'comment': comment,
                           'new_version': FeatureSerializer(new_version, many=True).data})
                 if OldVersionSerializer.is_valid():
                     OldVersionSerializer.save()
@@ -102,8 +110,8 @@ class FileUploadView(APIView):
 
         lis = []
         dict_1 = {}
-        dataset = Dataset.objects.get(name=filename)
-        dict_1['name'] = dataset.id
+        type = Type.objects.get(name=filename)
+        dict_1['name'] = type.id
         dict_1['type'] = 'Feature'
         dict_1['properties'] = {}
         properties = []
@@ -125,8 +133,8 @@ class FileUploadView(APIView):
                 dict_1['properties'][key] = value[key]
             lis.append(json.dumps(dict_1))
 
-        dataset.properties = properties
-        dataset.save()
+        type.properties = properties
+        type.save()
 
         for i in range(len(lis)):
             lis[i] = json.loads(lis[i])
@@ -265,15 +273,15 @@ class DatasetView(APIView):
     def get(self, request, id=0):
         if id==0:
             ff = DjangoFilterBackend()
-            datasets = Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
+            datasets = Type.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
             if 'group' in request.query_params:
-                datasets = Dataset.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
+                datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
             dataset = ff.filter_queryset(request, datasets, self)
-            return Response(DatasetSerializer(dataset, many=True, remove_fields=['type', 'headers',
+            return Response(TypeSerializer(dataset, many=True, remove_fields=['type', 'headers',
                                                                                  'properties', 'image', 'group', 'avaible_group']).data)
 
-        dataset = Dataset.objects.get(id=id)
-        return Response(DatasetSerializer(dataset, remove_fields=['group', 'avaible_group']).data)
+        dataset = Type.objects.get(id=id)
+        return Response(TypeSerializer(dataset, remove_fields=['group', 'avaible_group']).data)
 
 class DatasetAdminView(APIView):
     authentication_classes = [SessionAuthentication]
@@ -283,23 +291,23 @@ class DatasetAdminView(APIView):
     def get(self, request, id=0):
         if id==0:
             ff = DjangoFilterBackend()
-            dataset = ff.filter_queryset(request, Dataset.objects.all(), self)
-            return Response(DatasetSerializer(dataset, many=True, remove_fields=['type', 'headers',
+            dataset = ff.filter_queryset(request, Type.objects.all(), self)
+            return Response(TypeSerializer(dataset, many=True, remove_fields=['type', 'headers',
                                                                                  'properties', 'image', 'group', 'avaible_group']).data)
 
-        dataset = Dataset.objects.get(id=id)
-        return Response(DatasetSerializer(dataset).data)
+        dataset = Type.objects.get(id=id)
+        return Response(TypeSerializer(dataset).data)
 
     def post(self, request):
-        dataset_serializer = DatasetSerializer(data=request.data, context={'group': request.data['group']})
+        dataset_serializer = TypeSerializer(data=request.data, context={'group': request.data['group']})
         if dataset_serializer.is_valid():
             dataset_serializer.save()
             return Response("Success new dataset!")
         return Response(dataset_serializer.errors)
 
     def put(self, request):
-        dataset = Dataset.objects.get(id=request.data['id'])
-        dataset_serializer = DatasetSerializer(dataset, data=request.data, context={'group': request.data['group']})
+        dataset = Type.objects.get(id=request.data['id'])
+        dataset_serializer = TypeSerializer(dataset, data=request.data, context={'group': request.data['group']})
         if dataset_serializer.is_valid():
             dataset_serializer.save()
             return Response("Success update dataset!")
@@ -307,7 +315,7 @@ class DatasetAdminView(APIView):
 
     def delete(self, request):
         id = request.query_params.get('id')
-        Dataset.objects.filter(id__in=id.split(',')).delete()
+        Type.objects.filter(id__in=id.split(',')).delete()
         return Response("SUCCESS DEL")
 
 def room(request):
@@ -316,36 +324,81 @@ def room(request):
 class VersionControlView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [VersionPerm]
-    filterset_fields = ['user', 'dataset']
+    filterset_fields = ['user']
 
     def get(self, request, id=0):
         if id==0:
             ff = DjangoFilterBackend()
-            datasets = Dataset.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
-            if 'group' in request.query_params:
-                datasets = Dataset.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
+            datasets = list(request.user.groups.values_list('id', flat=True))
+            if 'dataset' in request.query_params:
+                datasets = [Group.objects.get(name=request.query_params['dataset']).id]
             version = ff.filter_queryset(request, VersionControl.objects.filter(dataset__in=datasets), self)
             return Response(VersionControlSerializer(version, many=True, remove_fields=['version', 'new_version', 'dataset']).data)
 
         version = VersionControl.objects.get(id=id)
-        return Response(VersionControlSerializer(version, remove_fields=['dataset']).data)
+        version_now = VersionControl.objects.filter(flag=True, dataset=version.dataset)
+        if (len(version_now)!=0 and version_now[0].date_update > version.date_update):
+            return Response(VersionControlSerializer(version, remove_fields=['dataset', 'new_version']).data)
+        elif (len(version_now)!=0 and version_now[0].date_update <= version.date_update):
+            return Response(VersionControlSerializer(version, remove_fields=['dataset', 'version']).data)
+        else:
+            return Response(VersionControlSerializer(version, remove_fields=['dataset', 'new_version']).data)
 
     def put(self, request, id):
-        version_obj = VersionControl.objects.get(id=id)
-        version = VersionControlSerializer(version_obj).data
+        version = VersionControl.objects.get(id=id)
+        versionSer = VersionControlSerializer(version).data
+        version_now = VersionControl.objects.filter(flag=True, dataset=versionSer['dataset'])
+        version_new = VersionControl.objects.filter(id__gt=id, dataset=versionSer['dataset']).order_by('id')
+        flag = False
+
+        if len(version_now)!=0:
+            version_now[0].flag = False
+            version_now[0].save()
+
+        if (len(version_now)!=0 and version_now[0].date_update > version.date_update):
+            all_version = VersionControl.objects.filter(
+                dataset=versionSer['dataset'],
+                date_update__gte=version.date_update, date_update__lt=version_now[0].date_update).order_by('-id')
+            version.flag = True
+            version.save()
+
+        elif len(version_now)!=0 and (version_now[0].date_update <= version.date_update):
+            all_version = VersionControl.objects.filter(
+                dataset=versionSer['dataset'],
+                date_update__gte=version_now[0].date_update, date_update__lte=version.date_update).order_by('id')
+            if len(version_new)!=0:
+                version_new[0].flag = True
+                version_new[0].save()
+            flag = True
+
+        else:
+            all_version = VersionControl.objects.filter(
+                dataset=versionSer['dataset'],
+                date_update__gte=version.date_update, date_update__lt=dateformat.format(timezone.now(), 'Y-m-d H:i:s')).order_by('-id')
+            version.flag = True
+            version.save()
+
+        mas_versions = []
         ids = []
         queryset = []
-        for obj in version['version']:
-            if obj['geometry']['type'] == "Point" and len(queryset) == 0:
-                queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
-                    name__in=Dataset.objects.filter(group=Dataset.objects.get(id=obj['name']).group))
-            ids.append(obj['id'])
-        if request.data['flag'] == False:
-            feature_serializer = FeatureSerializer(Feature.objects.filter(id__in=ids), data=version['version'], many=True,
+
+        for i in range(len(all_version)):
+            if flag == False:
+                param = all_version[i].version
+                mas_versions += all_version[i].version
+            else:
+                param = all_version[i].new_version
+                mas_versions += all_version[i].new_version
+            for obj_2 in param:
+                if obj_2['geometry']['type'] == "Point" and len(queryset) == 0:
+                    queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                        name__in=Type.objects.filter(group=Type.objects.get(id=obj_2['name']).group))
+                if obj_2['id'] not in ids:
+                    ids.append(obj_2['id'])
+
+        feature_serializer = FeatureSerializer(Feature.objects.filter(id__in=ids), data=mas_versions, many=True,
                                                    context=FeatureSerializer(queryset, many=True).data)
-        else:
-            feature_serializer = FeatureSerializer(Feature.objects.filter(id__in=ids), data=version['new_version'],
-                                                   many=True, context=FeatureSerializer(queryset, many=True).data)
+
         if feature_serializer.is_valid():
             feature_serializer.save()
             return Response("Version Return!")

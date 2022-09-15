@@ -130,7 +130,9 @@ export default {
     },
 
     editCardOn: {
-      handler() {
+
+      async handler() {
+
         this.editCardOn_ = this.editCardOn
         console.log(1)
         this.map.getInteractions().getArray().forEach(element => {
@@ -152,6 +154,23 @@ export default {
             }
           }
         });
+        if (!this.editCardOn.data && !this.infoCardOn.data) {
+          await this.getOneObject(this.objectForCard.id);
+          const layer = this.map.getAllLayers().find(el => el.get('typeId') === this.objectForCard.name);
+          let features = layer.getSource().getFeatures();
+          features = features.filter(el => el.id_ != this.objectForCard.id);
+          const source = new VectorSource({
+            features: [...features, ...new GeoJSON().readFeatures(
+              {
+                type: 'FeatureCollection',
+                features: [this.objectForCard]
+              },
+              {
+                featureProjection: 'EPSG:3857'
+              })],
+          });
+          layer.setSource(source);
+        }
       },
       deep: true
     },
@@ -161,7 +180,7 @@ export default {
   computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEditMode', 'oneType', 'allTypeForMap']),
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard']),
-    ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType']),
+    ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject']),
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
       this.feature.properties['Широта'] = cord[0];
@@ -187,6 +206,7 @@ export default {
       if (this.drawLayer.getSource().getFeatures().length === 1) {
         this.map.removeInteraction(this.draw);
         this.coord = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
+
         if (typeof this.coord[0] === 'object') {
           for (let i in this.coord) {
             if (typeof this.coord[i][0] === 'object') {

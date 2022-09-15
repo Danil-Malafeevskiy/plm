@@ -6,7 +6,7 @@ from rest_framework import serializers, exceptions
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_gis.serializers import GeometryField
 import django.contrib.auth.password_validation as validators
-from app.models import Feature, Dataset, VersionControl
+from app.models import Feature, Type, VersionControl
 from django.contrib.auth import get_user_model
 
 class BinaryField(serializers.Field):
@@ -21,29 +21,46 @@ class FeatureListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
 
         feature_old = {feature.id: feature for feature in instance}
-        feature_update = {feature['id']: feature for feature in validated_data if 'id' in feature.keys()}
+        feature_update = [feature for feature in validated_data if 'id' in feature.keys()]
+
+        update_id = [feature['id'] for feature in validated_data if 'id' in feature.keys()]
 
         features = [feature for feature in validated_data if 'id' not in feature.keys()]
         for feature in features:
             self.child.create(feature)
 
         res_update = []
-        for feature_id, data in feature_update.items():
-            feature = feature_old.get(feature_id)
+        for obj_feature in feature_update:
+            feature = feature_old.get(obj_feature['id'])
             type = FeatureSerializer(feature).data['geometry']
             if type['type'] == 'Point':
                 for line in self.context:
                     for lineIndex in range(len(line['geometry']['coordinates'])):
                         if type['coordinates'] == line['geometry']['coordinates'][lineIndex]:
-                            line['geometry']['coordinates'][lineIndex] = FeatureSerializer(data).data['geometry']['coordinates']
+                            line['geometry']['coordinates'][lineIndex] = FeatureSerializer(obj_feature).data['geometry']['coordinates']
                     new_line = FeatureSerializer(Feature.objects.get(id=line['id']), data=line)
                     if new_line.is_valid():
                         new_line.save()
-            res_update.append(data)
-            self.child.update(feature, data)
+            res_update.append(obj_feature)
+            self.child.update(feature, obj_feature)
 
         for feature_id, feature in feature_old.items():
-            if feature_id not in feature_update:
+            if feature_id not in update_id:
+                type = FeatureSerializer(feature).data['geometry']
+                if type['type'] == 'Point':
+                    for line in self.context:
+                        lineCoord = []
+                        for lineIndex in range(len(line['geometry']['coordinates'])):
+                            if type['coordinates'] != line['geometry']['coordinates'][lineIndex]:
+                                lineCoord.append(line['geometry']['coordinates'][lineIndex])
+                        line['geometry']['coordinates'] = lineCoord
+
+                        if len(line['geometry']['coordinates']) <= 1:
+                            Feature.objects.get(id=line['id']).delete()
+                        else:
+                            new_line = FeatureSerializer(Feature.objects.get(id=line['id']), data=line)
+                            if new_line.is_valid():
+                                new_line.save()
                 feature.delete()
 
         return res_update
@@ -53,6 +70,7 @@ class FeatureSerializer(serializers.ModelSerializer):
     geometry = GeometryField()
     image = BinaryField(required=False)
     class Meta:
+        ordering = ['id']
         list_serializer_class = FeatureListSerializer
         geo_field = 'geometry'
         model = Feature
@@ -73,6 +91,7 @@ class GroupSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
     avaible_permissions = serializers.SerializerMethodField()
     class Meta:
+        ordering = ['id']
         model = Group
         fields = ('id', 'name', 'permissions', 'avaible_permissions')
 
@@ -118,6 +137,7 @@ class UserSerializer(serializers.ModelSerializer):
     image = BinaryField(required=False)
 
     class Meta:
+        ordering = ['id']
         model = get_user_model()
         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff', 'is_active', 'groups', 'avaible_group',
                   'permissions', 'avaible_permission', 'last_login', 'date_joined', 'image')
@@ -188,24 +208,25 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
-class DatasetSerializer(serializers.ModelSerializer):
+class TypeSerializer(serializers.ModelSerializer):
     group = serializers.SerializerMethodField()
     avaible_group = serializers.SerializerMethodField()
     properties = serializers.JSONField(required=False, default=[""])
     image = BinaryField(required=False)
     class Meta:
-        model = Dataset
+        ordering = ['id']
+        model = Type
         fields = ('id', 'name', 'type', 'headers', 'properties', 'image', 'group', 'avaible_group')
         validators = [
             UniqueTogetherValidator(
-                queryset=Dataset.objects.all(),
+                queryset=Type.objects.all(),
                 fields=['name']
             )
         ]
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
-        super(DatasetSerializer, self).__init__(*args, **kwargs)
+        super(TypeSerializer, self).__init__(*args, **kwargs)
 
         if remove_fields:
             for field_name in remove_fields:
@@ -220,16 +241,17 @@ class DatasetSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['group'] = Group.objects.get(name=self.context['group'])
-        return super(DatasetSerializer, self).create(validated_data)
+        return super(TypeSerializer, self).create(validated_data)
 
     def update(self, instance, validated_data):
         validated_data['group'] = Group.objects.get(name=self.context['group'])
-        return super(DatasetSerializer, self).update(instance, validated_data)
+        return super(TypeSerializer, self).update(instance, validated_data)
 
 class VersionControlSerializer(serializers.ModelSerializer):
     date_update = serializers.DateTimeField(required=False, default=timezone.now, format="%Y-%m-%d %H:%M:%S")
 
     class Meta:
+        ordering = ['id']
         model = VersionControl
         fields = ('id', 'user', 'date_update', 'version', 'comment', 'dataset', 'version', 'new_version')
 

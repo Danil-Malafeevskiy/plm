@@ -3,8 +3,7 @@ from django.contrib.auth.models import Group, AbstractUser
 from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 
-
-class Dataset(models.Model):
+class Type(models.Model):
     name = models.CharField(max_length=100, default="")
     type = models.CharField(max_length=100, default="")
     headers = ArrayField(models.JSONField())
@@ -13,7 +12,7 @@ class Dataset(models.Model):
     image = models.BinaryField(blank=True, default="".encode('utf-8'))
 
 class Feature(models.Model):
-    name = models.ForeignKey(Dataset, on_delete=models.CASCADE, default=1)
+    name = models.ForeignKey(Type, on_delete=models.CASCADE, default=1)
     type = models.CharField(max_length=100, blank=True, default="Feature")
     properties = models.JSONField()
     geometry = models.GeometryField()
@@ -27,5 +26,6 @@ class VersionControl(models.Model):
     date_update = models.DateTimeField(default=timezone.now)
     version = ArrayField(models.JSONField())
     new_version = ArrayField(models.JSONField(), blank=True, null=True)
-    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, default=1)
+    dataset = models.ForeignKey(Group, on_delete=models.CASCADE, default=1)
     comment = models.CharField(max_length=100, default="", blank=True)
+    flag = models.BooleanField(default=False)
