@@ -1,7 +1,6 @@
 <template>
     <v-card class="card_of_object" v-show="cardVisable_.data === true">
         <div class="card__window">
-            <p>{{objectForCard.geometry}}</p>
             <p style="display: none">{{ objectForCard }}</p>
             <v-card
                 v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'"
