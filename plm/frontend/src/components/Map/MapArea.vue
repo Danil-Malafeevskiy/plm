@@ -29,7 +29,7 @@ export default {
   },
   props: ['allFeatures', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature'],
   data() {
-   return {
+    return {
       coord: [],
       coordEdit: [],
       features: {
@@ -61,7 +61,7 @@ export default {
       editedLineStringCoordinates: null,
     }
   },
-  },
+
   watch: {
     allFeatures: {
       async handler() {
@@ -80,7 +80,7 @@ export default {
       handler() {
         let arraysOfNewObject = this.createSubArrays();
         let arrayOfLayers = this.map.getAllLayers();
-        
+
         for (let i in arraysOfNewObject) {
           let layer = arrayOfLayers.find(el => `${el.get('typeId')}` === i);
           let source = new VectorSource({
@@ -98,13 +98,13 @@ export default {
       },
       deep: true,
     },
-    
+
     getObjectForCard: {
       handler() {
         this.objectForCard = this.getObjectForCard;
       }
     },
-    
+
     getFeature: function () {
       this.feature = this.getFeature;
     },
@@ -231,8 +231,8 @@ export default {
     changeCoordinates(event) {
       this.feature.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates());
     },
-    
-changeCoordinatesEdit(event) {
+
+    changeCoordinatesEdit(event) {
       this.map.getAllLayers().forEach(element => {
         if (!(element instanceof TileLayer)) {
           element.getSource().getFeatures().forEach(geom => {
@@ -312,10 +312,10 @@ changeCoordinatesEdit(event) {
       }, 400);
     },
 
-    deleteOldLayers(){
+    deleteOldLayers() {
       let arrayOfLayers = this.map.getAllLayers();
       arrayOfLayers.forEach(element => {
-        if(element.get('typeId') !== undefined){
+        if (element.get('typeId') !== undefined) {
           this.map.removeLayer(element);
         }
       })
@@ -346,7 +346,7 @@ changeCoordinatesEdit(event) {
     },
 
 
-takeCoordinates(event) {
+    takeCoordinates(event) {
       this.editedPointCoordinates = event.features.getArray()[0].getGeometry().getCoordinates()
     },
 
@@ -363,11 +363,11 @@ takeCoordinates(event) {
 
         this.map.addInteraction(this.selectInteractionLineString)
 
-          this.modifyEdit = new Modify({
-            features: this.selectInteractionLineString.getFeatures(),
-            style: selectStyle
-          })
-          this.map.addInteraction(this.modifyEdit)
+        this.modifyEdit = new Modify({
+          features: this.selectInteractionLineString.getFeatures(),
+          style: selectStyle
+        })
+        this.map.addInteraction(this.modifyEdit)
       }
       else if (features.features.length && features.features[0].geometry.type === 'Point' && !(this.typeForLayer.image === '')) {
         let style = new Style({
@@ -396,14 +396,14 @@ takeCoordinates(event) {
 
         this.map.addInteraction(this.selectInteraction)
 
-          this.modifyEdit = new Modify({
-            features: this.selectInteraction.getFeatures(),
-            style: selectStyle
-          })
-          this.map.addInteraction(this.modifyEdit)
+        this.modifyEdit = new Modify({
+          features: this.selectInteraction.getFeatures(),
+          style: selectStyle
+        })
+        this.map.addInteraction(this.modifyEdit)
 
-          this.modifyEdit.on('modifystart', this.takeCoordinates)
-          this.modifyEdit.on('modifyend', this.changeCoordinatesEdit)
+        this.modifyEdit.on('modifystart', this.takeCoordinates)
+        this.modifyEdit.on('modifyend', this.changeCoordinatesEdit)
       }
       else if (features.features.length && features.features[0].geometry.type === 'Point' && (this.typeForLayer.image === '')) {
         let selectStyle = new Style({
@@ -432,7 +432,7 @@ takeCoordinates(event) {
         this.modifyEdit.on('modifyend', this.changeCoordinatesEdit)
 
       }
-      
+
       this.map.getInteractions().getArray().forEach(element => {
         if (element instanceof Modify) {
           element.setActive(false)
