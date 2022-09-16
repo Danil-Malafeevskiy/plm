@@ -1,29 +1,37 @@
 <template>
     <v-slide-y-transition>
         <v-card class="card_test">
-            <v-list dense nav>
-                <v-list-item-group class="menu" v-model="selectedItem" color="#E93030">
-                    <v-list-item v-if="user.is_staff">
-                        <v-list-item-title>
-                            Пользователи
-                        </v-list-item-title>
-                    </v-list-item>
-                    <v-list-item v-if="user.is_staff">
-                        <v-list-item-title>
-                            Типы объектов
-                        </v-list-item-title>
-                    </v-list-item>
-                    <v-list-item v-if="user.is_staff">
-                        <v-list-item-title>
-                            База объектов
-                        </v-list-item-title>
-                    </v-list-item>
-                    <v-list-item>
-                        <v-list-item-title>
-                            <v-avatar color="#72ABEA" size="40">
-                                <span
-                                    class="white--text text-h6">{{user.first_name.slice(0,1)}}{{user.last_name.slice(0,1)}}</span>
-                            </v-avatar>
+                    <v-list dense nav>
+            <v-list-item-group class="menu" v-model="selectedItem" color="#E93030" >
+                <v-list-item v-if="user.is_staff" @click="chooseMenuItem">
+                    <v-list-item-title>
+                        Пользователи
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item v-if="user.is_staff" @click="chooseMenuItem">
+                    <v-list-item-title>
+                        Типы объектов
+                    </v-list-item-title>
+                </v-list-item>
+
+                <v-list-item v-if="user.is_staff" @click="chooseMenuItem" >
+                    <v-list-item-title>
+                        Версии системы
+                    </v-list-item-title>
+                </v-list-item>
+
+                <v-list-item v-if="user.is_staff" @click="chooseMenuItem"  >
+                    <v-list-item-title>
+                        База объектов
+                    </v-list-item-title>
+                </v-list-item>
+
+                <v-list-item>
+                    <v-list-item-title>
+                        <v-avatar color="#72ABEA" size="40">
+                            <span
+                                class="white--text text-h6">{{user.first_name.slice(0,1)}}{{user.last_name.slice(0,1)}}</span>
+                        </v-avatar>
 
                             {{ user.username }}
                         </v-list-item-title>
@@ -44,10 +52,10 @@ import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 export default {
     name: 'CardInLeftPanel',
-    props: ['resetSelectItem', 'visableCard', 'editCardOn'],
+    props: ['resetSelectItem', 'visableCard', 'editCardOn', 'visableVersions', 'notVisableVersions', 'versionsPage'],
     data() {
         return {
-            selectedItem: 2,
+            selectedItem: 3,
             initials: null,
             editCardOn_: this.editCardOn,
         }
@@ -73,27 +81,34 @@ export default {
                             this.onDataSet();
                             break;
                         }
-                        case 2:
+                        case 2: {
+                            this.onVersions();
+                            break;
+                        }
+                        case 3: {
                             this.onFeatures();
                             break;
-                        case 3:
+                        }
+                        case 4: {
                             this.onUser();
                             break;
+                        }
                     }
                 }
             }
         }
     },
-    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType', 'actions', 'getObjectForCard']),
+    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType', 'actions', 'getObjectForCard', 'allVersions']),
     methods: {
-        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject', 'getOneObject']),
+        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject', 'getOneObject', 'getVersions']),
         ...mapMutations(['updatefilterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
-            'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray', 'updateOneType', 'upadateTitle']),
+            'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray', 'updateOneType', 'upadateTitle', 'updateVersions']),
         logOutAndResolve() {
             this.logOut();
             location.reload();
         },
         async onUser() {
+            this.notVisableVersions()
             this.updateAction({
                 actionGet: 'getUsersOfGroup',
                 actionPost: 'postUser',
@@ -109,6 +124,7 @@ export default {
             this.visableCard();
         },
         onFeatures() {
+            this.notVisableVersions()
             this.updateNameForArray('База объектов');
             this.updateListType([]);
             this.getTypeObject();
@@ -121,6 +137,7 @@ export default {
             });
         },
         async onDataSet() {
+            this.notVisableVersions()
             this.updateNameForArray('Типы объектов');
             let object = {
                 properties: {
@@ -156,6 +173,7 @@ export default {
             this.upadateEmptyObject(object);
         },
         onUsers() {
+            this.notVisableVersions()
             this.updateNameForArray('Пользователи');
             this.updateListType([]);
             let headers = [
@@ -186,7 +204,13 @@ export default {
                 actionDelete: 'deleteGroup',
             });
             this.getAllGroups();
-        }
+        },
+
+        onVersions(){
+            this.visableVersions()
+            this.updateListType([]);
+            this.updateNameForArray('Версии системы');
+        },
     },
     mounted() {
 

@@ -7,10 +7,11 @@ from django.contrib.auth.models import Group, Permission
 from django.shortcuts import render
 from django.utils import timezone, dateformat
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.parsers import MultiPartParser, FileUploadParser
 
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
-from app.permissions import TowerPerm, FileUploadPerm, GroupPerm, UserPerm, DatasetPerm, VersionPerm
+from app.permissions import TowerPerm, FileUploadPerm, GroupPerm, UserPerm, TypePerm, VersionPerm
 from plm import settings
 from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
@@ -81,18 +82,18 @@ class TowerAPI(APIView):
 
         return Response(feature_serializer.errors)
 
-    def delete(self, request):
-        Feature.objects.all().delete()
-        return Response("aaa")
-
 class FileUploadView(APIView):
+
     serializer_class = FileSerializer
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, FileUploadPerm]
+    parser_classes = (MultiPartParser, FileUploadParser,)
 
     fs = FileSystemStorage(location=settings.MEDIA_URL)
 
+
     def put(self, request):
+        print(request.data)
         self.fs.save(request.FILES['file'].name, request.FILES['file'])
         doc = sqlite3.connect(settings.MEDIA_URL + request.FILES['file'].name)
         doc.enable_load_extension(True)
@@ -265,7 +266,7 @@ class UserAdminView(APIView):
         get_user_model().objects.filter(id__in=id.split(',')).delete()
         return Response("SUCCESS DEL USER!")
 
-class DatasetView(APIView):
+class TypeView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
     filterset_fields = ['type']
@@ -283,9 +284,9 @@ class DatasetView(APIView):
         dataset = Type.objects.get(id=id)
         return Response(TypeSerializer(dataset, remove_fields=['group', 'avaible_group']).data)
 
-class DatasetAdminView(APIView):
+class TypeAdminView(APIView):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [DatasetPerm]
+    permission_classes = [TypePerm]
     filterset_fields = ['type']
 
     def get(self, request, id=0):

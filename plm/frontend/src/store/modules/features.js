@@ -46,7 +46,8 @@ export default {
             }
             await axios.put(`/tower`, data).then((response) => {
                 console.log(response.data);
-            }).catch(error => console.log(error));
+            }).catch(error => console.log(error)); 
+            
         },
 
         async deleteFeature(ctx, features) {
@@ -61,6 +62,7 @@ export default {
                 commit('updatefilterForFeature', response.data);
             })
         },
+
         async uploadFileWithFeature(ctx, file) {
             await axios.put('/tower/upload', file, {
                 headers: {
@@ -68,6 +70,7 @@ export default {
                 }
             }).then((response) => console.log(response.data))
         },
+
     },
     mutations: {
         updateFeatures(state, features) {

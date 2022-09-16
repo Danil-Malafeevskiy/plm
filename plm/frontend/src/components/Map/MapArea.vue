@@ -21,7 +21,6 @@ import { Canvg } from 'canvg';
 import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
 
-
 export default {
   components: {
   },
@@ -53,6 +52,13 @@ export default {
       svg: document.querySelector('#svg_icon_of_type svg'),
       editedPointCoordinates: null,
       editedLineStringCoordinates: null,
+      noEditedCoord: null,
+      noEditedLineStringIndex: null,
+      noEditedLayer: {
+        data: null,
+      },
+      noEditedLayerId: null,
+      counter: 0,
     }
   },
 
@@ -118,11 +124,26 @@ export default {
     },
 
     editCardOn: {
+
       async handler() {
         this.editCardOn_ = this.editCardOn
         this.map.getInteractions().getArray().forEach(element => {
           if (element instanceof Modify) {
             element.setActive(!element.getActive())
+            if (!element.getActive() && !this.infoCardOn.data) {
+              this.map.getAllLayers().forEach(element => {
+                if (!(element instanceof TileLayer)) {
+                  element.getSource().getFeatures().forEach(geom => {
+                    if (geom.getGeometry().getType() === 'LineString') {
+                      if (element.get('typeId') === this.noEditedLayerId) {
+                        this.editedLineStringCoordinates[this.noEditedLineStringIndex] = this.noEditedCoord
+                        geom.getGeometry().setCoordinates(this.editedLineStringCoordinates)
+                      }
+                    }
+                  });
+                }
+              })
+            }
           }
         });
         if (!this.editCardOn.data && !this.infoCardOn.data) {
@@ -253,8 +274,12 @@ export default {
               geom.getGeometry().getCoordinates().forEach((coord, index) => {
                 if (coord[0] === this.editedPointCoordinates[0] && coord[1] === this.editedPointCoordinates[1]) {
                   this.editedLineStringCoordinates = geom.getGeometry().getCoordinates()
+                  this.noEditedCoord = coord
+                  this.noEditedLayer.data = geom
+                  this.noEditedLineStringIndex = index
                   this.editedLineStringCoordinates[index] = event.features.getArray()[0].getGeometry().getCoordinates()
                   geom.getGeometry().setCoordinates(this.editedLineStringCoordinates)
+                  this.noEditedLayerId = element.get('typeId')
                 }
               });
             }
