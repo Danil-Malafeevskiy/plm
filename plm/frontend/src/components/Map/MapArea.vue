@@ -34,12 +34,6 @@ export default {
         features: this.allFeatures,
       },
       feature: this.getFeature,
-      featurePoint: {},
-      featureLine: {},
-      featurePolygon: {},
-      vectorLayerPoint: null,
-      vectorLayerLine: null,
-      vectorLayerPolygon: null,
       selectInteractionLineString: null,
       map: null,
       drawLayer: new VectorLayer({
@@ -132,9 +126,7 @@ export default {
     editCardOn: {
 
       async handler() {
-
         this.editCardOn_ = this.editCardOn
-        console.log(1)
         this.map.getInteractions().getArray().forEach(element => {
           if (element instanceof Modify) {
             element.setActive(!element.getActive())

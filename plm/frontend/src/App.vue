@@ -40,7 +40,9 @@
         </template>
       </v-toolbar>
 
-      <v-tabs-items v-model="tab" style="height: 89.7%;">
+      <v-tabs-items v-model="tab" style="height: 89.7%">
+        <CardConflict v-show="cardVisable.data" :cardVisable="cardVisable" :conflictCard="conflictCard"
+          :editMode="editMode" :objectForCard_="objectForConflict"/>
 
         <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
           :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
@@ -101,6 +103,7 @@ import VersionControl from './components/HelpfulFunctions/VersionControl.vue';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
+import CardConflict from './components/HelpfulFunctions/CardConflict.vue';
 
 export default {
   components: {
@@ -110,6 +113,7 @@ export default {
     NavigationDrawer,
     Auth,
     ConflicWindow,
+    CardConflict
     VersionControl
   },
 
@@ -120,6 +124,8 @@ export default {
       items: [
         'список', 'карта'
       ],
+      objectForConflict: {},
+      conflictCard: false,
       cardVisable: { data: false },
       addCardOn: { data: false },
       infoCardOn: { data: false },
@@ -149,6 +155,11 @@ export default {
         }
       },
       deep: true,
+    },
+    getObjectForCard: {
+      handler() {
+        this.visableConflictCard();
+      }
     }
   },
   computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
@@ -185,6 +196,7 @@ export default {
 
             if (editObject.length && this.searchConflict(editObject[0], data.data)) {
               await this.updateNewData(data.data);
+              this.visableConflictCard();
               if (this.newData.length === 1) {
                 this.isConflict = true;
               }
@@ -246,7 +258,21 @@ export default {
       this.resetArrayEditMode();
       this.filterForFeature(this.oneType.id);
     },
-
+    uploadFile(file) {
+      let formData = new FormData();
+      formData.append("file", file);
+      this.uploadFileWithFeature(formData);
+    },
+    visableConflictCard(){
+      let object = this.newData.find(el => el.id === this.getObjectForCard.id);
+        if (object) {
+          this.objectForConflict = object
+          this.conflictCard = true;
+        }
+        else {
+          this.conflictCard = false;
+        }
+    }
   },
   mounted() {
     const chatSocket = new WebSocket("ws://localhost:8000/test");
