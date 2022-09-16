@@ -47,7 +47,8 @@ export default {
             console.log(data);
             await axios.put(`/tower`, data).then((response) => {
                 console.log(response.data);
-            }).catch(error => console.log(error));
+            }).catch(error => console.log(error)); 
+            
         },
 
         async deleteFeature(ctx, features) {
@@ -62,6 +63,20 @@ export default {
                 commit('updatefilterForFeature', response.data);
             })
         },
+
+        async uploadFeatures(file) {
+            let formData = new FormData();
+            formData.append("file", file);
+            await axios.put('/tower/upload', formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    }
+                })
+                .then((request) => {
+                    console.log(request.data)
+                }).catch(error => console.log(error));
+        }
     },
     mutations: {
         updateFeatures(state, features) {

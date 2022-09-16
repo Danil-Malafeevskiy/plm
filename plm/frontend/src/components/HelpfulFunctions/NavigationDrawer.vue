@@ -14,7 +14,7 @@
         </v-list-item>
 
         <CardInLeftPanel v-show="showCard" :resetSelectItem="resetSelectItem" :visableCard="visableCard"
-            :editCardOn="editCardOn" />
+            :editCardOn="editCardOn"  :visableVersions="visableVersions" :notVisableVersions="notVisableVersions" :versionsPage="versionsPage" />
 
         <v-list dense nav>
             <p
@@ -45,7 +45,7 @@ export default {
     comments: {
         CardInLeftPanel
     },
-    props: ['addCardOn', 'visableCard', 'editCardOn'],
+    props: ['addCardOn', 'visableCard', 'editCardOn', 'visableVersions', 'notVisableVersions', 'versionsPage'],
     data() {
         return {
             selectedItem: null,

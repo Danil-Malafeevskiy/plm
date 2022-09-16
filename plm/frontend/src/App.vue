@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <NavigationDrawer :addCardOn="addCardOn" :visableCard="visableCard" :editCardOn="editCardOn" />
+    <NavigationDrawer :addCardOn="addCardOn" :notVisableVersions="notVisableVersions" :visableCard="visableCard" :editCardOn="editCardOn" :visableVersions="visableVersions" :versionsPage="versionsPage" />
 
     <v-main>
       <div style="display: none">
@@ -27,6 +27,7 @@
               mdi-pencil
             </v-icon>
           </v-btn>
+
           <v-btn :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')" class="show__card"
             height="28px" width="80px" depressed color="#EE5E5E"
             @click="addCardOn.data = !addCardOn.data; visableCard();">
@@ -38,7 +39,7 @@
         </template>
       </v-toolbar>
 
-      <v-tabs-items v-model="tab" style="height: 89.7%">
+      <v-tabs-items v-model="tab" style="height: 89.7%;">
 
         <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
           :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
@@ -66,7 +67,10 @@
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
 
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" :editCardOn="editCardOn" />
+              :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data" />
+
+            <VersionControl v-if="versionsPage.data" :versionsPage="versionsPage" />
+
           </div>
         </v-tab-item>
         <v-tab-item>
@@ -86,8 +90,10 @@ import MapArea from './components/Map/MapArea.vue';
 import CardInfo from './components/HelpfulFunctions/Card.vue';
 import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue';
 import Auth from './components/Auth/Auth.vue';
-import { mapActions, mapGetters, mapMutations } from 'vuex';
 import ConflicWindow from './components/HelpfulFunctions/ConflicWindow.vue';
+import VersionControl from './components/HelpfulFunctions/VersionControl.vue';
+
+import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
 
@@ -99,7 +105,8 @@ export default {
     CardInfo,
     NavigationDrawer,
     Auth,
-    ConflicWindow
+    ConflicWindow,
+    VersionControl
   },
 
   data() {
@@ -113,11 +120,13 @@ export default {
       addCardOn: { data: false },
       infoCardOn: { data: false },
       editCardOn: { data: false },
+      versionsPage: { data: false },
       editMode: false,
       test: mdiAlignHorizontalCenter,
       feature: this.getFeature,
       isConflict: false,
       arrPut: [],
+      file: null,
     }
   },
   watch: {
@@ -141,14 +150,21 @@ export default {
   computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
     'newData', 'actions', 'typeForLayer']),
   methods: {
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature']),
-    ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'uploadFeatures']),
+    ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData', 'updateListType']),
+    
+    visableVersions(){
+      this.versionsPage.data = true
+    },
+    notVisableVersions(){
+      this.versionsPage.data = false
+    },
     visableCard() {
       this.cardVisable.data = true;
     },
     notVisableCard() {
       this.cardVisable.data = false;
-    },
+    }, 
     disabledAddButton() {
       return !this.cardVisable.data && JSON.stringify(this.emptyObject) === '{}';
     },
@@ -187,6 +203,11 @@ export default {
           break;
       }
     },
+
+    async uploadFile(){
+      await this.uploadFeatures(this.file)
+    },
+
     editObjects() {
       if (this.newData.length) {
         this.isConflict = true;
