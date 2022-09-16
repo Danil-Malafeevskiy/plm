@@ -148,10 +148,11 @@ export default {
         });
         if (!this.editCardOn.data && !this.infoCardOn.data) {
           let object = this.arrayEditMode.put.find(el => el.id === this.objectForCard.id);
-          if (!object) {
-            await this.getOneObject(this.objectForCard.id);
-            object = this.objectForCard;
+          await this.getOneObject(this.objectForCard.id);
+          if (object) {
+            this.objectForCard.geometry.coordinates = object.geometry.coordinates;
           }
+          object = this.objectForCard;
           const layer = this.map.getAllLayers().find(el => el.get('typeId') === object.name);
           let features = layer.getSource().getFeatures();
           features = features.filter(el => el.id_ != object.id);
