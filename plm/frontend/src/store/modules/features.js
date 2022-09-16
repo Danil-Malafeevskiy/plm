@@ -39,7 +39,7 @@ export default {
         async putFeature(ctx, features) {
             let data;
             if ('put' in features) {
-                data = [...features.put, ...features.post, getStrId(features.delete), ''];
+                data = [...features.put, ...features.post, getStrId(features.delete), features.messege];
             }
             else {
                 data = [...features, [], '']
@@ -47,7 +47,6 @@ export default {
             await axios.put(`/tower`, data).then((response) => {
                 console.log(response.data);
             }).catch(error => console.log(error)); 
-            
         },
 
         async deleteFeature(ctx, features) {
@@ -192,6 +191,7 @@ export default {
             put: [],
             post: [],
             delete: [],
+            messege: '',
         },
         newData: [],
     },
