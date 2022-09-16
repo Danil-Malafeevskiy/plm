@@ -44,7 +44,6 @@ export default {
             else {
                 data = [...features, [], '']
             }
-            console.log(data);
             await axios.put(`/tower`, data).then((response) => {
                 console.log(response.data);
             }).catch(error => console.log(error)); 
@@ -64,19 +63,14 @@ export default {
             })
         },
 
-        async uploadFeatures(file) {
-            let formData = new FormData();
-            formData.append("file", file);
-            await axios.put('/tower/upload', formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    }
-                })
-                .then((request) => {
-                    console.log(request.data)
-                }).catch(error => console.log(error));
-        }
+        async uploadFileWithFeature(ctx, file) {
+            await axios.put('/tower/upload', file, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                }
+            }).then((response) => console.log(response.data))
+        },
+
     },
     mutations: {
         updateFeatures(state, features) {

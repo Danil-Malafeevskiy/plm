@@ -82,10 +82,6 @@ class TowerAPI(APIView):
 
         return Response(feature_serializer.errors)
 
-    def delete(self, request):
-        Feature.objects.all().delete()
-        return Response("aaa")
-
 class FileUploadView(APIView):
 
     serializer_class = FileSerializer

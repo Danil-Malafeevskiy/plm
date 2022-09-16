@@ -2,14 +2,16 @@
     <v-row justify="start">
         <template v-if="'properties' in objectForCard && 'type' in objectForCard.properties">
             <p class="attributes ma-0">Основные атрибуты</p>
-            <v-col v-for="(el, index) in objectForCard.properties.headers" :key="index" cols="2" sm="6" md="5" lg="6"
-                v-show="el.text != 'id'">
-                <v-text-field v-model="objectForCard_.properties.headers[index].text" :label="el.text"
-                    :placeholder="el.text" filled :readonly="infoCardOn.data" :rules="[rules.required]"
-                    @input="textToValue(index)" append-icon="mdi-delete-outline"
-                    @click:append="deleteMainAttribute(index)">
-                </v-text-field>
-            </v-col>
+            <draggable v-model="objectForCard_.properties.headers">
+                    <v-col v-for="(el, index) in objectForCard.properties.headers" :key="index" cols="2" sm="6" md="5"
+                    lg="6" v-show="el.text != 'id'">
+                    <v-text-field v-model="objectForCard_.properties.headers[index].text" :label="el.text"
+                        :placeholder="el.text" filled :readonly="infoCardOn.data" :rules="[rules.required]"
+                        @input="textToValue(index)" append-icon="mdi-delete-outline"
+                        @click:append="deleteMainAttribute(index)">
+                    </v-text-field>
+                </v-col>
+            </draggable>
             <v-col cols="2" sm="6" md="5" lg="6">
                 <v-btn class="ma-0 pa-0 btn_on_card" :disabled="infoCardOn.data" width="100%" depressed color="#EE5E5E"
                     @click="addMainAttribute">
@@ -21,7 +23,7 @@
         </template>
         <template v-if="'properties' in objectForCard && 'type' in objectForCard.properties">
             <p class="attributes ma-0">Допольнительные атрибуты</p>
-
+            <draggable v-model="objectForCard_.properties.properties">
             <v-col v-for="(el, index) in objectForCard.properties.properties"
                 :key="objectForCard.properties.headers.length + index" cols="2" sm="6" md="5" lg="6"
                 v-show="el != 'id'">
@@ -30,6 +32,7 @@
                     @click:append="deleteAdditionalAttribute(index)" :rules="[rules.required]">
                 </v-text-field>
             </v-col>
+            </draggable>
             <v-col cols="2" sm="6" md="5" lg="6">
                 <v-btn class="ma-0 pa-0 btn_on_card" :disabled="infoCardOn.data" width="100%" depressed color="#EE5E5E"
                     @click="addAdditionalAttribute">
@@ -57,9 +60,13 @@
 
 <script>
 import { mapGetters } from 'vuex';
+import draggable from "vuedraggable";
 
 export default {
     name: 'FormForDynamicField',
+    components: {
+        draggable
+    },
     props: ['objectForCard', 'infoCardOn', 'checkEqualityOfFieads', 'changeConflictField'],
     data() {
         return {

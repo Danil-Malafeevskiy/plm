@@ -1,6 +1,7 @@
 <template>
-    <v-card class="card_test">
-        <v-list dense nav>
+    <v-slide-y-transition>
+        <v-card class="card_test">
+                    <v-list dense nav>
             <v-list-item-group class="menu" v-model="selectedItem" color="#E93030" >
                 <v-list-item v-if="user.is_staff" @click="chooseMenuItem">
                     <v-list-item-title>
@@ -32,17 +33,18 @@
                                 class="white--text text-h6">{{user.first_name.slice(0,1)}}{{user.last_name.slice(0,1)}}</span>
                         </v-avatar>
 
-                        {{ user.username }}
-                    </v-list-item-title>
+                            {{ user.username }}
+                        </v-list-item-title>
 
-                    <v-list-item-icon @click="logOutAndResolve()">
-                        <v-icon>mdi-logout-variant</v-icon>
-                    </v-list-item-icon>
+                        <v-list-item-icon @click="logOutAndResolve()">
+                            <v-icon>mdi-logout-variant</v-icon>
+                        </v-list-item-icon>
 
-                </v-list-item>
-            </v-list-item-group>
-        </v-list>
-    </v-card>
+                    </v-list-item>
+                </v-list-item-group>
+            </v-list>
+        </v-card>
+    </v-slide-y-transition>
 </template>
 
 <script>
@@ -143,7 +145,7 @@ export default {
                     type: '',
                     headers: [],
                     properties: [],
-                    group: null,
+                    group: '',
                 },
                 image: '',
             }
