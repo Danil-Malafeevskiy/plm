@@ -246,11 +246,7 @@ export default {
       this.resetArrayEditMode();
       this.filterForFeature(this.oneType.id);
     },
-    uploadFile(file) {
-      let formData = new FormData();
-      formData.append("file", file);
-      this.uploadFileWithFeature(formData);
-    }
+
   },
   mounted() {
     const chatSocket = new WebSocket("ws://localhost:8000/test");
