@@ -147,15 +147,20 @@ export default {
           }
         });
         if (!this.editCardOn.data && !this.infoCardOn.data) {
-          await this.getOneObject(this.objectForCard.id);
-          const layer = this.map.getAllLayers().find(el => el.get('typeId') === this.objectForCard.name);
+          let object = this.arrayEditMode.put.find(el => el.id === this.objectForCard.id);
+          if (!object) {
+            await this.getOneObject(this.objectForCard.id);
+            object = this.objectForCard;
+          }
+          const layer = this.map.getAllLayers().find(el => el.get('typeId') === object.name);
           let features = layer.getSource().getFeatures();
-          features = features.filter(el => el.id_ != this.objectForCard.id);
+          features = features.filter(el => el.id_ != object.id);
+
           const source = new VectorSource({
             features: [...features, ...new GeoJSON().readFeatures(
               {
                 type: 'FeatureCollection',
-                features: [this.objectForCard]
+                features: [object]
               },
               {
                 featureProjection: 'EPSG:3857'
