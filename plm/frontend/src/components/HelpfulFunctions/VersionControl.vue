@@ -24,19 +24,13 @@ export default {
 	data() {
 		return {
 			headers: [
-				{
-					text: '',
-					align: 'start',
-					sortable: false,
-					value: 'name',
-				},
 				{ text: 'id', value: 'id' },
 				{ text: 'Дата', value: 'date_update' },
 				{ text: 'Автор', value: 'user' },
 				{ text: 'Комментарий', value: 'comment' },
 				{ text: 'Flag', value: 'flag' },
 			],
-			tableArray: this.allVersions,
+			tableArray: [],
 			timeLastVersion: null,
 			currentVersion: null,
 		}

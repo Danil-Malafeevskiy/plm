@@ -1,6 +1,7 @@
 <template>
   <v-app>
-    <NavigationDrawer :addCardOn="addCardOn" :notVisableVersions="notVisableVersions" :visableCard="visableCard" :editCardOn="editCardOn" :visableVersions="visableVersions" :versionsPage="versionsPage" />
+    <NavigationDrawer :addCardOn="addCardOn" :notVisableVersions="notVisableVersions" :visableCard="visableCard"
+      :editCardOn="editCardOn" :visableVersions="visableVersions" :versionsPage="versionsPage" />
 
     <v-main>
       <div style="display: none">
@@ -42,7 +43,7 @@
 
       <v-tabs-items v-model="tab" style="height: 89.7%">
         <CardConflict v-show="cardVisable.data" :cardVisable="cardVisable" :conflictCard="conflictCard"
-          :editMode="editMode" :objectForCard_="objectForConflict"/>
+          :editMode="editMode" :objectForCard_="objectForConflict" />
 
         <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
           :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
@@ -50,22 +51,27 @@
         <v-tab-item>
 
           <v-slide-y-transition>
-            <div v-if="editMode && actions === 'getFeatures'" class="edit_line">
-              <div>
-                <a @click="closeEditMode" style="margin: 5px 20px">
-                  <v-icon small>mdi-close</v-icon>
-                </a>
-                <span style="color: #454545;">Редактирование</span>
+            <div v-if="editMode && actions === 'getFeatures'" style="background-color: #FBDADA;">
+              <div class="edit_line">
+                <div>
+                  <a @click="closeEditMode" style="margin: 5px 20px">
+                    <v-icon small>mdi-close</v-icon>
+                  </a>
+                  <span style="color: #454545;">Редактирование</span>
+                </div>
+                <div>
+                  <span style="color: #454545; margin-right: 20px">{{ arrayEditMode.put.length +
+                  arrayEditMode.post.length
+                  +
+                  arrayEditMode.delete.length
+                  }} объектов</span>
+                  <v-btn @click="editObjects" text class="pa-0" style="margin: 0 10px 0 0">
+                    <span style="color: #454545;">применить</span>
+                  </v-btn>
+                </div>
               </div>
-              <div>
-                <span style="color: #454545; margin-right: 20px">{{ arrayEditMode.put.length + arrayEditMode.post.length
-                +
-                arrayEditMode.delete.length
-                }} объектов</span>
-                <v-btn @click="editObjects" text class="pa-0" style="margin: 0 10px 0 0">
-                  <span style="color: #454545;">применить</span>
-                </v-btn>
-              </div>
+              <v-text-field v-model="arrayEditMode.messege" class="pa-2" background-color="#F1F1F1" hide-details
+                label="Сообщение" placeholder="Сообщение" filled></v-text-field>
             </div>
           </v-slide-y-transition>
           <div flat>
@@ -168,11 +174,11 @@ export default {
 
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'uploadFileWithFeature']),
     ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData']),
-    
-    visableVersions(){
+
+    visableVersions() {
       this.versionsPage.data = true
     },
-    notVisableVersions(){
+    notVisableVersions() {
       this.versionsPage.data = false
     },
 
@@ -181,7 +187,7 @@ export default {
     },
     notVisableCard() {
       this.cardVisable.data = false;
-    }, 
+    },
     disabledAddButton() {
       return !this.cardVisable.data && JSON.stringify(this.emptyObject) === '{}';
     },
@@ -222,11 +228,6 @@ export default {
           break;
       }
     },
-
-    async uploadFile(){
-      await this.uploadFeatures(this.file)
-    },
-
     editObjects() {
       if (this.newData.length) {
         this.isConflict = true;
@@ -258,15 +259,20 @@ export default {
       this.resetArrayEditMode();
       this.filterForFeature(this.oneType.id);
     },
-    visableConflictCard(){
+    visableConflictCard() {
       let object = this.newData.find(el => el.id === this.getObjectForCard.id);
-        if (object) {
-          this.objectForConflict = object
-          this.conflictCard = true;
-        }
-        else {
-          this.conflictCard = false;
-        }
+      if (object) {
+        this.objectForConflict = object
+        this.conflictCard = true;
+      }
+      else {
+        this.conflictCard = false;
+      }
+    },
+    uploadFile(file){
+      let formData = new FormData();
+      formData.append('file', file);
+      this.uploadFileWithFeature(formData);
     }
   },
   mounted() {
@@ -402,7 +408,6 @@ html {
 }
 
 .edit_line {
-  background-color: #FBDADA;
   position: relative;
   height: 45px;
   width: 100%;
