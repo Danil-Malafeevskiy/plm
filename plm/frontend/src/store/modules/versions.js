@@ -6,7 +6,7 @@ export default {
         async getVersions({ commit }) {
             await axios.get('/version').then((response) => {
                 commit('updateVersions', response.data)
-                console.log(response.data)
+                // console.log(response.data)
             })
         },
 
@@ -14,6 +14,8 @@ export default {
             axios.put(`/version/${id}`).then((response) => {
                 console.log(response.data)
                 dispatch('getVersions');
+                dispatch('getFeatures');
+                
             })
         }
     },
