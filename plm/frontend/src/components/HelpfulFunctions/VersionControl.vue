@@ -44,7 +44,7 @@ export default {
 	watch: {
 		allVersions: {
 			handler() {
-				this.tableArray = [...this.allVersions]
+				this.tableArray = this.allVersions
 				this.timeLastVersion = 0
 				this.tableArray.forEach(element => {
 					if (element === this.tableArray.filter(element => element.flag)[0]) {
@@ -52,6 +52,7 @@ export default {
 						this.currentVersion = element
 					}
 				})
+				console.log(this.tableArray)
 			}
 		},
 	},

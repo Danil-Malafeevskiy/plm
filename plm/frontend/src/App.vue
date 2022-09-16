@@ -113,7 +113,7 @@ export default {
     NavigationDrawer,
     Auth,
     ConflicWindow,
-    CardConflict
+    CardConflict,
     VersionControl
   },
 
@@ -257,11 +257,6 @@ export default {
       this.resetNewData();
       this.resetArrayEditMode();
       this.filterForFeature(this.oneType.id);
-    },
-    uploadFile(file) {
-      let formData = new FormData();
-      formData.append("file", file);
-      this.uploadFileWithFeature(formData);
     },
     visableConflictCard(){
       let object = this.newData.find(el => el.id === this.getObjectForCard.id);

@@ -3,24 +3,24 @@
         <v-card class="card_test">
                     <v-list dense nav>
             <v-list-item-group class="menu" v-model="selectedItem" color="#E93030" >
-                <v-list-item v-if="user.is_staff" @click="chooseMenuItem">
+                <v-list-item v-if="user.is_staff">
                     <v-list-item-title>
                         Пользователи
                     </v-list-item-title>
                 </v-list-item>
-                <v-list-item v-if="user.is_staff" @click="chooseMenuItem">
+                <v-list-item v-if="user.is_staff" >
                     <v-list-item-title>
                         Типы объектов
                     </v-list-item-title>
                 </v-list-item>
 
-                <v-list-item v-if="user.is_staff" @click="chooseMenuItem" >
+                <v-list-item v-if="user.is_staff"  >
                     <v-list-item-title>
                         Версии системы
                     </v-list-item-title>
                 </v-list-item>
 
-                <v-list-item v-if="user.is_staff" @click="chooseMenuItem"  >
+                <v-list-item v-if="user.is_staff" >
                     <v-list-item-title>
                         База объектов
                     </v-list-item-title>
