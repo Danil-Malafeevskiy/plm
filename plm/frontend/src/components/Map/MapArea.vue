@@ -52,6 +52,7 @@ export default {
       svg: document.querySelector('#svg_icon_of_type svg'),
       editedPointCoordinates: null,
       editedLineStringCoordinates: null,
+      noEditedLineStrings: null,
       noEditedCoord: null,
       noEditedLineStringIndex: null,
       noEditedLayer: {
@@ -128,22 +129,27 @@ export default {
       async handler() {
         this.editCardOn_ = this.editCardOn
         this.map.getInteractions().getArray().forEach(element => {
+
           if (element instanceof Modify) {
             element.setActive(!element.getActive())
-            if (!element.getActive() && !this.infoCardOn.data) {
-              this.map.getAllLayers().forEach(element => {
-                if (!(element instanceof TileLayer)) {
-                  element.getSource().getFeatures().forEach(geom => {
-                    if (geom.getGeometry().getType() === 'LineString') {
-                      if (element.get('typeId') === this.noEditedLayerId) {
-                        this.editedLineStringCoordinates[this.noEditedLineStringIndex] = this.noEditedCoord
-                        geom.getGeometry().setCoordinates(this.editedLineStringCoordinates)
-                      }
-                    }
-                  });
+          }
+        });
+        
+        this.map.getAllLayers().forEach(layer => {
+          if (!(layer instanceof TileLayer)) {
+            layer.getSource().getFeatures().forEach(geom => {
+              
+              if (geom.getGeometry().getType() === 'LineString') {
+                if (!this.editCardOn.data && !this.infoCardOn.data) {
+                  if (geom.getId() === this.noEditedLayerId) {
+                    this.editedLineStringCoordinates[this.noEditedLineStringIndex] = this.noEditedCoord
+                    geom.getGeometry().setCoordinates(this.editedLineStringCoordinates)
+                  } else {
+                    geom.getGeometry().setCoordinates(geom.getGeometry().getCoordinates())
+                  }
                 }
-              })
-            }
+              }
+            });
           }
         });
         if (!this.editCardOn.data && !this.infoCardOn.data) {
@@ -163,6 +169,7 @@ export default {
           });
           layer.setSource(source);
         }
+
       },
       deep: true
     },
@@ -279,8 +286,8 @@ export default {
                   this.noEditedLineStringIndex = index
                   this.editedLineStringCoordinates[index] = event.features.getArray()[0].getGeometry().getCoordinates()
                   geom.getGeometry().setCoordinates(this.editedLineStringCoordinates)
-                  this.noEditedLayerId = element.get('typeId')
-                }
+                  this.noEditedLayerId = geom.getId()
+                } 
               });
             }
           });
