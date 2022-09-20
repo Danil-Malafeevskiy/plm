@@ -186,10 +186,16 @@ export default {
       }
     },
     checkequalsItems(item, object) {
-      let checkObject = { ...object.properties }
+      let checkObject = { ...object.properties };
+      let putObject = this.arrayEditMode.put.find(el => el.id === object.id);
+      putObject = putObject ? { ...putObject.properties } : 1;
+      let newObject = this.newData.find(el => el.id === object.id);
+      newObject = newObject ? { ...newObject.properties } : 1;
       for (let i in this.headers) {
         if (this.headers[i].text != 'id_' && this.headers[i].text != 'id' && checkObject[this.headers[i].text] !== item[this.headers[i].text]) {
-          return false;
+          if(!(putObject && newObject && putObject[this.headers[i].text] === item[this.headers[i].text])){
+            return false;
+          }
         }
       }
       return true;

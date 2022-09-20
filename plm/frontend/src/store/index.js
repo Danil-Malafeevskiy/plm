@@ -5,6 +5,7 @@ import auth from './modules/auth'
 import group from './modules/group'
 import Var from './modules/var'
 import typeObject from './modules/typeObject'
+import versions from './modules/versions'
 
 Vue.use(Vuex);
 
@@ -14,6 +15,7 @@ export default new Vuex.Store({
         auth,
         group,
         Var,
-        typeObject
+        typeObject, 
+        versions
     }
 });

@@ -6,7 +6,15 @@ export default {
             await axios.get('/group').then((response) => {
                 commit('updateAllGroups', response.data);
             })
+        }, 
+
+        async getAllUserGroups({ commit }){
+            await axios.get('/user').then((response) => {
+                let group = { ...response.data };
+                commit('updateAllUserGroups', group.groups)
+            })
         },
+
         async getGroup({ commit }, id) {
             await axios.get(`/group/${id}`).then((response) => {
                 let group = { ...response.data };
@@ -35,7 +43,7 @@ export default {
             })
         },
         async putGroup({ dispatch }, group) {
-            group ={ ...group, ...group.properties};
+            group = { ...group, ...group.properties };
             delete group.properties;
             await axios.put('/group', group).then((response) => {
                 console.log(response.data);
@@ -48,6 +56,11 @@ export default {
                 dispatch('getAllGroups');
             })
         },
+        async allGroupForNav({ commit }) {
+            await axios.get('/group').then((response) => {
+                commit('updateAllGroupsForNav', response.data);
+            })
+        }
     },
     mutations: {
         updateAllGroups(state, groups) {
@@ -55,16 +68,28 @@ export default {
             this.commit('updateListItem', { items: groups })
             this.commit('updateListType', groups)
         },
-        updateGroup(state, group){
+        updateAllGroupsForNav(state, groups) {
+            state.groups = groups;
+            this.commit('updateListType', groups)
+        },
+        updateGroup(state, group) {
             state.group = group;
+        }, 
+        updateAllUserGroups(state, groups){
+            state.userGroups = groups
+            this.commit('updateListItem', { items: groups })
+            this.commit('updateListType', groups)
         }
     },
     getters: {
         allGroups(state) {
             return state.groups;
         },
-        currentGroup(state){
+        currentGroup(state) {
             return state.group;
+        }, 
+        allUserGroups(state){
+            return state.userGroups
         }
     },
     state: {
@@ -73,5 +98,7 @@ export default {
             id: null,
             name: null
         },
+        groupsForNav: [],
+        userGroups: []
     },
 }

@@ -85,6 +85,7 @@ class TowerAPI(APIView):
         return Response(feature_serializer.errors)
 
 class FileUploadView(APIView):
+
     serializer_class = FileSerializer
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, FileUploadPerm]
@@ -92,7 +93,9 @@ class FileUploadView(APIView):
 
     fs = FileSystemStorage(location=settings.MEDIA_URL)
 
+
     def put(self, request):
+        print(request.data)
         self.fs.save(request.FILES['file'].name, request.FILES['file'])
         doc = sqlite3.connect(settings.MEDIA_URL + request.FILES['file'].name)
         doc.enable_load_extension(True)

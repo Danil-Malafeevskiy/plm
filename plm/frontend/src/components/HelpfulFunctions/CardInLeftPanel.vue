@@ -13,11 +13,19 @@
                             Типы объектов
                         </v-list-item-title>
                     </v-list-item>
+
+                    <v-list-item v-if="user.is_staff">
+                        <v-list-item-title>
+                            Версии системы
+                        </v-list-item-title>
+                    </v-list-item>
+
                     <v-list-item v-if="user.is_staff">
                         <v-list-item-title>
                             База объектов
                         </v-list-item-title>
                     </v-list-item>
+
                     <v-list-item>
                         <v-list-item-title>
                             <v-avatar color="#72ABEA" size="40">
@@ -44,12 +52,13 @@ import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 export default {
     name: 'CardInLeftPanel',
-    props: ['resetSelectItem', 'visableCard', 'editCardOn'],
+    props: ['resetSelectItem', 'visableCard', 'editCardOn', 'visableVersions', 'notVisableVersions', 'versionsPage'],
     data() {
         return {
-            selectedItem: 2,
+            selectedItem: 3,
             initials: null,
             editCardOn_: this.editCardOn,
+            groupsOfUser: [],
         }
     },
     watch: {
@@ -73,27 +82,35 @@ export default {
                             this.onDataSet();
                             break;
                         }
-                        case 2:
+                        case 2: {
+                            this.onVersions();
+                            break;
+                        }
+                        case 3: {
                             this.onFeatures();
                             break;
-                        case 3:
+                        }
+                        case 4: {
                             this.onUser();
                             break;
+                        }
                     }
                 }
             }
-        }
+        },
     },
-    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType', 'actions', 'getObjectForCard']),
+    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType', 'actions', 'getObjectForCard', 'allVersions', 'allUserGroups']),
     methods: {
-        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject', 'getOneObject']),
+        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject', 'getOneObject', 'getVersions', 'getAllTypeForTable', 'allGroupForNav', 'getUser']),
+
         ...mapMutations(['updatefilterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
-            'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray', 'updateOneType', 'upadateTitle']),
+            'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray', 'updateOneType', 'upadateTitle', 'updateVersions', 'updateAllUserGroups']),
         logOutAndResolve() {
             this.logOut();
             location.reload();
         },
         async onUser() {
+            this.notVisableVersions()
             this.updateAction({
                 actionGet: 'getUsersOfGroup',
                 actionPost: 'postUser',
@@ -109,6 +126,7 @@ export default {
             this.visableCard();
         },
         onFeatures() {
+            this.notVisableVersions()
             this.updateNameForArray('База объектов');
             this.updateListType([]);
             this.getTypeObject();
@@ -120,7 +138,9 @@ export default {
                 actionDelete: 'deleteFeature',
             });
         },
-        async onDataSet() {
+        onDataSet() {
+            this.notVisableVersions();
+            this.updateListType([]);
             this.updateNameForArray('Типы объектов');
             let object = {
                 properties: {
@@ -148,14 +168,12 @@ export default {
                 actionPut: 'putTypeObject',
                 actionDelete: 'deleteTypeObject',
             });
-            if (this.allType != []) {
-                await this.getTypeObject();
-            }
-            this.updateListItem({ items: this.allType });
-            this.updateListType([]);
+            this.updateListType(this.groupsOfUser);
+            this.getAllTypeForTable();
             this.upadateEmptyObject(object);
         },
         onUsers() {
+            this.notVisableVersions()
             this.updateNameForArray('Пользователи');
             this.updateListType([]);
             let headers = [
@@ -186,10 +204,20 @@ export default {
                 actionDelete: 'deleteGroup',
             });
             this.getAllGroups();
-        }
-    },
-    mounted() {
+        },
 
+        onVersions() {
+            this.visableVersions()
+            this.updateListType([]);
+            this.updateListType(this.groupsOfUser);
+            this.updateNameForArray('Версии системы');
+            
+            this.getAllGroups();
+        },
+    },
+    async mounted() {
+        await this.getUser();
+        this.groupsOfUser = [ ...this.user.groups ];
     }
 }
 </script>

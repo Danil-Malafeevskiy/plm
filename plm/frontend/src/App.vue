@@ -1,6 +1,7 @@
 <template>
   <v-app>
-    <NavigationDrawer :addCardOn="addCardOn" :visableCard="visableCard" :editCardOn="editCardOn" />
+    <NavigationDrawer :addCardOn="addCardOn" :notVisableVersions="notVisableVersions" :visableCard="visableCard"
+      :editCardOn="editCardOn" :visableVersions="visableVersions" :versionsPage="versionsPage" />
 
     <v-main>
       <div style="display: none">
@@ -27,6 +28,7 @@
               mdi-pencil
             </v-icon>
           </v-btn>
+
           <v-btn :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')" class="show__card"
             height="28px" width="80px" depressed color="#EE5E5E"
             @click="addCardOn.data = !addCardOn.data; visableCard();">
@@ -40,6 +42,8 @@
       </v-toolbar>
 
       <v-tabs-items v-model="tab" style="height: 89.7%">
+        <CardConflict v-show="cardVisable.data" :cardVisable="cardVisable" :conflictCard="conflictCard"
+          :editMode="editMode" :objectForCard_="objectForConflict" />
 
         <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
           :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
@@ -47,22 +51,27 @@
         <v-tab-item>
 
           <v-slide-y-transition>
-            <div v-if="editMode && actions === 'getFeatures'" class="edit_line">
-              <div>
-                <a @click="closeEditMode" style="margin: 5px 20px">
-                  <v-icon small>mdi-close</v-icon>
-                </a>
-                <span style="color: #454545;">Редактирование</span>
+            <div v-if="editMode && actions === 'getFeatures'" style="background-color: #FBDADA;">
+              <div class="edit_line">
+                <div>
+                  <a @click="closeEditMode" style="margin: 5px 20px">
+                    <v-icon small>mdi-close</v-icon>
+                  </a>
+                  <span style="color: #454545;">Редактирование</span>
+                </div>
+                <div>
+                  <span style="color: #454545; margin-right: 20px">{{ arrayEditMode.put.length +
+                  arrayEditMode.post.length
+                  +
+                  arrayEditMode.delete.length
+                  }} объектов</span>
+                  <v-btn @click="editObjects" text class="pa-0" style="margin: 0 10px 0 0">
+                    <span style="color: #454545;">применить</span>
+                  </v-btn>
+                </div>
               </div>
-              <div>
-                <span style="color: #454545; margin-right: 20px">{{ arrayEditMode.put.length + arrayEditMode.post.length
-                +
-                arrayEditMode.delete.length
-                }} объектов</span>
-                <v-btn @click="editObjects" text class="pa-0" style="margin: 0 10px 0 0">
-                  <span style="color: #454545;">применить</span>
-                </v-btn>
-              </div>
+              <v-text-field v-model="arrayEditMode.messege" class="pa-2" background-color="#F1F1F1" hide-details
+                label="Сообщение" placeholder="Сообщение" filled></v-text-field>
             </div>
           </v-slide-y-transition>
           <div flat>
@@ -71,13 +80,17 @@
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
 
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" :editCardOn="editCardOn" />
+              :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data" />
+
+            <VersionControl v-if="versionsPage.data" :versionsPage="versionsPage" />
+
           </div>
         </v-tab-item>
         <v-tab-item>
           <div flat>
             <MapArea :allFeatures="allFeatures" :visableCard="visableCard" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="emptyObject" />
+              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="emptyObject"
+              :changeElements="changeElements" />
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -91,10 +104,12 @@ import MapArea from './components/Map/MapArea.vue';
 import CardInfo from './components/HelpfulFunctions/Card.vue';
 import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue';
 import Auth from './components/Auth/Auth.vue';
-import { mapActions, mapGetters, mapMutations } from 'vuex';
 import ConflicWindow from './components/HelpfulFunctions/ConflicWindow.vue';
+import VersionControl from './components/HelpfulFunctions/VersionControl.vue';
+import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
+import CardConflict from './components/HelpfulFunctions/CardConflict.vue';
 
 export default {
   components: {
@@ -103,7 +118,9 @@ export default {
     CardInfo,
     NavigationDrawer,
     Auth,
-    ConflicWindow
+    ConflicWindow,
+    CardConflict,
+    VersionControl
   },
 
   data() {
@@ -113,15 +130,19 @@ export default {
       items: [
         'список', 'карта'
       ],
+      objectForConflict: {},
+      conflictCard: false,
       cardVisable: { data: false },
       addCardOn: { data: false },
       infoCardOn: { data: false },
       editCardOn: { data: false },
+      versionsPage: { data: false },
       editMode: false,
       test: mdiAlignHorizontalCenter,
-      feature: this.getFeature,
       isConflict: false,
       arrPut: [],
+      file: null,
+      changeElements: [],
     }
   },
   watch: {
@@ -140,13 +161,37 @@ export default {
         }
       },
       deep: true,
+    },
+    getObjectForCard: {
+      handler() {
+        this.visableConflictCard();
+      }
+    },
+    actions: {
+      async handler() {
+        await this.notVisableCard();
+        setTimeout(() => {
+          this.infoCardOn.data = false;
+          this.addCardOn.data = false;
+          this.editCardOn.data = false;
+        }, 500);
+      }
     }
   },
-  computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
+  computed: mapGetters(['allFeatures', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
     'newData', 'actions', 'typeForLayer']),
   methods: {
+
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'uploadFileWithFeature']),
     ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData']),
+
+    visableVersions() {
+      this.versionsPage.data = true
+    },
+    notVisableVersions() {
+      this.versionsPage.data = false
+    },
+
     visableCard() {
       this.cardVisable.data = true;
     },
@@ -159,6 +204,7 @@ export default {
     async onmessage(e) {
       const data = JSON.parse(e.data);
       this.getFeatures();
+      console.log(data.data);
       switch (data.action) {
 
         case "update": {
@@ -167,6 +213,7 @@ export default {
 
             if (editObject.length && this.searchConflict(editObject[0], data.data)) {
               await this.updateNewData(data.data);
+              this.visableConflictCard();
               if (this.newData.length === 1) {
                 this.isConflict = true;
               }
@@ -183,7 +230,12 @@ export default {
           }
           break;
         case 'delete':
-          // console.log(data.data);
+          this.arrayEditMode.put = this.arrayEditMode.put.filter(el => el.id != data.data.id)
+          if (this.getObjectForCard.id === data.data.id) {
+            this.infoCardOn.data = false;
+            this.editCardOn.data = false;
+            this.notVisableCard();
+          }
           if (data.data.name === this.oneType.id) {
             this.filterForFeature(this.oneType.id);
           }
@@ -219,13 +271,25 @@ export default {
     },
     closeEditMode() {
       this.editMode = !this.editMode;
+      this.changeElements = [...this.arrayEditMode.put, ...this.arrayEditMode.delete];
       this.resetNewData();
       this.resetArrayEditMode();
+      this.getFeatures();
       this.filterForFeature(this.oneType.id);
+    },
+    visableConflictCard() {
+      let object = this.newData.find(el => el.id === this.getObjectForCard.id);
+      if (object) {
+        this.objectForConflict = object
+        this.conflictCard = true;
+      }
+      else {
+        this.conflictCard = false;
+      }
     },
     uploadFile(file) {
       let formData = new FormData();
-      formData.append("file", file);
+      formData.append('file', file);
       this.uploadFileWithFeature(formData);
     }
   },
@@ -362,7 +426,6 @@ html {
 }
 
 .edit_line {
-  background-color: #FBDADA;
   position: relative;
   height: 45px;
   width: 100%;
