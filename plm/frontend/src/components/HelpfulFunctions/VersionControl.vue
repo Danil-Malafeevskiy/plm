@@ -72,18 +72,12 @@ export default {
 				})
 			}
 		},
-		getTypeId: {
-			handler(){
-				this.getGroup()
-				this.getFilteredVersions(this.nameGroup)
-			}
-		}
 	},
 	computed: {
 		...mapGetters(['allVersions', 'allListItem', 'getList', 'getTypeId', 'allGroups', 'allFilteredVersions', 'user','allUserGroups' ])
 	},
 	methods: {
-		...mapActions(['getVersions', 'putVersion', 'getGroup', 'getFilteredVersions', 'getAllGroups', 'getAllUserGroups']),
+		...mapActions(['getVersions', 'putVersion', 'getGroup', 'getAllGroups', 'getAllUserGroups']),
 		...mapMutations(['updateVersions', 'updateFilteredVersions', 'updateAllGroups', 'updateAllUserGroups']),
 		chooseVersion(item){
 			this.putVersion(item.id)	
@@ -109,11 +103,7 @@ export default {
 	},
 
 	async mounted() {
-		// this.getAllUserGroups()
-		// console.log(this.allUserGroups)
-		this.getGroup()
 		this.getVersions()
-		this.getFilteredVersions(this.nameGroup)
 	}, 
 
 }

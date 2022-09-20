@@ -152,7 +152,7 @@ export default {
     },
     computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType']) },
     methods: {
-        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAllTypeInGroup']),
+        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAllTypeInGroup', 'getFilteredVersions']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
             'updateListType', 'updateListItem']),
         getOneGroup(id) {
@@ -181,6 +181,9 @@ export default {
             }
             else if (domItem === "Типы объектов") {
                 this.getAllTypeInGroup(objectType);
+            }
+            else if (domItem === "Версии системы"){
+                this.getFilteredVersions(objectType);
             }
             else {
                 await this.getOneTypeObjectForFeature({ id: objectType.id });
