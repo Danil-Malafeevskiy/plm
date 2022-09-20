@@ -56,7 +56,7 @@ export default {
                 dispatch('getTypeObject', true);
             })
         },
-        async putTypeObject({ dispatch }, type) {
+        async putTypeObject({ dispatch, state }, type) {
             let putType = { ...type.properties };
             for(let key in type){
                 if(key != 'properties'){
@@ -65,7 +65,12 @@ export default {
             }
             await axios.put('/dataset/admin', putType).then((response) => {
                 console.log(response.data);
-                dispatch('getTypeObject', true);
+                if(state.pastGroup != null){
+                    dispatch('getAllTypeInGroup', state.pastGroup);
+                }
+                else{
+                    dispatch('getAlltypeForTable');
+                }
             });
         },
         async deleteTypeObject({ dispatch }, id) {
@@ -77,6 +82,17 @@ export default {
         async getSortType({ commit }, drawType){
             await axios.get(`/dataset?type=${drawType}`).then((response) => {
                 commit('updateSelectedDrawType', response.data);
+            })
+        },
+        async getAllTypeForTable({ commit }){
+            await axios.get('/dataset').then((response) => {
+                commit('updateAllTypeForTable', response.data)
+            })
+        },
+        async getAllTypeInGroup({ commit, state }, group){
+            state.pastGroup = group;
+            await axios.get(`/dataset?group=${group}`).then((response) => {
+                commit('updateAllTypeForTable', response.data);
             })
         }
     },
@@ -100,7 +116,12 @@ export default {
         },
         updateAllTypeForMap(state, types){
             state.allTypeForMap = types;
+        },
+        updateAllTypeForTable(state, types){
+            state.allTypeForTable = types;
+            this.commit('updateListItem', {items: types});
         }
+        
     },
     getters: {
         allType(state) {
@@ -120,6 +141,9 @@ export default {
         },
         allTypeForMap(state){
             return state.allTypeForMap;
+        },
+        allTypeForTable(state){
+            return state.allTypeForTable
         }
     },
     state: {
@@ -133,5 +157,7 @@ export default {
         },
         typeForLayer: {},
         selectedDrawType: [],
+        allTypeForTable: [],
+        pastGroup: null,
     },
 }

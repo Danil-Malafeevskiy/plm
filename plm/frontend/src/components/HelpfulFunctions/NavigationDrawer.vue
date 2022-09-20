@@ -14,7 +14,8 @@
         </v-list-item>
 
         <CardInLeftPanel v-show="showCard" :resetSelectItem="resetSelectItem" :visableCard="visableCard"
-            :editCardOn="editCardOn"  :visableVersions="visableVersions" :notVisableVersions="notVisableVersions" :versionsPage="versionsPage" />
+            :editCardOn="editCardOn" :visableVersions="visableVersions" :notVisableVersions="notVisableVersions"
+            :versionsPage="versionsPage" />
 
         <v-list dense nav>
             <p
@@ -29,8 +30,11 @@
                     color="#E93030">
                     <v-list-item class="pa-3" v-for="key in fiteredAllTypes" :key="key.id" link
                         style="border-radius: 8px !important;">
-                        <v-list-item-title class="pa-1">
+                        <v-list-item-title class="pa-1" v-if="typeof key === 'object'">
                             {{ key.name }}
+                        </v-list-item-title>
+                        <v-list-item-title class="pa-1" v-else>
+                            {{ key }}
                         </v-list-item-title>
                     </v-list-item>
                 </v-list-item-group>
@@ -136,14 +140,19 @@ export default {
                 }
                 else {
                     const searchText = document.querySelector('#search').value;
-                    this.fiteredAllTypes = this.allType.filter(el => el.name.toLowerCase().includes(searchText.toLowerCase()));
+                    if (this.allType.length && typeof this.allType[0] === 'object') {
+                        this.fiteredAllTypes = this.allType.filter(el => el.name.toLowerCase().includes(searchText.toLowerCase()));
+                    }
+                    else {
+                        this.fiteredAllTypes = this.allType.filter(el => el.toLowerCase().includes(searchText.toLowerCase()));
+                    }
                 }
             }
         }
     },
     computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType']) },
     methods: {
-        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature']),
+        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAllTypeInGroup']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
             'updateListType', 'updateListItem']),
         getOneGroup(id) {
@@ -170,6 +179,9 @@ export default {
                 this.updateHeaders(headers);
                 this.getUsersOfGroup(objectType);
             }
+            else if (domItem === "Типы объектов") {
+                this.getAllTypeInGroup(objectType);
+            }
             else {
                 await this.getOneTypeObjectForFeature({ id: objectType.id });
                 this.objectType = this.oneType;
@@ -180,6 +192,7 @@ export default {
         },
         resetSelectItem() {
             setTimeout(() => { this.showCard = !this.showCard; });
+            this.selectedItem = null;
         },
         search(searchText) {
             if (searchText != null) {
