@@ -318,6 +318,7 @@ export default {
               this.editedLineStringIndex = index
               this.editedLineStringCoordinates[index] = event.features.getArray()[0].getGeometry().getCoordinates()
               geom.getGeometry().setCoordinates(this.editedLineStringCoordinates)
+
             }
           });
         }

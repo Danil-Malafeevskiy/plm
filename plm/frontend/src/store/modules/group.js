@@ -6,7 +6,15 @@ export default {
             await axios.get('/group').then((response) => {
                 commit('updateAllGroups', response.data);
             })
+        }, 
+
+        async getAllUserGroups({ commit }){
+            await axios.get('/user').then((response) => {
+                let group = { ...response.data };
+                commit('updateAllUserGroups', group.groups)
+            })
         },
+
         async getGroup({ commit }, id) {
             await axios.get(`/group/${id}`).then((response) => {
                 let group = { ...response.data };
@@ -66,6 +74,11 @@ export default {
         },
         updateGroup(state, group) {
             state.group = group;
+        }, 
+        updateAllUserGroups(state, groups){
+            state.userGroups = groups
+            this.commit('updateListItem', { items: groups })
+            this.commit('updateListType', groups)
         }
     },
     getters: {
@@ -74,6 +87,9 @@ export default {
         },
         currentGroup(state) {
             return state.group;
+        }, 
+        allUserGroups(state){
+            return state.userGroups
         }
     },
     state: {
@@ -83,5 +99,6 @@ export default {
             name: null
         },
         groupsForNav: [],
+        userGroups: []
     },
 }
