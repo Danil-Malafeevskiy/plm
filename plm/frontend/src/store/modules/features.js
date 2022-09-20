@@ -22,20 +22,11 @@ export default {
                 // }
             }).catch(error => console.log(error));
         },
-
         async getOneFeature({ commit }, id) {
             await axios.get(`/tower/${id}`).then((response) => {
                 commit('updateObjectForCard', response.data[0]);
             }).catch(error => console.log(error));
         },
-
-        async postFeature({ dispatch }, feature) {
-            await axios.post('/tower', feature).then((response) => {
-                console.log(response.data);
-                dispatch('getFeatures');
-            }).catch(error => console.log(error));
-        },
-
         async putFeature(ctx, features) {
             let data;
             if ('put' in features) {
@@ -48,20 +39,17 @@ export default {
                 console.log(response.data);
             }).catch(error => console.log(error)); 
         },
-
-        async deleteFeature(ctx, features) {
-            console.log(getStrId(features));
-            await axios.put(`/tower`, [getStrId(features), '']).then((response) => {
-                console.log(response.data);
-            }).catch(error => console.log(error));
-        },
         async filterForFeature({ commit, state }, typeId = state.featureTypeId) {
             state.featureTypeId = typeId;
             await axios.get(`/tower?name=${typeId}`).then((response) => {
                 commit('updatefilterForFeature', response.data);
             })
         },
-
+        async filterForFeatureForMap({ commit }, typeId){
+            await axios.get(`/tower?name=${typeId}`).then((response) => {
+                commit('updateFeatureForMap', response.data);
+            })
+        },
         async uploadFileWithFeature(ctx, file) {
             await axios.put('/tower/upload', file, {
                 headers: {
@@ -69,7 +57,11 @@ export default {
                 }
             }).then((response) => console.log(response.data))
         },
-
+        async getFeatureForMap({ commit }, id){
+            await axios.get(`/tower/${id}`).then((response) => {
+                commit('updateFeatureInMap', response.data[0])
+            });
+        }
     },
     mutations: {
         updateFeatures(state, features) {
@@ -106,8 +98,7 @@ export default {
                     }
                     else {
                         state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
-
-                        if (state.arrayEditMode.put.filter(el => el.id === item.id).length) {
+                        if (state.arrayEditMode.put.find(el => el.id === item.id)) {
                             for (let key in state.arrayEditMode.put) {
                                 if (state.arrayEditMode.put[key].id === item.id) {
                                     Vue.set(state.arrayEditMode.put, key, item);
@@ -127,11 +118,11 @@ export default {
                     else {
                         state.arrayEditMode.put = state.arrayEditMode.put.filter(el => el.id != item.id);
 
-                        if (!state.arrayEditMode.delete.filter(el => el.id === item.id).length) {
-                            state.arrayEditMode.delete.push(item);
+                        if (state.arrayEditMode.delete.find(el => el.id === item.id)) {
+                            state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
                         }
                         else {
-                            state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
+                            state.arrayEditMode.delete.push(item);
                         }
                     }
                     break;
@@ -153,6 +144,12 @@ export default {
         },
         resetNewData(state) {
             state.newData = [];
+        },
+        updataFeatureForMap(state, features){
+            state.featureForMap = features;
+        },
+        updateFeatureInMap(state, feature){
+            state.featureInMap = feature;
         }
     },
     getters: {
@@ -176,6 +173,12 @@ export default {
         },
         newData(state) {
             return state.newData;
+        },
+        featureForMap(state){
+            return state.featureForMap;
+        },
+        featureInMap(state){
+            return state.featureInMap;
         }
     },
     state: {
@@ -194,5 +197,7 @@ export default {
             messege: '',
         },
         newData: [],
+        featureForMap: [],
+        featureInMap: {}
     },
 }

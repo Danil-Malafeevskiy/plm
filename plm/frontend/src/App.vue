@@ -89,7 +89,8 @@
         <v-tab-item>
           <div flat>
             <MapArea :allFeatures="allFeatures" :visableCard="visableCard" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="emptyObject" />
+              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="emptyObject"
+              :changeElements="changeElements" />
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -105,7 +106,6 @@ import NavigationDrawer from './components/HelpfulFunctions/NavigationDrawer.vue
 import Auth from './components/Auth/Auth.vue';
 import ConflicWindow from './components/HelpfulFunctions/ConflicWindow.vue';
 import VersionControl from './components/HelpfulFunctions/VersionControl.vue';
-
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
@@ -139,10 +139,10 @@ export default {
       versionsPage: { data: false },
       editMode: false,
       test: mdiAlignHorizontalCenter,
-      feature: this.getFeature,
       isConflict: false,
       arrPut: [],
       file: null,
+      changeElements: [],
     }
   },
   watch: {
@@ -166,9 +166,19 @@ export default {
       handler() {
         this.visableConflictCard();
       }
+    },
+    actions: {
+      async handler() {
+        await this.notVisableCard();
+        setTimeout(() => {
+          this.infoCardOn.data = false;
+          this.addCardOn.data = false;
+          this.editCardOn.data = false;
+        }, 500);
+      }
     }
   },
-  computed: mapGetters(['allFeatures', 'getFeature', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
+  computed: mapGetters(['allFeatures', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
     'newData', 'actions', 'typeForLayer']),
   methods: {
 
@@ -194,6 +204,7 @@ export default {
     async onmessage(e) {
       const data = JSON.parse(e.data);
       this.getFeatures();
+      console.log(data.data);
       switch (data.action) {
 
         case "update": {
@@ -219,7 +230,12 @@ export default {
           }
           break;
         case 'delete':
-          // console.log(data.data);
+          this.arrayEditMode.put = this.arrayEditMode.put.filter(el => el.id != data.data.id)
+          if (this.getObjectForCard.id === data.data.id) {
+            this.infoCardOn.data = false;
+            this.editCardOn.data = false;
+            this.notVisableCard();
+          }
           if (data.data.name === this.oneType.id) {
             this.filterForFeature(this.oneType.id);
           }
@@ -255,8 +271,10 @@ export default {
     },
     closeEditMode() {
       this.editMode = !this.editMode;
+      this.changeElements = [...this.arrayEditMode.put, ...this.arrayEditMode.delete];
       this.resetNewData();
       this.resetArrayEditMode();
+      this.getFeatures();
       this.filterForFeature(this.oneType.id);
     },
     visableConflictCard() {
@@ -269,7 +287,7 @@ export default {
         this.conflictCard = false;
       }
     },
-    uploadFile(file){
+    uploadFile(file) {
       let formData = new FormData();
       formData.append('file', file);
       this.uploadFileWithFeature(formData);
