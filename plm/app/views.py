@@ -32,7 +32,7 @@ class TowerAPI(APIView):
                 datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
             ff = DjangoFilterBackend()
             filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(name__in=
-                list(datasets.values_list('id', flat=True))), self)
+                list(datasets.values_list('id', flat=True))).order_by('id'), self)
 
             feature_serializer = FeatureSerializer(filtered_queryset, many=True, remove_fields=['image'])
             return Response(feature_serializer.data)
@@ -55,29 +55,31 @@ class TowerAPI(APIView):
                     queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(name__in=Type.objects.filter(group=Type.objects.get(id=data['name']).group))
                 ids.append(data['id'])
 
-        feature_2 = None
-        if len(ids) > 0:
-            feature_2 = FeatureSerializer(Feature.objects.filter(id__in=ids), many=True).data
-
         ids = ids + delete_mas
 
         feature = Feature.objects.filter(id__in=ids)
+
+        if len(ids)==0:
+            dataset = Type.objects.get(id=request.data[0]['name']).group.id
+        else:
+            dataset = feature[0].name.group.id
+
         feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=FeatureSerializer(queryset, many=True).data)
         if feature_serializer.is_valid():
-            new_version = feature_serializer.save()
-            if feature_2!=None:
-                try:
-                    VersionControl.objects.filter(date_update__gte=VersionControl.objects.get(flag=True, dataset=feature[0].name.group.id).date_update, dataset=feature[0].name.group.id).delete()
-                except Exception as e:
-                    print("Ваша версия максимальна!")
-                OldVersionSerializer = VersionControlSerializer(
-                    data={"user": request.user.username, "version": feature_2,
-                          'dataset': feature[0].name.group.id, 'comment': comment,
-                          'new_version': FeatureSerializer(new_version, many=True).data})
-                if OldVersionSerializer.is_valid():
-                    OldVersionSerializer.save()
-                else:
-                    return Response(OldVersionSerializer.errors)
+            version, new_version = feature_serializer.save()
+            try:
+                VersionControl.objects.filter(date_update__gte=VersionControl.objects.get(flag=True, dataset=feature[0].name.group.id).date_update, dataset=feature[0].name.group.id).delete()
+            except Exception as e:
+                print("Ваша версия максимальна!")
+
+            OldVersionSerializer = VersionControlSerializer(
+                data={"user": request.user.username, "version": version,
+                      'dataset': dataset, 'comment': comment,
+                      "new_version": new_version})
+            if OldVersionSerializer.is_valid():
+                OldVersionSerializer.save()
+            else:
+                return Response(OldVersionSerializer.errors)
             return Response("Success up!")
 
         return Response(feature_serializer.errors)
@@ -113,6 +115,9 @@ class FileUploadView(APIView):
         dict_1['type'] = 'Feature'
         dict_1['properties'] = {}
         properties = []
+        headers = []
+        for obj in type.headers:
+            headers.append(obj['text'])
         flag = True
         for value in dict_0:
             if len(properties)!=0:
@@ -125,7 +130,7 @@ class FileUploadView(APIView):
                     dict_1['geometry'] = value[key]
                     continue
 
-                if flag:
+                if flag and key not in headers:
                     properties.append(key)
 
                 dict_1['properties'][key] = value[key]
@@ -291,7 +296,7 @@ class TypeAdminView(APIView):
             ff = DjangoFilterBackend()
             dataset = ff.filter_queryset(request, Type.objects.all(), self)
             return Response(TypeSerializer(dataset, many=True, remove_fields=['type', 'headers',
-                                                                                 'properties', 'image', 'group', 'avaible_group']).data)
+                                                                                 'properties', 'image', 'avaible_group']).data)
 
         dataset = Type.objects.get(id=id)
         return Response(TypeSerializer(dataset).data)
@@ -317,7 +322,7 @@ class TypeAdminView(APIView):
         return Response("SUCCESS DEL")
 
 def room(request):
-    return render(request, 'E:/KT/plm/plm/templates/test.html')
+    return render(request, 'D:/plm/plm/templates/test.html')
 
 class VersionControlView(APIView):
     authentication_classes = [SessionAuthentication]
@@ -329,24 +334,18 @@ class VersionControlView(APIView):
             ff = DjangoFilterBackend()
             datasets = list(request.user.groups.values_list('id', flat=True))
             if 'dataset' in request.query_params:
-                datasets = [Group.objects.get(name=request.query_params['dataset']).id]
-            version = ff.filter_queryset(request, VersionControl.objects.filter(dataset__in=datasets), self)
+                datasets = [Group.objects.filter(name=request.query_params['dataset']).id]
+            version = ff.filter_queryset(request, VersionControl.objects.filter(dataset__in=datasets).order_by('id'), self)
             return Response(VersionControlSerializer(version, many=True, remove_fields=['version', 'new_version', 'dataset']).data)
 
         version = VersionControl.objects.get(id=id)
-        version_now = VersionControl.objects.filter(flag=True, dataset=version.dataset)
-        if (len(version_now)!=0 and version_now[0].date_update > version.date_update):
-            return Response(VersionControlSerializer(version, remove_fields=['dataset', 'new_version']).data)
-        elif (len(version_now)!=0 and version_now[0].date_update <= version.date_update):
-            return Response(VersionControlSerializer(version, remove_fields=['dataset', 'version']).data)
-        else:
-            return Response(VersionControlSerializer(version, remove_fields=['dataset', 'new_version']).data)
+        return Response(VersionControlSerializer(version, remove_fields=['dataset']).data)
 
-    def put(self, request, id):
+
+    def put(self, request, id=0):
         version = VersionControl.objects.get(id=id)
         versionSer = VersionControlSerializer(version).data
         version_now = VersionControl.objects.filter(flag=True, dataset=versionSer['dataset'])
-        version_new = VersionControl.objects.filter(id__gt=id, dataset=versionSer['dataset']).order_by('id')
         flag = False
 
         if len(version_now)!=0:
@@ -361,43 +360,54 @@ class VersionControlView(APIView):
             version.save()
 
         elif len(version_now)!=0 and (version_now[0].date_update <= version.date_update):
-            all_version = VersionControl.objects.filter(
-                dataset=versionSer['dataset'],
-                date_update__gte=version_now[0].date_update, date_update__lte=version.date_update).order_by('id')
-            if len(version_new)!=0:
-                version_new[0].flag = True
-                version_new[0].save()
+            if 'flag' in request.data.keys():
+                all_version = VersionControl.objects.filter(
+                    dataset=versionSer['dataset'],
+                    date_update__gte=version_now[0].date_update, date_update__lte=dateformat.format(timezone.now(), 'Y-m-d H:i:s')).order_by('id')
+            else:
+                all_version = VersionControl.objects.filter(
+                    dataset=versionSer['dataset'],
+                    date_update__gte=version_now[0].date_update, date_update__lt=version.date_update).order_by('id')
+
+                version.flag = True
+                version.save()
+
             flag = True
 
         else:
             all_version = VersionControl.objects.filter(
                 dataset=versionSer['dataset'],
-                date_update__gte=version.date_update, date_update__lt=dateformat.format(timezone.now(), 'Y-m-d H:i:s')).order_by('-id')
+                date_update__gte=version.date_update, date_update__lte=dateformat.format(timezone.now(), 'Y-m-d H:i:s')).order_by('-id')
             version.flag = True
             version.save()
 
-        mas_versions = []
-        ids = []
-        queryset = []
-
+        errors = []
         for i in range(len(all_version)):
+            mas_versions = []
+            ids = []
             if flag == False:
-                param = all_version[i].version
-                mas_versions += all_version[i].version
+                del_param = all_version[i].version['delete']
+                up_param = all_version[i].version['update']
+                create_param = all_version[i].version['create']
             else:
-                param = all_version[i].new_version
-                mas_versions += all_version[i].new_version
-            for obj_2 in param:
-                if obj_2['geometry']['type'] == "Point" and len(queryset) == 0:
-                    queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
-                        name__in=Type.objects.filter(group=Type.objects.get(id=obj_2['name']).group))
+                del_param = all_version[i].new_version['delete']
+                up_param = all_version[i].new_version['update']
+                create_param = all_version[i].new_version['create']
+
+            mas_versions += (create_param + up_param)
+            for obj_2 in up_param:
                 if obj_2['id'] not in ids:
                     ids.append(obj_2['id'])
+            for obj_2 in del_param:
+                if obj_2 not in ids:
+                    ids.append(obj_2)
 
-        feature_serializer = FeatureSerializer(Feature.objects.filter(id__in=ids), data=mas_versions, many=True,
-                                                   context=FeatureSerializer(queryset, many=True).data)
+            feature_serializer = FeatureSerializer(Feature.objects.filter(id__in=ids), data=mas_versions, many=True, context=False)
 
-        if feature_serializer.is_valid():
-            feature_serializer.save()
+            if feature_serializer.is_valid():
+                feature_serializer.save()
+            else:
+                errors.append(feature_serializer.errors)
+        if len(errors)==0:
             return Response("Version Return!")
-        return Response(feature_serializer.errors)
+        return Response(errors)

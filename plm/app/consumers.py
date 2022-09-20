@@ -22,7 +22,7 @@ class FeatureConsumer(AsyncAPIConsumer):
 
     @model_observer(Feature)
     async def feature_change(self, message, **kwargs):
-        await  self.send_json(message)
+        await self.send_json(message)
 
     @feature_change.serializer
     def feature_change(self, instance: Feature, action, **kwargs):
@@ -39,7 +39,7 @@ class FeatureConsumer(AsyncAPIConsumer):
 
     @model_observer(Type)
     async def dataset_change(self, message, **kwargs):
-        await  self.send_json(message)
+        await self.send_json(message)
 
     @dataset_change.serializer
     def dataset_change(self, instance: Feature, action, **kwargs):
