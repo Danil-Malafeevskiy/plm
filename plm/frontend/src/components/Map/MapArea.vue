@@ -279,14 +279,17 @@ export default {
           element.getSource().getFeatures().forEach(geom => {
             if (geom.getGeometry().getType() === 'LineString') {
               geom.getGeometry().getCoordinates().forEach((coord, index) => {
-                if (coord[0] === this.editedPointCoordinates[0] && coord[1] === this.editedPointCoordinates[1]) {
-                  this.editedLineStringCoordinates = geom.getGeometry().getCoordinates()
-                  this.noEditedCoord = coord
-                  this.noEditedLayer.data = geom
-                  this.noEditedLineStringIndex = index
-                  this.editedLineStringCoordinates[index] = event.features.getArray()[0].getGeometry().getCoordinates()
-                  geom.getGeometry().setCoordinates(this.editedLineStringCoordinates)
-                  this.noEditedLayerId = geom.getId()
+                if (this.editCardOn.data && !this.infoCardOn.data) {
+                  if (coord[0] === this.editedPointCoordinates[0] && coord[1] === this.editedPointCoordinates[1]) {
+                    this.noEditedLineStrings = geom.getGeometry().getCoordinates()
+                    this.editedLineStringCoordinates = geom.getGeometry().getCoordinates()
+                    this.noEditedCoord = coord
+                    this.noEditedLayer.data = geom
+                    this.noEditedLineStringIndex = index
+                    this.editedLineStringCoordinates[index] = event.features.getArray()[0].getGeometry().getCoordinates()
+                    geom.getGeometry().setCoordinates(this.editedLineStringCoordinates)
+                    this.noEditedLayerId = geom.getId()
+                  }
                 } 
               });
             }

@@ -98,11 +98,11 @@ export default {
             }
         }
     },
-    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType', 'actions', 'getObjectForCard', 'allVersions']),
+    computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType', 'actions', 'getObjectForCard', 'allVersions', 'allUserGroups']),
     methods: {
-        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject', 'getOneObject', 'getVersions']),
+        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject', 'getOneObject', 'getVersions', 'getAllUserGroups']),
         ...mapMutations(['updatefilterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
-            'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray', 'updateOneType', 'upadateTitle', 'updateVersions']),
+            'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray', 'updateOneType', 'upadateTitle', 'updateVersions', 'updateAllUserGroups']),
         logOutAndResolve() {
             this.logOut();
             location.reload();
@@ -210,6 +210,8 @@ export default {
             this.visableVersions()
             this.updateListType([]);
             this.updateNameForArray('Версии системы');
+            
+            this.getAllGroups();
         },
     },
     mounted() {

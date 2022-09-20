@@ -1,18 +1,28 @@
 <template>
-	<div class="counter">
-		<span class="object" v-if="tableArray.length % 10 === 1">{{ tableArray.length }} объект </span>
-		<span class="object" v-else-if="tableArray.length % 10 > 1 && tableArray.length % 10 < 5">
-			{{ tableArray.length }} объекта </span>
-		<span class="object" v-else>{{ tableArray.length }} объектов </span>
-
+	<div>
+		<div style="margin: 20px 5px 20px 20px; color: #787878; font-weight: 500;">
+			<span v-if="tableArray.length % 10 === 1">{{ tableArray.length }} объект </span>
+			<span v-else-if="tableArray.length % 10 > 1 && tableArray.length % 10 < 5">
+				{{ tableArray.length }} объекта </span>
+			<span v-else>{{ tableArray.length }} объектов </span>
+		</div>
+	
 		<v-data-table :headers="headers" :items="tableArray" hide-default-footer style="
 			height: 100% !important;
 			width: 95% !important; 
 			background-color: #E5E5E5; 
 			box-shadow: none !important;
-			margin-left: 2% !important;" @click:row="chooseVersion"
-			:item-class="currentVersionStyle"
-			></v-data-table>
+			margin-left: 2% !important;" @click:row="chooseVersion" sort-by="id" :sort-desc="true"
+			>
+	
+			<template v-slot:[`item.select`]="{ item }">
+				<v-btn v-model="item.select" class='columnText' text id="no-background-hover" tile
+					:style="[(item.flag || currentVersion === item) ? {'color' : '#EE5E5E'} : {'color' : '#b6b3b3'}]">
+					Последняя версия
+				</v-btn>
+			</template>
+	
+		</v-data-table>
 	</div>
 </template>
 
@@ -24,70 +34,124 @@ export default {
 	data() {
 		return {
 			headers: [
-				{ text: 'id', value: 'id' },
-				{ text: 'Дата', value: 'date_update' },
-				{ text: 'Автор', value: 'user' },
-				{ text: 'Комментарий', value: 'comment' },
-				{ text: 'Flag', value: 'flag' },
+				{
+					text: '',
+					value: 'select',
+					align: 'center',
+					sortable: false,
+				},
+				// { text: 'id', value: 'id' },
+				{ text: 'Дата', value: 'date_update', align: 'start' },
+				{ text: 'Автор', value: 'user', align: 'start' },
+				{ text: 'Комментарий', value: 'comment', align: 'start' },
+				// { text: 'Flag', value: 'flag' },
 			],
 			tableArray: [],
-			timeLastVersion: null,
+			currentVersionId: null,
 			currentVersion: null,
+			nameGroup: null,
 		}
 	},
 	watch: {
 		allVersions: {
 			handler() {
 				this.tableArray = this.allVersions
-				this.timeLastVersion = 0
+				let id = 0
 				this.tableArray.forEach(element => {
 					if (element === this.tableArray.filter(element => element.flag)[0]) {
-						// this.timeLastVersion = time
 						this.currentVersion = element
+						this.currentVersionId = element.id
+					} 
+					else if (!this.tableArray.filter(element => element.flag).length) {
+						if ( id < element.id){
+							this.currentVersion = element
+							this.currentVersionId = element.id
+							id = element.id
+						}
 					}
 				})
-				console.log(this.tableArray)
 			}
 		},
+		getTypeId: {
+			handler(){
+				this.getGroup()
+				this.getFilteredVersions(this.nameGroup)
+			}
+		}
 	},
 	computed: {
-		...mapGetters(['allVersions'])
+		...mapGetters(['allVersions', 'allListItem', 'getList', 'getTypeId', 'allGroups', 'allFilteredVersions', 'user','allUserGroups' ])
 	},
 	methods: {
-		...mapActions(['getVersions', 'putVersion']),
-		...mapMutations(['updateVersions']),
+		...mapActions(['getVersions', 'putVersion', 'getGroup', 'getFilteredVersions', 'getAllGroups', 'getAllUserGroups']),
+		...mapMutations(['updateVersions', 'updateFilteredVersions', 'updateAllGroups', 'updateAllUserGroups']),
 		chooseVersion(item){
-			this.putVersion(item.id)
+			this.putVersion(item.id)	
 		},
 		getTimeVersion(time) {
 			let data = new Date(time)
 			return data
 		},
-		currentVersionStyle(item){
-			if(item === this.currentVersion) {
-				return 'current'
-			} 
+		currentVersionStyle(item) {
+			if (item.id > this.currentVersionId) {
+				return 'noCurrent'
+			}
+		}, 
+		getGroup(){
+			// console.log(this.getTypeId)
+			this.allGroups.forEach(element => {
+				if ( element.id === this.getTypeId){
+					this.nameGroup = element.name
+				}
+			});
 		},
+		
 	},
-	
+
 	async mounted() {
+		// this.getAllUserGroups()
+		// console.log(this.allUserGroups)
+		this.getGroup()
 		this.getVersions()
-	}
+		this.getFilteredVersions(this.nameGroup)
+	}, 
+
 }
 </script>
 
-<style>
+<style >
 .object {
 	margin: 20px 5px 20px 20px;
 	color: #787878;
 	font-weight: 500;
 }
-.current{
-	background-color: rgb(251, 218, 218);
+
+.noCurrent{
+	background: #F2F2F2 !important;
 }
 
-.afterCurrent{
-	background-color: grey;
+.current{
+	background: #F2F2F2;
+	color: #EE5E5E !important;
 }
+
+.columnText {
+	font-weight: 500;
+	font-size: 14px;
+	line-height: 16px;
+	display: flex;
+	align-items: center;
+	text-align: right;
+	letter-spacing: 1.25px;
+	text-transform: uppercase;
+}
+
+#no-background-hover::before {
+   background-color: transparent !important; 
+   display: none !important;
+}
+
+
+
 
 </style>
