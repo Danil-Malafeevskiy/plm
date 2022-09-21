@@ -10,19 +10,23 @@ export default {
             })
         },
 
-        async getFilteredVersions({ commit }, group) {
+        async getFilteredVersions({ commit, state }, group) {
+            state.pastGroupVersion = group;
             await axios.get(`/version?dataset=${group}`).then((response) => {
                 commit('updateFilteredVersions', response.data)
                 // console.log(response.data)
             })
         },
 
-        async putVersion({dispatch},id){
+        async putVersion({ dispatch, state },id){
             axios.put(`/version/${id}`).then((response) => {
+                if (state.pastGroupVersion){
+                    dispatch('getFilteredVersions', state.pastGroupVersion);
+                }
+                else{
+                    dispatch('getVersions');
+                }
                 console.log(response.data)
-                dispatch('getVersions');
-                dispatch('getFeatures');
-                
             })
         },
 
@@ -51,5 +55,6 @@ export default {
     },
     state: {
         versions: [],
+        pastGroupVersion: null,
     }
 }

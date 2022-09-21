@@ -39,7 +39,6 @@ export default {
                         }
                     }
                 }
-                console.log(user);
                 commit('updateObjectForCard', user);
             })
         },
@@ -51,10 +50,8 @@ export default {
             })
         },
         async putUser({ dispatch, state }, user) {
-            console.log(user);
             user = { ...user, ...user.properties};
             delete user.properties;
-            console.log(user);
             await axios.put('/user/admin', user).then(() => {
                 dispatch('getUsersOfGroup');
                 if (user.id === state.user.id){
