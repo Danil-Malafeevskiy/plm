@@ -79,7 +79,7 @@ export default {
                 if (state.pastGroup != null) {
                     dispatch('getAllTypeInGroup', state.pastGroup);
                 }
-                else {
+                else{
                     dispatch('getAllTypeForTable');
                 }
             });

@@ -28,7 +28,17 @@ export default {
                 }
                 console.log(response.data)
             })
-        }
+        },
+
+        async putLastVersion({dispatch},id){
+            let lastVersion = {'flag' : true}
+            axios.put(`/version/${id}`, lastVersion).then((response) => {
+                console.log(response.data)
+                dispatch('getVersions');
+                dispatch('getFeatures');
+                
+            })
+        },
     },
     mutations: {
         updateVersions(state, versions) {

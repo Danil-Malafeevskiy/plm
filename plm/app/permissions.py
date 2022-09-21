@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
 class TowerPerm(permissions.BasePermission):
-    message = "You don't have enough rights to do this!"
+    message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -10,13 +10,13 @@ class TowerPerm(permissions.BasePermission):
             return "Can change feature" in request.user.user_permissions.values_list('name', flat=True)
 
 class FileUploadPerm(permissions.BasePermission):
-    message = "You don't have enough rights to do this!"
+    message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
         return "Can add feature" in request.user.user_permissions.values_list('name', flat=True)
 
 class GroupPerm(permissions.BasePermission):
-    message = "You don't have enough rights to do this!"
+    message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -25,7 +25,7 @@ class GroupPerm(permissions.BasePermission):
             return "Can change group" in request.user.user_permissions.values_list('name', flat=True)
 
 class UserPerm(permissions.BasePermission):
-    message = "You don't have enough rights to do this!"
+    message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -34,7 +34,7 @@ class UserPerm(permissions.BasePermission):
             return "Can change user" in request.user.user_permissions.values_list('name', flat=True)
 
 class TypePerm(permissions.BasePermission):
-    message = "You don't have enough rights to do this!"
+    message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -43,7 +43,7 @@ class TypePerm(permissions.BasePermission):
             return "Can change type" in request.user.user_permissions.values_list('name', flat=True)
 
 class VersionPerm(permissions.BasePermission):
-    message = "You don't have enough rights to do this!"
+    message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
