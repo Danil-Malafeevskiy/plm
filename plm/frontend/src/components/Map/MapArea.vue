@@ -11,7 +11,7 @@ import { fromLonLat, toLonLat } from 'ol/proj';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
-import { Draw, Modify } from 'ol/interaction';
+import { Draw, Modify, Snap } from 'ol/interaction';
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 import { Icon, Style } from 'ol/style';
@@ -54,6 +54,7 @@ export default {
       editedLineStringIndex: null,
       counter: 0,
       oldFeature: null,
+      arrFeatureForDraw: [],
     }
   },
 
@@ -145,15 +146,27 @@ export default {
     getFeature: function () {
       this.feature = this.getFeature;
     },
-    oneType: {
+    drawType: {
       handler() {
-        this.resetInteractions();
+        if (this.map) {
+          this.resetInteractions();
+        }
       }
     },
+    // oneType: {
+    //   handler() {
+    //     if (this.map) {
+    //       this.resetInteractions();
+    //     }
+    //   }
+    // },
     addCardOn: {
       handler() {
         this.addCardOn_ = this.addCardOn;
-        this.resetInteractions();
+        if (this.map) {
+          this.resetInteractions();
+        }
+
       },
       deep: true
     },
@@ -228,21 +241,26 @@ export default {
       return feature;
     },
     resetInteractions() {
+      this.map.removeInteraction(this.draw);
+      this.map.removeLayer(this.drawLayer);
+      this.drawLayer.getSource().refresh();
       if (this.addCardOn.data) {
-        this.map.removeInteraction(this.draw);
         this.addInteraction();
       }
       else {
-        this.map.removeInteraction(this.draw);
-        this.drawLayer.getSource().refresh();
         this.map.removeInteraction(this.modify);
       }
     },
     updateCoordinates() {
-      if (this.drawLayer.getSource().getFeatures().length === 1) {
+      if (this.drawLayer.getSource().getFeatures().length === 1 || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
         this.map.removeInteraction(this.draw);
-        this.coord = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
-
+        
+        if (this.drawLayer.getSource().getFeatures().length === 1) {
+          this.coord = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
+        }
+        else {
+          this.coord = this.drawLayer.getSource().getFeatures().find(el => el.getGeometry().getType() === 'LineString').getGeometry().getCoordinates();
+        }
         if (typeof this.coord[0] === 'object') {
           for (let i in this.coord) {
             if (typeof this.coord[i][0] === 'object') {
@@ -259,7 +277,6 @@ export default {
         else {
           this.coord = toLonLat(this.coord);
           this.updateLonLat(this.coord);
-          this.map.removeInteraction(this.modifyEdit)
         }
 
         this.feature.geometry.coordinates = this.coord;
@@ -343,38 +360,60 @@ export default {
       }
       return subArrays;
     },
-
     async addInteraction() {
       this.map.removeInteraction(this.modify);
       this.drawLayer.getSource().refresh();
-      await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
-
-      this.drawLayer = new VectorLayer({
-        source: new VectorSource({
-          features: []
-        }),
-      });
 
       if (this.drawType === 'Point') {
-        const interaction = this.map.getInteractions().getArray().find(el => el.get('typeId') === this.oneType.id);
-        this.drawLayer.setStyle(interaction.get('style'));
+        await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
+
+        this.drawLayer = new VectorLayer({
+          source: new VectorSource({
+            features: []
+          }),
+        });
+
+        if (this.drawType === 'Point') {
+          const interaction = this.map.getInteractions().getArray().find(el => el.get('typeId') === this.oneType.id);
+          this.drawLayer.setStyle(interaction.get('style'));
+        }
+        this.modify = new Modify({
+          source: this.drawLayer.getSource(),
+          style: this.drawLayer.getStyle()
+        });
+
+        this.modify.on('modifyend', this.changeCoordinates);
+
+        this.draw = new Draw({
+          source: this.drawLayer.getSource(),
+          type: this.drawType,
+          style: this.drawLayer.getStyle(),
+        });
+        this.map.addLayer(this.drawLayer);
+        this.map.addInteraction(this.draw);
+        this.map.addInteraction(this.modify);
       }
-      this.modify = new Modify({
-        source: this.drawLayer.getSource(),
-        style: this.drawLayer.getStyle()
-      });
+      else {
+        const layerOfPoint = this.map.getAllLayers().filter(el => el.get('type') === 'Point');
+        for (let i in layerOfPoint) {
+          this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfPoint[i].getSource().getFeatures()];
+        }
 
-      this.modify.on('modifyend', this.changeCoordinates);
+        const source = new VectorSource({ features: this.arrFeatureForDraw });
+        this.drawLayer = new VectorLayer({
+          source: source
+        });
 
-      this.draw = new Draw({
-        source: this.drawLayer.getSource(),
-        type: this.drawType,
-        style: this.drawLayer.getStyle(),
-      });
+        this.draw = new Draw({
+          source: source,
+          type: this.drawType,
+        });
 
-      this.map.addLayer(this.drawLayer);
-      this.map.addInteraction(this.draw);
-      this.map.addInteraction(this.modify);
+        const snap = new Snap({ source: source });
+        this.map.addLayer(this.drawLayer);
+        this.map.addInteraction(this.draw);
+        this.map.addInteraction(snap);
+      }
       this.interactionId = this.map.getInteractions().getArray().length - 1;
     },
 
@@ -405,7 +444,6 @@ export default {
         };
 
         let layer = new VectorLayer({
-          renderBuffer: 500,
           source: new VectorSource({
             features: new GeoJSON().readFeatures(features,
               {
