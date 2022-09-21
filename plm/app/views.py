@@ -60,7 +60,7 @@ class TowerAPI(APIView):
         feature = Feature.objects.filter(id__in=ids)
 
         if len(ids)==0:
-            dataset = Feature.objects.get(id=request.data['id']).name.group.id
+            dataset = Feature.objects.get(id=request.data[0]['id']).name.group.id
         else:
             dataset = feature[0].name.group.id
 
