@@ -93,9 +93,7 @@ class FileUploadView(APIView):
 
     fs = FileSystemStorage(location=settings.MEDIA_URL)
 
-
     def put(self, request):
-        print(request.data)
         self.fs.save(request.FILES['file'].name, request.FILES['file'])
         doc = sqlite3.connect(settings.MEDIA_URL + request.FILES['file'].name)
         doc.enable_load_extension(True)
