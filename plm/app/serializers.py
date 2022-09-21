@@ -126,7 +126,7 @@ class FeatureListSerializer(serializers.ListSerializer):
             new_version['update'] = new_update
             version['update'] = old_update
 
-        return version, new_version
+            return version, new_version
 
 class FeatureSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
@@ -156,6 +156,7 @@ class FeatureSerializer(serializers.ModelSerializer):
 
 class FileSerializer(serializers.Serializer):
     file = serializers.FileField()
+    group = serializers.CharField()
 
 class GroupSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
@@ -283,6 +284,7 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class TypeSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
     group = serializers.SerializerMethodField()
     avaible_group = serializers.SerializerMethodField()
     properties = serializers.JSONField(required=False, default=[""])
@@ -292,12 +294,6 @@ class TypeSerializer(serializers.ModelSerializer):
         ordering = ['id']
         model = Type
         fields = ('id', 'name', 'type', 'headers', 'properties', 'image', 'group', 'avaible_group', 'all_obj')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Type.objects.all(),
-                fields=['name']
-            )
-        ]
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -306,6 +302,18 @@ class TypeSerializer(serializers.ModelSerializer):
         if remove_fields:
             for field_name in remove_fields:
                 self.fields.pop(field_name)
+
+    def validate(self, data):
+        if 'id' in data.keys():
+            name = Type.objects.get(id=data['id']).name
+            if name == data['name']:
+                return super(TypeSerializer, self).validate(data)
+
+        queryset = Type.objects.filter(group=Group.objects.get(name=self.context['group']), name=data['name'])
+        if len(queryset)!=0:
+            raise serializers.ValidationError({"name": "У этого датасета уже существует тип с таким именем!"})
+
+        return super(TypeSerializer, self).validate(data)
 
     def get_all_obj(self, obj):
         return len(Feature.objects.filter(name=obj.id))
