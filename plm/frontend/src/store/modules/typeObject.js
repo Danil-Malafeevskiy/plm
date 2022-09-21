@@ -12,7 +12,7 @@ export default {
                 }
             });
         },
-        async getAllType({commit}){
+        async getAllType({ commit }) {
             await axios.get('/dataset').then((response) => {
                 commit('updateAllTypeForMap', response.data);
             })
@@ -49,47 +49,66 @@ export default {
                 commit('updateOneType', { type: response.data, forFeature });
             });
         },
-        async postTypeObject({ dispatch }, newType) {
+        async postTypeObject({ dispatch, commit, state }, newType) {
             console.log(newType);
             await axios.post('/dataset/admin', newType).then((response) => {
                 console.log(response.data);
-                dispatch('getTypeObject', true);
+                if (typeof response.data === 'string') {
+                    commit('updateIsGetAllChange');
+                }
+                if (state.pastGroup != null) {
+                    dispatch('getAllTypeInGroup', state.pastGroup);
+                }
+                else {
+                    dispatch('getAllTypeForTable');
+                }
             })
         },
-        async putTypeObject({ dispatch, state }, type) {
+        async putTypeObject({ dispatch, commit, state }, type) {
             let putType = { ...type.properties };
-            for(let key in type){
-                if(key != 'properties'){
+            for (let key in type) {
+                if (key != 'properties') {
                     putType[key] = type[key]
                 }
             }
             await axios.put('/dataset/admin', putType).then((response) => {
                 console.log(response.data);
-                if(state.pastGroup != null){
+                if (typeof response.data === 'string') {
+                    commit('updateIsGetAllChange');
+                }
+                if (state.pastGroup != null) {
                     dispatch('getAllTypeInGroup', state.pastGroup);
                 }
-                else{
-                    dispatch('getAlltypeForTable');
+                else {
+                    dispatch('getAllTypeForTable');
                 }
             });
         },
-        async deleteTypeObject({ dispatch }, id) {
+        async deleteTypeObject({ dispatch, commit, state }, id) {
             await axios.delete(`/dataset/admin?id=${id}`).then((response) => {
                 console.log(response.data);
-                dispatch('getTypeObject', true);
+                if (typeof response.data === 'string') {
+                    commit('updateIsGetAllChange');
+                }
+                if (state.pastGroup != null) {
+                    dispatch('getAllTypeInGroup', state.pastGroup);
+                }
+                else {
+                    dispatch('getAllTypeForTable');
+                }
             })
-        }, 
-        async getSortType({ commit }, drawType){
+        },
+        async getSortType({ commit }, drawType) {
             await axios.get(`/dataset?type=${drawType}`).then((response) => {
                 commit('updateSelectedDrawType', response.data);
             })
         },
-        async getAllTypeForTable({ commit }){
+        async getAllTypeForTable({ commit }) {
             await axios.get('/dataset').then((response) => {
                 commit('updateAllTypeForTable', response.data)
             })
         },
-        async getAllTypeInGroup({ commit, state }, group){
+        async getAllTypeInGroup({ commit, state }, group) {
             state.pastGroup = group;
             await axios.get(`/dataset?group=${group}`).then((response) => {
                 commit('updateAllTypeForTable', response.data);
@@ -108,20 +127,20 @@ export default {
                 state.type = type;
             }
         },
-        updateTypeForLayer(state, type){
+        updateTypeForLayer(state, type) {
             state.typeForLayer = type;
         },
-        updateSelectedDrawType(state, type){
+        updateSelectedDrawType(state, type) {
             state.selectedDrawType = type;
         },
-        updateAllTypeForMap(state, types){
+        updateAllTypeForMap(state, types) {
             state.allTypeForMap = types;
         },
-        updateAllTypeForTable(state, types){
+        updateAllTypeForTable(state, types) {
             state.allTypeForTable = types;
-            this.commit('updateListItem', {items: types});
+            this.commit('updateListItem', { items: types });
         }
-        
+
     },
     getters: {
         allType(state) {
@@ -133,16 +152,16 @@ export default {
         typeForFeature(state) {
             return state.typeForFeature;
         },
-        typeForLayer(state){
+        typeForLayer(state) {
             return state.typeForLayer;
         },
-        selectedDrawType(state){
+        selectedDrawType(state) {
             return state.selectedDrawType;
         },
-        allTypeForMap(state){
+        allTypeForMap(state) {
             return state.allTypeForMap;
         },
-        allTypeForTable(state){
+        allTypeForTable(state) {
             return state.allTypeForTable
         }
     },

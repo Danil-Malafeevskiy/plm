@@ -5,7 +5,7 @@
                     <v-col v-for="(el, index) in objectForCard.properties.headers" :key="index" cols="2" sm="6" md="5"
                     lg="6" v-show="el.text != 'id'">
                     <v-text-field v-model="objectForCard_.properties.headers[index].text" :label="el.text"
-                        :placeholder="el.text" filled :readonly="infoCardOn.data" :rules="[rules.required]"
+                        :placeholder="el.text" filled :readonly="infoCardOn.data" :rules="[rules.required, rules.main]"
                         @input="textToValue(index)" append-icon="mdi-delete-outline"
                         @click:append="deleteMainAttribute(index)">
                     </v-text-field>
@@ -65,6 +65,7 @@ export default {
             objectForCard_: this.objectForCard,
             rules: {
                 required: el => this.checkDoubleFields(el) || 'Одинаковые имена атрибутов',
+                main: el => !!el || 'Обяательный атрибут'
             },
         }
     },

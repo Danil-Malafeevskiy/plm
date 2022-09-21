@@ -57,6 +57,9 @@ export default {
             if(!(name in state.selectedObjects)){
                 Vue.set(state.selectedObjects, name, []);
             }
+        },
+        updateIsGetAllChange(state){
+            state.isGetAllChange = !state.isGetAllChange;
         }
     },
     getters: {
@@ -92,6 +95,9 @@ export default {
         },
         actions(state){
             return state.actionGet;
+        },
+        isGetAllChange(state){
+            return state.isGetAllChange;
         }
     },
     state: {
@@ -109,5 +115,6 @@ export default {
         toolbarTitle: null,
         nameForArray: null,
         selectedObjects: {},
+        isGetAllChange: false,
     },
 }
