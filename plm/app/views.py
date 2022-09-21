@@ -333,7 +333,7 @@ class VersionControlView(APIView):
             ff = DjangoFilterBackend()
             datasets = list(request.user.groups.values_list('id', flat=True))
             if 'dataset' in request.query_params:
-                datasets = [Group.objects.filter(name=request.query_params['dataset']).id]
+                datasets = [Group.objects.filter(name=request.query_params['dataset'])[0].id]
             version = ff.filter_queryset(request, VersionControl.objects.filter(dataset__in=datasets).order_by('id'), self)
             return Response(VersionControlSerializer(version, many=True, remove_fields=['version', 'new_version', 'dataset']).data)
 
