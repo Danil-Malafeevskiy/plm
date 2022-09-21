@@ -53,7 +53,7 @@ class FeatureListSerializer(serializers.ListSerializer):
                                 break
                         if up_flag:
                             feat = Feature.objects.get(id=line['id'])
-                            feat.geometry.coordinates = line['geometry']['coordinates']
+                            feat.geometry = GEOSGeometry(f'{line["geometry"]}')
                             feat.save()
                             if copy_line['id'] not in up_dict.keys():
                                 up_dict[copy_line['id']] = copy_line
@@ -90,7 +90,7 @@ class FeatureListSerializer(serializers.ListSerializer):
                                     new_version['delete'].append(line['id'])
                             else:
                                 feat = Feature.objects.get(id=line['id'])
-                                feat.geometry.coordinates = line['geometry']['coordinates']
+                                feat.geometry = GEOSGeometry(f'{line["geometry"]}')
                                 feat.save()
 
                             if copy_line['id'] not in up_dict.keys():
@@ -101,7 +101,7 @@ class FeatureListSerializer(serializers.ListSerializer):
                     new_version['delete'].append(feature_id)
                     feature.delete()
 
-        if len(up_dict)!=0 or len(del_line)!=0:
+        if len(up_dict)!=0 or len(del_line)!=0 and self.context!=False:
             for line in self.context:
                 if line['id'] in del_line:
                     version['create'].append(up_dict[line['id']])
@@ -113,15 +113,20 @@ class FeatureListSerializer(serializers.ListSerializer):
                     else:
                         version['update'].append(up_dict[line['id']])
                         new_version['update'].append(line)
-                elif line['id'] in new_version['delete']:
-                    for obj in new_version['update']:
-                        if obj['id'] == line['id']:
-                            new_version['update'].remove(obj)
-                    for obj in version['update']:
-                        if obj['id'] == line['id']:
-                            version['update'].remove(obj)
 
-        return version, new_version
+        new_update = []
+        old_update = []
+        if self.context!=False:
+            for index in range(len(new_version['update'])):
+                if new_version['update'][index]['id'] not in new_version['delete']:
+                    new_update.append(new_version['update'][index])
+
+                if version['update'][index]['id'] not in new_version['delete']:
+                    old_update.append(version['update'][index])
+            new_version['update'] = new_update
+            version['update'] = old_update
+
+            return version, new_version
 
 class FeatureSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
