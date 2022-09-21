@@ -25,7 +25,6 @@ export default {
         },
         async getUsersOfGroup({ commit, state }, group = state.group) {
             await axios.get(`/user/admin?groups=${group.id}`).then((response) => {
-                console.log(response.data);
                 if (typeof response.data === 'object') {
                     commit('updateListItem', { items: response.data })
                 }
