@@ -20,7 +20,7 @@
                         </v-list-item-title>
                     </v-list-item>
 
-                    <v-list-item v-if="user && user.is_staff">
+                    <v-list-item v-if="user">
                         <v-list-item-title>
                             База объектов
                         </v-list-item-title>
@@ -75,26 +75,40 @@ export default {
                         })
                     }
                     await this.resetSelectItem();
-                    switch (this.selectedItem) {
-                        case 0: {
-                            this.onUsers();
-                            break;
+                    if (this.user.is_staff) {
+                        switch (this.selectedItem) {
+                            case 0: {
+                                this.onUsers();
+                                break;
+                            }
+                            case 1: {
+                                this.onDataSet();
+                                break;
+                            }
+                            case 2: {
+                                this.onVersions();
+                                break;
+                            }
+                            case 3: {
+                                this.onFeatures();
+                                break;
+                            }
+                            case 4: {
+                                this.onUser();
+                                break;
+                            }
                         }
-                        case 1: {
-                            this.onDataSet();
-                            break;
-                        }
-                        case 2: {
-                            this.onVersions();
-                            break;
-                        }
-                        case 3: {
-                            this.onFeatures();
-                            break;
-                        }
-                        case 4: {
-                            this.onUser();
-                            break;
+                    }
+                    else{
+                        switch (this.selectedItem) {
+                            case 0: {
+                                this.onFeatures();
+                                break;
+                            }
+                            case 1: {
+                                this.onUser();
+                                break;
+                            }
                         }
                     }
                 }
