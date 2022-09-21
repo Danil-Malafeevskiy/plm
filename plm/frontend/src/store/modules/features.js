@@ -35,7 +35,7 @@ export default {
             else {
                 data = [...features, [], '']
             }
-            await axios.put(`/tower`, data).then((response) => {
+            await axios.put(`/tower`, data, {headers:{"Content-Type" : "application/json"}}).then((response) => {
                 console.log(response.data);
             }).catch(error => console.log(error)); 
         },

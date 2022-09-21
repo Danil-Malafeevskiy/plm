@@ -7,8 +7,6 @@
 			<span v-else>{{ tableArray.length }} объектов </span>
 		</div>
 
-		<v-btn text id="no-background-hover" tile @click="lastVersion">Вернуться к последней версии</v-btn>
-	
 		<v-data-table :headers="headers" :items="tableArray" hide-default-footer style="
 			height: 100% !important;
 			width: 95% !important; 
@@ -19,12 +17,14 @@
 	
 			<template v-slot:[`item.select`]="{ item }">
 				<v-btn v-model="item.select" class='columnText' text id="no-background-hover" tile
-					:style="[(item.flag || currentVersion === item) ? {'color' : '#EE5E5E'} : {'color' : '#b6b3b3'}]">
+					:style="[(item.flag) ? {'color' : '#EE5E5E'} : {'color' : '#b6b3b3'}]">
 					Последняя версия
 				</v-btn>
 			</template>
 	
 		</v-data-table>
+
+		<v-btn text id="no-background-hover" class="lastVersion ma-2 pa-2" tile @click="lastVersion">Выбрать текущие данные</v-btn>
 	</div>
 </template>
 
@@ -81,8 +81,8 @@ export default {
 	methods: {
 		...mapActions(['getVersions', 'putVersion', 'getGroup', 'getAllGroups', 'getAllUserGroups', 'putLastVersion']),
 		...mapMutations(['updateVersions', 'updateFilteredVersions', 'updateAllGroups', 'updateAllUserGroups']),
-		chooseVersion(item){
-			this.putVersion(item.id)	
+		chooseVersion(item) {
+			this.putVersion(item.id)
 		},
 		getTimeVersion(time) {
 			let data = new Date(time)
@@ -102,15 +102,17 @@ export default {
 			});
 		},
 
-		lastVersion(){
-			console.log(this.allVersions)
-			let id = 0
-			this.allVersions.forEach(element => {
-				if (element.id > id){
-					id = element.id
-				}
-			});
-			this.putLastVersion(id)
+		lastVersion() {
+			// console.log(this.allVersions)
+			if (this.allVersions.filter(el => el.flag).length) {
+				let id = 0
+				this.allVersions.forEach(element => {
+					if (element.id > id) {
+						id = element.id
+					}
+				});
+				this.putLastVersion(id)
+			}
 		}
 		
 	},
@@ -153,8 +155,10 @@ export default {
    background-color: transparent !important; 
    display: none !important;
 }
-
-
-
-
+.lastVersion {
+	left: 77.8%;
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-end;
+}
 </style>
