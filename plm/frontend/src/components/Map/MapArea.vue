@@ -98,25 +98,27 @@ export default {
 
     getObjectForCard: {
       handler() {
-        if(this.editCardOn.data){
+        if (this.editCardOn.data) {
           this.oldFeature = this.objectForCard;
         }
-        else{
+        else {
           this.oldFeature = this.getObjectForCard;
         }
         this.objectForCard = this.getObjectForCard;
         this.editCardOn_.data = false;
-        this.map.getAllLayers().filter(el => el.get('typeId') === this.objectForCard.name).forEach(el => {
-          el.getSource().getFeatures().forEach(element => {
-            if (element.getId() === this.getObjectForCard.id) {
-              let interaction = this.map.getInteractions().getArray().filter(this.clearFeaturesInInteractionAndFindInteraction);
-              if (interaction.length) {
-                interaction[0].getFeatures().push(element);
-              }
-            }
-          })
-        })
 
+        if ('name' in this.objectForCard && typeof this.objectForCard.name === 'number') {
+          this.map.getAllLayers().filter(el => el.get('typeId') === this.objectForCard.name).forEach(el => {
+            el.getSource().getFeatures().forEach(element => {
+              if (element.getId() === this.getObjectForCard.id) {
+                let interaction = this.map.getInteractions().getArray().filter(this.clearFeaturesInInteractionAndFindInteraction);
+                if (interaction.length && (interaction[0].getFeatures().getArray().length && interaction[0].getFeatures().getArray()[0].getId() != this.objectForCard.id) || !(interaction[0].getFeatures().getArray().length)) {
+                  interaction[0].getFeatures().push(element);
+                }
+              }
+            })
+          })
+        }
       }
     },
     changeElements: {
@@ -184,9 +186,9 @@ export default {
     },
     async returnCoordinates() {
       this.editedPointCoordinates = fromLonLat(this.oldFeature.geometry.coordinates);
-      
+
       let object = this.arrayEditMode.put.find(el => el.id === this.oldFeature.id);
-      if(!object){
+      if (!object) {
         await this.getFeatureForMap(this.oldFeature.id)
         object = this.featureInMap;
       }
@@ -208,13 +210,13 @@ export default {
       let geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(this.editedPointCoordinates), {
         filterLayer: el => el.get('type') === 'LineString',
       });
-      if (geom) {
+      if (geom.length) {
         this.editedLineStringCoordinates[this.editedLineStringIndex] = fromLonLat(object.geometry.coordinates);
         geom[0].getGeometry().setCoordinates(this.editedLineStringCoordinates);
       }
     },
     clearFeaturesInInteractionAndFindInteraction(el) {
-      if (el.get('typeId') != undefined && el.getFeatures().getArray().length) {
+      if (el.get('typeId') != undefined && el.getFeatures().getArray().length && el.getFeatures().getArray()[0].getId() != this.objectForCard.id) {
         el.getFeatures().clear();
       }
       return el.get('typeId') === this.getObjectForCard.name
@@ -299,9 +301,11 @@ export default {
         this.visableCard();
       }
       else if (!this.addCardOn_.data) {
-        this.infoCardOn_.data = false;
-        this.editCardOn_.data = false;
         this.notVisableCard();
+        setTimeout(() => {
+          this.infoCardOn_.data = false;
+          this.editCardOn_.data = false;
+        }, 500)
       }
     },
     changeCoordinates(event) {
@@ -352,14 +356,8 @@ export default {
       });
 
       if (this.drawType === 'Point') {
-        this.drawLayer.setStyle(new Style({
-          image: new Icon({
-            anchor: [0.5, 0, 5],
-            anchorXUnits: 'fraction',
-            anchorYUnits: 'pixels',
-            src: document.getElementById('png_icon_of_one_type').toDataURL('image/png')
-          }),
-        }));
+        const interaction = this.map.getInteractions().getArray().find(el => el.get('typeId') === this.oneType.id);
+        this.drawLayer.setStyle(interaction.get('style'));
       }
       this.modify = new Modify({
         source: this.drawLayer.getSource(),
@@ -388,12 +386,12 @@ export default {
       }, 400);
     },
     deleteOldLayers() {
-      let arrayOfLayers = this.map.getAllLayers();
-      arrayOfLayers.forEach(element => {
-        if (element.get('typeId') !== undefined) {
-          this.map.removeLayer(element);
-        }
-      })
+      this.map.getAllLayers().filter(el => el.get('typeId') !== undefined).forEach(element => {
+        this.map.removeLayer(element);
+      });
+      this.map.getInteractions().getArray().filter(el => el.get('typeId') !== undefined).forEach(element => {
+        this.map.removeInteraction(element);
+      });
     },
     updataDomElements() {
       this.canvas = document.getElementById('png_icon_of_type');
@@ -421,8 +419,8 @@ export default {
         layer.set('type', this.typeForLayer.type);
 
         this.map.addLayer(layer);
-        this.canvas.height = 24;
-        this.canvas.width = 24;
+        this.canvas.height = 25;
+        this.canvas.width = 25;
 
         this.addModify(layer);
       });
@@ -491,7 +489,7 @@ export default {
 
       this.map.addInteraction(this.selectInteraction);
 
-      if (!(this.typeForLayer.type === 'LineString')) {
+      if (this.typeForLayer.type !== 'LineString') {
         this.modifyEdit = new Modify({
           features: this.selectInteraction.getFeatures(),
           style: selectStyle
@@ -502,6 +500,7 @@ export default {
       }
 
       this.selectInteraction.set('typeId', this.typeForLayer.id);
+      this.selectInteraction.set('style', selectStyle);
 
       if ((this.infoCardOn.data || this.editCardOn.data) && this.selectInteraction.get('typeId') === this.getObjectForCard.name) {
         this.map.getAllLayers().filter(el => el.get('typeId') === this.getObjectForCard.name).forEach(el => {
@@ -530,7 +529,7 @@ export default {
         }),
       ],
       view: new View({
-        zoom: 13,
+        zoom: 12,
         center: fromLonLat([56.177483, 54.924307]),
         constrainResolution: true,
       })

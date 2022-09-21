@@ -3,37 +3,39 @@
         <v-card class="card_test">
             <v-list dense nav>
                 <v-list-item-group class="menu" v-model="selectedItem" color="#E93030">
-                    <v-list-item v-if="user.is_staff">
+                    <v-list-item v-if="user && user.is_staff">
                         <v-list-item-title>
                             Пользователи
                         </v-list-item-title>
                     </v-list-item>
-                    <v-list-item v-if="user.is_staff">
+                    <v-list-item v-if="user && user.is_staff">
                         <v-list-item-title>
                             Типы объектов
                         </v-list-item-title>
                     </v-list-item>
 
-                    <v-list-item v-if="user.is_staff">
+                    <v-list-item v-if="user && user.is_staff">
                         <v-list-item-title>
                             Версии системы
                         </v-list-item-title>
                     </v-list-item>
 
-                    <v-list-item v-if="user.is_staff">
+                    <v-list-item v-if="user && user.is_staff">
                         <v-list-item-title>
                             База объектов
                         </v-list-item-title>
                     </v-list-item>
 
-                    <v-list-item>
+                    <v-list-item v-if="user">
                         <v-list-item-title>
-                            <v-avatar color="#72ABEA" size="40">
-                                <span
-                                    class="white--text text-h6">{{user.first_name.slice(0,1)}}{{user.last_name.slice(0,1)}}</span>
+                            <v-avatar color="#72ABEA" size="35">
+                                <span v-if="!(user.image)" class="white--text text-h11">
+                                    {{user.first_name.slice(0,1)}}{{user.last_name.slice(0,1)}}
+                                </span>
+                                <img v-else :src="user.image">
                             </v-avatar>
 
-                            {{ user.username }}
+                            {{user.first_name}} {{user.last_name}}
                         </v-list-item-title>
 
                         <v-list-item-icon @click="logOutAndResolve()">
@@ -112,17 +114,12 @@ export default {
         async onUser() {
             this.notVisableVersions()
             this.updateAction({
-                actionGet: 'getUsersOfGroup',
-                actionPost: 'postUser',
                 actionOneGet: 'getOneUser',
                 actionPut: 'putUser',
-                actionDelete: 'deleteUser',
             });
             await this.getOneObject(this.user.id);
-            console.log(this.getObjectForCard);
             this.updateListType([]);
             this.updateListItem({ items: [this.user] })
-            this.editCardOn_.data = true;
             this.visableCard();
         },
         onFeatures() {
@@ -215,7 +212,7 @@ export default {
     },
     async mounted() {
         await this.getUser();
-        this.groupsOfUser = [ ...this.user.groups ];
+        this.groupsOfUser = [...this.user.groups];
     }
 }
 </script>

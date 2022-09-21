@@ -99,7 +99,12 @@ export default {
       'selectedDrawType', 'actions', 'allGroups', 'user']),
     selected: {
       get() {
-        return this.arrObjects[`${this.nameArray}`];
+        if (this.arrObjects[`${this.nameArray}`] != undefined) {
+          return this.arrObjects[`${this.nameArray}`];
+        }
+        else{
+          return [];
+        }
       },
       set(value) { this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
     },
@@ -154,8 +159,6 @@ export default {
     },
     async deleteObjects() {
       this.deleteObject(this.arrObjects[`${this.nameArray}`]);
-      await this.filterForFeature();
-      this.getAllObject();
       this.resetSelected();
     },
     async moveObject(type) {
@@ -193,7 +196,7 @@ export default {
       newObject = newObject ? { ...newObject.properties } : 1;
       for (let i in this.headers) {
         if (this.headers[i].text != 'id_' && this.headers[i].text != 'id' && checkObject[this.headers[i].text] !== item[this.headers[i].text]) {
-          if(!(putObject && newObject && putObject[this.headers[i].text] === item[this.headers[i].text])){
+          if (!(putObject && newObject && putObject[this.headers[i].text] === item[this.headers[i].text])) {
             return false;
           }
         }
