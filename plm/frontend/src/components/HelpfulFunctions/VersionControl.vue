@@ -1,5 +1,9 @@
 <template>
 	<div>
+		<v-scroll-x-reverse-transition>
+			<div id="notification">&nbsp;&nbsp;&nbsp;&nbsp;Развитие версии изменено</div>
+		</v-scroll-x-reverse-transition>
+	
 		<div style="margin: 20px 5px 20px 20px; color: #787878; font-weight: 500;">
 			<span v-if="tableArray.length % 10 === 1">{{ tableArray.length }} объект </span>
 			<span v-else-if="tableArray.length % 10 > 1 && tableArray.length % 10 < 5">
@@ -7,8 +11,6 @@
 			<span v-else>{{ tableArray.length }} объектов </span>
 		</div>
 
-		<v-btn text id="no-background-hover" tile @click="lastVersion">Вернуться к последней версии</v-btn>
-	
 		<v-data-table :headers="headers" :items="tableArray" hide-default-footer style="
 			height: 100% !important;
 			width: 95% !important; 
@@ -19,12 +21,14 @@
 	
 			<template v-slot:[`item.select`]="{ item }">
 				<v-btn v-model="item.select" class='columnText' text id="no-background-hover" tile
-					:style="[(item.flag || currentVersion === item) ? {'color' : '#EE5E5E'} : {'color' : '#b6b3b3'}]">
+					:style="[(item.flag) ? {'color' : '#EE5E5E'} : {'color' : '#b6b3b3'}]">
 					Последняя версия
 				</v-btn>
 			</template>
 	
 		</v-data-table>
+
+		<v-btn text id="no-background-hover" class="lastVersion ma-2 pa-2" tile @click="lastVersion">Выбрать текущие данные</v-btn>
 	</div>
 </template>
 
@@ -81,8 +85,13 @@ export default {
 	methods: {
 		...mapActions(['getVersions', 'putVersion', 'getGroup', 'getAllGroups', 'getAllUserGroups', 'putLastVersion']),
 		...mapMutations(['updateVersions', 'updateFilteredVersions', 'updateAllGroups', 'updateAllUserGroups']),
-		chooseVersion(item){
-			this.putVersion(item.id)	
+		chooseVersion(item) {
+			this.putVersion(item.id)
+			document.getElementById('notification').style.display = 'block'
+			setTimeout(function () {
+				document.getElementById('notification').style.display = 'none'
+			}, 5000);
+			
 		},
 		getTimeVersion(time) {
 			let data = new Date(time)
@@ -94,7 +103,6 @@ export default {
 			}
 		}, 
 		getGroup(){
-			// console.log(this.getTypeId)
 			this.allGroups.forEach(element => {
 				if ( element.id === this.getTypeId){
 					this.nameGroup = element.name
@@ -102,15 +110,21 @@ export default {
 			});
 		},
 
-		lastVersion(){
-			console.log(this.allVersions)
-			let id = 0
-			this.allVersions.forEach(element => {
-				if (element.id > id){
-					id = element.id
-				}
-			});
-			this.putLastVersion(id)
+		lastVersion() {
+			if (this.tableArray.filter(el => el.flag).length) {
+				let id = 0
+				this.tableArray.forEach(element => {
+					if (element.id > id) {
+						id = element.id
+					}
+				});
+				document.getElementById('notification').style.display = 'block'
+				setTimeout(function () {
+					document.getElementById('notification').style.display = 'none'
+				}, 5000);
+				
+				this.putLastVersion(id)
+			}
 		}
 		
 	},
@@ -153,8 +167,17 @@ export default {
    background-color: transparent !important; 
    display: none !important;
 }
+.lastVersion {
+	left: 77.8%;
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-end;
+}
 
-
-
-
+#notification {
+	background-color: #FBDADA;
+	width: 100%;
+	color: #D7153A;
+	display: none;
+}
 </style>

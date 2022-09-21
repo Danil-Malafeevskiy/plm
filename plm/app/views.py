@@ -320,7 +320,7 @@ class TypeAdminView(APIView):
         return Response("SUCCESS DEL")
 
 def room(request):
-    return render(request, 'D:/KT/plm/plm/templates/test.html')
+    return render(request, 'E:/KT/plm/plm/templates/test.html')
 
 class VersionControlView(APIView):
     authentication_classes = [SessionAuthentication]
