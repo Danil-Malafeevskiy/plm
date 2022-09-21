@@ -183,18 +183,15 @@ class GroupView(APIView):
     def get(self, request, id=0):
         if id==0:
             groups = Group.objects.all()
-            group = GroupSerializer(groups, many=True, remove_fields=['permissions', 'avaible_permissions'])
+            group = GroupSerializer(groups, many=True)
             return Response(group.data)
 
         group = Group.objects.get(id=id)
-        groups = GroupSerializer(group)
+        groups = GroupSerializer(group, remove_fields=['all_user'])
         return Response(groups.data)
 
-    def options(self, request, *args, **kwargs):
-        return Response(Permission.objects.all().values_list('name', flat=True))
-
     def post(self, request):
-        group_serializer = GroupSerializer(data=request.data, context={'permissions': request.data['permissions']})
+        group_serializer = GroupSerializer(data=request.data)
         if group_serializer.is_valid():
             group_serializer.save()
             return Response("Success new group!")
@@ -203,7 +200,7 @@ class GroupView(APIView):
 
     def put(self, request):
         change_group = Group.objects.get(id=request.data['id'])
-        group_serializer = GroupSerializer(change_group, data=request.data, context={'permissions': request.data['permissions']})
+        group_serializer = GroupSerializer(change_group, data=request.data)
         if group_serializer.is_valid():
             group_serializer.save()
             return Response("Success up group!")
@@ -240,7 +237,7 @@ class UserAdminView(APIView):
                                                                                           'last_login', 'date_joined', 'image'])
             return Response(user_serializer.data)
 
-        user_serializer = UserSerializer(get_user_model().objects.get(id=id), remove_fields=['password'])
+        user_serializer = UserSerializer(get_user_model().objects.get(id=id), remove_fields=['password', 'is_superuser', 'is_staff', 'is_active', 'last_login', 'date_joined'])
         return Response(user_serializer.data)
 
     def post(self, request):
