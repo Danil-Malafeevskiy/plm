@@ -17,9 +17,6 @@ export default {
         async getFeatures({ commit }) {
             await axios.get('/tower').then((response) => {
                 commit('updateFeatures', response.data);
-                // if (state.featureTypeId != null) {
-                //     dispatch('filterForFeature');
-                // }
             }).catch(error => console.log(error));
         },
         async getOneFeature({ commit }, id) {
@@ -27,7 +24,7 @@ export default {
                 commit('updateObjectForCard', response.data[0]);
             }).catch(error => console.log(error));
         },
-        async putFeature(ctx, features) {
+        async putFeature({ commit }, features) {
             let data;
             if ('put' in features) {
                 data = [...features.put, ...features.post, getStrId(features.delete), features.messege];
@@ -37,7 +34,18 @@ export default {
             }
             await axios.put(`/tower`, data).then((response) => {
                 console.log(response.data);
+                if(typeof response.data === 'string'){
+                    commit('updateIsGetAllChange');
+                }
             }).catch(error => console.log(error)); 
+        },
+        async deleteFeature({ commit }, feature){
+            await axios.put('/tower', [ getStrId(feature), '']).then((response) => {
+                console.log(response.data);
+                if(typeof response.data === 'string'){
+                    commit('updateIsGetAllChange');
+                }
+            })
         },
         async filterForFeature({ commit, state }, typeId = state.featureTypeId) {
             state.featureTypeId = typeId;
@@ -89,12 +97,16 @@ export default {
         updateArrayEditMode(state, { item, type }) {
             switch (type) {
                 case 'post':
-                    Vue.set(state.arrayEditMode.post, state.arrayEditMode.post.length, item);
+                    state.arrayEditMode.post.push(item);
                     break;
 
                 case 'put':
                     if ('id_' in item) {
-                        Vue.set(state.arrayEditMode.post, item.id_ - 1, item);
+                        for (let key in state.arrayEditMode.post) {
+                            if (state.arrayEditMode.post[key].id_ === item.id_) {
+                                Vue.set(state.arrayEditMode.post, key, item);
+                            }
+                        }
                     }
                     else {
                         state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);

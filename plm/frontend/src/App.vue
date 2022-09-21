@@ -35,9 +35,8 @@
             <v-icon color="white !default" dark>
               mdi-plus
             </v-icon>
-
           </v-btn>
-          <v-file-input hide-input prepend-icon="mdi-file-upload" @change="uploadFile"></v-file-input>
+          <v-file-input hide-input :key="componentKey" prepend-icon="mdi-file-upload" @change="uploadFile"></v-file-input>
         </template>
       </v-toolbar>
 
@@ -143,6 +142,7 @@ export default {
       arrPut: [],
       file: null,
       changeElements: [],
+      componentKey: 0,
     }
   },
   watch: {
@@ -176,10 +176,16 @@ export default {
           this.editCardOn.data = false;
         }, 500);
       }
-    }
+    },
+    isGetAllChange: {
+      handler() {
+        this.getFeatures();
+        this.filterForFeature(this.oneType.id);
+      }
+    },
   },
   computed: mapGetters(['allFeatures', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
-    'newData', 'actions', 'typeForLayer']),
+    'newData', 'actions', 'typeForLayer', 'isGetAllChange']),
   methods: {
 
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'uploadFileWithFeature']),
@@ -203,10 +209,7 @@ export default {
     },
     async onmessage(e) {
       const data = JSON.parse(e.data);
-      this.getFeatures();
-      console.log(data.data);
       switch (data.action) {
-
         case "update": {
           if (this.editMode) {
             let editObject = this.arrayEditMode.put.filter(el => el.id === data.data.id);
@@ -219,25 +222,16 @@ export default {
               }
             }
           }
-          else if (data.data.name === this.oneType.id) {
-            this.filterForFeature(this.oneType.id);
-          }
           break;
         }
         case "create":
-          if (data.data.name === this.oneType.id) {
-            this.filterForFeature(this.oneType.id);
-          }
           break;
         case 'delete':
           this.arrayEditMode.put = this.arrayEditMode.put.filter(el => el.id != data.data.id)
-          if (this.getObjectForCard.id === data.data.id) {
+          if (this.getObjectForCard && this.getObjectForCard.id === data.data.id) {
             this.infoCardOn.data = false;
             this.editCardOn.data = false;
             this.notVisableCard();
-          }
-          if (data.data.name === this.oneType.id) {
-            this.filterForFeature(this.oneType.id);
           }
           break;
         default:
@@ -291,7 +285,11 @@ export default {
       let formData = new FormData();
       formData.append('file', file);
       this.uploadFileWithFeature(formData);
-    }
+      this.componentKey++;
+    },
+    // testt(e){
+    //   console.log(e);
+    // }
   },
   mounted() {
     const chatSocket = new WebSocket("ws://localhost:8000/test");
