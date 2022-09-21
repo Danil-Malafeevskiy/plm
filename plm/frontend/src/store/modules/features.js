@@ -157,7 +157,7 @@ export default {
         resetNewData(state) {
             state.newData = [];
         },
-        updataFeatureForMap(state, features){
+        updateFeatureForMap(state, features){
             state.featureForMap = features;
         },
         updateFeatureInMap(state, feature){
