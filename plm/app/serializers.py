@@ -126,7 +126,7 @@ class FeatureListSerializer(serializers.ListSerializer):
             new_version['update'] = new_update
             version['update'] = old_update
 
-            return version, new_version
+        return version, new_version
 
 class FeatureSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
