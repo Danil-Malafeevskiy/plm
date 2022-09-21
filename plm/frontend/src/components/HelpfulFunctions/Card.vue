@@ -277,7 +277,7 @@ export default {
 
     },
     methods: {
-        ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature']),
+        ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable']),
         ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData']),
         async addNewFeature() {
             if (this.objectForCard.name != null) {

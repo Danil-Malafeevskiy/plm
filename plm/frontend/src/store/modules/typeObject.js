@@ -69,7 +69,7 @@ export default {
                     dispatch('getAllTypeInGroup', state.pastGroup);
                 }
                 else{
-                    dispatch('getAlltypeForTable');
+                    dispatch('getAllTypeForTable');
                 }
             });
         },

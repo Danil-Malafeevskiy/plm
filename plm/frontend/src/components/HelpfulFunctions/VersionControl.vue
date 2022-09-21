@@ -6,6 +6,8 @@
 				{{ tableArray.length }} объекта </span>
 			<span v-else>{{ tableArray.length }} объектов </span>
 		</div>
+
+		<v-btn text id="no-background-hover" tile @click="lastVersion">Вернуться к последней версии</v-btn>
 	
 		<v-data-table :headers="headers" :items="tableArray" hide-default-footer style="
 			height: 100% !important;
@@ -77,7 +79,7 @@ export default {
 		...mapGetters(['allVersions', 'allListItem', 'getList', 'getTypeId', 'allGroups', 'allFilteredVersions', 'user','allUserGroups' ])
 	},
 	methods: {
-		...mapActions(['getVersions', 'putVersion', 'getGroup', 'getAllGroups', 'getAllUserGroups']),
+		...mapActions(['getVersions', 'putVersion', 'getGroup', 'getAllGroups', 'getAllUserGroups', 'putLastVersion']),
 		...mapMutations(['updateVersions', 'updateFilteredVersions', 'updateAllGroups', 'updateAllUserGroups']),
 		chooseVersion(item){
 			this.putVersion(item.id)	
@@ -99,6 +101,17 @@ export default {
 				}
 			});
 		},
+
+		lastVersion(){
+			console.log(this.allVersions)
+			let id = 0
+			this.allVersions.forEach(element => {
+				if (element.id > id){
+					id = element.id
+				}
+			});
+			this.putLastVersion(id)
+		}
 		
 	},
 
