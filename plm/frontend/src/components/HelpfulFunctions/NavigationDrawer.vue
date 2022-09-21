@@ -30,11 +30,14 @@
                     color="#E93030">
                     <v-list-item class="pa-3" v-for="key in fiteredAllTypes" :key="key.id" link
                         style="border-radius: 8px !important;">
-                        <v-list-item-title class="pa-1" v-if="typeof key === 'object'">
-                            {{ key.name }}
+                        <v-list-item-title class="pa-1" v-if="typeof key === 'object' && key.all_obj">
+                            <div class="name"> <div>{{ key.name }}</div> <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{key.all_obj}}</div> </div>
+                        </v-list-item-title>
+                        <v-list-item-title class="pa-1" v-else-if="key.all_user">
+                            <div class="name"> <div>{{ key.name }}</div> <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{key.all_user}}</div> </div>
                         </v-list-item-title>
                         <v-list-item-title class="pa-1" v-else>
-                            {{ key }}
+                            <div>{{ key }}</div>   
                         </v-list-item-title>
                     </v-list-item>
                 </v-list-item-group>
@@ -226,4 +229,10 @@ export default {
 .text_in_span {
     margin-left: 35px;
 }
+
+
+.name{
+    display: flex;
+}
+
 </style>
