@@ -83,25 +83,25 @@ class FeatureListSerializer(serializers.ListSerializer):
                         if del_flag and line['id'] not in new_version['delete']:
                             line['geometry']['coordinates'] = lineCoord
 
-                            if len(copy_line['geometry']['coordinates']) <= 1:
+                            if len(line['geometry']['coordinates']) <= 1:
                                 Feature.objects.get(id=line['id']).delete()
                                 if line['id'] not in del_line:
                                     del_line.append(line['id'])
                                     new_version['delete'].append(line['id'])
                             else:
-                                new_line = FeatureSerializer(Feature.objects.get(id=line['id']), data=line)
-                                if new_line.is_valid():
-                                    new_line.save()
+                                feat = Feature.objects.get(id=line['id'])
+                                feat.geometry.coordinates = line['geometry']['coordinates']
+                                feat.save()
 
                             if copy_line['id'] not in up_dict.keys():
                                 up_dict[copy_line['id']] = copy_line
 
-                version['create'].append(type)
-                new_version['delete'].append(feature_id)
                 if feature_id not in new_version['delete']:
+                    version['create'].append(type)
+                    new_version['delete'].append(feature_id)
                     feature.delete()
 
-        if len(up_dict)!=0:
+        if len(up_dict)!=0 or len(del_line)!=0:
             for line in self.context:
                 if line['id'] in del_line:
                     version['create'].append(up_dict[line['id']])
@@ -113,6 +113,13 @@ class FeatureListSerializer(serializers.ListSerializer):
                     else:
                         version['update'].append(up_dict[line['id']])
                         new_version['update'].append(line)
+                elif line['id'] in new_version['delete']:
+                    for obj in new_version['update']:
+                        if obj['id'] == line['id']:
+                            new_version['update'].remove(obj)
+                    for obj in version['update']:
+                        if obj['id'] == line['id']:
+                            version['update'].remove(obj)
 
         return version, new_version
 
