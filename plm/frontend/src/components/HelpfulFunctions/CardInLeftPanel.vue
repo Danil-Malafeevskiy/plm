@@ -211,8 +211,6 @@ export default {
             this.updateListType([]);
             this.updateListType(this.groupsOfUser);
             this.updateNameForArray('Версии системы');
-            
-            this.getAllGroups();
         },
     },
     async mounted() {
