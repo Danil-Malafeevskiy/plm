@@ -156,6 +156,7 @@ class FeatureSerializer(serializers.ModelSerializer):
 
 class FileSerializer(serializers.Serializer):
     file = serializers.FileField()
+    group = serializers.CharField()
 
 class GroupSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()

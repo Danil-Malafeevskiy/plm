@@ -44,37 +44,33 @@ class TowerAPI(APIView):
     def put(self, request):
         ids = []
         queryset = []
+        group_name = request.data.pop(-1)
         comment = request.data.pop(-1)
         delete_mas = request.data.pop(-1)
         if len(delete_mas)!=0:
             queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
-                name__in=Type.objects.filter(group=Type.objects.get(id=Feature.objects.get(id=delete_mas[0]).name.id).group))
+                name__in=Type.objects.filter(group=Group.objects.get(name=group_name).id))
         for data in request.data:
             if 'id' in data.keys():
                 if data['geometry']['type'] == "Point" and len(queryset)==0:
-                    queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(name__in=Type.objects.filter(group=Type.objects.get(id=data['name']).group))
+                    queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(name__in=Type.objects.filter(group=Group.objects.get(name=group_name).id))
                 ids.append(data['id'])
 
         ids = ids + delete_mas
 
         feature = Feature.objects.filter(id__in=ids)
 
-        if len(ids)==0:
-            dataset = Type.objects.get(id=request.data[0]['name']).group.id
-        else:
-            dataset = feature[0].name.group.id
-
         feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=FeatureSerializer(queryset, many=True).data)
         if feature_serializer.is_valid():
             version, new_version = feature_serializer.save()
             try:
-                VersionControl.objects.filter(date_update__gte=VersionControl.objects.get(flag=True, dataset=feature[0].name.group.id).date_update, dataset=feature[0].name.group.id).delete()
+                VersionControl.objects.filter(date_update__gte=VersionControl.objects.get(flag=True, dataset=Group.objects.get(name=group_name).id).date_update, dataset=Group.objects.get(name=group_name).id).delete()
             except Exception as e:
                 print("Ваша версия максимальна!")
 
             OldVersionSerializer = VersionControlSerializer(
                 data={"user": request.user.username, "version": version,
-                      'dataset': dataset, 'comment': comment,
+                      'dataset': Group.objects.get(name=group_name).id, 'comment': comment,
                       "new_version": new_version})
             if OldVersionSerializer.is_valid():
                 OldVersionSerializer.save()
@@ -113,7 +109,7 @@ class FileUploadView(APIView):
 
         lis = []
         dict_1 = {}
-        type = Type.objects.get(name=filename)
+        type = Type.objects.get(name=filename, group=Group.objects.get(name=request.data['group']).id)
         dict_1['name'] = type.id
         dict_1['type'] = 'Feature'
         dict_1['properties'] = {}
