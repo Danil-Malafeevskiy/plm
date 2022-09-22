@@ -80,7 +80,8 @@ export default {
             await axios.get(`/tower/${id}`).then((response) => {
                 commit('updateFeatureInMap', response.data[0])
             });
-        }
+        },
+
     },
     mutations: {
         updateFeatures(state, features) {
@@ -245,6 +246,6 @@ export default {
         },
         newData: [],
         featureForMap: [],
-        featureInMap: {}
+        featureInMap: {},
     },
 }
