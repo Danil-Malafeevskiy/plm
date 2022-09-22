@@ -11,7 +11,7 @@
 			<span v-else>{{ tableArray.length }} объектов </span>
 		</div>
 
-		<v-data-table :headers="headers" :items="tableArray" hide-default-footer style="
+		<v-data-table :headers="headers" :items="tableArray" :items-per-page="5" style="
 			height: 100% !important;
 			width: 95% !important; 
 			background-color: #E5E5E5; 
