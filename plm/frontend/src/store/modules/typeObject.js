@@ -3,7 +3,7 @@ import axios from "axios";
 export default {
     actions: {
         async getTypeObject({ commit }, change = false) {
-            await axios.get('/dataset').then((response) => {
+            await axios.get('/dataset/admin').then((response) => {
                 if (!change) {
                     commit('updateListType', response.data);
                 }
@@ -45,7 +45,7 @@ export default {
             }
         },
         async getOneTypeObjectForFeature({ commit }, { id, forFeature = false }) {
-            await axios.get(`/dataset/${id}`).then((response) => {
+            await axios.get(`/dataset/admin/${id}`).then((response) => {
                 commit('updateOneType', { type: response.data, forFeature });
             });
         },

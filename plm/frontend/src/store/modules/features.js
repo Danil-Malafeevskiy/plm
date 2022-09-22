@@ -12,6 +12,16 @@ function getStrId(features) {
     return strId;
 }
 
+function getEditedFeatures(arrayEdited, type) {
+    let array = [];
+    for (let key in arrayEdited) {
+        if (key != 'messege') {
+            array = [...array, ...arrayEdited[key][type]];
+        }
+    }
+    return array;
+}
+
 export default {
     actions: {
         async getFeatures({ commit }) {
@@ -25,6 +35,7 @@ export default {
             }).catch(error => console.log(error));
         },
         async putFeature({ commit }, features) {
+            console.log(features);
             let data;
             if ('put' in features) {
                 data = [...features.put, ...features.post, getStrId(features.delete), features.messege];
@@ -32,17 +43,17 @@ export default {
             else {
                 data = [...features, [], '']
             }
-            await axios.put(`/tower`, data, {headers:{"Content-Type" : "application/json"}}).then((response) => {
+            await axios.put(`/tower`, data, { headers: { "Content-Type": "application/json" } }).then((response) => {
                 console.log(response.data);
-                if(typeof response.data === 'string'){
+                if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');
                 }
-            }).catch(error => console.log(error)); 
+            }).catch(error => console.log(error));
         },
-        async deleteFeature({ commit }, feature){
-            await axios.put('/tower', [ getStrId(feature), '']).then((response) => {
+        async deleteFeature({ commit }, feature) {
+            await axios.put('/tower', [getStrId(feature), '']).then((response) => {
                 console.log(response.data);
-                if(typeof response.data === 'string'){
+                if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');
                 }
             })
@@ -53,7 +64,7 @@ export default {
                 commit('updatefilterForFeature', response.data);
             })
         },
-        async filterForFeatureForMap({ commit }, typeId){
+        async filterForFeatureForMap({ commit }, typeId) {
             await axios.get(`/tower?name=${typeId}`).then((response) => {
                 commit('updateFeatureForMap', response.data);
             })
@@ -65,7 +76,7 @@ export default {
                 }
             }).then((response) => console.log(response.data))
         },
-        async getFeatureForMap({ commit }, id){
+        async getFeatureForMap({ commit }, id) {
             await axios.get(`/tower/${id}`).then((response) => {
                 commit('updateFeatureInMap', response.data[0])
             });
@@ -95,54 +106,73 @@ export default {
             state.featureTypeId = nameType;
         },
         updateArrayEditMode(state, { item, type }) {
+            if (!(item.group in state.arrayEditMode)) {
+                Vue.set(state.arrayEditMode, item.group, {
+                    put: [],
+                    post: [],
+                    delete: []
+                });
+            }
             switch (type) {
                 case 'post':
-                    state.arrayEditMode.post.push(item);
+                    state.arrayEditMode[item.group].post.push(item);
+                    state.arrayEdit.post.push(item);
                     break;
 
                 case 'put':
                     if ('id_' in item) {
-                        for (let key in state.arrayEditMode.post) {
-                            if (state.arrayEditMode.post[key].id_ === item.id_) {
-                                Vue.set(state.arrayEditMode.post, key, item);
+                        for (let key in state.arrayEditMode[item.group].post) {
+                            if (state.arrayEditMode[item.group].post[key].id_ === item.id_) {
+                                Vue.set(state.arrayEditMode[item.group].post, key, item);
                             }
                         }
+                        state.arrayEdit.post = getEditedFeatures(state.arrayEditMode, 'post');
                     }
                     else {
-                        state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
-                        if (state.arrayEditMode.put.find(el => el.id === item.id)) {
-                            for (let key in state.arrayEditMode.put) {
-                                if (state.arrayEditMode.put[key].id === item.id) {
-                                    Vue.set(state.arrayEditMode.put, key, item);
+                        state.arrayEditMode[item.group].delete = state.arrayEditMode[item.group].delete.filter(el => el.id != item.id);
+                        state.arrayEdit.delete = state.arrayEdit.delete.filter(el => el.id != item.id);
+
+                        if (state.arrayEditMode[item.group].put.find(el => el.id === item.id)) {
+                            for (let key in state.arrayEditMode[item.group].put) {
+                                if (state.arrayEditMode[item.group].put[key].id === item.id) {
+                                    Vue.set(state.arrayEditMode[item.group].put, key, item);
                                 }
                             }
                         }
                         else {
-                            state.arrayEditMode.put.push(item);
+                            state.arrayEditMode[item.group].put.push(item);
                         }
                     }
+                    state.arrayEdit.put = getEditedFeatures(state.arrayEditMode, 'put');
                     break;
 
                 case 'delete':
                     if ('id_' in item) {
-                        state.arrayEditMode.post = state.arrayEditMode.post.filter(el => el.id_ != item.id_);
+                        state.arrayEditMode[item.group].post = state.arrayEditMode[item.group].post.filter(el => el.id_ != item.id_);
+                        state.arrayEdit.post = state.arrayEdit.post.filter(el => el.id_ != item.id_);
                     }
                     else {
-                        state.arrayEditMode.put = state.arrayEditMode.put.filter(el => el.id != item.id);
+                        state.arrayEditMode[item.group].put = state.arrayEditMode[item.group].put.filter(el => el.id != item.id);
+                        state.arrayEdit.put = state.arrayEdit.put.filter(el => el.id != item.id);
 
-                        if (state.arrayEditMode.delete.find(el => el.id === item.id)) {
-                            state.arrayEditMode.delete = state.arrayEditMode.delete.filter(el => el.id != item.id);
+                        if (state.arrayEditMode[item.group].delete.find(el => el.id === item.id)) {
+                            state.arrayEditMode[item.group].delete = state.arrayEditMode[item.group].delete.filter(el => el.id != item.id);
                         }
                         else {
-                            state.arrayEditMode.delete.push(item);
+                            state.arrayEditMode[item.group].delete.push(item);
                         }
-                    }
+                    } 
+                    state.arrayEdit.delete = getEditedFeatures(state.arrayEditMode, 'delete');
+
                     break;
             }
 
         },
         resetArrayEditMode(state) {
             state.arrayEditMode = {
+                messege: '',
+            }
+            state.arrayEdit = {
                 put: [],
                 post: [],
                 delete: [],
@@ -157,10 +187,10 @@ export default {
         resetNewData(state) {
             state.newData = [];
         },
-        updateFeatureForMap(state, features){
+        updateFeatureForMap(state, features) {
             state.featureForMap = features;
         },
-        updateFeatureInMap(state, feature){
+        updateFeatureInMap(state, feature) {
             state.featureInMap = feature;
         }
     },
@@ -183,13 +213,16 @@ export default {
         arrayEditMode(state) {
             return state.arrayEditMode;
         },
+        arrayEdit(state) {
+            return state.arrayEdit;
+        },
         newData(state) {
             return state.newData;
         },
-        featureForMap(state){
+        featureForMap(state) {
             return state.featureForMap;
         },
-        featureInMap(state){
+        featureInMap(state) {
             return state.featureInMap;
         }
     },
@@ -203,10 +236,12 @@ export default {
             geometry: {},
         },
         arrayEditMode: {
+            messege: '',
+        },
+        arrayEdit: {
             put: [],
             post: [],
             delete: [],
-            messege: '',
         },
         newData: [],
         featureForMap: [],

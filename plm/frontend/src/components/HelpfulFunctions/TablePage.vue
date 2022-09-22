@@ -74,9 +74,9 @@ export default {
     allListItem: {
       handler() {
         this.tableArrayItems = [...this.allListItem];
-        if (this.arrayEditMode.post.length) {
-          for (let i in this.arrayEditMode.post) {
-            this.tableArrayItems.push({ ...this.arrayEditMode.post[i].properties, id_: this.arrayEditMode.post[i].id_ });
+        if (this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length) {
+          for (let i in this.arrayEdit.post) {
+            this.tableArrayItems.push({ ...this.arrayEdit.post[i].properties, id_: this.arrayEdit.post[i].id_ });
           }
         }
       }
@@ -84,9 +84,9 @@ export default {
     arrayEditMode: {
       handler() {
         this.tableArrayItems = [...this.allListItem];
-        if (this.arrayEditMode.post.length) {
-          for (let i in this.arrayEditMode.post) {
-            this.tableArrayItems.push({ ...this.arrayEditMode.post[i].properties, id_: this.arrayEditMode.post[i].id_ });
+        if (this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length) {
+          for (let i in this.arrayEdit.post) {
+            this.tableArrayItems.push({ ...this.arrayEdit.post[i].properties, id_: this.arrayEdit.post[i].id_ });
           }
         }
       },
@@ -96,13 +96,13 @@ export default {
   computed: {
     ...mapGetters(['allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray',
       'drawType', 'getToolbarTitle', 'arrayEditMode', 'newData', 'oneType',
-      'selectedDrawType', 'actions', 'allGroups', 'user']),
+      'selectedDrawType', 'actions', 'allGroups', 'user', 'arrayEdit']),
     selected: {
       get() {
         if (this.arrObjects[`${this.nameArray}`] != undefined) {
           return this.arrObjects[`${this.nameArray}`];
         }
-        else{
+        else {
           return [];
         }
       },
@@ -113,7 +113,8 @@ export default {
         return this.allGroups.filter(el => el.name != this.getToolbarTitle)
       }
       else {
-        return this.selectedDrawType.filter(el => el.name != this.getToolbarTitle);
+        console.log(this.oneType.group);
+        return this.selectedDrawType.filter(el => el.name != this.getToolbarTitle && el.group === this.oneType.group);
       }
     }
   },
@@ -126,10 +127,10 @@ export default {
         if (this.getObjectForCard === null || this.getObjectForCard.id != obj.id ||
           (this.getObjectForCard.id == obj.id && !this.checkequalsItems(obj, this.getObjectForCard)) || !this.infoCardOn_.data) {
           if ('id_' in obj) {
-            this.updateObjectForCard(JSON.parse(JSON.stringify(this.arrayEditMode.post.find(el => el.id_ === obj.id_))));
+            this.updateObjectForCard(JSON.parse(JSON.stringify(this.arrayEdit.post.find(el => el.id_ === obj.id_))));
           }
           else {
-            const object = this.arrayEditMode.put.filter(el => el.id === obj.id);
+            const object = this.arrayEdit.put.filter(el => el.id === obj.id);
             if (object.length) {
               this.updateObjectForCard(JSON.parse(JSON.stringify(object[0])));
             }
@@ -190,7 +191,7 @@ export default {
     },
     checkequalsItems(item, object) {
       let checkObject = { ...object.properties };
-      let putObject = this.arrayEditMode.put.find(el => el.id === object.id);
+      let putObject = this.arrayEdit.put.find(el => el.id === object.id);
       putObject = putObject ? { ...putObject.properties } : 1;
       let newObject = this.newData.find(el => el.id === object.id);
       newObject = newObject ? { ...newObject.properties } : 1;
@@ -222,8 +223,8 @@ export default {
         classForItem += ' text_color_purple';
       }
 
-      const putObject = this.arrayEditMode.put.filter(el => el.id === item.id);
-      const deleteObject = this.arrayEditMode.delete.filter(el => el.id === item.id);
+      const putObject = this.arrayEdit.put.filter(el => el.id === item.id);
+      const deleteObject = this.arrayEdit.delete.filter(el => el.id === item.id);
       const newPutObject = this.newData.filter(el => el.id === item.id);
 
       if (newPutObject.length) {
