@@ -72,7 +72,7 @@ export default {
         }
       }
     },
-    arrayEditMode: {
+    arrayEdit: {
       handler() {
         let arraysOfNewObject = this.createSubArrays();
         let arrayOfLayers = this.map.getAllLayers();
@@ -189,7 +189,7 @@ export default {
 
 
   },
-  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEditMode', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap']),
+  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap']),
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard']),
     ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
@@ -199,15 +199,24 @@ export default {
     },
     async returnCoordinates() {
       this.editedPointCoordinates = fromLonLat(this.oldFeature.geometry.coordinates);
+      let object;
+      
+      if ('id_' in this.oldFeature) {
+        object = this.arrayEdit.post.find(el => el.id === this.oldFeature.id);
+        object.id = object.id_;
+      }
+      else {
+        object = this.arrayEdit.put.find(el => el.id === this.oldFeature.id);
+        object = object === null ? this.arrayEdit.delete.find(el => el.id === this.oldFeature.id) : object;
+      }
 
-      let object = this.arrayEditMode.put.find(el => el.id === this.oldFeature.id);
       if (!object) {
         await this.getFeatureForMap(this.oldFeature.id)
         object = this.featureInMap;
       }
       const layer = this.map.getAllLayers().find(el => el.get('typeId') === object.name);
       let features = layer.getSource().getFeatures();
-      features = features.filter(el => el.id_ != object.id);
+      features = features.filter(el => el.id_ != object.id && el.id_ != object.id_);
       const source = new VectorSource({
         features: [...features, ...new GeoJSON().readFeatures(
           {
@@ -254,7 +263,7 @@ export default {
     updateCoordinates() {
       if (this.drawLayer.getSource().getFeatures().length === 1 || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
         this.map.removeInteraction(this.draw);
-        
+
         if (this.drawLayer.getSource().getFeatures().length === 1) {
           this.coord = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
         }
@@ -286,13 +295,13 @@ export default {
     },
 
     findItem(id) {
-      let item = this.arrayEditMode.put.find(el => el.id === id);
+      let item = this.arrayEdit.put.find(el => el.id === id);
 
       if (item === undefined) {
-        item = this.arrayEditMode.delete.find(el => el.id === id);
+        item = this.arrayEdit.delete.find(el => el.id === id);
       }
       if (item === undefined) {
-        item = this.arrayEditMode.post.find(el => el.id_ === id)
+        item = this.arrayEdit.post.find(el => el.id_ === id)
       }
 
       if (item === undefined) {
@@ -312,6 +321,7 @@ export default {
           this.updateObjectForCard(JSON.parse(JSON.stringify(item)));
         }
         else {
+          console.log(1);
           await this.getOneFeature(feature_.id_);
         }
         this.infoCardOn_.data = true;
@@ -350,9 +360,9 @@ export default {
       let subArrays = {};
       for (let i in this.allType) {
         subArrays[`${this.allType[i].id}`] = [];
-        for (let j in this.arrayEditMode.post) {
-          if (this.arrayEditMode.post[j].name == this.allType[i].id) {
-            let obj = JSON.parse(JSON.stringify(this.arrayEditMode.post[j]));
+        for (let j in this.arrayEdit.post) {
+          if (this.arrayEdit.post[j].name == this.allType[i].id) {
+            let obj = JSON.parse(JSON.stringify(this.arrayEdit.post[j]));
             obj.id = obj.id_;
             subArrays[`${this.allType[i].id}`].push(obj);
           }
