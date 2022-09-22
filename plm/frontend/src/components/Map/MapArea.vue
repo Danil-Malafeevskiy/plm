@@ -187,6 +187,7 @@ export default {
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode']),
     ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
+
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
       this.feature.properties['Широта'] = cord[0];
@@ -292,8 +293,9 @@ export default {
         }
         else {
           this.coord = toLonLat(this.coord);
-          this.updateLonLat(this.coord);
+          this.updateLonLat(this.coord); 
         }
+        
 
         this.feature.geometry.coordinates = this.coord;
         this.feature.type = 'Feature';
@@ -320,9 +322,7 @@ export default {
     },
 
     async getFeature_(event) {
-      this.updateCoordinates();
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
-
       if (feature_ != null && !this.addCardOn_.data) {
 
         let item = this.findItem(feature_.id_)
@@ -341,6 +341,11 @@ export default {
           this.infoCardOn_.data = false;
           this.editCardOn_.data = false;
         }, 500)
+      } 
+      else if(feature_ != null && this.addCardOn_.data && this.drawType === 'Point') {
+        this.drawLayer.getSource().refresh()
+      } else{
+        this.updateCoordinates();
       }
     },
     changeCoordinates(event) {
@@ -627,6 +632,20 @@ export default {
       this.addInteraction();
     }
     this.resizeMap();
+
+    // this.map.on("click", (e) => {
+
+    //   // console.log(toLonLat(this.map.getCoordinateFromPixel(e.pixel)))
+
+    //   let coord = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(this.map.getCoordinateFromPixel(e.pixel)))[0];
+    //   console.log(coord)
+    //   // this.map.getAllLayers().forEach(element => {
+    //   //   if (element.get('typeId')){
+    //   //     console.log(element.getFeature())
+    //   //   }
+    //   // });
+
+    // })
 
   }
 }
