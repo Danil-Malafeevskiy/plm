@@ -185,7 +185,8 @@ class GroupView(APIView):
             if request.user.is_superuser:
                 groups = Group.objects.all()
             else:
-                groups_list = request.user.groups.values_list('name', flat=True).remove("Admin")
+                groups_list = [group for group in list(request.user.groups.values_list('name', flat=True))
+                                                                    if group != "Admin"]
                 groups = Group.objects.filter(name__in=groups_list)
             group = GroupSerializer(groups, many=True)
             return Response(group.data)
@@ -240,7 +241,8 @@ class UserAdminView(APIView):
     def get(self, request, id=0):
         if id == 0:
             ff = DjangoFilterBackend()
-            users = get_user_model().objects.filter(groups__name__in=request.user.groups.values_list('name', flat=True).remove("Admin"))
+            users = get_user_model().objects.filter(groups__name__in=[group for group in list(request.user.groups.values_list('name', flat=True))
+                                                                    if group != "Admin"])
             if request.user.is_superuser:
                 users = get_user_model().objects.all()
 
