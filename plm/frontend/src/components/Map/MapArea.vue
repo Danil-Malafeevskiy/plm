@@ -11,7 +11,7 @@ import { fromLonLat, toLonLat } from 'ol/proj';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
-import { Draw, Modify } from 'ol/interaction';
+import { Draw, Modify, Snap } from 'ol/interaction';
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 import { Icon, Style } from 'ol/style';
@@ -54,6 +54,7 @@ export default {
       editedLineStringIndex: null,
       counter: 0,
       oldFeature: null,
+      arrFeatureForDraw: [],
     }
   },
 
@@ -71,7 +72,7 @@ export default {
         }
       }
     },
-    arrayEditMode: {
+    arrayEdit: {
       handler() {
         let arraysOfNewObject = this.createSubArrays();
         let arrayOfLayers = this.map.getAllLayers();
@@ -145,15 +146,27 @@ export default {
     getFeature: function () {
       this.feature = this.getFeature;
     },
-    oneType: {
+    drawType: {
       handler() {
-        this.resetInteractions();
+        if (this.map) {
+          this.resetInteractions();
+        }
       }
     },
+    // oneType: {
+    //   handler() {
+    //     if (this.map) {
+    //       this.resetInteractions();
+    //     }
+    //   }
+    // },
     addCardOn: {
       handler() {
         this.addCardOn_ = this.addCardOn;
-        this.resetInteractions();
+        if (this.map) {
+          this.resetInteractions();
+        }
+
       },
       deep: true
     },
@@ -176,25 +189,34 @@ export default {
 
 
   },
-  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEditMode', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap']),
+  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap']),
   methods: {
-    ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard']),
-    ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
+    ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updatefilterForFeature']),
+    ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap', 'filterForFeature']),
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
       this.feature.properties['Широта'] = cord[0];
     },
     async returnCoordinates() {
       this.editedPointCoordinates = fromLonLat(this.oldFeature.geometry.coordinates);
+      let object;
+      
+      if ('id_' in this.oldFeature) {
+        object = this.arrayEdit.post.find(el => el.id === this.oldFeature.id);
+        object.id = object.id_;
+      }
+      else {
+        object = this.arrayEdit.put.find(el => el.id === this.oldFeature.id);
+        object = object === null ? this.arrayEdit.delete.find(el => el.id === this.oldFeature.id) : object;
+      }
 
-      let object = this.arrayEditMode.put.find(el => el.id === this.oldFeature.id);
       if (!object) {
         await this.getFeatureForMap(this.oldFeature.id)
         object = this.featureInMap;
       }
       const layer = this.map.getAllLayers().find(el => el.get('typeId') === object.name);
       let features = layer.getSource().getFeatures();
-      features = features.filter(el => el.id_ != object.id);
+      features = features.filter(el => el.id_ != object.id && el.id_ != object.id_);
       const source = new VectorSource({
         features: [...features, ...new GeoJSON().readFeatures(
           {
@@ -228,21 +250,26 @@ export default {
       return feature;
     },
     resetInteractions() {
+      this.map.removeInteraction(this.draw);
+      this.map.removeLayer(this.drawLayer);
+      this.drawLayer.getSource().refresh();
       if (this.addCardOn.data) {
-        this.map.removeInteraction(this.draw);
         this.addInteraction();
       }
       else {
-        this.map.removeInteraction(this.draw);
-        this.drawLayer.getSource().refresh();
         this.map.removeInteraction(this.modify);
       }
     },
     updateCoordinates() {
-      if (this.drawLayer.getSource().getFeatures().length === 1) {
+      if (this.drawLayer.getSource().getFeatures().length === 1 || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
         this.map.removeInteraction(this.draw);
-        this.coord = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
 
+        if (this.drawLayer.getSource().getFeatures().length === 1) {
+          this.coord = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
+        }
+        else {
+          this.coord = this.drawLayer.getSource().getFeatures().find(el => el.getGeometry().getType() === 'LineString').getGeometry().getCoordinates();
+        }
         if (typeof this.coord[0] === 'object') {
           for (let i in this.coord) {
             if (typeof this.coord[i][0] === 'object') {
@@ -258,9 +285,9 @@ export default {
         }
         else {
           this.coord = toLonLat(this.coord);
-          this.updateLonLat(this.coord);
-          this.map.removeInteraction(this.modifyEdit)
+          this.updateLonLat(this.coord); 
         }
+        
 
         this.feature.geometry.coordinates = this.coord;
         this.feature.type = 'Feature';
@@ -269,13 +296,13 @@ export default {
     },
 
     findItem(id) {
-      let item = this.arrayEditMode.put.find(el => el.id === id);
+      let item = this.arrayEdit.put.find(el => el.id === id);
 
       if (item === undefined) {
-        item = this.arrayEditMode.delete.find(el => el.id === id);
+        item = this.arrayEdit.delete.find(el => el.id === id);
       }
       if (item === undefined) {
-        item = this.arrayEditMode.post.find(el => el.id_ === id)
+        item = this.arrayEdit.post.find(el => el.id_ === id)
       }
 
       if (item === undefined) {
@@ -285,9 +312,7 @@ export default {
     },
 
     async getFeature_(event) {
-      this.updateCoordinates();
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
-
       if (feature_ != null && !this.addCardOn_.data) {
 
         let item = this.findItem(feature_.id_)
@@ -306,6 +331,11 @@ export default {
           this.infoCardOn_.data = false;
           this.editCardOn_.data = false;
         }, 500)
+      } 
+      else if(feature_ != null && this.addCardOn_.data && this.drawType === 'Point') {
+        this.drawLayer.getSource().refresh()
+      } else{
+        this.updateCoordinates();
       }
     },
     changeCoordinates(event) {
@@ -333,9 +363,9 @@ export default {
       let subArrays = {};
       for (let i in this.allType) {
         subArrays[`${this.allType[i].id}`] = [];
-        for (let j in this.arrayEditMode.post) {
-          if (this.arrayEditMode.post[j].name == this.allType[i].id) {
-            let obj = JSON.parse(JSON.stringify(this.arrayEditMode.post[j]));
+        for (let j in this.arrayEdit.post) {
+          if (this.arrayEdit.post[j].name == this.allType[i].id) {
+            let obj = JSON.parse(JSON.stringify(this.arrayEdit.post[j]));
             obj.id = obj.id_;
             subArrays[`${this.allType[i].id}`].push(obj);
           }
@@ -343,38 +373,60 @@ export default {
       }
       return subArrays;
     },
-
     async addInteraction() {
       this.map.removeInteraction(this.modify);
       this.drawLayer.getSource().refresh();
-      await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
-
-      this.drawLayer = new VectorLayer({
-        source: new VectorSource({
-          features: []
-        }),
-      });
 
       if (this.drawType === 'Point') {
-        const interaction = this.map.getInteractions().getArray().find(el => el.get('typeId') === this.oneType.id);
-        this.drawLayer.setStyle(interaction.get('style'));
+        await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
+
+        this.drawLayer = new VectorLayer({
+          source: new VectorSource({
+            features: []
+          }),
+        });
+
+        if (this.drawType === 'Point') {
+          const interaction = this.map.getInteractions().getArray().find(el => el.get('typeId') === this.oneType.id);
+          this.drawLayer.setStyle(interaction.get('style'));
+        }
+        this.modify = new Modify({
+          source: this.drawLayer.getSource(),
+          style: this.drawLayer.getStyle()
+        });
+
+        this.modify.on('modifyend', this.changeCoordinates);
+
+        this.draw = new Draw({
+          source: this.drawLayer.getSource(),
+          type: this.drawType,
+          style: this.drawLayer.getStyle(),
+        });
+        this.map.addLayer(this.drawLayer);
+        this.map.addInteraction(this.draw);
+        this.map.addInteraction(this.modify);
       }
-      this.modify = new Modify({
-        source: this.drawLayer.getSource(),
-        style: this.drawLayer.getStyle()
-      });
+      else {
+        const layerOfPoint = this.map.getAllLayers().filter(el => el.get('type') === 'Point');
+        for (let i in layerOfPoint) {
+          this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfPoint[i].getSource().getFeatures()];
+        }
 
-      this.modify.on('modifyend', this.changeCoordinates);
+        const source = new VectorSource({ features: this.arrFeatureForDraw });
+        this.drawLayer = new VectorLayer({
+          source: source
+        });
 
-      this.draw = new Draw({
-        source: this.drawLayer.getSource(),
-        type: this.drawType,
-        style: this.drawLayer.getStyle(),
-      });
+        this.draw = new Draw({
+          source: source,
+          type: this.drawType,
+        });
 
-      this.map.addLayer(this.drawLayer);
-      this.map.addInteraction(this.draw);
-      this.map.addInteraction(this.modify);
+        const snap = new Snap({ source: source });
+        this.map.addLayer(this.drawLayer);
+        this.map.addInteraction(this.draw);
+        this.map.addInteraction(snap);
+      }
       this.interactionId = this.map.getInteractions().getArray().length - 1;
     },
 
@@ -405,7 +457,6 @@ export default {
         };
 
         let layer = new VectorLayer({
-          renderBuffer: 500,
           source: new VectorSource({
             features: new GeoJSON().readFeatures(features,
               {
@@ -542,6 +593,20 @@ export default {
       this.addInteraction();
     }
     this.resizeMap();
+
+    // this.map.on("click", (e) => {
+
+    //   // console.log(toLonLat(this.map.getCoordinateFromPixel(e.pixel)))
+
+    //   let coord = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(this.map.getCoordinateFromPixel(e.pixel)))[0];
+    //   console.log(coord)
+    //   // this.map.getAllLayers().forEach(element => {
+    //   //   if (element.get('typeId')){
+    //   //     console.log(element.getFeature())
+    //   //   }
+    //   // });
+
+    // })
 
   }
 }

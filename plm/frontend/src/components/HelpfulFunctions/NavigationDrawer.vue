@@ -31,10 +31,23 @@
                     <v-list-item class="pa-3" v-for="key in fiteredAllTypes" :key="key.id" link
                         style="border-radius: 8px !important;">
                         <v-list-item-title class="pa-1" v-if="typeof key === 'object'">
-                            {{ key.name }}
+                            <div class="name">
+                                <div>{{ key.name }}</div>
+                                <template v-if="'all_obj' in key">
+                                <div v-if="key.group in arrayEditMode" style="font-size: 16px; color: #A5A5A6; margin-left: auto;">
+                                    {{key.all_obj + arrayEditMode[key.group].post.filter(el => el.name === key.id).length}}
+                                </div>
+                                <div v-else style="font-size: 16px; color: #A5A5A6; margin-left: auto;">
+                                    {{key.all_obj}}
+                                </div>
+                            </template>
+                            <template v-else-if="'all_user' in key">
+                                <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{key.all_user}}</div>
+                            </template>
+                            </div>
                         </v-list-item-title>
                         <v-list-item-title class="pa-1" v-else>
-                            {{ key }}
+                            <div>{{ key }}</div>
                         </v-list-item-title>
                     </v-list-item>
                 </v-list-item-group>
@@ -150,7 +163,7 @@ export default {
             }
         }
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType']) },
+    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode']) },
     methods: {
         ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAllTypeInGroup', 'getFilteredVersions']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
@@ -182,7 +195,7 @@ export default {
             else if (domItem === "Типы объектов") {
                 this.getAllTypeInGroup(objectType);
             }
-            else if (domItem === "Версии системы"){
+            else if (domItem === "Версии системы") {
                 this.getFilteredVersions(objectType);
             }
             else {
@@ -225,5 +238,10 @@ export default {
 
 .text_in_span {
     margin-left: 35px;
+}
+
+
+.name {
+    display: flex;
 }
 </style>

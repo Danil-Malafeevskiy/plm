@@ -36,7 +36,8 @@
               mdi-plus
             </v-icon>
           </v-btn>
-          <v-file-input hide-input :key="componentKey" prepend-icon="mdi-file-upload" @change="uploadFile"></v-file-input>
+          <v-file-input hide-input :key="componentKey" prepend-icon="mdi-file-upload" @change="uploadFile">
+          </v-file-input>
         </template>
       </v-toolbar>
 
@@ -59,10 +60,9 @@
                   <span style="color: #454545;">Редактирование</span>
                 </div>
                 <div>
-                  <span style="color: #454545; margin-right: 20px">{{ arrayEditMode.put.length +
-                  arrayEditMode.post.length
+                  <span style="color: #454545; margin-right: 20px">{{arrayEdit.put.length + arrayEdit.post.length
                   +
-                  arrayEditMode.delete.length
+                  arrayEdit.delete.length
                   }} объектов</span>
                   <v-btn @click="editObjects" text class="pa-0" style="margin: 0 10px 0 0">
                     <span style="color: #454545;">применить</span>
@@ -70,7 +70,8 @@
                 </div>
               </div>
               <v-text-field v-model="arrayEditMode.messege" class="pa-2" background-color="#F1F1F1" hide-details
-                label="Сообщение" placeholder="Сообщение" filled></v-text-field>
+                label="Сообщение" placeholder="Сообщение" filled>
+              </v-text-field>
             </div>
           </v-slide-y-transition>
           <div flat>
@@ -180,15 +181,18 @@ export default {
     isGetAllChange: {
       handler() {
         this.getFeatures();
-        this.filterForFeature(this.oneType.id);
+        if (this.actions === 'getFeatures') {
+          this.getTypeObject();
+          this.filterForFeature(this.oneType.id);
+        }
       }
     },
   },
   computed: mapGetters(['allFeatures', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
-    'newData', 'actions', 'typeForLayer', 'isGetAllChange']),
+    'newData', 'actions', 'typeForLayer', 'isGetAllChange', 'arrayEdit']),
   methods: {
 
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'uploadFileWithFeature']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'uploadFileWithFeature', 'getTypeObject']),
     ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData']),
 
     visableVersions() {
@@ -212,7 +216,7 @@ export default {
       switch (data.action) {
         case "update": {
           if (this.editMode) {
-            let editObject = this.arrayEditMode.put.filter(el => el.id === data.data.id);
+            let editObject = this.arrayEditMode[this.oneType.group].put.filter(el => el.id === data.data.id);
 
             if (editObject.length && this.searchConflict(editObject[0], data.data)) {
               await this.updateNewData(data.data);
@@ -227,7 +231,7 @@ export default {
         case "create":
           break;
         case 'delete':
-          this.arrayEditMode.put = this.arrayEditMode.put.filter(el => el.id != data.data.id)
+          this.arrayEditMode[this.oneType.group].put = this.arrayEditMode[this.oneType.group].put.filter(el => el.id != data.data.id)
           if (this.getObjectForCard && this.getObjectForCard.id === data.data.id) {
             this.infoCardOn.data = false;
             this.editCardOn.data = false;
@@ -243,8 +247,11 @@ export default {
         this.isConflict = true;
         return;
       }
-
-      this.putFeature(this.arrayEditMode);
+      for (let key in this.arrayEditMode) {
+        if (key != 'messege') {
+          this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})` });
+        }
+      }
       this.resetArrayEditMode();
       this.editMode = !this.editMode;
     },
@@ -265,7 +272,10 @@ export default {
     },
     closeEditMode() {
       this.editMode = !this.editMode;
-      this.changeElements = [...this.arrayEditMode.put, ...this.arrayEditMode.delete];
+      this.changeElements = [];
+      for (let key in this.arrayEditMode) {
+        this.changeElements = [...this.changeElements, ...this.arrayEditMode[key].put, ...this.arrayEditMode[key].delete]
+      }
       this.resetNewData();
       this.resetArrayEditMode();
       this.getFeatures();
@@ -287,9 +297,6 @@ export default {
       this.uploadFileWithFeature(formData);
       this.componentKey++;
     },
-    // testt(e){
-    //   console.log(e);
-    // }
   },
   mounted() {
     const chatSocket = new WebSocket("ws://localhost:8000/test");
