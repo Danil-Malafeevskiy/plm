@@ -35,7 +35,6 @@ export default {
             }).catch(error => console.log(error));
         },
         async putFeature({ commit }, features) {
-            console.log(features);
             let data;
             if ('put' in features) {
                 data = [...features.put, ...features.post, getStrId(features.delete), features.messege];

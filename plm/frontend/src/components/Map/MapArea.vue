@@ -153,13 +153,6 @@ export default {
         }
       }
     },
-    // oneType: {
-    //   handler() {
-    //     if (this.map) {
-    //       this.resetInteractions();
-    //     }
-    //   }
-    // },
     addCardOn: {
       handler() {
         this.addCardOn_ = this.addCardOn;
@@ -181,6 +174,7 @@ export default {
           }
         });
         if (!this.editCardOn.data && !this.infoCardOn.data) {
+          console.log(1);
           await this.returnCoordinates();
         }
       },
@@ -191,8 +185,9 @@ export default {
   },
   computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap']),
   methods: {
-    ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updatefilterForFeature']),
-    ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap', 'filterForFeature']),
+    ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode']),
+    ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
+
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
       this.feature.properties['Широта'] = cord[0];
@@ -200,9 +195,9 @@ export default {
     async returnCoordinates() {
       this.editedPointCoordinates = fromLonLat(this.oldFeature.geometry.coordinates);
       let object;
-      
+
       if ('id_' in this.oldFeature) {
-        object = this.arrayEdit.post.find(el => el.id === this.oldFeature.id);
+        object = JSON.parse(JSON.stringify(this.arrayEdit.post.find(el => el.id_ === this.oldFeature.id_)));
         object.id = object.id_;
       }
       else {
@@ -214,6 +209,7 @@ export default {
         await this.getFeatureForMap(this.oldFeature.id)
         object = this.featureInMap;
       }
+
       const layer = this.map.getAllLayers().find(el => el.get('typeId') === object.name);
       let features = layer.getSource().getFeatures();
       features = features.filter(el => el.id_ != object.id && el.id_ != object.id_);
@@ -232,9 +228,13 @@ export default {
       let geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(this.editedPointCoordinates), {
         filterLayer: el => el.get('type') === 'LineString',
       });
+
       if (geom.length) {
-        this.editedLineStringCoordinates[this.editedLineStringIndex] = fromLonLat(object.geometry.coordinates);
+        this.editedLineStringCoordinates[this.editedLineStringIndex] = fromLonLat(object.geometry.coordinates)
         geom[0].getGeometry().setCoordinates(this.editedLineStringCoordinates);
+        if (typeof geom[0].getId() === 'string') {
+          this.changeNewLineString(geom[0].getId(), geom[0].getGeometry().getCoordinates());
+        }
       }
     },
     clearFeaturesInInteractionAndFindInteraction(el) {
@@ -259,6 +259,14 @@ export default {
       else {
         this.map.removeInteraction(this.modify);
       }
+    },
+    changeNewLineString(id, coordinates) {
+      let lineSting = this.arrayEdit.post.find(el => id === el.id_);
+      for (let i in coordinates) {
+        coordinates[i] = toLonLat(coordinates[i]);
+      }
+      lineSting.geometry.coordinates = coordinates;
+      this.updateArrayEditMode({ item: lineSting, type: 'put' });
     },
     updateCoordinates() {
       if (this.drawLayer.getSource().getFeatures().length === 1 || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
@@ -294,7 +302,9 @@ export default {
         this.feature.geometry.type = this.drawType;
       }
     },
-
+    test(object) {
+      this.editedLineStringCoordinates[this.editedLineStringIndex] = fromLonLat(object.geometry.coordinates);
+    },
     findItem(id) {
       let item = this.arrayEdit.put.find(el => el.id === id);
 
@@ -349,10 +359,14 @@ export default {
           geom.getGeometry().getCoordinates().forEach((coord, index) => {
             if (JSON.stringify(coord) === JSON.stringify(this.editedPointCoordinates)) {
               this.editedLineStringCoordinates = geom.getGeometry().getCoordinates();
-              this.editedLineStringIndex = index
-              this.editedLineStringCoordinates[index] = event.features.getArray()[0].getGeometry().getCoordinates()
-              geom.getGeometry().setCoordinates(this.editedLineStringCoordinates)
 
+              this.editedLineStringIndex = index;
+              this.editedLineStringCoordinates[index] = event.features.getArray()[0].getGeometry().getCoordinates()
+
+              geom.getGeometry().setCoordinates(this.editedLineStringCoordinates);
+              if (typeof geom.getId() === 'string') {
+                this.changeNewLineString(geom.getId(), geom.getGeometry().getCoordinates());
+              }
             }
           });
         }
@@ -406,8 +420,9 @@ export default {
         this.map.addInteraction(this.draw);
         this.map.addInteraction(this.modify);
       }
-      else {
-        const layerOfPoint = this.map.getAllLayers().filter(el => el.get('type') === 'Point');
+      else if (this.drawType === 'LineString') {
+        this.arrFeatureForDraw = [];
+        const layerOfPoint = this.map.getAllLayers().filter(el => el.get('type') === 'Point' && el.get('group') === this.oneType.group);
         for (let i in layerOfPoint) {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfPoint[i].getSource().getFeatures()];
         }
@@ -426,6 +441,29 @@ export default {
         this.map.addLayer(this.drawLayer);
         this.map.addInteraction(this.draw);
         this.map.addInteraction(snap);
+      }
+      else {
+        this.drawLayer = new VectorLayer({
+          source: new VectorSource({
+            features: []
+          }),
+        });
+
+        this.modify = new Modify({
+          source: this.drawLayer.getSource(),
+          style: this.drawLayer.getStyle()
+        });
+
+        this.modify.on('modifyend', this.changeCoordinates);
+
+        this.draw = new Draw({
+          source: this.drawLayer.getSource(),
+          type: this.drawType,
+          style: this.drawLayer.getStyle(),
+        });
+        this.map.addLayer(this.drawLayer);
+        this.map.addInteraction(this.draw);
+        this.map.addInteraction(this.modify);
       }
       this.interactionId = this.map.getInteractions().getArray().length - 1;
     },
@@ -468,6 +506,7 @@ export default {
         await this.getOneTypeObject({ id: element.id, forFeature: true });
         layer.set('typeId', element.id);
         layer.set('type', this.typeForLayer.type);
+        layer.set('group', this.typeForLayer.group);
 
         this.map.addLayer(layer);
         this.canvas.height = 25;
