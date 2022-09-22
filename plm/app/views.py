@@ -182,7 +182,11 @@ class GroupView(APIView):
 
     def get(self, request, id=0):
         if id==0:
-            groups = Group.objects.all()
+            if request.user.is_superuser:
+                groups = Group.objects.all()
+            else:
+                groups_list = request.user.groups.values_list('name', flat=True).remove("Admin")
+                groups = Group.objects.filter(name__in=groups_list)
             group = GroupSerializer(groups, many=True)
             return Response(group.data)
 
@@ -193,7 +197,12 @@ class GroupView(APIView):
     def post(self, request):
         group_serializer = GroupSerializer(data=request.data)
         if group_serializer.is_valid():
-            group_serializer.save()
+            group = group_serializer.save()
+
+            if not request.user.is_superuser:
+                user = get_user_model().objects.get(id=request.user.id)
+                user.groups.add(Group.objects.get(name=group['name']))
+                user.save()
             return Response("Success new group!")
 
         return Response(group_serializer.errors)
@@ -216,7 +225,12 @@ class UserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response(UserSerializer(request.user, remove_fields=['password']).data)
+        if request.user.is_superuser:
+            return Response(UserSerializer(request.user, remove_fields=['password', 'permissions', 'avaible_permission']).data)
+        if request.user.is_staff:
+            return Response(UserSerializer(request.user, remove_fields=['password', 'permissions', 'avaible_permission', 'admin_permissions']).data)
+        return Response(UserSerializer(request.user, remove_fields=['password', 'permissions', 'avaible_permission',
+                                                                    'admin_permissions', 'user_permissions', 'group']).data)
 
 class UserAdminView(APIView):
     authentication_classes = [SessionAuthentication]
@@ -226,21 +240,26 @@ class UserAdminView(APIView):
     def get(self, request, id=0):
         if id == 0:
             ff = DjangoFilterBackend()
-            filtered_queryset = ff.filter_queryset(request, get_user_model().objects.all(), self)
+            users = get_user_model().objects.filter(groups__name__in=request.user.groups.values_list('name', flat=True).remove("Admin"))
+            if request.user.is_superuser:
+                users = get_user_model().objects.all()
+
+            filtered_queryset = ff.filter_queryset(request, users, self)
 
 
             user_serializer = UserSerializer(filtered_queryset, many=True, remove_fields=['password', 'first_name', 'last_name', 'email',
-                                                                                          'is_superuser', 'is_staff', 'is_active',
-                                                                                          'groups', 'avaible_group',
+                                                                                          'is_superuser', 'is_staff',
+                                                                                          'groups',
                                                                                           'permissions',
                                                                                           'avaible_permission',
-                                                                                          'last_login', 'date_joined', 'image'])
+                                                                                          'image', 'admin_permissions', 'user_permissions'])
             return Response(user_serializer.data)
 
-        user_serializer = UserSerializer(get_user_model().objects.get(id=id), remove_fields=['password', 'is_superuser', 'is_staff', 'is_active', 'last_login', 'date_joined'])
-        return Response(user_serializer.data)
+        return Response(UserSerializer(get_user_model().objects.get(id=id), remove_fields=['password', 'is_superuser', 'is_staff', 'admin_permissions', 'user_permissions']).data)
 
     def post(self, request):
+        if "Admin" in request.data['groups']:
+            request.data['is_staff'] = True
         reg = UserSerializer(data=request.data, context={'permissions': request.data['permissions'], 'groups': request.data['groups']})
         if reg.is_valid():
             reg.save()
@@ -279,10 +298,10 @@ class TypeView(APIView):
                 datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
             dataset = ff.filter_queryset(request, datasets, self)
             return Response(TypeSerializer(dataset, many=True, remove_fields=['type', 'headers',
-                                                                                 'properties', 'image', 'group', 'avaible_group']).data)
+                                                                                 'properties', 'image', 'group']).data)
 
         dataset = Type.objects.get(id=id)
-        return Response(TypeSerializer(dataset, remove_fields=['group', 'avaible_group']).data)
+        return Response(TypeSerializer(dataset).data)
 
 class TypeAdminView(APIView):
     authentication_classes = [SessionAuthentication]
@@ -292,9 +311,13 @@ class TypeAdminView(APIView):
     def get(self, request, id=0):
         if id==0:
             ff = DjangoFilterBackend()
-            dataset = ff.filter_queryset(request, Type.objects.all(), self)
-            return Response(TypeSerializer(dataset, many=True, remove_fields=['type', 'headers',
-                                                                                 'properties', 'image', 'avaible_group']).data)
+            datasets = ff.filter_queryset(request, Type.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True))), self)
+            if request.user.is_superuser:
+                datasets = ff.filter_queryset(request, Type.objects.all(), self)
+            if 'group' in request.query_params:
+                datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
+            return Response(TypeSerializer(datasets, many=True, remove_fields=['type', 'headers',
+                                                                                 'properties', 'image']).data)
 
         dataset = Type.objects.get(id=id)
         return Response(TypeSerializer(dataset).data)

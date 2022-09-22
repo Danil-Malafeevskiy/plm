@@ -4,6 +4,8 @@ class TowerPerm(permissions.BasePermission):
     message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
+        if request.user.is_superuser:
+            return True
         if request.method in permissions.SAFE_METHODS:
             return "Can view feature" in request.user.user_permissions.values_list('name', flat=True)
         if request.method == 'PUT':
@@ -13,12 +15,16 @@ class FileUploadPerm(permissions.BasePermission):
     message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
+        if request.user.is_superuser:
+            return True
         return "Can add feature" in request.user.user_permissions.values_list('name', flat=True)
 
 class GroupPerm(permissions.BasePermission):
     message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
+        if request.user.is_superuser:
+            return True
         if request.method in permissions.SAFE_METHODS:
             return "Can view group" in request.user.user_permissions.values_list('name', flat=True)
         if request.method == 'PUT' or request.method == 'POST' or request.method == 'DELETE':
@@ -28,6 +34,8 @@ class UserPerm(permissions.BasePermission):
     message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
+        if request.user.is_superuser:
+            return True
         if request.method in permissions.SAFE_METHODS:
             return "Can view user" in request.user.user_permissions.values_list('name', flat=True)
         if request.method == 'PUT' or request.method == 'POST' or request.method == 'DELETE':
@@ -37,6 +45,8 @@ class TypePerm(permissions.BasePermission):
     message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
+        if request.user.is_superuser:
+            return True
         if request.method in permissions.SAFE_METHODS:
             return "Can view type" in request.user.user_permissions.values_list('name', flat=True)
         if request.method == 'PUT' or request.method == 'POST' or request.method == 'DELETE':
@@ -46,6 +56,8 @@ class VersionPerm(permissions.BasePermission):
     message = "У вас нет прав для данного действия!"
 
     def has_permission(self, request, view):
+        if request.user.is_superuser:
+            return True
         if request.method in permissions.SAFE_METHODS:
             return "Can view version control" in request.user.user_permissions.values_list('name', flat=True)
         if request.method == 'PUT' or request.method == 'POST' or request.method == 'DELETE':

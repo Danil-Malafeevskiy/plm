@@ -179,15 +179,16 @@ class GroupSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     groups = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
-    avaible_group = serializers.SerializerMethodField()
     avaible_permission = serializers.SerializerMethodField()
     image = BinaryField(required=False)
+    admin_permissions = serializers.SerializerMethodField()
+    user_permissions = serializers.SerializerMethodField()
 
     class Meta:
         ordering = ['id']
         model = get_user_model()
-        fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff', 'is_active', 'groups', 'avaible_group',
-                  'permissions', 'avaible_permission', 'last_login', 'date_joined', 'image')
+        fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff', 'groups',
+                  'permissions', 'avaible_permission', 'image', 'admin_permissions', 'user_permissions')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -198,30 +199,37 @@ class UserSerializer(serializers.ModelSerializer):
                 self.fields.pop(field_name)
 
     def get_groups(self, obj):
-        return list(obj.groups.values_list('name', flat=True))
+        if obj.is_superuser:
+            return list(Group.objects.values_list('name', flat=True))
+
+        return [group for group in list(obj.groups.values_list('name', flat=True))
+                if group != "Admin"]
 
     def get_permissions(self, obj):
-        if obj.is_superuser == True:
+        if obj.is_staff:
             return [per for per in obj.user_permissions.values_list('name', flat=True)
-                if ("change" in per or "view" in per) and ("content type" not in per and "session" not in per and "log" not in per )]
-        else:
-            return [per for per in obj.user_permissions.values_list('name', flat=True)
-                    if ("change" in per or "view" in per) and ("feature" in per or "version control" in per)]
-
-    def get_avaible_group(self, obj):
-        perm = list(obj.groups.values_list('name', flat=True))
-        return [per for per in Group.objects.all().values_list('name', flat=True)
-                if per not in perm]
+                    if ("change" in per or "view" in per) and ("content type" not in per and "session" not in per and "log" not in per and "permission" not in per)]
+        return [per for per in obj.user_permissions.values_list('name', flat=True)
+                if ("change" in per or "view" in per) and ("feature" in per or "version control" in per)]
 
     def get_avaible_permission(self, obj):
         perm = list(obj.user_permissions.values_list('name', flat=True))
-        if obj.is_superuser == True:
+        if obj.is_staff:
             return [per for per in Permission.objects.all().values_list('name', flat=True)
-                    if per not in perm and ("change" in per or "view" in per) and ("content type" not in per and "session" not in per and "log" not in per )]
-        else:
-            return [per for per in Permission.objects.all().values_list('name', flat=True)
+                    if per not in perm and ("change" in per or "view" in per) and
+                    ("content type" not in per and "session" not in per and "log" not in per and "permission" not in per)]
+        return [per for per in Permission.objects.all().values_list('name', flat=True)
                     if per not in perm and ("change" in per or "view" in per) and ("feature" in per or "version control" in per)]
 
+    def get_admin_permissions(self, obj):
+        return [per for per in Permission.objects.values_list('name', flat=True)
+                if ("change" in per or "view" in per) and (
+                            "content type" not in per and "session" not in per and "log" not in per and "permission" not in per)]
+
+    def get_user_permissions(self, obj):
+        return [per for per in Permission.objects.values_list('name', flat=True)
+                if ("change" in per or "view" in per) and (
+                            "feature" in per or "version control" in per)]
 
     def validate(self, data):
         if 'password' in data.keys():
@@ -267,14 +275,13 @@ class UserSerializer(serializers.ModelSerializer):
 class TypeSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     group = serializers.SerializerMethodField()
-    avaible_group = serializers.SerializerMethodField()
     properties = serializers.JSONField(required=False, default=[""])
     image = BinaryField(required=False)
     all_obj = serializers.SerializerMethodField()
     class Meta:
         ordering = ['id']
         model = Type
-        fields = ('id', 'name', 'type', 'headers', 'properties', 'image', 'group', 'avaible_group', 'all_obj')
+        fields = ('id', 'name', 'type', 'headers', 'properties', 'image', 'group', 'all_obj')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -301,10 +308,6 @@ class TypeSerializer(serializers.ModelSerializer):
 
     def get_group(self, obj):
         return Group.objects.get(id=obj.group_id).name
-
-    def get_avaible_group(self, obj):
-        return [per for per in Group.objects.all().values_list('name', flat=True)
-                if (per != Group.objects.get(id=obj.group_id).name)]
 
     def create(self, validated_data):
         validated_data['group'] = Group.objects.get(name=self.context['group'])
