@@ -222,7 +222,7 @@ class GroupView(APIView):
 
             if not request.user.is_superuser:
                 user = get_user_model().objects.get(id=request.user.id)
-                user.groups.add(Group.objects.get(name=group['name']))
+                user.groups.add(Group.objects.get(name=group.name))
                 user.save()
             return Response("Success new group!")
 
@@ -262,7 +262,8 @@ class UserAdminView(APIView):
         if id == 0:
             ff = DjangoFilterBackend()
             users = get_user_model().objects.filter(groups__name__in=[group for group in list(request.user.groups.values_list('name', flat=True))
-                                                                    if group != "Admin"])
+                                                                    if group != "Admin"]).distinct().exclude(id=request.user.id)
+
             if request.user.is_superuser:
                 users = get_user_model().objects.all()
 
