@@ -9,7 +9,6 @@ from app.serializers import FeatureSerializer, TypeSerializer
 
 
 class FeatureConsumer(AsyncAPIConsumer):
-    groups = list(Group.objects.values_list("name", flat=True))
 
     @action()
     async def connect(self):
@@ -18,6 +17,7 @@ class FeatureConsumer(AsyncAPIConsumer):
             for group in list(self.scope["user"].groups.values_list("name", flat=True)):
                 await self.feature_change.subscribe(group=group)
                 await self.dataset_change.subscribe(group=group)
+                await self.channel_layer.group_add(group, self.channel_name)
             await self.accept()
 
     @model_observer(Feature)
@@ -53,3 +53,6 @@ class FeatureConsumer(AsyncAPIConsumer):
     @dataset_change.groups_for_consumer
     def dataset_change(self, group=None, **kwargs):
         yield f'-group__{group}'
+
+    async def update_feature(self, event):
+        await self.send_json({'content': event['content']})

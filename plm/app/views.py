@@ -2,6 +2,8 @@ import json
 import os
 import sqlite3
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.shortcuts import render
@@ -61,12 +63,22 @@ class TowerAPI(APIView):
 
         if len(ids)==0:
             dataset = Type.objects.get(id=request.data[0]['name']).group.id
+            group_name = Type.objects.get(id=request.data[0]['name']).group.name
         else:
             dataset = feature[0].name.group.id
+            group_name = feature[0].name.group.name
 
         feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=FeatureSerializer(queryset, many=True).data)
         if feature_serializer.is_valid():
             version, new_version = feature_serializer.save()
+            layer = get_channel_layer()
+            async_to_sync(layer.group_send)(
+                group_name,
+                {
+                    'type': 'update.feature',
+                    'content': 'Все объекты добавлены и обновлены!'
+                }
+            )
             try:
                 VersionControl.objects.filter(date_update__gte=VersionControl.objects.get(flag=True, dataset=dataset).date_update, dataset=dataset).delete()
             except Exception as e:
@@ -143,9 +155,17 @@ class FileUploadView(APIView):
         for i in range(len(lis)):
             lis[i] = json.loads(lis[i])
 
-        feature_serializer = FeatureSerializer(data=lis, many=True)
+        feature_serializer = FeatureSerializer(data=lis, many=True, context=False)
         if feature_serializer.is_valid():
             feature_serializer.save()
+            layer = get_channel_layer()
+            async_to_sync(layer.group_send)(
+                request.data['group'],
+                {
+                    'type': 'update.feature',
+                    'content': 'Все объекты добавлены!'
+                }
+            )
             return Response("Success new")
         return Response(feature_serializer.errors)
 
@@ -345,7 +365,7 @@ class TypeAdminView(APIView):
         return Response("SUCCESS DEL")
 
 def room(request):
-    return render(request, 'E:/KT/plm/plm/templates/test.html')
+    return render(request, 'D:/plm/plm/templates/test.html')
 
 class VersionControlView(APIView):
     authentication_classes = [SessionAuthentication]
