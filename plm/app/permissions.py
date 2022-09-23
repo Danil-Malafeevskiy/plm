@@ -17,7 +17,7 @@ class FileUploadPerm(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user.is_superuser:
             return True
-        return "Can add feature" in request.user.user_permissions.values_list('name', flat=True)
+        return "Can change feature" in request.user.user_permissions.values_list('name', flat=True)
 
 class GroupPerm(permissions.BasePermission):
     message = "У вас нет прав для данного действия!"
