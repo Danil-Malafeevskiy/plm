@@ -251,7 +251,7 @@ class UserView(APIView):
         if request.user.is_staff:
             return Response(UserSerializer(request.user, remove_fields=['password', 'permissions', 'avaible_permission', 'admin_permissions']).data)
         return Response(UserSerializer(request.user, remove_fields=['password', 'permissions', 'avaible_permission',
-                                                                    'admin_permissions', 'user_permissions', 'group']).data)
+                                                                    'admin_permissions', 'user_permissions', 'groups']).data)
 
 class UserAdminView(APIView):
     authentication_classes = [SessionAuthentication]

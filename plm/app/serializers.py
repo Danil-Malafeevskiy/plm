@@ -61,6 +61,9 @@ class FeatureListSerializer(serializers.ListSerializer):
 
                 new_version['update'].append(FeatureSerializer(obj_feature).data)
                 version['update'].append(type)
+                if obj_feature['geometry'].geom_type == 'LineString':
+                    if obj_feature['id'] not in up_dict.keys():
+                        up_dict[obj_feature['id']] = type
                 if obj_feature['id'] in new_line_dict.keys():
                     obj_feature['geometry'] = GEOSGeometry(f'{new_line_dict[obj_feature["id"]]}')
                 self.child.update(feature, obj_feature)
@@ -74,7 +77,10 @@ class FeatureListSerializer(serializers.ListSerializer):
                     for line in self.context:
                         lineCoord = []
                         del_flag = False
-                        copy_line = FeatureSerializer(Feature.objects.get(id=line['id'])).data
+                        try:
+                            copy_line = FeatureSerializer(Feature.objects.get(id=line['id'])).data
+                        except Exception:
+                            continue
                         for lineIndex in range(len(line['geometry']['coordinates'])):
                             if type['geometry']['coordinates'] != line['geometry']['coordinates'][lineIndex]:
                                 lineCoord.append(line['geometry']['coordinates'][lineIndex])
@@ -101,16 +107,18 @@ class FeatureListSerializer(serializers.ListSerializer):
                     new_version['delete'].append(feature_id)
                     feature.delete()
 
-        if len(up_dict)!=0 or len(del_line)!=0 and self.context!=False:
+        if (len(up_dict)!=0 or len(del_line)!=0) and self.context!=False:
             for line in self.context:
                 if line['id'] in del_line:
                     version['create'].append(up_dict[line['id']])
                 elif line['id'] in up_dict.keys() and line['id'] not in new_version['delete']:
+                    flag_find = False
                     for obj in new_version['update']:
                         if obj['id'] == line['id']:
                             obj['geometry']['coordinates'] = line['geometry']['coordinates']
+                            flag_find = True
                             break
-                    else:
+                    if not flag_find:
                         version['update'].append(up_dict[line['id']])
                         new_version['update'].append(line)
 
