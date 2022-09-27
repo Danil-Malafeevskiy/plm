@@ -18,7 +18,7 @@
                             <v-col cols="2" sm="6" md="5" lg="6">
                                 <v-text-field background-color="#F1F1F1"
                                     :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" v-model="userData.password"
-                                    :rules="[rules.min]" hint="Минимум 8 символов" placeholder="Пароль"
+                                    placeholder="Пароль"
                                     :type="showPassword ? 'text' : 'password'" filled
                                     @click:append="showPassword = !showPassword">
                                 </v-text-field>
@@ -49,10 +49,7 @@ export default {
                 username: null,
                 password: null
             },
-            rules: {
-                required: value => !!value || 'Обязательное поле',
-                min: v => v.length >= 8 || 'Минимум 8 символов',
-            },
+
         }
     },
     watch: {

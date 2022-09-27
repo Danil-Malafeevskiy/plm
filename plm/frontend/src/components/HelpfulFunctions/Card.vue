@@ -142,7 +142,7 @@
                                 :checkEqualityOfFieads="checkEqualityOfFieads"
                                 :changeConflictField="changeConflictField" />
 
-                            <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="infoCardOn" />
+                            <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="infoCardOn" :addCardOn="addCardOn"/>
                             <v-snackbar v-model="snackbar" timeout="2000" color="red accent-2">
                                 {{ errorMessege }}
                             </v-snackbar>
