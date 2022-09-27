@@ -8,6 +8,7 @@
                         Группы
                     </v-expansion-panel-header>
 
+
                     <v-expansion-panel-content class="ma-0 pa-0">
                         <v-row class="pa-2 ma-0">
                             <template v-if="'groups' in objectForCard">
@@ -140,42 +141,67 @@ export default {
         objectForCard: {
             handler() {
                 this.objectForCard_ = this.objectForCard;
-
                 this.userPermissions = [...this.user.user_permissions]
-                if (this.currentGroup.name === 'Admin' || this.usersAdmin.includes(this.objectForCard_.id)) {
+
+                if ((this.currentGroup.name === 'Admin' || this.usersAdmin.includes(this.objectForCard_.id) || this.objectForCard_.groups.includes('Admin')) && this.user.is_superuser) {
                     this.adminPermissions = [...this.user.admin_permissions]
-                    this.permissionList = [...this.user.admin_permissions, ...this.user.user_permissions];
+                    this.permissionList = [...this.user.admin_permissions];
                     this.objectForCard_.groups.push('Admin')
                 } else {
-                    let index = this.objectForCard_.groups.indexOf('Admin');
-                    if (index !== -1) {
-                        this.objectForCard_.groups.splice(index, 1);
-                    }
                     this.permissionList = [...this.user.user_permissions];
+                }
+                this.permissionList = [...new Set(this.permissionList)]
+                this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)]
+                this.groupsPermissions();
+            }
+        },
+
+        'objectForCard.groups': {
+            handler(){
+                this.objectForCard_ = this.objectForCard;
+                this.userPermissions = [...this.user.user_permissions]
+
+                if(this.objectForCard_.groups.includes('Admin') && this.user.is_superuser){
+                    this.adminPermissions = [...this.user.admin_permissions]
+                    this.permissionList = [...this.user.admin_permissions];
+                    
+                } else {
+                    this.permissionList = [...this.user.user_permissions];
+                }
+
+                if (this.addCardOn.data && this.objectForCard_.groups.includes('Admin') && this.user.is_superuser) {
+                    this.objectForCard_.permissions = this.adminPermissions
+                } else if (this.addCardOn.data && !this.objectForCard_.groups.includes('Admin')) {
+                    this.objectForCard_.permissions = this.userPermissions
                 }
                 this.permissionList = [...new Set(this.permissionList)]
                 
                 this.groupsPermissions();
+            }
+        },
 
-            }
-        },
+
         allGroups: {
-            handler(){
-                this.allGroups_ = this.allGroups
-                this.allGroups_.forEach(element => {
-                    if(element.name === 'Admin'){
-                        this.groupAdminId = element.id
-                    }
-                });
-                this.getAllUsersForAdmin(this.groupAdminId)
+            handler() {
+                if (this.user.is_superuser) {
+                    this.allGroups_ = this.allGroups
+                    this.allGroups_.forEach(element => {
+                        if (element.name === 'Admin') {
+                            this.groupAdminId = element.id
+                        }
+                    });
+                    this.getAllUsersForAdmin(this.groupAdminId)
+                }
             }
         },
-        allUsersForAdmin:{
-            handler(){
-                this.allUsersForAdmin_ = this.allUsersForAdmin
-                this.allUsersForAdmin_.forEach(element => {
-                    this.usersAdmin.push(element.id)
-                });
+        allUsersForAdmin: {
+            handler() {
+                if (this.user.is_superuser) {
+                    this.allUsersForAdmin_ = this.allUsersForAdmin
+                    this.allUsersForAdmin_.forEach(element => {
+                        this.usersAdmin.push(element.id)
+                    });
+                }
             }
         },
 
@@ -184,18 +210,16 @@ export default {
                 this.userPermissions = [...this.user.user_permissions]
                 if (this.user.is_superuser) {
                     if (this.addCardOn.data && this.currentGroup.name === 'Admin' || this.usersAdmin.includes(this.objectForCard_.id)) {
+                        
                         this.adminPermissions = [...this.user.admin_permissions]
-                        this.permissionList = [...this.user.admin_permissions, ...this.user.user_permissions];
+                        this.permissionList = [...this.user.admin_permissions];
                         this.objectForCard_.groups.push('Admin')
                     } else {
-                        let index = this.objectForCard_.groups.indexOf('Admin');
-                        if (index !== -1) {
-                            this.objectForCard_.groups.splice(index, 1);
-                        }
                         this.permissionList = [...this.user.user_permissions];
                     }
                 }
                 this.groupsPermissions();
+                this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)]
                 this.permissionList = [...new Set(this.permissionList)]
             },
             deep: true,
@@ -217,16 +241,6 @@ export default {
     },
 
     mounted() {
-        this.userPermissions = [...this.user.user_permissions]
-        if (this.user.is_superuser) {
-            this.adminPermissions = [...this.user.admin_permissions] 
-            this.permissionList = [...this.user.admin_permissions, ...this.user.user_permissions];
-        } else if (this.user.is_staff){
-            this.permissionList = [...this.user.user_permissions];
-        }
-        this.permissionList = [...new Set(this.permissionList)]
-
-
         this.groupsForType = [...this.user.groups];
         this.userGroups = [...this.user.groups];
         
