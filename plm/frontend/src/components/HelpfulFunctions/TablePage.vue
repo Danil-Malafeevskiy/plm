@@ -74,7 +74,7 @@ export default {
     allListItem: {
       handler() {
         this.tableArrayItems = [...this.allListItem];
-        if (this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length) {
+        if (this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length ) {
           for (let i in this.arrayEdit.post) {
             this.tableArrayItems.push({ ...this.arrayEdit.post[i].properties, id_: this.arrayEdit.post[i].id_ });
           }

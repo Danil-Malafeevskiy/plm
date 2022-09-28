@@ -2,6 +2,11 @@ import axios from "axios";
 
 export default {
     actions: {
+        async getAllUsersForAdmin({commit}, id) {
+            await axios.get(`/user/admin?groups=${id}`).then((response) => {
+                commit('updateAllUsersForAdmin', response.data);
+            })
+        },
         async getAllGroups({ commit }) {
             await axios.get('/group').then((response) => {
                 commit('updateAllGroups', response.data);
@@ -59,7 +64,9 @@ export default {
             await axios.get('/group').then((response) => {
                 commit('updateAllGroupsForNav', response.data);
             })
-        }
+        },
+        
+        
     },
     mutations: {
         updateAllGroups(state, groups) {
@@ -78,6 +85,9 @@ export default {
             state.userGroups = groups
             this.commit('updateListItem', { items: groups })
             this.commit('updateListType', groups)
+        },
+        updateAllUsersForAdmin(state, usersAdmin){
+            state.usersAdmin = usersAdmin
         }
     },
     getters: {
@@ -89,6 +99,9 @@ export default {
         }, 
         allUserGroups(state){
             return state.userGroups
+        },
+        allUsersForAdmin(state){
+            return state.usersAdmin
         }
     },
     state: {
@@ -98,6 +111,7 @@ export default {
             name: null
         },
         groupsForNav: [],
-        userGroups: []
+        userGroups: [],
+        usersAdmin: [],
     },
 }
