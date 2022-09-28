@@ -25,7 +25,7 @@ import { toStringXY } from 'ol/coordinate';
 export default {
   components: {
   },
-  props: ['allFeatures', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature', 'changeElements'],
+  props: ['allFeatures', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature', 'changeElements', 'cardVisable'],
   data() {
     return {
       coord: [],
@@ -51,8 +51,6 @@ export default {
       canvas: document.getElementById('png_icon_of_type'),
       svg: document.querySelector('#svg_icon_of_type svg'),
       editedPointCoordinates: null,
-      editedLineStringCoordinates: [],
-      editedLineStringIndex: [],
       counter: 0,
       oldFeature: null,
       arrFeatureForDraw: [],
@@ -107,7 +105,14 @@ export default {
           this.oldFeature = this.getObjectForCard;
         }
         this.objectForCard = this.getObjectForCard;
-        this.editCardOn_.data = false;
+
+        if (this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) {
+          this.editCardOn_.data = false;
+        }
+        else {
+          this.returnCoordinateForPoint('id_' in this.objectForCard ? this.objectForCard.id_ : this.objectForCard.id, 
+          this.objectForCard.name, this.objectForCard.geometry.coordinates);
+        }
 
         if ('name' in this.objectForCard && typeof this.objectForCard.name === 'number') {
           this.map.getAllLayers().filter(el => el.get('typeId') === this.objectForCard.name).forEach(el => {
@@ -163,7 +168,6 @@ export default {
         if (this.map) {
           this.resetInteractions();
         }
-
       },
       deep: true
     },
@@ -183,10 +187,16 @@ export default {
       },
       deep: true
     },
-
-
+    cardVisable: {
+      handler() {
+        if (!this.cardVisable.data) {
+          this.map.getInteractions().getArray().filter(el => el.get('typeId') !== undefined).forEach(element => element.getFeatures().clear())
+        }
+      },
+      deep: true,
+    }
   },
-  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap']),
+  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData']),
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode']),
     ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
@@ -196,16 +206,6 @@ export default {
       this.feature.properties['Широта'] = cord[0];
     },
     async returnCoordinates() {
-      let geoJSON = new GeoJSON().readFeatures(
-        {
-          type: 'FeatureCollection',
-          features: [this.oldFeature]
-        },
-        {
-          featureProjection: 'EPSG:3857'
-        });
-
-      this.editedPointCoordinates = geoJSON[0].getGeometry().getCoordinates();
       let object;
 
       if ('id_' in this.oldFeature) {
@@ -222,42 +222,41 @@ export default {
         object = this.featureInMap;
       }
 
-      const layer = this.map.getAllLayers().find(el => el.get('typeId') === object.name);
-      let features = layer.getSource().getFeatures();
-      features = features.filter(el => el.id_ != object.id && el.id_ != object.id_);
-      const source = new VectorSource({
-        features: [...features, ...new GeoJSON().readFeatures(
-          {
-            type: 'FeatureCollection',
-            features: [object]
-          },
-          {
-            featureProjection: 'EPSG:3857'
-          })],
-      });
-      layer.setSource(source);
-
-      let geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(this.editedPointCoordinates), {
+      this.returnCoordinateForPoint('id_' in object ? object.id_ : object.id, object.name, object.geometry.coordinates)
+      
+      if (this.oldFeature !== this.objectForCard) {
+        this.oldFeature = this.objectForCard;
+      }
+    },
+    async returnCoordinateForPoint(id, typeId, coordinates){
+      const layer = this.map.getAllLayers().find(el => el.get('typeId') === typeId);
+      const features = layer.getSource().getFeatures();
+      let feature = await features.find(el => el.getId() === id);
+      
+      const oldCoordinates = feature.getGeometry().getCoordinates();
+      const newCoordinates = fromLonLat(coordinates);
+      feature.getGeometry().setCoordinates(newCoordinates);
+      
+      this.returnCoordinateForLineString(oldCoordinates, newCoordinates);
+    },
+    returnCoordinateForLineString(oldCoordinates, newCoordinates){
+      const geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(oldCoordinates), {
         filterLayer: el => el.get('type') === 'LineString',
       });
 
-      let editedPointCoordinates = fromLonLat(object.geometry.coordinates);
       geom.forEach((element) => {
         element.getGeometry().getCoordinates().forEach((coord, index) => {
-          if (toStringXY(coord, 7) === toStringXY(this.editedPointCoordinates, 7)) {
-            this.editedLineStringCoordinates = element.getGeometry().getCoordinates();
-            this.editedLineStringCoordinates[index] = editedPointCoordinates;
-
-            element.getGeometry().setCoordinates(this.editedLineStringCoordinates);
+          if (toStringXY(coord, 7) === toStringXY(oldCoordinates, 7)) {
+            let lineStingCooradinates = element.getGeometry().getCoordinates();
+            lineStingCooradinates[index] = newCoordinates;
+            
+            element.getGeometry().setCoordinates(lineStingCooradinates);
             if (typeof element.getId() === 'string') {
               this.changeNewLineString(element.getId(), element.getGeometry().getCoordinates());
             }
           }
         });
       })
-      if (this.oldFeature !== this.objectForCard) {
-        this.oldFeature = this.objectForCard;
-      }
     },
     clearFeaturesInInteractionAndFindInteraction(el) {
       if (el.get('typeId') != undefined && el.getFeatures().getArray().length && el.getFeatures().getArray()[0].getId() != this.objectForCard.id) {
@@ -324,9 +323,6 @@ export default {
         this.feature.geometry.type = this.drawType;
       }
     },
-    test(object) {
-      this.editedLineStringCoordinates[this.editedLineStringIndex] = fromLonLat(object.geometry.coordinates);
-    },
     findItem(id) {
       let item = this.arrayEdit.put.find(el => el.id === id);
 
@@ -385,24 +381,8 @@ export default {
         this.feature.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates());
       }
       else {
-        let geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(this.editedPointCoordinates), {
-          filterLayer: el => el.get('type') === 'LineString',
-        });
-
-        geom.forEach((element) => {
-          element.getGeometry().getCoordinates().forEach((coord, index) => {
-            if (toStringXY(coord, 7) === toStringXY(this.editedPointCoordinates, 7)) {
-              this.editedLineStringCoordinates = element.getGeometry().getCoordinates();
-              this.editedLineStringCoordinates[index] = event.features.getArray()[0].getGeometry().getCoordinates()
-
-              element.getGeometry().setCoordinates(this.editedLineStringCoordinates);
-              if (typeof element.getId() === 'string') {
-                this.changeNewLineString(element.getId(), element.getGeometry().getCoordinates());
-              }
-            }
-          });
-        });
-
+        this.returnCoordinateForLineString(this.editedPointCoordinates, event.features.getArray()[0].getGeometry().getCoordinates())
+        
         this.objectForCard.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
       }
     },
@@ -538,7 +518,6 @@ export default {
 
         await this.getOneTypeObject({ id: element.id, forFeature: true });
         layer.set('typeId', this.typeForLayer.id);
-        console.log(layer.get('typeId'));
         layer.set('type', this.typeForLayer.type);
         layer.set('group', this.typeForLayer.group);
 
