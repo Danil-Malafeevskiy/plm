@@ -142,7 +142,7 @@
                                 :checkEqualityOfFieads="checkEqualityOfFieads"
                                 :changeConflictField="changeConflictField" />
 
-                            <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="infoCardOn" :addCardOn="addCardOn"/>
+                            <ExpansionPanelForCard :objectForCard="objectForCard" :cardVisable="cardVisable" :infoCardOn="infoCardOn"/>
                             <v-snackbar v-model="snackbar" timeout="2000" color="red accent-2">
                                 {{ errorMessege }}
                             </v-snackbar>
@@ -375,6 +375,7 @@ export default {
                         return;
                     }
                 }
+                console.log(this.objectForCard);
                 this.putObject(this.objectForCard);
             }
             this.editCardOn_.data = !this.editCardOn_.data;
