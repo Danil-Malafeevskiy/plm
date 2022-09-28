@@ -117,7 +117,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'arrayEditMode', 'newData', 'actions', 'user']),
+        ...mapGetters(['getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'arrayEdit', 'newData', 'actions', 'user']),
     },
     methods: {
         ...mapActions(['getOneTypeObjectForFeature']),
@@ -128,7 +128,7 @@ export default {
                 newPutobject = this.newData.filter(el => el.id === this.objectForCard.id);
             }
             else {
-                newPutobject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id);
+                newPutobject = this.arrayEdit.put.filter(el => el.id === this.objectForCard.id);
             }
 
             this.updateObjectForCard(JSON.parse(JSON.stringify(newPutobject[0])));
@@ -138,7 +138,7 @@ export default {
                 try {
                     let newPutObject = this.newData.filter(el => el.id === this.objectForCard.id)[0];
                     if (newPutObject != undefined) {
-                        let oldPutObject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id)[0];
+                        let oldPutObject = this.arrayEdit.put.filter(el => el.id === this.objectForCard.id)[0];
                         return newPutObject.properties[field] === oldPutObject.properties[field];
                     }
                     return true;
