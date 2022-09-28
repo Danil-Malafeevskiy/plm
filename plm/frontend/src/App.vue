@@ -92,7 +92,7 @@
         </v-tab-item>
         <v-tab-item>
           <div flat>
-            <MapArea :allFeatures="allFeatures" :visableCard="visableCard" :notVisableCard="notVisableCard"
+            <MapArea :allFeatures="allFeatures" :cardVisable="cardVisable" :visableCard="visableCard" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="emptyObject"
               :changeElements="changeElements" />
           </div>
@@ -220,6 +220,7 @@ export default {
     },
     async onmessage(e) {
       const data = JSON.parse(e.data);
+
       switch (data.action) {
         case "update": {
           if (this.editMode) {
@@ -246,6 +247,9 @@ export default {
           }
           break;
         default:
+          if('content' in data && data.content === 'Все объекты добавлены и обновлены!'){
+            this.getFeatures();
+          }
           break;
       }
     },

@@ -297,7 +297,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEditMode', 'newData', 'actions', 'user']),
+        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user']),
     },
     methods: {
         ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable']),
@@ -412,7 +412,7 @@ export default {
                 newPutobject = this.newData.filter(el => el.id === this.objectForCard.id);
             }
             else {
-                newPutobject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id);
+                newPutobject = this.arrayEdit.put.filter(el => el.id === this.objectForCard.id);
             }
 
             this.updateObjectForCard(JSON.parse(JSON.stringify(newPutobject[0])));
@@ -422,7 +422,7 @@ export default {
                 try {
                     let newPutObject = this.newData.filter(el => el.id === this.objectForCard.id)[0];
                     if (newPutObject != undefined) {
-                        let oldPutObject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id)[0];
+                        let oldPutObject = this.arrayEdit.put.filter(el => el.id === this.objectForCard.id)[0];
                         return newPutObject.properties[field] === oldPutObject.properties[field];
                     }
                     return true;
@@ -437,7 +437,7 @@ export default {
             if (!this.infoCardOn.data) {
                 let newPutObject = this.newData.filter(el => el.id === this.objectForCard.id)
                 if (newPutObject[0].properties[field] === this.objectForCard.properties[field]) {
-                    newPutObject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id);
+                    newPutObject = this.arrayEdit.put.filter(el => el.id === this.objectForCard.id);
                 }
                 this.objectForCard.properties[field] = newPutObject[0].properties[field];
             }
