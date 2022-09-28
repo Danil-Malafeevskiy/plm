@@ -24,11 +24,11 @@
                                 </v-col>
                             </template>
                             <template v-else>
-                                <v-col v-for="(f, index) in groupsForType" :key="index" cols="2" sm="6" md="5" lg="6"
+                                <v-col v-for="(f, index) in userGroups" :key="index" cols="2" sm="6" md="5" lg="6"
                                     class="pa-0 ma-0">
                                     <v-radio-group multiple hide-details class="ma-0 pa-0"
                                         v-model="objectForCard_.properties.group">
-                                        <v-radio :label="f" :value="groupsForType[index]" :readonly="infoCardOn.data"
+                                        <v-radio :label="f" :value="userGroups[index]" :readonly="infoCardOn.data"
                                             class="ma-2" color="#E93030" on-icon="mdi-checkbox-marked"
                                             off-icon="mdi-checkbox-blank-outline" style="
                                     min-height: 37.53% !important; 
@@ -53,7 +53,7 @@
                     </v-expansion-panel-header>
 
 
-                    <v-expansion-panel-content  cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                    <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
                         <v-expansion-panels accordion flat class="pa-0 ma-0">
                             <v-expansion-panel v-for="el in groups" id="permission" :key="el" cols="2" sm="6" md="5"
                                 lg="6" class="pa-0 ma-0">
@@ -62,9 +62,9 @@
                                     {{ el }}
                                 </v-expansion-panel-header>
 
-                                <v-expansion-panel-content class="ma-0 pa-0" >
+                                <v-expansion-panel-content class="ma-0 pa-0">
                                     <v-row class="pa-2 ma-0">
-                                        <v-col v-for="(name, index) in permissionList" :key="name" cols="2" sm="6" 
+                                        <v-col v-for="(name, index) in permissionList" :key="name" cols="2" sm="6"
                                             md="5" lg="6" class="pa-0 ma-0">
                                             <v-checkbox v-if="name.includes(el[0].toLowerCase() + el.slice(1))"
                                                 v-model="objectForCard_.permissions" :readonly="infoCardOn.data"
@@ -91,7 +91,7 @@ import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 export default {
     name: 'ExpansionPanel',
-    props: ['objectForCard', 'infoCardOn', 'addCardOn'],
+    props: ['objectForCard', 'infoCardOn', 'cardVisable'],
     data() {
         return {
             groups: [],         // Группы прав
@@ -103,45 +103,42 @@ export default {
             userPermissions: null,
             groupAdminId: null,
             allGroups_: this.allGroups,
-            allUsersForAdmin_: this.allUsersForAdmin,
             usersAdmin: [],
         }
     },
     watch: {
         objectForCard: {
-            handler() {
+            async handler() {
                 this.objectForCard_ = this.objectForCard;
-                this.userPermissions = [...this.user.user_permissions]
-                if (this.user.is_superuser) {
-                    if (this.currentGroup.name === 'Admin' || this.usersAdmin.includes(this.objectForCard_.id) || this.objectForCard_.groups.includes('Admin')) {
-                        this.adminPermissions = [...this.user.admin_permissions]
-                        this.permissionList = [...this.user.admin_permissions];
-                        this.objectForCard_.groups.push('Admin')
+                if (this.objectForCard.properties && 'username' in this.objectForCard.properties) {
+                    if (this.user.is_superuser) {
+                        await this.getAllUsersForAdmin(this.groupAdminId);
+
+                        if (this.usersAdmin.includes(this.objectForCard_.id)) {
+                            this.permissionList = [...this.user.admin_permissions];
+                            this.objectForCard_.groups.push('Admin')
+                        }
+                    } else {
+                        this.permissionList = [...this.user.user_permissions];
                     }
-                } else {
-                    this.permissionList = [...this.user.user_permissions];
+                    this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)]
+                    this.groupsPermissions();
                 }
-                this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)]
-                this.groupsPermissions();
             }
         },
 
         'objectForCard.groups': {
-            handler(){
+            handler() {
                 this.objectForCard_ = this.objectForCard;
 
-                this.userPermissions = [...this.user.user_permissions]
                 if (this.objectForCard_.groups.includes('Admin') && this.user.is_superuser) {
-                    this.adminPermissions = [...this.user.admin_permissions]
                     this.permissionList = [...this.user.admin_permissions]
                 } else {
                     this.permissionList = [...this.user.user_permissions]
                 }
 
-                if (this.addCardOn.data && this.objectForCard_.groups.includes('Admin') && this.user.is_superuser) {
-                    this.objectForCard_.permissions = this.adminPermissions
-                } else if (this.addCardOn.data && !this.objectForCard_.groups.includes('Admin')) {
-                    this.objectForCard_.permissions = this.userPermissions
+                if (this.cardVisable.data) {
+                    this.objectForCard_.permissions = this.permissionList
                 }
 
                 this.groupsPermissions();
@@ -157,36 +154,28 @@ export default {
                             this.groupAdminId = element.id
                         }
                     });
-                    this.getAllUsersForAdmin(this.groupAdminId)
+                    this.getAllUsersForAdmin(this.groupAdminId);
                 }
             }
         },
         allUsersForAdmin: {
             handler() {
                 if (this.user.is_superuser) {
-                    this.allUsersForAdmin_ = this.allUsersForAdmin
-                    this.allUsersForAdmin_.forEach(element => {
-                        this.usersAdmin.push(element.id)
-                    });
+                    this.usersAdmin = this.allUsersForAdmin.map(element => element.id);
                 }
             }
         },
 
         currentGroup: {
-            handler(){
-                this.userPermissions = [...this.user.user_permissions]
+            handler() {
                 if (this.user.is_superuser) {
-                    if (this.addCardOn.data && this.currentGroup.name === 'Admin') {
-                        this.adminPermissions = [...this.user.admin_permissions]
+                    if (this.cardVisable.data && !this.infoCardOn.data && this.currentGroup.name === 'Admin') {
                         this.permissionList = [...this.user.admin_permissions]
-                        this.objectForCard_.groups = []
                         this.objectForCard_.groups.push(this.currentGroup.name)
-                    } else if (this.addCardOn.data && this.currentGroup.name) {
+                    } else if (this.cardVisable.data && !this.infoCardOn.data && this.currentGroup.name) {
                         this.permissionList = [...this.user.user_permissions];
-                        this.objectForCard_.groups = []
                         this.objectForCard_.groups.push(this.currentGroup.name)
                     } else if (this.usersAdmin.includes(this.objectForCard_.id)) {
-                        this.adminPermissions = [...this.user.admin_permissions]
                         this.permissionList = [...this.user.admin_permissions]
                         this.objectForCard_.groups.push('Admin')
                     } else {
@@ -215,7 +204,6 @@ export default {
     },
 
     mounted() {
-        this.groupsForType = [...this.user.groups];
         this.userGroups = [...this.user.groups];
         this.groupsPermissions();
     }

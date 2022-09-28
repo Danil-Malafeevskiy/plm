@@ -44,8 +44,7 @@ export default {
         },
 
         async postUser({ dispatch }, newUser) {
-            await axios.post('/user/admin', newUser).then((response) => {
-                newUser.id = response.data.id;
+            await axios.post('/user/admin', newUser).then(() => {
                 dispatch('getUsersOfGroup');
             })
         },
