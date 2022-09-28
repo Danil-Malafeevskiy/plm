@@ -9,7 +9,7 @@
                 <v-card-text>
                     <div class="btn">
                         <v-btn @click="$emit('offConflictWindow')" color="#EE5E5E" type="submit" style="height: 45px; color: white !important;">
-                            окей
+                            ок
                         </v-btn>
                     </div>
                 </v-card-text>
