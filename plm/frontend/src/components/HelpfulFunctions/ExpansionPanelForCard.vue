@@ -53,7 +53,7 @@
                     </v-expansion-panel-header>
 
 
-                    <v-expansion-panel-content  cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                    <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
                         <v-expansion-panels accordion flat class="pa-0 ma-0">
                             <v-expansion-panel v-for="el in groups" id="permission" :key="el" cols="2" sm="6" md="5"
                                 lg="6" class="pa-0 ma-0">
@@ -62,9 +62,9 @@
                                     {{ el }}
                                 </v-expansion-panel-header>
 
-                                <v-expansion-panel-content class="ma-0 pa-0" >
+                                <v-expansion-panel-content class="ma-0 pa-0">
                                     <v-row class="pa-2 ma-0">
-                                        <v-col v-for="(name, index) in permissionList" :key="name" cols="2" sm="6" 
+                                        <v-col v-for="(name, index) in permissionList" :key="name" cols="2" sm="6"
                                             md="5" lg="6" class="pa-0 ma-0">
                                             <v-checkbox v-if="name.includes(el[0].toLowerCase() + el.slice(1))"
                                                 v-model="objectForCard_.permissions" :readonly="infoCardOn.data"
@@ -108,37 +108,38 @@ export default {
     },
     watch: {
         objectForCard: {
-            handler() {
+            async handler() {
                 this.objectForCard_ = this.objectForCard;
-                if (this.user.is_superuser) {
-                    if (this.currentGroup.name === 'Admin' || this.usersAdmin.includes(this.objectForCard_.id) || this.objectForCard_.groups.includes('Admin')) {
-                        this.permissionList = [...this.user.admin_permissions];
-                        this.objectForCard_.groups.push('Admin')
+                if (this.objectForCard.properties && 'username' in this.objectForCard.properties) {
+                    if (this.user.is_superuser) {
+                        await this.getAllUsersForAdmin(this.groupAdminId);
+
+                        if (this.usersAdmin.includes(this.objectForCard_.id)) {
+                            this.permissionList = [...this.user.admin_permissions];
+                            this.objectForCard_.groups.push('Admin')
+                        }
+                    } else {
+                        this.permissionList = [...this.user.user_permissions];
                     }
-                } else {
-                    this.permissionList = [...this.user.user_permissions];
+                    this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)]
+                    this.groupsPermissions();
                 }
-                this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)]
-                this.groupsPermissions();
             }
         },
 
         'objectForCard.groups': {
-            handler(){
+            handler() {
                 this.objectForCard_ = this.objectForCard;
 
                 if (this.objectForCard_.groups.includes('Admin') && this.user.is_superuser) {
-                    this.usersAdmin.push(this.objectForCard.id);
-                    this.usersAdmin = [...new Set(this.usersAdmin)]
                     this.permissionList = [...this.user.admin_permissions]
                 } else {
-                    this.usersAdmin.filter(el => el.id != this.objectForCard.id);
                     this.permissionList = [...this.user.user_permissions]
                 }
 
                 if (this.cardVisable.data) {
                     this.objectForCard_.permissions = this.permissionList
-                } 
+                }
 
                 this.groupsPermissions();
             }
@@ -166,7 +167,7 @@ export default {
         },
 
         currentGroup: {
-            handler(){
+            handler() {
                 if (this.user.is_superuser) {
                     if (this.cardVisable.data && !this.infoCardOn.data && this.currentGroup.name === 'Admin') {
                         this.permissionList = [...this.user.admin_permissions]

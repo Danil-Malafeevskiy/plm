@@ -26,15 +26,21 @@ export default {
                 else{
                     dispatch('getVersions');
                 }
+                dispatch('getFeatures');
                 console.log(response.data)
             })
         },
 
-        async putLastVersion({dispatch},id){
+        async putLastVersion({dispatch, state},id){
             let lastVersion = {'flag' : true}
             axios.put(`/version/${id}`, lastVersion).then((response) => {
                 console.log(response.data)
-                dispatch('getVersions');
+                if (state.pastGroupVersion){
+                    dispatch('getFilteredVersions', state.pastGroupVersion);
+                }
+                else{
+                    dispatch('getVersions');
+                }
                 dispatch('getFeatures');
                 
             })
