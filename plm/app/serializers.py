@@ -182,7 +182,7 @@ class GroupSerializer(serializers.ModelSerializer):
                 self.fields.pop(field_name)
 
     def get_all_user(self, obj):
-        return len(get_user_model().objects.filter(groups__name=obj.name))
+        return len(get_user_model().objects.filter(groups__name=obj.name).exclude(id=self.context))
 
 class UserSerializer(serializers.ModelSerializer):
     groups = serializers.SerializerMethodField()

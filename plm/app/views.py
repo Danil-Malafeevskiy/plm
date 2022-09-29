@@ -208,7 +208,7 @@ class GroupView(APIView):
                 groups_list = [group for group in list(request.user.groups.values_list('name', flat=True))
                                                                     if group != "Admin"]
                 groups = Group.objects.filter(name__in=groups_list)
-            group = GroupSerializer(groups, many=True)
+            group = GroupSerializer(groups, many=True, context=request.user.id)
             return Response(group.data)
 
         group = Group.objects.get(id=id)
@@ -265,7 +265,7 @@ class UserAdminView(APIView):
                                                                     if group != "Admin"]).distinct().exclude(id=request.user.id)
 
             if request.user.is_superuser:
-                users = get_user_model().objects.all()
+                users = get_user_model().objects.all().exclude(id=request.user.id)
 
             filtered_queryset = ff.filter_queryset(request, users, self)
 
