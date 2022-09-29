@@ -168,10 +168,11 @@ class FileSerializer(serializers.Serializer):
 
 class GroupSerializer(serializers.ModelSerializer):
     all_user = serializers.SerializerMethodField()
+    all_type = serializers.SerializerMethodField()
     class Meta:
         ordering = ['id']
         model = Group
-        fields = ('id', 'name', 'all_user')
+        fields = ('id', 'name', 'all_user', 'all_type')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -183,6 +184,9 @@ class GroupSerializer(serializers.ModelSerializer):
 
     def get_all_user(self, obj):
         return len(get_user_model().objects.filter(groups__name=obj.name).exclude(id=self.context))
+
+    def get_all_type(self, obj):
+        return len(Type.objects.filter(group=obj.id))
 
 class UserSerializer(serializers.ModelSerializer):
     groups = serializers.SerializerMethodField()
