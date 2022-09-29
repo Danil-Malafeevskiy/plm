@@ -36,8 +36,11 @@
               mdi-plus
             </v-icon>
           </v-btn>
-          <v-file-input hide-input :key="componentKey" prepend-icon="mdi-file-upload" @change="uploadFile">
-          </v-file-input>
+          <v-btn depressed class="pa-0" small fab elevation="0" color="#E5E5E5" @click="isFileInput = !isFileInput">
+            <v-icon>
+              mdi-file-upload
+            </v-icon>
+          </v-btn>
         </template>
       </v-toolbar>
 
@@ -78,6 +81,7 @@
 
             <Auth v-if="getAuth === false" />
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
+            <FIleInputWindow v-if="isFileInput" @offFileInput="offFileInput"/>
 
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data" />
@@ -88,7 +92,7 @@
         </v-tab-item>
         <v-tab-item>
           <div flat>
-            <MapArea :allFeatures="allFeatures" :visableCard="visableCard" :notVisableCard="notVisableCard"
+            <MapArea :allFeatures="allFeatures" :cardVisable="cardVisable" :visableCard="visableCard" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="emptyObject"
               :changeElements="changeElements" />
           </div>
@@ -110,6 +114,7 @@ import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
 import CardConflict from './components/HelpfulFunctions/CardConflict.vue';
+import FIleInputWindow from './components/HelpfulFunctions/FIleInputWindow.vue';
 
 export default {
   components: {
@@ -120,8 +125,9 @@ export default {
     Auth,
     ConflicWindow,
     CardConflict,
-    VersionControl
-  },
+    VersionControl,
+    FIleInputWindow
+},
 
   data() {
     return {
@@ -140,6 +146,7 @@ export default {
       editMode: false,
       test: mdiAlignHorizontalCenter,
       isConflict: false,
+      isFileInput: false,
       arrPut: [],
       file: null,
       changeElements: [],
@@ -192,7 +199,7 @@ export default {
     'newData', 'actions', 'typeForLayer', 'isGetAllChange', 'arrayEdit']),
   methods: {
 
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'uploadFileWithFeature', 'getTypeObject']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getTypeObject']),
     ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData']),
 
     visableVersions() {
@@ -213,6 +220,7 @@ export default {
     },
     async onmessage(e) {
       const data = JSON.parse(e.data);
+
       switch (data.action) {
         case "update": {
           if (this.editMode) {
@@ -239,6 +247,9 @@ export default {
           }
           break;
         default:
+          if('content' in data && data.content === 'Все объекты добавлены и обновлены!'){
+            this.getFeatures();
+          }
           break;
       }
     },
@@ -256,7 +267,10 @@ export default {
       this.editMode = !this.editMode;
     },
     offConflictWindow() {
-      this.isConflict = false;
+      this.isConflict = !this.isConflict;
+    },
+    offFileInput(){
+      this.isFileInput = !this.isFileInput;
     },
     searchConflict(itemFirst, itemSecond) {
       let result = false;
@@ -272,9 +286,9 @@ export default {
     },
     closeEditMode() {
       this.editMode = !this.editMode;
-      this.changeElements = [];
-      for (let key in this.arrayEditMode) {
-        this.changeElements = [...this.changeElements, ...this.arrayEditMode[key].put, ...this.arrayEditMode[key].delete]
+      if(this.editCardOn.data){
+        this.editCardOn.data = !this.editCardOn.data;
+        this.infoCardOn = !this.editCardOn.data;
       }
       this.resetNewData();
       this.resetArrayEditMode();
@@ -290,12 +304,6 @@ export default {
       else {
         this.conflictCard = false;
       }
-    },
-    uploadFile(file) {
-      let formData = new FormData();
-      formData.append('file', file);
-      this.uploadFileWithFeature(formData);
-      this.componentKey++;
     },
   },
   mounted() {

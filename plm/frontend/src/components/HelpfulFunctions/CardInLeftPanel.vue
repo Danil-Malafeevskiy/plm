@@ -69,11 +69,10 @@ export default {
                 this.updatefilterForFeature([]);
                 this.upadateTitle('');
                 if (this.selectedItem != null) {
-                    if ((this.selectedItem != 3 && this.user.is_staff) || (this.selectedItem != 0 && this.user.is_active)) {
-                        setTimeout(() => {
-                            document.querySelector('.text_in_span').innerHTML = document.querySelector('.v-item--active .v-list-item__title').innerText;
-                        })
-                    }
+                    setTimeout(() => {
+                        document.querySelector('.text_in_span').innerHTML = document.querySelector('.v-item--active .v-list-item__title').innerText;
+                    })
+                    
                     await this.resetSelectItem();
                     if (this.user.is_staff) {
                         switch (this.selectedItem) {
@@ -99,7 +98,7 @@ export default {
                             }
                         }
                     }
-                    else{
+                    else {
                         switch (this.selectedItem) {
                             case 0: {
                                 this.onFeatures();

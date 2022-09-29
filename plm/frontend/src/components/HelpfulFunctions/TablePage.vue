@@ -74,7 +74,7 @@ export default {
     allListItem: {
       handler() {
         this.tableArrayItems = [...this.allListItem];
-        if (this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length) {
+        if (this.oneType && this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length ) {
           for (let i in this.arrayEdit.post) {
             this.tableArrayItems.push({ ...this.arrayEdit.post[i].properties, id_: this.arrayEdit.post[i].id_ });
           }
@@ -84,7 +84,7 @@ export default {
     arrayEditMode: {
       handler() {
         this.tableArrayItems = [...this.allListItem];
-        if (this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length) {
+        if (this.oneType && this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length) {
           for (let i in this.arrayEdit.post) {
             this.tableArrayItems.push({ ...this.arrayEdit.post[i].properties, id_: this.arrayEdit.post[i].id_ });
           }
@@ -113,7 +113,6 @@ export default {
         return this.allGroups.filter(el => el.name != this.getToolbarTitle)
       }
       else {
-        console.log(this.oneType.group);
         return this.selectedDrawType.filter(el => el.name != this.getToolbarTitle && el.group === this.oneType.group);
       }
     }

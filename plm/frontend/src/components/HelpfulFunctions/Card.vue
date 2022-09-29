@@ -142,7 +142,8 @@
                                 :checkEqualityOfFieads="checkEqualityOfFieads"
                                 :changeConflictField="changeConflictField" />
 
-                            <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="infoCardOn" />
+                            <ExpansionPanelForCard :objectForCard="objectForCard" :cardVisable="cardVisable"
+                                :infoCardOn="infoCardOn" />
                             <v-snackbar v-model="snackbar" timeout="2000" color="red accent-2">
                                 {{ errorMessege }}
                             </v-snackbar>
@@ -153,8 +154,7 @@
                                     <v-text-field v-model="objectForCard.properties.password" label="password"
                                         :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                                         hint="Минимум 8 символов" placeholder="Пароль"
-                                        :type="showPassword ? 'text' : 'password'" filled
-                                        :disabled="!editCardOn.data"
+                                        :type="showPassword ? 'text' : 'password'" filled :disabled="!editCardOn.data"
                                         @click:append="showPassword = !showPassword" :rules="[rules.min]">
                                     </v-text-field>
                                 </v-col>
@@ -297,7 +297,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEditMode', 'newData', 'actions', 'user']),
+        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user']),
     },
     methods: {
         ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable']),
@@ -308,45 +308,8 @@ export default {
                 this.updateArrayEditMode({ item: JSON.parse(JSON.stringify(this.objectForCard)), type: 'post' });
             }
             else {
-                if ('groups' in this.objectForCard) {
-                    for (let key in this.objectForCard.properties) {
-                        if (key !== 'password' && key != 'email' && this.objectForCard.properties[key] === '') {
-                            this.showSnacker('Обязательные поля не могут быть пустыми');
-                            return;
-                        }
-                        else if (key === 'password' && this.objectForCard.properties[key].length < 8) {
-                            this.showSnacker('Пароль не может юыть меньше 8 символов');
-                            return;
-                        }
-                    }
-                    if (!this.objectForCard.groups.length) {
-                        this.showSnacker('Выберите группы');
-                        return;
-                    }
-                    this.objectForCard.properties = { ...this.objectForCard, ...this.objectForCard.properties }
-                    delete this.objectForCard.properties.properties;
-                }
-
-                else if ('headers' in this.objectForCard.properties) {
-                    if(!this.objectForCard.properties.name){
-                        this.showSnacker('Введите имя типа');
-                        return;
-                    }
-                    else if (!this.objectForCard.properties.type){
-                        this.showSnacker('Введите тип геометрии');
-                        return;
-                    }
-                    else if (!this.objectForCard.properties.headers.length) {
-                        this.showSnacker('Добавьте основные атрибуты');
-                        return;
-                    }
-                    else if (this.checkDoubleFields(this.objectForCard.properties)) {
-                        this.showSnacker('Не может быть атрибутов с одинаковыми именами');
-                        return;
-                    }
-                    this.objectForCard.properties.image = this.objectForCard.image;
-                }
-
+                this.checkCorrectFields();
+                console.log(this.objectForCard.propeties);
                 await this.postObject(this.objectForCard.properties);
             }
             this.addCardOn_.data = !this.addCardOn_.data;
@@ -369,16 +332,59 @@ export default {
                 this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
             }
             else {
-                if ('headers' in this.objectForCard.properties) {
-                    if (this.checkDoubleFields(this.objectForCard.properties)) {
-                        this.showSnacker('Не может быть атрибутов с одинаковыми именами');
-                        return;
-                    }
-                }
+                this.checkCorrectFields();
+                
                 this.putObject(this.objectForCard);
             }
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
+        },
+        checkCorrectFields(){
+            if ('groups' in this.objectForCard) {
+                    for (let key in this.objectForCard.properties) {
+                        if (key !== 'password' && key != 'email' && this.objectForCard.properties[key] === '') {
+                            this.showSnacker('Обязательные поля не могут быть пустыми');
+                            return;
+                        }
+                        else if (key === 'password' && this.objectForCard.properties[key].length < 8) {
+                            this.showSnacker('Пароль не может юыть меньше 8 символов');
+                            return;
+                        }
+                    }
+                    if (!this.objectForCard.groups.length) {
+                        this.showSnacker('Выберите группы');
+                        return;
+                    }
+
+                    else if (!this.objectForCard.properties.email.toLowerCase()
+                        .match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
+                        this.showSnacker('Некорректный email');
+                        return;
+                    }
+                    
+                    this.objectForCard.properties = { ...this.objectForCard, ...this.objectForCard.properties }
+                    delete this.objectForCard.properties.properties;
+                }
+
+                else if ('headers' in this.objectForCard.properties) {
+                    if (!this.objectForCard.properties.name) {
+                        this.showSnacker('Введите имя типа');
+                        return;
+                    }
+                    else if (!this.objectForCard.properties.type) {
+                        this.showSnacker('Введите тип геометрии');
+                        return;
+                    }
+                    else if (!this.objectForCard.properties.headers.length) {
+                        this.showSnacker('Добавьте основные атрибуты');
+                        return;
+                    }
+                    else if (this.checkDoubleFields(this.objectForCard.properties)) {
+                        this.showSnacker('Не может быть атрибутов с одинаковыми именами');
+                        return;
+                    }
+                    this.objectForCard.properties.image = this.objectForCard.image;
+                }
         },
         showSnacker(errorText) {
             this.errorMessege = errorText;
@@ -412,7 +418,7 @@ export default {
                 newPutobject = this.newData.filter(el => el.id === this.objectForCard.id);
             }
             else {
-                newPutobject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id);
+                newPutobject = this.arrayEdit.put.filter(el => el.id === this.objectForCard.id);
             }
 
             this.updateObjectForCard(JSON.parse(JSON.stringify(newPutobject[0])));
@@ -422,7 +428,7 @@ export default {
                 try {
                     let newPutObject = this.newData.filter(el => el.id === this.objectForCard.id)[0];
                     if (newPutObject != undefined) {
-                        let oldPutObject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id)[0];
+                        let oldPutObject = this.arrayEdit.put.filter(el => el.id === this.objectForCard.id)[0];
                         return newPutObject.properties[field] === oldPutObject.properties[field];
                     }
                     return true;
@@ -437,7 +443,7 @@ export default {
             if (!this.infoCardOn.data) {
                 let newPutObject = this.newData.filter(el => el.id === this.objectForCard.id)
                 if (newPutObject[0].properties[field] === this.objectForCard.properties[field]) {
-                    newPutObject = this.arrayEditMode.put.filter(el => el.id === this.objectForCard.id);
+                    newPutObject = this.arrayEdit.put.filter(el => el.id === this.objectForCard.id);
                 }
                 this.objectForCard.properties[field] = newPutObject[0].properties[field];
             }

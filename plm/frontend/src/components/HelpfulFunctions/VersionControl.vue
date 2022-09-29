@@ -56,6 +56,7 @@ export default {
 			currentVersionId: null,
 			currentVersion: null,
 			nameGroup: null,
+			timeoutId: null,
 		}
 	},
 	watch: {
@@ -88,9 +89,7 @@ export default {
 		chooseVersion(item) {
 			this.putVersion(item.id)
 			document.getElementById('notification').style.display = 'block'
-			setTimeout(function () {
-				document.getElementById('notification').style.display = 'none'
-			}, 5000);
+			this.showNotification()
 			
 		},
 		getTimeVersion(time) {
@@ -110,6 +109,13 @@ export default {
 			});
 		},
 
+		showNotification(){
+			clearTimeout(this.timeoutId)
+			this.timeoutId = setTimeout(function () {
+				document.getElementById('notification').style.display = 'none'
+			}, 2000);
+		},
+
 		lastVersion() {
 			if (this.tableArray.filter(el => el.flag).length) {
 				let id = 0
@@ -119,9 +125,7 @@ export default {
 					}
 				});
 				document.getElementById('notification').style.display = 'block'
-				setTimeout(function () {
-					document.getElementById('notification').style.display = 'none'
-				}, 5000);
+				this.showNotification()
 				
 				this.putLastVersion(id)
 			}
