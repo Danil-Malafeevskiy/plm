@@ -204,8 +204,10 @@ export default {
     },
 
     mounted() {
-        this.userGroups = [...this.user.groups];
-        this.groupsPermissions();
+        if ('groups' in this.user) {
+            this.userGroups = [...this.user.groups];
+            this.groupsPermissions();
+        }
     }
 }
 </script>
