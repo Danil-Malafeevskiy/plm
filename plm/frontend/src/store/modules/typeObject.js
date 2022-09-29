@@ -1,9 +1,20 @@
 import axios from "axios";
 
+function getUrl(user){
+    let url;
+    if(user.is_staff || user.is_superuser){
+        url = '/dataset/admin';
+    }
+    else{
+        url = '/dataset';
+    }
+    return url;
+}
+
 export default {
     actions: {
-        async getTypeObject({ commit }, change = false) {
-            await axios.get('/dataset/admin').then((response) => {
+        async getTypeObject({ commit, getters }, change = false) {
+            await axios.get(getUrl(getters.user)).then((response) => {
                 if (!change) {
                     commit('updateListType', response.data);
                 }
@@ -17,10 +28,10 @@ export default {
                 commit('updateAllTypeForMap', response.data);
             })
         },
-        async getOneTypeObject({ commit }, id) {
+        async getOneTypeObject({ commit, getters }, id) {
             switch (typeof id) {
                 case 'number': {
-                    await axios.get(`/dataset/admin/${id}`).then((response) => {
+                    await axios.get(getUrl(getters.user) + `/${id}`).then((response) => {
                         let result = { ...response.data };
                         result.properties = { ...result };
 
@@ -37,15 +48,15 @@ export default {
                     break;
                 }
                 case 'object': {
-                    await axios.get(`/dataset/admin/${id.id}`).then((response) => {
+                    await axios.get(getUrl(getters.user) + `/${id.id}`).then((response) => {
                         commit('updateTypeForLayer', response.data);
                     })
                     break;
                 }
             }
         },
-        async getOneTypeObjectForFeature({ commit }, { id, forFeature = false }) {
-            await axios.get(`/dataset/admin/${id}`).then((response) => {
+        async getOneTypeObjectForFeature({ commit, getters }, { id, forFeature = false }) {
+            await axios.get(getUrl(getters.user) + `/${id}`).then((response) => {
                 commit('updateOneType', { type: response.data, forFeature });
             });
         },

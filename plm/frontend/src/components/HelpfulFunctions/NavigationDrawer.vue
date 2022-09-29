@@ -34,16 +34,19 @@
                             <div class="name">
                                 <div>{{ key.name }}</div>
                                 <template v-if="'all_obj' in key">
-                                <div v-if="key.group in arrayEditMode" style="font-size: 16px; color: #A5A5A6; margin-left: auto;">
-                                    {{key.all_obj + arrayEditMode[key.group].post.filter(el => el.name === key.id).length}}
-                                </div>
-                                <div v-else style="font-size: 16px; color: #A5A5A6; margin-left: auto;">
-                                    {{key.all_obj}}
-                                </div>
-                            </template>
-                            <template v-else-if="'all_user' in key">
-                                <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{key.all_user}}</div>
-                            </template>
+                                    <div v-if="key.group in arrayEditMode"
+                                        style="font-size: 16px; color: #A5A5A6; margin-left: auto;">
+                                        {{key.all_obj + arrayEditMode[key.group].post.filter(el => el.name ===
+                                        key.id).length}}
+                                    </div>
+                                    <div v-else style="font-size: 16px; color: #A5A5A6; margin-left: auto;">
+                                        {{key.all_obj}}
+                                    </div>
+                                </template>
+                                <template v-else-if="'all_user' in key">
+                                    <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{key.all_user}}
+                                    </div>
+                                </template>
                             </div>
                         </v-list-item-title>
                         <v-list-item-title class="pa-1" v-else>
@@ -220,9 +223,11 @@ export default {
         },
     },
     components: { CardInLeftPanel },
-    async mounted() {
-        await this.getTypeObject();
-        this.selectedItem = 0;
+    mounted() {
+        setTimeout(async () => {
+            await this.getTypeObject();
+            this.selectedItem = 0;
+        }, 500);
     },
 }
 </script>
