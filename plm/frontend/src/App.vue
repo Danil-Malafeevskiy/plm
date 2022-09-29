@@ -307,11 +307,11 @@ export default {
     },
   },
   mounted() {
+    this.getUser();
+    this.getFeatures();  
+    
     const chatSocket = new WebSocket("ws://localhost:8000/test");
     chatSocket.onmessage = this.onmessage;
-
-    this.getFeatures();
-    this.getUser();
   }
 }
 </script>

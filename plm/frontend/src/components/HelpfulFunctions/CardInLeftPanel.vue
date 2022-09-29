@@ -72,7 +72,7 @@ export default {
                     setTimeout(() => {
                         document.querySelector('.text_in_span').innerHTML = document.querySelector('.v-item--active .v-list-item__title').innerText;
                     })
-                    
+
                     await this.resetSelectItem();
                     if (this.user.is_staff) {
                         switch (this.selectedItem) {
@@ -225,7 +225,9 @@ export default {
     },
     async mounted() {
         await this.getUser();
-        this.groupsOfUser = [...this.user.groups];
+        if ('groups' in this.user) {
+            this.groupsOfUser = [...this.user.groups];
+        }
     }
 }
 </script>
