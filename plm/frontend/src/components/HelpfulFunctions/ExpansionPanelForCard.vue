@@ -26,7 +26,7 @@
                             <template v-else>
                                 <v-col v-for="(f, index) in userGroups" :key="index" cols="2" sm="6" md="5" lg="6"
                                     class="pa-0 ma-0">
-                                    <v-radio-group multiple hide-details class="ma-0 pa-0"
+                                    <v-radio-group hide-details class="ma-0 pa-0"
                                         v-model="objectForCard_.properties.group">
                                         <v-radio :label="f" :value="userGroups[index]" :readonly="infoCardOn.data"
                                             class="ma-2" color="#E93030" on-icon="mdi-checkbox-marked"
@@ -66,13 +66,14 @@
                                     <v-row class="pa-2 ma-0">
                                         <v-col v-for="(name, index) in permissionList" :key="name" cols="2" sm="6"
                                             md="5" lg="6" class="pa-0 ma-0">
-                                            <v-checkbox v-if="name.includes(el[0].toLowerCase() + el.slice(1))"
+                                            <v-checkbox v-if="name.includes((el[0] + el.slice(1)).toLowerCase())"
                                                 v-model="objectForCard_.permissions" :readonly="infoCardOn.data"
                                                 class="ma-2" color="#E93030" :value="permissionList[index]" style="
                                                                         min-height: 37.53% !important; 
                                                                         max-height: 37.53% !important;
                                                                     " :label="name">
                                             </v-checkbox>
+
                                         </v-col>
                                     </v-row>
                                 </v-expansion-panel-content>
@@ -196,7 +197,13 @@ export default {
             this.groups = []
             for (let i = 0; i < this.permissionList.length; ++i) {
                 let el = this.permissionList[i].split(" ").pop();
-                el = el[0].toUpperCase() + el.slice(1);
+
+                if(el === 'control'){
+                    el = 'Version Control'
+                } else {
+                    el = el[0].toUpperCase() + el.slice(1);
+                }
+                
                 this.groups.push(el);
             }
             this.groups = [...new Set(this.groups)]
