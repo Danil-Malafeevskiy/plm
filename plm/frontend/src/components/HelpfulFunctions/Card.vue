@@ -363,7 +363,7 @@ export default {
                 let object = JSON.parse(JSON.stringify(this.objectForCard));
                 object.properties = { ...object, ...object.properties }
                 delete object.properties.properties;
-
+                console.log(object);
                 this.putObject(object);
             }
             this.editCardOn_.data = !this.editCardOn_.data;
@@ -373,7 +373,7 @@ export default {
             if(this.password === this.password_again){
                 const user = {
                     id: this.user.id,
-                    email: this.email.username,
+                    email: this.user.email,
                     password: this.password,
                 }
                 this.putUser(user);
