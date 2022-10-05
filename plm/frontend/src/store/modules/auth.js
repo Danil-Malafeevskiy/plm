@@ -4,6 +4,25 @@ axios.defaults.xsrfCookieName = "csrftoken";
 
 export default {
     actions: {
+        async sendEmail({ commit }, emailData){
+            await axios.post('/password-reset-request', emailData).then((response) => {
+                console.log(response.data)
+                commit('updateEmail', response.data);
+            });
+        },
+
+        async checkoutPasswordReset({ commit }, path){
+            await axios.get(`/${path}/get`).then((response) => {
+                commit('updateUserToken', response.data)
+            })
+        },
+
+        async changePassword({ commit }, data){
+            await axios.put('/password-setnew', data).then((response) =>{
+                commit('updateValidateErrors', response.data);
+            })
+        },
+
         async logIn({ commit }, userData) {
             await axios.post('/tower/login', userData).then((response) => {
                 commit('updateAuth', response.data === 'Success login');
@@ -44,7 +63,6 @@ export default {
         },
 
         async postUser({ dispatch }, newUser) {
-            console.log(newUser);
             await axios.post('/user/admin', newUser).then(() => {
                 dispatch('getUsersOfGroup');
             })
@@ -52,9 +70,7 @@ export default {
         async putUser({ dispatch, state, getters }, user) {
             user = { ...user, ...user.properties };
             delete user.properties;
-            user.username = user.email;
-            console.log(user);
-            await axios.put('/user/admin', user).then((response) => {
+            await axios.put('/user/admin', user).then(() => {
                 if (getters.allListItem[0] !== state.user) {
                     dispatch('getUsersOfGroup');
                     if (user.id === state.user.id) {
@@ -64,14 +80,14 @@ export default {
                 else if(getters.allListItem[0] === state.user && 'password' in user){
                     dispatch('logOut');
                 }
-                console.log(response.data)
             })
         },
         async deleteUser({ dispatch }, idUser) {
             await axios.delete(`/user/admin?id=${idUser}`).then(() => {
                 dispatch('getUsersOfGroup');
             })
-        }
+        },
+
     },
 
     mutations: {
@@ -83,6 +99,15 @@ export default {
         },
         updateAllUsers(state, users) {
             state.allUsers = users;
+        },
+        updateEmail(state, email) {
+            state.email = email
+        },
+        updateUserToken(state, token){
+            state.userResetPasswordData = token
+        },
+        updateValidateErrors(state, erorrs){
+            state.validateErrors = erorrs
         }
     },
     getters: {
@@ -91,11 +116,25 @@ export default {
         },
         user(state) {
             return state.user;
+        },
+        userResetPasswordData(state) {
+            return state.userResetPasswordData
+        }, 
+
+        validateErrors(state){
+            return state.validateErrors
+        },
+
+        validateEmailErrors(state){
+            return state.email
         }
     },
     state: {
         authBool: null,
         user: null,
         allUsers: [],
+        email: null,
+        userResetPasswordData: null,
+        validateErrors: null,
     },
 }

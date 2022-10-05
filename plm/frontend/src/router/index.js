@@ -6,8 +6,8 @@ Vue.use(VueRouter)
 
 const routes = [
     {
-      path: '/reset-password/:id',
-      name: 'reset-password',
+      path: '/password-reset/:uid/:token',
+      name: 'password-reset',
       public: true,
       component: ResetPasswordView
     }
