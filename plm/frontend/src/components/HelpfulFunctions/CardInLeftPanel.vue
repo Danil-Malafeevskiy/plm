@@ -54,13 +54,12 @@ import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 export default {
     name: 'CardInLeftPanel',
-    props: ['resetSelectItem', 'visableCard', 'editCardOn', 'visableVersions', 'notVisableVersions', 'versionsPage'],
+    props: ['resetSelectItem', 'visableCard', 'visableVersions', 'notVisableVersions', 'versionsPage', 'infoCardOn'],
     data() {
         return {
             selectedItem: 3,
-            initials: null,
-            editCardOn_: this.editCardOn,
             groupsOfUser: [],
+            infoCardOn_: this.infoCardOn
         }
     },
     watch: {
@@ -116,7 +115,7 @@ export default {
     },
     computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType', 'actions', 'getObjectForCard', 'allVersions', 'allUserGroups']),
     methods: {
-        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject', 'getOneObject', 'getVersions', 'getAllTypeForTable', 'allGroupForNav', 'getUser']),
+        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject', 'getOneObject', 'getVersions', 'getAllTypeForTable', 'allGroupForNav', 'getUser', 'allGroupForNav']),
 
         ...mapMutations(['updatefilterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
             'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray', 'updateOneType', 'upadateTitle', 'updateVersions', 'updateAllUserGroups']),
@@ -133,7 +132,10 @@ export default {
             await this.getOneObject(this.user.id);
             this.updateListType([]);
             this.updateListItem({ items: [this.user] })
-            this.visableCard();
+            setTimeout(() => {
+                this.visableCard();
+                this.infoCardOn_.data = true;
+            }, 280);
         },
         onFeatures() {
             this.notVisableVersions()
@@ -178,7 +180,7 @@ export default {
                 actionPut: 'putTypeObject',
                 actionDelete: 'deleteTypeObject',
             });
-            this.updateListType(this.groupsOfUser);
+            this.allGroupForNav();
             this.getAllTypeForTable();
             this.upadateEmptyObject(object);
         },

@@ -72,12 +72,12 @@ export default {
       }
     },
     arrayEdit: {
-      handler() {
+      async handler() {
         let arraysOfNewObject = this.createSubArrays();
         let arrayOfLayers = this.map.getAllLayers();
 
         for (let i in arraysOfNewObject) {
-          const layer = arrayOfLayers.find(el => `${el.get('typeId')}` === i);
+          const layer = arrayOfLayers.find((el) => { return `${el.get('typeId')}` === i });
           let feature = layer.getSource().getFeatures();
           feature = this.deleteNewObjectFromMap(feature, arraysOfNewObject[i]);
           const source = new VectorSource({
@@ -106,12 +106,14 @@ export default {
         }
         this.objectForCard = this.getObjectForCard;
 
-        if (this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) {
-          this.editCardOn_.data = false;
-        }
-        else {
-          this.returnCoordinateForPoint('id_' in this.objectForCard ? this.objectForCard.id_ : this.objectForCard.id, 
-          this.objectForCard.name, this.objectForCard.geometry.coordinates);
+        if ('geometry' in this.getObjectForCard) {
+          if (this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) {
+            this.editCardOn_.data = false;
+          }
+          else {
+            this.returnCoordinateForPoint('id_' in this.objectForCard ? this.objectForCard.id_ : this.objectForCard.id,
+              this.objectForCard.name, this.objectForCard.geometry.coordinates);
+          }
         }
 
         if ('name' in this.objectForCard && typeof this.objectForCard.name === 'number') {
@@ -223,23 +225,23 @@ export default {
       }
 
       this.returnCoordinateForPoint('id_' in object ? object.id_ : object.id, object.name, object.geometry.coordinates)
-      
+
       if (this.oldFeature !== this.objectForCard) {
         this.oldFeature = this.objectForCard;
       }
     },
-    async returnCoordinateForPoint(id, typeId, coordinates){
+    returnCoordinateForPoint(id, typeId, coordinates) {
       const layer = this.map.getAllLayers().find(el => el.get('typeId') === typeId);
       const features = layer.getSource().getFeatures();
-      let feature = await features.find(el => el.getId() === id);
-      
+      let feature = features.find(el => { return el.getId() === id });
+
       const oldCoordinates = feature.getGeometry().getCoordinates();
       const newCoordinates = fromLonLat(coordinates);
       feature.getGeometry().setCoordinates(newCoordinates);
-      
+
       this.returnCoordinateForLineString(oldCoordinates, newCoordinates);
     },
-    returnCoordinateForLineString(oldCoordinates, newCoordinates){
+    returnCoordinateForLineString(oldCoordinates, newCoordinates) {
       const geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(oldCoordinates), {
         filterLayer: el => el.get('type') === 'LineString',
       });
@@ -249,7 +251,7 @@ export default {
           if (toStringXY(coord, 7) === toStringXY(oldCoordinates, 7)) {
             let lineStingCooradinates = element.getGeometry().getCoordinates();
             lineStingCooradinates[index] = newCoordinates;
-            
+
             element.getGeometry().setCoordinates(lineStingCooradinates);
             if (typeof element.getId() === 'string') {
               this.changeNewLineString(element.getId(), element.getGeometry().getCoordinates());
@@ -382,7 +384,7 @@ export default {
       }
       else {
         this.returnCoordinateForLineString(this.editedPointCoordinates, event.features.getArray()[0].getGeometry().getCoordinates())
-        
+
         this.objectForCard.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
       }
     },

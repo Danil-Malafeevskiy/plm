@@ -15,7 +15,7 @@
 
         <CardInLeftPanel v-show="showCard" :resetSelectItem="resetSelectItem" :visableCard="visableCard"
             :editCardOn="editCardOn" :visableVersions="visableVersions" :notVisableVersions="notVisableVersions"
-            :versionsPage="versionsPage" />
+            :versionsPage="versionsPage" :infoCardOn="infoCardOn"/>
 
         <v-list dense nav>
             <p
@@ -43,7 +43,7 @@
                                         {{key.all_obj}}
                                     </div>
                                 </template>
-                                <template v-else-if="'all_user' in key">
+                                <template v-else-if="'all_user' in key && actions !== 'getTypeObject'">
                                     <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{key.all_user}}
                                     </div>
                                 </template>
@@ -68,7 +68,7 @@ export default {
     comments: {
         CardInLeftPanel
     },
-    props: ['addCardOn', 'visableCard', 'editCardOn', 'visableVersions', 'notVisableVersions', 'versionsPage'],
+    props: ['addCardOn', 'visableCard', 'editCardOn', 'visableVersions', 'notVisableVersions', 'versionsPage', 'infoCardOn'],
     data() {
         return {
             selectedItem: null,
@@ -166,7 +166,7 @@ export default {
             }
         }
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode']) },
+    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions']) },
     methods: {
         ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAllTypeInGroup', 'getFilteredVersions']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
@@ -196,7 +196,7 @@ export default {
                 this.getUsersOfGroup(objectType);
             }
             else if (domItem === "Типы объектов") {
-                this.getAllTypeInGroup(objectType);
+                this.getAllTypeInGroup(objectType.name);
             }
             else if (domItem === "Версии системы") {
                 this.getFilteredVersions(objectType);

@@ -26,7 +26,7 @@
                             <template v-else>
                                 <v-col v-for="(f, index) in userGroups" :key="index" cols="2" sm="6" md="5" lg="6"
                                     class="pa-0 ma-0">
-                                    <v-radio-group multiple hide-details class="ma-0 pa-0"
+                                    <v-radio-group hide-details class="ma-0 pa-0"
                                         v-model="objectForCard_.properties.group">
                                         <v-radio :label="f" :value="userGroups[index]" :readonly="infoCardOn.data"
                                             class="ma-2" color="#E93030" on-icon="mdi-checkbox-marked"
@@ -130,18 +130,19 @@ export default {
         'objectForCard.groups': {
             handler() {
                 this.objectForCard_ = this.objectForCard;
+                if ('groups' in this.objectForCard) {
+                    if (this.objectForCard_.groups.includes('Admin') && this.user.is_superuser) {
+                        this.permissionList = [...this.user.admin_permissions]
+                    } else {
+                        this.permissionList = [...this.user.user_permissions]
+                    }
 
-                if (this.objectForCard_.groups.includes('Admin') && this.user.is_superuser) {
-                    this.permissionList = [...this.user.admin_permissions]
-                } else {
-                    this.permissionList = [...this.user.user_permissions]
+                    if (this.cardVisable.data) {
+                        this.objectForCard_.permissions = this.permissionList
+                    }
+
+                    this.groupsPermissions();
                 }
-
-                if (this.cardVisable.data) {
-                    this.objectForCard_.permissions = this.permissionList
-                }
-
-                this.groupsPermissions();
             }
         },
 
@@ -190,7 +191,7 @@ export default {
     },
     computed: mapGetters(['user', 'currentGroup', 'allGroups', 'allUsersForAdmin']),
     methods: {
-        ...mapActions(['getAllUsersForAdmin', 'getAllGroups']),
+        ...mapActions(['getAllUsersForAdmin', 'getAllGroups', 'getUser']),
         ...mapMutations(['updateAllUsersForAdmin', 'updateAllGroups']),
         groupsPermissions() {
             this.groups = []
@@ -203,7 +204,8 @@ export default {
         },
     },
 
-    mounted() {
+    async mounted() {
+        await this.getUser();
         if ('groups' in this.user) {
             this.userGroups = [...this.user.groups];
             this.groupsPermissions();
