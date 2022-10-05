@@ -129,13 +129,12 @@ export default {
                 actionOneGet: 'getOneUser',
                 actionPut: 'putUser',
             });
-            await this.getOneObject(this.user.id);
             this.updateListType([]);
             this.updateListItem({ items: [this.user] })
             setTimeout(() => {
                 this.visableCard();
                 this.infoCardOn_.data = true;
-            }, 280);
+            }, 500);
         },
         onFeatures() {
             this.notVisableVersions()

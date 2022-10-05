@@ -307,8 +307,8 @@ export default {
                         if (i === 'email' || i === 'first_name' || i === 'last_name' || i === 'email') {
                             userForCard.properties[i] = this.user[i];
                         }
-                        else if(i === 'id') {
-                            userForCard.id = this.user[i];
+                        else {
+                            userForCard[i] = this.user[i];
                         }
                     }
                     this.updateObjectForCard(userForCard);
@@ -329,8 +329,12 @@ export default {
             }
             else {
                 this.checkCorrectFields();
-                console.log(this.objectForCard.propeties);
-                await this.postObject(this.objectForCard.properties);
+                
+                let object = JSON.parse(JSON.stringify(this.objectForCard));
+                object = { ...object, ...object.properties }
+                delete object.properties;
+                
+                await this.postObject(object);
             }
             this.addCardOn_.data = !this.addCardOn_.data;
             this.notVisableCard();
@@ -356,10 +360,11 @@ export default {
                     return;
                 }
 
-                this.objectForCard.properties = { ...this.objectForCard, ...this.objectForCard.properties }
-                delete this.objectForCard.properties.properties;
+                let object = JSON.parse(JSON.stringify(this.objectForCard));
+                object.properties = { ...object, ...object.properties }
+                delete object.properties.properties;
 
-                this.putObject(this.objectForCard);
+                this.putObject(object);
             }
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
@@ -368,7 +373,7 @@ export default {
             if(this.password === this.password_again){
                 const user = {
                     id: this.user.id,
-                    username: this.user.username,
+                    email: this.email.username,
                     password: this.password,
                 }
                 this.putUser(user);
@@ -421,6 +426,7 @@ export default {
                 }
                 this.objectForCard.properties.image = this.objectForCard.image;
             }
+            return true;
         },
         showSnacker(errorText) {
             this.errorMessege = errorText;
