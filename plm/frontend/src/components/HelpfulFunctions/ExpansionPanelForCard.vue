@@ -1,7 +1,7 @@
 <template>
     <div>
         <div style="margin: 0 0 10px 24px"
-            v-if="'properties' in objectForCard && ('username' in objectForCard.properties || 'type' in objectForCard.properties)">
+            v-if="'properties' in objectForCard && ('first_name' in objectForCard.properties || 'type' in objectForCard.properties)">
             <v-expansion-panels accordion flat class="pa-0 ma-0">
                 <v-expansion-panel class="pa-0 ma-0">
                     <v-expansion-panel-header class="pa-0 ma-0">
@@ -188,7 +188,7 @@ export default {
                 this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)]
             },
             deep: true,
-        }
+        },
     },
     computed: mapGetters(['user', 'currentGroup', 'allGroups', 'allUsersForAdmin']),
     methods: {
@@ -199,12 +199,12 @@ export default {
             for (let i = 0; i < this.permissionList.length; ++i) {
                 let el = this.permissionList[i].split(" ").pop();
 
-                if(el === 'control'){
+                if (el === 'control') {
+
                     el = 'Version Control'
                 } else {
                     el = el[0].toUpperCase() + el.slice(1);
                 }
-                
                 this.groups.push(el);
             }
             this.groups = [...new Set(this.groups)]

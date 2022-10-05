@@ -96,8 +96,6 @@ export default {
                                     first_name: "",
                                     last_name: "",
                                     email: "",
-                                    username: "",
-                                    password: "",
                                 },
                                 groups: [],
                                 permissions: [],
@@ -136,7 +134,6 @@ export default {
                                 properties: {
                                     name: '',
                                 },
-                                permissions: []
                             }
                             this.upadateEmptyObject(object);
                         }
@@ -188,8 +185,8 @@ export default {
                         "sortable": false
                     },
                     {
-                        "text": "username",
-                        "value": "username"
+                        "text": "email",
+                        "value": "email"
                     }
                 ];
                 this.updateHeaders(headers);
