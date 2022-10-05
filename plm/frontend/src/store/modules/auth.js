@@ -48,19 +48,23 @@ export default {
                 dispatch('getUsersOfGroup');
             })
         },
-        async putUser({ dispatch, state }, user) {
-            user = { ...user, ...user.properties};
+        async putUser({ dispatch, state, getters }, user) {
+            user = { ...user, ...user.properties };
             delete user.properties;
             await axios.put('/user/admin', user).then(() => {
-                dispatch('getUsersOfGroup');
-                if (user.id === state.user.id){
-                    dispatch('getUser');
+                if (getters.allListItem[0] !== state.user) {
+                    dispatch('getUsersOfGroup');
+                    if (user.id === state.user.id) {
+                        dispatch('getUser');
+                    }
+                }
+                else if(getters.allListItem[0] === state.user && 'password' in user){
+                    dispatch('logOut');
                 }
             })
         },
         async deleteUser({ dispatch }, idUser) {
-            await axios.delete(`/user/admin?id=${idUser}`).then((response) => {
-                console.log(response.data);
+            await axios.delete(`/user/admin?id=${idUser}`).then(() => {
                 dispatch('getUsersOfGroup');
             })
         }

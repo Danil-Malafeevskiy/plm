@@ -131,18 +131,19 @@ export default {
         'objectForCard.groups': {
             handler() {
                 this.objectForCard_ = this.objectForCard;
+                if ('groups' in this.objectForCard) {
+                    if (this.objectForCard_.groups.includes('Admin') && this.user.is_superuser) {
+                        this.permissionList = [...this.user.admin_permissions]
+                    } else {
+                        this.permissionList = [...this.user.user_permissions]
+                    }
 
-                if (this.objectForCard_.groups.includes('Admin') && this.user.is_superuser) {
-                    this.permissionList = [...this.user.admin_permissions]
-                } else {
-                    this.permissionList = [...this.user.user_permissions]
+                    if (this.cardVisable.data) {
+                        this.objectForCard_.permissions = this.permissionList
+                    }
+
+                    this.groupsPermissions();
                 }
-
-                if (this.cardVisable.data) {
-                    this.objectForCard_.permissions = this.permissionList
-                }
-
-                this.groupsPermissions();
             }
         },
 
@@ -191,7 +192,7 @@ export default {
     },
     computed: mapGetters(['user', 'currentGroup', 'allGroups', 'allUsersForAdmin']),
     methods: {
-        ...mapActions(['getAllUsersForAdmin', 'getAllGroups']),
+        ...mapActions(['getAllUsersForAdmin', 'getAllGroups', 'getUser']),
         ...mapMutations(['updateAllUsersForAdmin', 'updateAllGroups']),
         groupsPermissions() {
             this.groups = []
@@ -210,7 +211,8 @@ export default {
         },
     },
 
-    mounted() {
+    async mounted() {
+        await this.getUser();
         if ('groups' in this.user) {
             this.userGroups = [...this.user.groups];
             this.groupsPermissions();

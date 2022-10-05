@@ -63,7 +63,6 @@ export default {
 
         async onSubmit() {
             await this.logIn(this.userData)
-            console.log(this.getAuth);
             if (this.getAuth){
                 location.reload();
             } else{
@@ -75,11 +74,6 @@ export default {
 
         },
     },
-    mounted() {
-        setTimeout(() =>{
-            console.log(this.getAuth);
-        }, 1000)
-    }
 
 }
 </script>
