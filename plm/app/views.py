@@ -5,7 +5,7 @@ import sqlite3
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate, login, logout, get_user_model
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Group
 from django.shortcuts import render
 from django.utils import timezone, dateformat
 from rest_framework.authentication import SessionAuthentication
@@ -21,6 +21,7 @@ from rest_framework.views import APIView
 from app.models import Feature, Type, VersionControl
 from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, TypeSerializer, VersionControlSerializer
 from rest_framework.response import Response
+from django.core.mail import send_mail
 
 class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
@@ -247,10 +248,10 @@ class UserView(APIView):
 
     def get(self, request):
         if request.user.is_superuser:
-            return Response(UserSerializer(request.user, remove_fields=['password', 'permissions', 'avaible_permission']).data)
+            return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'permissions', 'avaible_permission']).data)
         if request.user.is_staff:
-            return Response(UserSerializer(request.user, remove_fields=['password', 'permissions', 'avaible_permission', 'admin_permissions']).data)
-        return Response(UserSerializer(request.user, remove_fields=['password', 'permissions', 'avaible_permission',
+            return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'permissions', 'avaible_permission', 'admin_permissions']).data)
+        return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'permissions', 'avaible_permission',
                                                                     'admin_permissions', 'user_permissions', 'groups']).data)
 
 class UserAdminView(APIView):
@@ -270,7 +271,7 @@ class UserAdminView(APIView):
             filtered_queryset = ff.filter_queryset(request, users, self)
 
 
-            user_serializer = UserSerializer(filtered_queryset, many=True, remove_fields=['password', 'first_name', 'last_name', 'email',
+            user_serializer = UserSerializer(filtered_queryset, many=True, remove_fields=['username', 'password', 'first_name', 'last_name',
                                                                                           'is_superuser', 'is_staff',
                                                                                           'groups',
                                                                                           'permissions',
@@ -278,14 +279,20 @@ class UserAdminView(APIView):
                                                                                           'image', 'admin_permissions', 'user_permissions'])
             return Response(user_serializer.data)
 
-        return Response(UserSerializer(get_user_model().objects.get(id=id), remove_fields=['password', 'is_superuser', 'is_staff', 'admin_permissions', 'user_permissions']).data)
+        return Response(UserSerializer(get_user_model().objects.get(id=id), remove_fields=['username', 'full_name', 'password', 'is_superuser', 'is_staff', 'admin_permissions', 'user_permissions']).data)
 
     def post(self, request):
         if "Admin" in request.data['groups']:
             request.data['is_staff'] = True
+
+        request.data['password'] = get_user_model().objects.make_random_password(length=16)
+        request.data['username'] = request.data['email']
+
         reg = UserSerializer(data=request.data, context={'permissions': request.data['permissions'], 'groups': request.data['groups']})
         if reg.is_valid():
-            reg.save()
+            registr = reg.save()
+            send_mail('Пароль для входа на сайт', f'Ваш пароль: {request.data["password"]}',
+                      settings.DEFAULT_FROM_EMAIL, [registr.email])
             return Response({"id": reg.data['id']})
         return Response(reg.errors)
 
@@ -293,6 +300,8 @@ class UserAdminView(APIView):
         user = get_user_model().objects.get(id=request.data['id'])
         if 'password' in request.data.keys():
             user_serializer = UserSerializer(user, data=request.data)
+            send_mail('Пароль для входа на сайт изменен', f'Ваш новый пароль: {request.data["password"]}',
+                      settings.DEFAULT_FROM_EMAIL, [user.email])
         else:
             user_serializer = UserSerializer(user, data=request.data, remove_fields=['password'],
                                              context={'permissions': request.data['permissions'],

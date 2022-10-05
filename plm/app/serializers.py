@@ -189,18 +189,20 @@ class GroupSerializer(serializers.ModelSerializer):
         return len(Type.objects.filter(group=obj.id))
 
 class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
     groups = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
     avaible_permission = serializers.SerializerMethodField()
     image = BinaryField(required=False)
     admin_permissions = serializers.SerializerMethodField()
     user_permissions = serializers.SerializerMethodField()
+    email = serializers.EmailField(required=True)
 
     class Meta:
         ordering = ['id']
         model = get_user_model()
         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff', 'groups',
-                  'permissions', 'avaible_permission', 'image', 'admin_permissions', 'user_permissions')
+                  'permissions', 'avaible_permission', 'image', 'admin_permissions', 'user_permissions', 'full_name')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -209,6 +211,9 @@ class UserSerializer(serializers.ModelSerializer):
         if remove_fields:
             for field_name in remove_fields:
                 self.fields.pop(field_name)
+
+    def get_full_name(self, obj):
+        return get_user_model().objects.get(username=obj.username).get_full_name()
 
     def get_groups(self, obj):
         if obj.is_superuser:
