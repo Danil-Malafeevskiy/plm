@@ -1,16 +1,16 @@
 <template>
-    <TablePage />
+    <App />
 </template>
 
 <script>
-import TablePage from '../components/HelpfulFunctions/TablePage.vue';
+import App from '@/App.vue';
 
 export default {
   name: 'HomeView',
 
   components: {
-    TablePage
-  },
+    App
+},
 }
 </script>
 
