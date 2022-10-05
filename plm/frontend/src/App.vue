@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <NavigationDrawer :addCardOn="addCardOn" :notVisableVersions="notVisableVersions" :visableCard="visableCard"
-      :editCardOn="editCardOn" :visableVersions="visableVersions" :versionsPage="versionsPage" />
+      :editCardOn="editCardOn" :visableVersions="visableVersions" :versionsPage="versionsPage" :infoCardOn="infoCardOn"/>
 
     <v-main>
       <router-view></router-view>
@@ -82,7 +82,7 @@
 
             <Auth v-if="getAuth === false && authbool" />
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
-            <FIleInputWindow v-if="isFileInput" @offFileInput="offFileInput"/>
+            <FIleInputWindow v-if="isFileInput" @offFileInput="offFileInput" />
 
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data" />
@@ -93,9 +93,9 @@
         </v-tab-item>
         <v-tab-item>
           <div flat>
-            <MapArea :allFeatures="allFeatures" :cardVisable="cardVisable" :visableCard="visableCard" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="emptyObject"
-              :changeElements="changeElements" />
+            <MapArea :allFeatures="allFeatures" :cardVisable="cardVisable" :visableCard="visableCard"
+              :notVisableCard="notVisableCard" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
+              :getFeature="emptyObject" :changeElements="changeElements" />
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -129,7 +129,7 @@ export default {
     CardConflict,
     VersionControl,
     FIleInputWindow
-},
+  },
 
   data() {
     return {
@@ -178,14 +178,20 @@ export default {
         this.visableConflictCard();
       }
     },
+    emptyObject: {
+      handler(){
+        if(this.actions === 'getFeatures')
+        this.emptyObject.group = this.oneType.group;
+      }
+    },
     actions: {
-      async handler() {
-        await this.notVisableCard();
+      handler() {
+        this.notVisableCard();
         setTimeout(() => {
           this.infoCardOn.data = false;
           this.addCardOn.data = false;
           this.editCardOn.data = false;
-        }, 500);
+        }, 280);
       }
     },
     isGetAllChange: {
@@ -199,7 +205,7 @@ export default {
     },
   },
   computed: mapGetters(['allFeatures', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
-    'newData', 'actions', 'typeForLayer', 'isGetAllChange', 'arrayEdit']),
+    'newData', 'actions', 'typeForLayer', 'isGetAllChange', 'arrayEdit', 'allListItem', 'user']),
   methods: {
 
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getTypeObject']),
@@ -223,7 +229,7 @@ export default {
     },
     async onmessage(e) {
       const data = JSON.parse(e.data);
-
+      console.log(data);
       switch (data.action) {
         case "update": {
           if (this.editMode) {
@@ -242,7 +248,9 @@ export default {
         case "create":
           break;
         case 'delete':
-          this.arrayEditMode[this.oneType.group].put = this.arrayEditMode[this.oneType.group].put.filter(el => el.id != data.data.id)
+          if (this.editMode) {
+            this.arrayEditMode[this.oneType.group].put = this.arrayEditMode[this.oneType.group].put.filter(el => el.id != data.data.id);
+          }
           if (this.getObjectForCard && this.getObjectForCard.id === data.data.id) {
             this.infoCardOn.data = false;
             this.editCardOn.data = false;
@@ -250,7 +258,7 @@ export default {
           }
           break;
         default:
-          if('content' in data && data.content === 'Все объекты добавлены и обновлены!'){
+          if ('content' in data && (data.content === 'Все объекты добавлены и обновлены!' || data.content === 'Все объекты добавлены!')) {
             this.getFeatures();
           }
           break;
@@ -272,7 +280,7 @@ export default {
     offConflictWindow() {
       this.isConflict = !this.isConflict;
     },
-    offFileInput(){
+    offFileInput() {
       this.isFileInput = !this.isFileInput;
     },
     searchConflict(itemFirst, itemSecond) {
@@ -289,7 +297,7 @@ export default {
     },
     closeEditMode() {
       this.editMode = !this.editMode;
-      if(this.editCardOn.data){
+      if (this.editCardOn.data) {
         this.editCardOn.data = !this.editCardOn.data;
         this.infoCardOn = !this.editCardOn.data;
       }
@@ -319,8 +327,8 @@ export default {
   mounted() {
     this.checkPath()
     this.getUser();
-    this.getFeatures();  
-    
+    this.getFeatures();
+
     const chatSocket = new WebSocket("ws://localhost:8000/test");
     chatSocket.onmessage = this.onmessage;
   }
