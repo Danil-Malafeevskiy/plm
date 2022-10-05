@@ -6,8 +6,13 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.sites.shortcuts import get_current_site
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone, dateformat
+from django.utils.encoding import smart_bytes, smart_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.parsers import MultiPartParser, FileUploadParser
 
@@ -248,10 +253,10 @@ class UserView(APIView):
 
     def get(self, request):
         if request.user.is_superuser:
-            return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'permissions', 'avaible_permission']).data)
+            return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'avaible_permission']).data)
         if request.user.is_staff:
-            return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'permissions', 'avaible_permission', 'admin_permissions']).data)
-        return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'permissions', 'avaible_permission',
+            return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'avaible_permission', 'admin_permissions']).data)
+        return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'avaible_permission',
                                                                     'admin_permissions', 'user_permissions', 'groups']).data)
 
 class UserAdminView(APIView):
@@ -374,9 +379,6 @@ class TypeAdminView(APIView):
         Type.objects.filter(id__in=id.split(',')).delete()
         return Response("SUCCESS DEL")
 
-def room(request):
-    return render(request, 'E:/plm/plm/templates/test.html')
-
 class VersionControlView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [VersionPerm]
@@ -464,3 +466,33 @@ class VersionControlView(APIView):
         if len(errors)==0:
             return Response("Version Return!")
         return Response(errors)
+
+class RequestResetPassword(APIView):
+
+    def post(self, request):
+        if get_user_model().objects.filter(email=request.data['email']).exists():
+            user = get_user_model().objects.get(email=request.data['email'])
+            uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
+            token = PasswordResetTokenGenerator().make_token(user)
+            current_site = get_current_site(request=request).domain
+            relativeLink = reverse('password-reset', kwargs={'uidb64': uidb64, 'token': token})
+            absurl = 'http://'+current_site+relativeLink
+            email_body = 'Перейдите по ссылке для изменения пароля:'
+            send_mail('Сброс и изменение пароля', f'{email_body} \n{absurl}',
+                      settings.DEFAULT_FROM_EMAIL, [request.data["email"]])
+            return Response({'success': "Ссылка на изменение пароля отправлена на ваш Email!"})
+        return Response("Мы не можем найти предоставленный Email. Проверьте введенные данные.")
+
+class ResetPassword(APIView):
+    def get(self, request, uidb64, token):
+        try:
+            id = smart_str(urlsafe_base64_decode(uidb64))
+            user = get_user_model().objects.get(id=id)
+
+            if not PasswordResetTokenGenerator().check_token(user, token):
+                return Response({'error': "Невалидный токен! Попробуйте еще раз!"})
+
+            return Response({'success': True})
+        except Exception:
+            if not PasswordResetTokenGenerator().check_token(user):
+                return Response({'error': "Невалидный токен! Попробуйте еще раз!"})
