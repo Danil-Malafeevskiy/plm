@@ -38,8 +38,10 @@ class UserPerm(permissions.BasePermission):
             return True
         if request.method in permissions.SAFE_METHODS:
             return "Can view user" in request.user.user_permissions.values_list('name', flat=True)
-        if request.method == 'PUT' or request.method == 'POST' or request.method == 'DELETE':
+        if request.method == 'POST' or request.method == 'DELETE':
             return "Can change user" in request.user.user_permissions.values_list('name', flat=True)
+        if request.method == 'PUT':
+            return True
 
 class TypePerm(permissions.BasePermission):
     message = "У вас нет прав для данного действия!"

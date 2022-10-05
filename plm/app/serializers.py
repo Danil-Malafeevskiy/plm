@@ -1,9 +1,13 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils import timezone
 from django.contrib.gis.geos import GEOSGeometry
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 
 from rest_framework import serializers, exceptions
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_gis.serializers import GeometryField
 import django.contrib.auth.password_validation as validators
@@ -168,10 +172,11 @@ class FileSerializer(serializers.Serializer):
 
 class GroupSerializer(serializers.ModelSerializer):
     all_user = serializers.SerializerMethodField()
+    all_type = serializers.SerializerMethodField()
     class Meta:
         ordering = ['id']
         model = Group
-        fields = ('id', 'name', 'all_user')
+        fields = ('id', 'name', 'all_user', 'all_type')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -184,19 +189,24 @@ class GroupSerializer(serializers.ModelSerializer):
     def get_all_user(self, obj):
         return len(get_user_model().objects.filter(groups__name=obj.name).exclude(id=self.context))
 
+    def get_all_type(self, obj):
+        return len(Type.objects.filter(group=obj.id))
+
 class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
     groups = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
     avaible_permission = serializers.SerializerMethodField()
     image = BinaryField(required=False)
     admin_permissions = serializers.SerializerMethodField()
     user_permissions = serializers.SerializerMethodField()
+    email = serializers.EmailField(required=True)
 
     class Meta:
         ordering = ['id']
         model = get_user_model()
         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff', 'groups',
-                  'permissions', 'avaible_permission', 'image', 'admin_permissions', 'user_permissions')
+                  'permissions', 'avaible_permission', 'image', 'admin_permissions', 'user_permissions', 'full_name')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -205,6 +215,9 @@ class UserSerializer(serializers.ModelSerializer):
         if remove_fields:
             for field_name in remove_fields:
                 self.fields.pop(field_name)
+
+    def get_full_name(self, obj):
+        return get_user_model().objects.get(username=obj.username).get_full_name()
 
     def get_groups(self, obj):
         if obj.is_superuser:
@@ -339,3 +352,32 @@ class VersionControlSerializer(serializers.ModelSerializer):
         if remove_fields:
             for field_name in remove_fields:
                 self.fields.pop(field_name)
+
+class SetNewPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(min_length=8, max_length=18, write_only=True)
+    token = serializers.CharField(min_length=1, write_only=True)
+    uidb64 = serializers.CharField(min_length=1, write_only=True)
+
+    class Meta:
+        fields = ['password', 'token', 'uidb64']
+
+    def validate(self, attrs):
+        password = attrs.get('password')
+        token = attrs.get('token')
+        uidb64 = attrs.get('uidb64')
+
+        id = force_str(urlsafe_base64_decode(uidb64))
+        user = get_user_model().objects.get(id=id)
+
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            raise AuthenticationFailed("Невалидный токен!")
+
+        try:
+            validators.validate_password(password=password)
+        except exceptions.ValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
+
+        user.set_password(password)
+        user.save()
+
+        return super().validate(attrs)

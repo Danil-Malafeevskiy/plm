@@ -200,11 +200,11 @@ export default {
                 let el = this.permissionList[i].split(" ").pop();
 
                 if (el === 'control') {
+
                     el = 'Version Control'
                 } else {
                     el = el[0].toUpperCase() + el.slice(1);
                 }
-
                 this.groups.push(el);
             }
             this.groups = [...new Set(this.groups)]

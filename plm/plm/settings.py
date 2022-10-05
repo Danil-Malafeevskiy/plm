@@ -47,6 +47,13 @@ INSTALLED_APPS = [
     'app.apps.AppConfig',
 ]
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+DEFAULT_FROM_EMAIL = 'test_kron@mail.ru'
+EMAIL_HOST = 'smtp.mail.ru'
+EMAIL_PORT = 2525
+EMAIL_HOST_USER = 'test_kron@mail.ru'
+EMAIL_HOST_PASSWORD = 'bXd8XbLmvqYB9TdVWi4f'
+EMAIL_USE_TLS = True
 
 CORS_ORIGIN_ALLOW_ALL = True
 
