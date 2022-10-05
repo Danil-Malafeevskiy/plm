@@ -18,6 +18,8 @@ from rest_framework.parsers import MultiPartParser, FileUploadParser
 
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.renderers import TemplateHTMLRenderer
+
 from app.permissions import TowerPerm, FileUploadPerm, GroupPerm, UserPerm, TypePerm, VersionPerm
 from plm import settings
 from django.core.files.storage import FileSystemStorage
@@ -484,6 +486,7 @@ class RequestResetPassword(APIView):
         return Response("Мы не можем найти предоставленный Email. Проверьте введенные данные.")
 
 class ResetPassword(APIView):
+
     def get(self, request, uidb64, token):
         id = smart_str(urlsafe_base64_decode(uidb64))
         user = get_user_model().objects.get(id=id)
