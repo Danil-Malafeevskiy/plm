@@ -220,6 +220,13 @@ export default {
         onVersions() {
             this.visableVersions()
             this.updateListType([]);
+            this.updateAction({
+                actionGet: '',
+                actionPost: '',
+                actionOneGet: '',
+                actionPut: '',
+                actionDelete: '',
+            });
             this.updateListType(this.groupsOfUser);
             this.updateNameForArray('Версии системы');
         },

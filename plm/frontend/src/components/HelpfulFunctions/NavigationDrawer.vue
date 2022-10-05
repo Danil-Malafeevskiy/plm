@@ -29,7 +29,7 @@
                 <v-list-item-group v-if="fiteredAllTypes.length" class="object__data" v-model="selectedItem"
                     color="#E93030">
                     <v-list-item class="pa-3" v-for="key in fiteredAllTypes" :key="key.id" link
-                        style="border-radius: 8px !important;">
+                        style="border-radius: 8px !important;" @click="changeObject(key)">
                         <v-list-item-title class="pa-1" v-if="typeof key === 'object'">
                             <div class="name">
                                 <div>{{ key.name }}</div>
@@ -45,6 +45,10 @@
                                 </template>
                                 <template v-else-if="'all_user' in key && actions !== 'getTypeObject'">
                                     <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{key.all_user}}
+                                    </div>
+                                </template>
+                                <template v-else-if="'all_type' in key && actions === 'getTypeObject'">
+                                    <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{key.all_type}}
                                     </div>
                                 </template>
                             </div>
@@ -81,7 +85,6 @@ export default {
         selectedItem: {
             async handler(newValue, oldValue) {
                 if (this.selectedItem != null) {
-                    this.changeObject(this.fiteredAllTypes[this.selectedItem]);
                     if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
                         this.updateAction({
                             actionGet: 'getUsersOfGroup',
