@@ -492,7 +492,7 @@ class ResetPassword(APIView):
         user = get_user_model().objects.get(id=id)
 
         if not PasswordResetTokenGenerator().check_token(user, token):
-            return Response({'error': "Невалидный токен! Попробуйте еще раз!"})
+            return Response({'success': False})
 
         return Response({'success': True, 'uidb64': uidb64, 'token': token})
 
