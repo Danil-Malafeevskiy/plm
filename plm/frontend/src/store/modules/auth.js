@@ -44,6 +44,7 @@ export default {
         },
 
         async postUser({ dispatch }, newUser) {
+            console.log(newUser);
             await axios.post('/user/admin', newUser).then(() => {
                 dispatch('getUsersOfGroup');
             })
@@ -51,7 +52,9 @@ export default {
         async putUser({ dispatch, state, getters }, user) {
             user = { ...user, ...user.properties };
             delete user.properties;
-            await axios.put('/user/admin', user).then(() => {
+            user.username = user.email;
+            console.log(user);
+            await axios.put('/user/admin', user).then((response) => {
                 if (getters.allListItem[0] !== state.user) {
                     dispatch('getUsersOfGroup');
                     if (user.id === state.user.id) {
@@ -61,6 +64,7 @@ export default {
                 else if(getters.allListItem[0] === state.user && 'password' in user){
                     dispatch('logOut');
                 }
+                console.log(response.data)
             })
         },
         async deleteUser({ dispatch }, idUser) {
