@@ -3,7 +3,6 @@
         <v-card class="card_of_object" v-show="cardVisable_.data === true">
             <div class="card__window">
                 <p style="display: none">{{ objectForCard }}</p>
-                <!-- <p>{{ objectForCard.geometry }}</p> -->
                 <v-card
                     v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'"
                     class="one_picture pa-0 ma-0 background_color_gray" tile flat
@@ -28,11 +27,11 @@
                 </v-file-input>
 
                 <v-file-input v-else-if="!objectForCard.image" @change="fileToBase64" accept="image/*" :class="{
-                    'background_color_red': !('properties' in objectForCard && 'username' in objectForCard.properties),
-                    'background_color_gray': ('properties' in objectForCard && 'username' in objectForCard.properties)
+                    'background_color_red': !('properties' in objectForCard && 'first_name' in objectForCard.properties),
+                    'background_color_gray': ('properties' in objectForCard && 'first_name' in objectForCard.properties)
                 }" class="pa-0 ma-0" height="37.53%" :prepend-icon="icon" :disabled="infoCardOn_.data" hide-input>
                 </v-file-input>
-                <template v-else-if="objectForCard.image && !infoCardOn_.data && allListItem[0] !== user">
+                <template v-else-if="objectForCard.image && !infoCardOn_.data">
                     <div class="background_img"></div>
                     <v-btn class="btn_del_img ma-3 pa-0" elevation="0" icon @click="objectForCard.image = ''">
                         <v-icon color="white">
@@ -43,19 +42,19 @@
 
                 <template v-if="!('properties' in objectForCard && 'type' in objectForCard.properties)">
                     <v-img v-if="objectForCard.image" :src="objectForCard.image" :class="{
-                        'one_picture': infoCardOn_.data || allListItem[0] === user,
-                        'not_one_picture': !infoCardOn_.data && allListItem[0] !== user,
+                        'one_picture': infoCardOn_.data,
+                        'not_one_picture': !infoCardOn_.data,
                     }" width="100%" height="37.53%"></v-img>
                 </template>
 
                 <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                     <v-card-text class="pa-0">
-                        <v-form v-if="allListItem[0] != user">
+                        <v-form>
                             <v-row justify="start" style="padding-bottom: 0 !important;">
                                 <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
-                                    <v-card-text v-if="objectForCard.properties.username != undefined" class="pa-0"
+                                    <v-card-text v-if="objectForCard.properties.first_name != undefined" class="pa-0"
                                         style="font-size: 24px;">{{
-                                        objectForCard.properties.username
+                                        objectForCard.properties.first_name
                                         }}
                                     </v-card-text>
                                     <v-card-text v-else-if="'name' in objectForCard" class="pa-0"
@@ -138,38 +137,40 @@
                                 </template>
                             </v-row>
 
-                            <FormForDynamicField :objectForCard="objectForCard" :infoCardOn="infoCardOn"
-                                :checkEqualityOfFieads="checkEqualityOfFieads"
+                            <FormForDynamicField v-if="allListItem[0] !== user" :objectForCard="objectForCard"
+                                :infoCardOn="infoCardOn" :checkEqualityOfFieads="checkEqualityOfFieads"
                                 :changeConflictField="changeConflictField" />
 
-                            <ExpansionPanelForCard :objectForCard="objectForCard" :cardVisable="cardVisable"
-                                :infoCardOn="infoCardOn" />
+                            <ExpansionPanelForCard v-if="allListItem[0] !== user" :objectForCard="objectForCard"
+                                :cardVisable="cardVisable" :infoCardOn="infoCardOn" />
                             <v-snackbar v-model="snackbar" timeout="2000" color="red accent-2">
                                 {{ errorMessege }}
                             </v-snackbar>
                         </v-form>
-                        <v-form v-else-if="allListItem[0] === user">
+                        <v-form v-if="allListItem[0] === user">
                             <v-row justify="start" style="padding-bottom: 0 !important;">
+                                <p class="attributes ma-0">Изменение пароля</p>
                                 <v-col cols="2" sm="6" md="5" lg="6">
-                                    <v-text-field v-model="objectForCard.properties.password" label="password"
+                                    <v-text-field v-model="password" label="Новый пароль"
                                         :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                                        hint="Минимум 8 символов" placeholder="Пароль"
-                                        :type="showPassword ? 'text' : 'password'" filled :disabled="!editCardOn.data"
+                                        hint="Минимум 8 символов" placeholder="Новый пароль"
+                                        :type="showPassword ? 'text' : 'password'" filled :readonly="infoCardOn_.data"
                                         @click:append="showPassword = !showPassword" :rules="[rules.min]">
                                     </v-text-field>
                                 </v-col>
-                                <v-col class="pa-0" cols="2" sm="6" md="5" lg="6" v-if="!editCardOn.data">
-                                    <v-card-text class="pa-0"
-                                        style="font-size: 24px; display: flex; justify-content: flex-end;">
-                                        <v-btn @click="editOn" depressed class="ma-0 btn" fab small elevation="0"
-                                            style="background-color: white !important" color="white"
-                                            :disabled="!editMode && 'type' in this.objectForCard"
-                                            :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
-                                            <v-icon>
-                                                mdi-pencil
-                                            </v-icon>
-                                        </v-btn>
-                                    </v-card-text>
+                                <v-col cols="2" sm="6" md="5" lg="6">
+                                    <v-text-field v-model="password_again" label="Повторите пароль"
+                                        :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                                        hint="Минимум 8 символов" placeholder="Повторите пароль"
+                                        :type="showPassword ? 'text' : 'password'" filled :readonly="infoCardOn_.data"
+                                        @click:append="showPassword = !showPassword" :rules="[rules.min]">
+                                    </v-text-field>
+                                </v-col>
+                                <v-col cols="2" sm="6" md="5" lg="6"></v-col>
+                                <v-col cols="2" sm="6" md="5" lg="6" style="display: flex; justify-content: flex-end">
+                                    <v-btn :disabled="password.length < 8 && password_again.length < 8" @click="changePassword" class="ma-0" text v-if="editCardOn.data">
+                                        Изменить пароль
+                                    </v-btn>
                                 </v-col>
                             </v-row>
                         </v-form>
@@ -180,14 +181,15 @@
                     </v-btn>
                     <v-btn text @click="addNewFeature()">Создать</v-btn>
                 </div>
-                <div class="card__footer" v-else-if="editCardOn_.data">
+                <div class="card__footer" v-else-if="editCardOn.data">
                     <v-btn @click="changeItem(isOldItem = !isOldItem)"
                         v-if="newData.filter(el => el.id === objectForCard.id).length" color="#0F0CA7" text
                         style="margin-right: 15px !important">
                         оригинал
                     </v-btn>
 
-                    <v-btn text @click="notVisableCard(); editCardOn_.data = !editCardOn_.data"
+                    <v-btn v-if="allListItem[0] != user" text
+                        @click="notVisableCard(); editCardOn_.data = !editCardOn_.data"
                         style="margin-right: 15px !important">
                         ОТМЕНА
                     </v-btn>
@@ -232,6 +234,8 @@ export default {
                 min: v => v !== undefined ? v.length >= 8 : !!v || 'Минимум 8 символов',
             },
             errorMessege: '',
+            password: '',
+            password_again: '',
         }
     },
     watch: {
@@ -294,13 +298,29 @@ export default {
                     this.updateOneType({ type: emptyType, forFeature: true });
                 }
             },
+        },
+        allListItem: {
+            handler() {
+                if (this.allListItem[0] === this.user) {
+                    let userForCard = { properties: {} };
+                    for (let i in this.user) {
+                        if (i === 'email' || i === 'first_name' || i === 'last_name' || i === 'email') {
+                            userForCard.properties[i] = this.user[i];
+                        }
+                        else if(i === 'id') {
+                            userForCard.id = this.user[i];
+                        }
+                    }
+                    this.updateObjectForCard(userForCard);
+                }
+            }
         }
     },
     computed: {
         ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user']),
     },
     methods: {
-        ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable']),
+        ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
         ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData']),
         async addNewFeature() {
             if (this.objectForCard.name != null) {
@@ -332,59 +352,75 @@ export default {
                 this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
             }
             else {
-                this.checkCorrectFields();
-                
+                if(!this.checkCorrectFields()){
+                    return;
+                }
+
+                this.objectForCard.properties = { ...this.objectForCard, ...this.objectForCard.properties }
+                delete this.objectForCard.properties.properties;
+
                 this.putObject(this.objectForCard);
             }
             this.editCardOn_.data = !this.editCardOn_.data;
             this.infoCardOn_.data = !this.infoCardOn_.data;
         },
-        checkCorrectFields(){
+        changePassword(){
+            if(this.password === this.password_again){
+                const user = {
+                    id: this.user.id,
+                    username: this.user.username,
+                    password: this.password,
+                }
+                this.putUser(user);
+            }
+            else {
+                this.showSnacker('Пароли не совпадают');
+                return;
+            }
+        },
+        checkCorrectFields() {
             if ('groups' in this.objectForCard) {
-                    for (let key in this.objectForCard.properties) {
-                        if (key !== 'password' && key != 'email' && this.objectForCard.properties[key] === '') {
-                            this.showSnacker('Обязательные поля не могут быть пустыми');
-                            return;
-                        }
-                        else if (key === 'password' && this.objectForCard.properties[key].length < 8) {
-                            this.showSnacker('Пароль не может юыть меньше 8 символов');
-                            return;
-                        }
+                for (let key in this.objectForCard.properties) {
+                    if (key !== 'password' && key != 'email' && this.objectForCard.properties[key] === '') {
+                        this.showSnacker('Обязательные поля не могут быть пустыми');
+                        return false;
                     }
-                    if (!this.objectForCard.groups.length) {
-                        this.showSnacker('Выберите группы');
-                        return;
+                    else if (key === 'password' && this.objectForCard.properties[key].length < 8) {
+                        this.showSnacker('Пароль не может юыть меньше 8 символов');
+                        return false;
                     }
-
-                    else if (!this.objectForCard.properties.email.toLowerCase()
-                        .match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
-                        this.showSnacker('Некорректный email');
-                        return;
-                    }
-                    
-                    this.objectForCard.properties = { ...this.objectForCard, ...this.objectForCard.properties }
-                    delete this.objectForCard.properties.properties;
+                }
+                if (!this.objectForCard.groups.length) {
+                    this.showSnacker('Выберите группы');
+                    return false;
                 }
 
-                else if ('headers' in this.objectForCard.properties) {
-                    if (!this.objectForCard.properties.name) {
-                        this.showSnacker('Введите имя типа');
-                        return;
-                    }
-                    else if (!this.objectForCard.properties.type) {
-                        this.showSnacker('Введите тип геометрии');
-                        return;
-                    }
-                    else if (!this.objectForCard.properties.headers.length) {
-                        this.showSnacker('Добавьте основные атрибуты');
-                        return;
-                    }
-                    else if (this.checkDoubleFields(this.objectForCard.properties)) {
-                        this.showSnacker('Не может быть атрибутов с одинаковыми именами');
-                        return;
-                    }
-                    this.objectForCard.properties.image = this.objectForCard.image;
+                else if (!this.objectForCard.properties.email.toLowerCase()
+                    .match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
+                    this.showSnacker('Некорректный email');
+                    return false;
                 }
+            }
+
+            else if ('headers' in this.objectForCard.properties) {
+                if (!this.objectForCard.properties.name) {
+                    this.showSnacker('Введите имя типа');
+                    return false;
+                }
+                else if (!this.objectForCard.properties.type) {
+                    this.showSnacker('Введите тип геометрии');
+                    return false;
+                }
+                else if (!this.objectForCard.properties.headers.length) {
+                    this.showSnacker('Добавьте основные атрибуты');
+                    return false;
+                }
+                else if (this.checkDoubleFields(this.objectForCard.properties)) {
+                    this.showSnacker('Не может быть атрибутов с одинаковыми именами');
+                    return false;
+                }
+                this.objectForCard.properties.image = this.objectForCard.image;
+            }
         },
         showSnacker(errorText) {
             this.errorMessege = errorText;
