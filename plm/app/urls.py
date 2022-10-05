@@ -19,6 +19,7 @@ urlpatterns = [
     re_path(r'^dataset/admin$',views.TypeAdminView.as_view()),
     re_path(r'^version$', views.VersionControlView.as_view()),
     re_path(r'^version/([0-9]+)$', views.VersionControlView.as_view()),
-    re_path(r'^password-reset', views.RequestResetPassword.as_view()),
-    path('password-reset/<uidb64>/<token>', views.RequestResetPassword.as_view(), name='password-reset')
+    re_path(r'^password-reset-request', views.RequestResetPassword.as_view()),
+    path('password-reset/<uidb64>/<token>', views.ResetPassword.as_view(), name='password-reset'),
+    re_path(r'^password-setnew', views.SetNewPassword.as_view()),
 ]

@@ -24,7 +24,8 @@ from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
 
 from app.models import Feature, Type, VersionControl
-from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, TypeSerializer, VersionControlSerializer
+from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, TypeSerializer, \
+    VersionControlSerializer, SetNewPasswordSerializer
 from rest_framework.response import Response
 from django.core.mail import send_mail
 
@@ -468,7 +469,6 @@ class VersionControlView(APIView):
         return Response(errors)
 
 class RequestResetPassword(APIView):
-
     def post(self, request):
         if get_user_model().objects.filter(email=request.data['email']).exists():
             user = get_user_model().objects.get(email=request.data['email'])
@@ -485,14 +485,16 @@ class RequestResetPassword(APIView):
 
 class ResetPassword(APIView):
     def get(self, request, uidb64, token):
-        try:
-            id = smart_str(urlsafe_base64_decode(uidb64))
-            user = get_user_model().objects.get(id=id)
+        id = smart_str(urlsafe_base64_decode(uidb64))
+        user = get_user_model().objects.get(id=id)
 
-            if not PasswordResetTokenGenerator().check_token(user, token):
-                return Response({'error': "Невалидный токен! Попробуйте еще раз!"})
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            return Response({'error': "Невалидный токен! Попробуйте еще раз!"})
 
-            return Response({'success': True})
-        except Exception:
-            if not PasswordResetTokenGenerator().check_token(user):
-                return Response({'error': "Невалидный токен! Попробуйте еще раз!"})
+        return Response({'success': True, 'uidb64': uidb64, 'token': token})
+
+class SetNewPassword(APIView):
+    def put(self, request):
+        pass_serializer = SetNewPasswordSerializer(data=request.data)
+        pass_serializer.is_valid(raise_exception=True)
+        return Response("Пароль успешно изменен!")

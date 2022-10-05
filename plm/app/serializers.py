@@ -1,9 +1,13 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils import timezone
 from django.contrib.gis.geos import GEOSGeometry
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 
 from rest_framework import serializers, exceptions
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_gis.serializers import GeometryField
 import django.contrib.auth.password_validation as validators
@@ -348,3 +352,32 @@ class VersionControlSerializer(serializers.ModelSerializer):
         if remove_fields:
             for field_name in remove_fields:
                 self.fields.pop(field_name)
+
+class SetNewPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(min_length=8, max_length=18, write_only=True)
+    token = serializers.CharField(min_length=1, write_only=True)
+    uidb64 = serializers.CharField(min_length=1, write_only=True)
+
+    class Meta:
+        fields = ['password', 'token', 'uidb64']
+
+    def validate(self, attrs):
+        password = attrs.get('password')
+        token = attrs.get('token')
+        uidb64 = attrs.get('uidb64')
+
+        id = force_str(urlsafe_base64_decode(uidb64))
+        user = get_user_model().objects.get(id=id)
+
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            raise AuthenticationFailed("Невалидный токен!")
+
+        try:
+            validators.validate_password(password=password)
+        except exceptions.ValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
+
+        user.set_password(password)
+        user.save()
+
+        return super().validate(attrs)
