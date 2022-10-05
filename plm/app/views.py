@@ -496,5 +496,6 @@ class ResetPassword(APIView):
 class SetNewPassword(APIView):
     def put(self, request):
         pass_serializer = SetNewPasswordSerializer(data=request.data)
-        pass_serializer.is_valid(raise_exception=True)
-        return Response("Пароль успешно изменен!")
+        if pass_serializer.is_valid():
+            return Response("Пароль успешно изменен!")
+        return Response(pass_serializer.errors)
