@@ -1,4 +1,6 @@
 from django.urls import re_path, include, path
+from django.views.generic import TemplateView
+
 from app import views
 
 urlpatterns = [
@@ -20,6 +22,7 @@ urlpatterns = [
     re_path(r'^version$', views.VersionControlView.as_view()),
     re_path(r'^version/([0-9]+)$', views.VersionControlView.as_view()),
     re_path(r'^password-reset-request', views.RequestResetPassword.as_view()),
-    path('password-reset/<uidb64>/<token>', views.ResetPassword.as_view(), name='password-reset'),
+    path('password-reset/<uidb64>/<token>', TemplateView.as_view(template_name='index.html'), name='password-reset'),
+    path('password-reset/<uidb64>/<token>/get', views.ResetPassword.as_view()),
     re_path(r'^password-setnew', views.SetNewPassword.as_view()),
 ]
