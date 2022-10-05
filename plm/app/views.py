@@ -309,15 +309,21 @@ class UserAdminView(APIView):
         if 'password' in request.data.keys():
             user_serializer = UserSerializer(user, data=request.data)
             send_mail('Пароль для входа на сайт изменен', f'Ваш новый пароль: {request.data["password"]}',
-                      settings.DEFAULT_FROM_EMAIL, [user.email])
+                      settings.DEFAULT_FROM_EMAIL, [request.data["email"]])
         else:
+            if request.data['email'] != user.email:
+                try:
+                    send_mail('Смена почты', 'Ваша почта была изменена на эту!',
+                              settings.DEFAULT_FROM_EMAIL, [request.data["email"]])
+                except Exception:
+                    return Response({'email': ["Введенная почта некорректна!"]})
             user_serializer = UserSerializer(user, data=request.data, remove_fields=['password'],
                                              context={'permissions': request.data['permissions'],
                                                       'groups': request.data['groups']})
 
         if user_serializer.is_valid():
             user_serializer.save()
-            return Response("Success up!")
+            return Response({'success': "Success up!"})
         return Response(user_serializer.errors)
 
     def delete(self, request):
@@ -492,7 +498,7 @@ class ResetPassword(APIView):
         user = get_user_model().objects.get(id=id)
 
         if not PasswordResetTokenGenerator().check_token(user, token):
-            return Response({'error': "Невалидный токен! Попробуйте еще раз!"})
+            return Response({'success': False})
 
         return Response({'success': True, 'uidb64': uidb64, 'token': token})
 
