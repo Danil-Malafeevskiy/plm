@@ -4,6 +4,7 @@
       :editCardOn="editCardOn" :visableVersions="visableVersions" :versionsPage="versionsPage" :infoCardOn="infoCardOn"/>
 
     <v-main>
+      <router-view></router-view>
       <div style="display: none">
         <canvas id="png_icon_of_type">
         </canvas>
@@ -79,7 +80,7 @@
           </v-slide-y-transition>
           <div flat>
 
-            <Auth v-if="getAuth === false" />
+            <Auth v-if="getAuth === false && authbool" />
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
             <FIleInputWindow v-if="isFileInput" @offFileInput="offFileInput" />
 
@@ -98,6 +99,7 @@
           </div>
         </v-tab-item>
       </v-tabs-items>
+      
     </v-main>
   </v-app>
 </template>
@@ -151,6 +153,7 @@ export default {
       file: null,
       changeElements: [],
       componentKey: 0,
+      authbool: null, 
     }
   },
   watch: {
@@ -313,8 +316,16 @@ export default {
         this.conflictCard = false;
       }
     },
+    checkPath(){
+      if (location.pathname === '/') {
+        this.authbool = true
+      } else {
+        this.authbool = false
+      }
+    },
   },
   mounted() {
+    this.checkPath()
     this.getUser();
     this.getFeatures();
 

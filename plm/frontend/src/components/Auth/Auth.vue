@@ -1,8 +1,9 @@
 <template>
-    <div class="text-center">
+    <div class="text-center" id='auth'>
         <v-dialog v-model="dialog" width="500" overlay-color="white" overlay-opacity="0.8" persistent
             no-click-animation style="filter: blur(1px) !important; backdrop-filter: blur(4px) !important;">
-            <v-card class="title">
+
+            <v-card class="title" v-if="!resetBool">
                 <div class="text-h6" style="text-align: center; padding: 44px 0;">
                     Здраствуйте!
                 </div>
@@ -30,10 +31,37 @@
                                 ВОЙТИ
                             </v-btn>
                         </div>
+                        <div class="reset-password">
+                            <v-btn @click="onResetPassword">Забыли пароль?</v-btn>
+                        </div>
                     </v-form>
                 </v-card-text>
             </v-card>
+
+            <v-card class="title" v-else-if="resetBool">
+                <div class="text-h6" style="text-align: center; padding: 44px 0;">
+                    Впишите адресс электронной почты
+                </div>
+                <v-card-text>
+                    <v-form @submit.prevent="onSendEmail" style="padding: 0 50px">
+                        <v-text-field background-color="#F1F1F1" v-model="emailForResetPassword"
+                            placeholder="vasyly@mail.com" filled>
+                        </v-text-field>
+                        
+                        <div class="btn">
+                            <v-btn class="pa-0 ma-0" color="#EE5E5E" type="submit" style="width: 100%; height: 45px; color: white !important;">
+                                Восстановить пароль
+                            </v-btn>
+                        </div>
+                        <div class="reset-password">
+                            <v-btn @click="onResetPassword">Назад</v-btn>
+                        </div>
+                    </v-form>
+                </v-card-text>
+            </v-card>
+
         </v-dialog>
+        
     </div>
 </template>
 
@@ -49,7 +77,8 @@ export default {
                 username: null,
                 password: null
             },
-
+            emailForResetPassword: null, 
+            resetBool: false,
         }
     },
     watch: {
@@ -68,11 +97,17 @@ export default {
             } else{
                 this.userData.username = '';
                 this.userData.password = '';
-
             }
-            
-
         },
+
+        async onResetPassword(){
+            this.resetBool = !this.resetBool
+        },
+
+        async onSendEmail() {
+            console.log('sended')
+            this.resetBool = false
+        }
     },
 
 }
@@ -105,6 +140,7 @@ export default {
 .btn {
     padding-top: 12px
 }
+
 </style>
 
 

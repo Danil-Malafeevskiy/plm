@@ -1,23 +1,17 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import HomeView from "@/views/HomeView.vue"
-import MapView from '@/views/MapView.vue'
+import ResetPasswordView from '@/views/ResetPasswordView.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
     {
-      path: '/',
-      name: 'home',
-      component: HomeView
-    },
-    {
-      path: '/map',
-      name: 'map',
-      component: MapView
+      path: '/reset-password/:id',
+      name: 'reset-password',
+      public: true,
+      component: ResetPasswordView
     }
   ]
-
 
   const router = new VueRouter({
     mode: 'history',
