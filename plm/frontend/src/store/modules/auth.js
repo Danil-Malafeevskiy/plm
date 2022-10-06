@@ -79,7 +79,7 @@ export default {
         async putUser({ dispatch, state, getters, commit }, user) {
             user = { ...user, ...user.properties };
             delete user.properties;
-            await axios.put('/user/admin', user).then(() => {
+            await axios.put('/user/admin', user).then((response) => {
                 if (getters.allListItem[0] !== state.user) {
                     dispatch('getUsersOfGroup');
                     if (user.id === state.user.id) {
