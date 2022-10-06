@@ -89,10 +89,11 @@ class TowerAPI(APIView):
                     'content': 'Все объекты добавлены и обновлены!'
                 }
             )
-            try:
-                VersionControl.objects.filter(date_update__gte=VersionControl.objects.get(flag=True, dataset=dataset).date_update, dataset=dataset).delete()
-            except Exception as e:
-                print("Ваша версия максимальна!")
+
+            if VersionControl.objects.filter(date_update__gte=VersionControl.objects.get(flag=True, dataset=dataset).date_update, dataset=dataset).exists():
+                VersionControl.objects.filter(
+                    date_update__gte=VersionControl.objects.get(flag=True, dataset=dataset).date_update,
+                    dataset=dataset).delete()
 
             OldVersionSerializer = VersionControlSerializer(
                 data={"user": request.user.username, "version": version,
