@@ -15,7 +15,7 @@
 
         <CardInLeftPanel v-show="showCard" :resetSelectItem="resetSelectItem" :visableCard="visableCard"
             :editCardOn="editCardOn" :visableVersions="visableVersions" :notVisableVersions="notVisableVersions"
-            :versionsPage="versionsPage" :infoCardOn="infoCardOn"/>
+            :versionsPage="versionsPage" :infoCardOn="infoCardOn" />
 
         <v-list dense nav>
             <p
@@ -166,7 +166,7 @@ export default {
             }
         }
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions']) },
+    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions', 'getToolbarTitle']) },
     methods: {
         ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAllTypeInGroup', 'getFilteredVersions']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
@@ -176,37 +176,39 @@ export default {
         },
 
         async changeObject(objectType) {
-            this.objectType = objectType;
-            const domItem = document.querySelector('.text_in_span').innerHTML;
-            this.upadateTitle(objectType.name);
-            if (domItem === "Пользователи") {
-                const headers = [
-                    {
-                        "text": "id",
-                        "align": "start",
-                        "value": "id",
-                        "sortable": false
-                    },
-                    {
-                        "text": "email",
-                        "value": "email"
-                    }
-                ];
-                this.updateHeaders(headers);
-                this.getUsersOfGroup(objectType);
-            }
-            else if (domItem === "Типы объектов") {
-                this.getAllTypeInGroup(objectType.name);
-            }
-            else if (domItem === "Версии системы") {
-                this.getFilteredVersions(objectType);
-            }
-            else {
-                await this.getOneTypeObjectForFeature({ id: objectType.id });
-                this.objectType = this.oneType;
-                this.updateHeaders(this.objectType.headers);
-                this.updateDrawType(this.objectType.type);
-                await this.filterForFeature(this.objectType.id);
+            if (this.getToolbarTitle != objectType.name) {
+                this.objectType = objectType;
+                const domItem = document.querySelector('.text_in_span').innerHTML;
+                this.upadateTitle(objectType.name);
+                if (domItem === "Пользователи") {
+                    const headers = [
+                        {
+                            "text": "id",
+                            "align": "start",
+                            "value": "id",
+                            "sortable": false
+                        },
+                        {
+                            "text": "full_name",
+                            "value": "full_name"
+                        }
+                    ];
+                    this.updateHeaders(headers);
+                    this.getUsersOfGroup(objectType);
+                }
+                else if (domItem === "Типы объектов") {
+                    this.getAllTypeInGroup(objectType.name);
+                }
+                else if (domItem === "Версии системы") {
+                    this.getFilteredVersions(objectType);
+                }
+                else {
+                    await this.getOneTypeObjectForFeature({ id: objectType.id });
+                    this.objectType = this.oneType;
+                    this.updateHeaders(this.objectType.headers);
+                    this.updateDrawType(this.objectType.type);
+                    await this.filterForFeature(this.objectType.id);
+                }
             }
         },
         resetSelectItem() {
