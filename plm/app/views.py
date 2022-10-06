@@ -8,7 +8,6 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
-from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone, dateformat
 from django.utils.encoding import smart_bytes, smart_str
@@ -37,7 +36,10 @@ class TowerAPI(APIView):
 
     def get(self, request, id=0):
         if id == 0:
-            datasets = Type.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
+            groups = list(request.user.groups.values_list('id', flat=True))
+            if request.user.is_superuser:
+                groups = Group.objects.all()
+            datasets = Type.objects.filter(group__in=groups)
             if 'group' in request.query_params:
                 datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
             ff = DjangoFilterBackend()
@@ -237,7 +239,7 @@ class GroupView(APIView):
                 user.save()
             return Response("Success new group!")
 
-        return Response({group_serializer.errors['name']: "Группа с таким именем уже существует!"})
+        return Response({'name': "Группа с таким именем уже существует!"})
 
     def put(self, request):
         change_group = Group.objects.get(id=request.data['id'])
@@ -245,7 +247,7 @@ class GroupView(APIView):
         if group_serializer.is_valid():
             group_serializer.save()
             return Response("Success up group!")
-        return Response({group_serializer.errors['name']: "Группа с таким именем уже существует!"})
+        return Response({'name': "Группа с таким именем уже существует!"})
 
     def delete(self, request):
         id = request.query_params.get('id')
@@ -405,6 +407,8 @@ class VersionControlView(APIView):
         if id==0:
             ff = DjangoFilterBackend()
             datasets = list(request.user.groups.values_list('id', flat=True))
+            if request.user.is_superuser:
+                datasets = Group.objects.all()
             if 'dataset' in request.query_params:
                 datasets = [Group.objects.filter(name=request.query_params['dataset'])[0].id]
             version = ff.filter_queryset(request, VersionControl.objects.filter(dataset__in=datasets).order_by('id'), self)
