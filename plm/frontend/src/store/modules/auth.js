@@ -86,13 +86,13 @@ export default {
                         dispatch('getUser');
                     }
                 }
-                else if (getters.allListItem[0] === state.user && 'password' in user) {
+                else if (getters.allListItem[0] === state.user) {
                     if (typeof response.data === 'object') {
                         for (let i in response.data) {
                             commit('updateError', response.data[i]);
                         }
                     }
-                    else {
+                    else if ('password' in user) {
                         dispatch('logOut');
                     }
                 }

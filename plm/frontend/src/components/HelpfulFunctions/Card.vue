@@ -315,6 +315,13 @@ export default {
                     this.updateObjectForCard(userForCard);
                 }
             }
+        },
+        snackbar: {
+            handler () {
+                if(!this.snackbar){
+                    this.updateError(null);
+                }
+            }
         }
     },
     computed: {
@@ -322,7 +329,7 @@ export default {
     },
     methods: {
         ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
-        ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData']),
+        ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData', 'updateError']),
         async addNewFeature() {
             if (this.objectForCard.name && typeof this.objectForCard.name === 'number') {
                 if(!this.objectForCard.geometry.coordinates.length){
