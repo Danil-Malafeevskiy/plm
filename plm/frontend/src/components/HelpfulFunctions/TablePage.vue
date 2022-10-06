@@ -191,6 +191,10 @@ export default {
     checkequalsItems(item, object) {
       let checkObject = { ...object.properties };
       
+      if('first_name' in checkObject){
+        checkObject.full_name = checkObject.first_name + ' ' + checkObject.last_name;
+      }
+      
       let putObject = this.arrayEdit.put.find(el => el.id === object.id);
       putObject = putObject ? { ...putObject.properties } : 1;
       let newObject = this.newData.find(el => el.id === object.id);

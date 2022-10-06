@@ -53,13 +53,14 @@
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 export default {
     name: 'CardInLeftPanel',
-    props: ['resetSelectItem', 'visableCard', 'editCardOn', 'visableVersions', 'notVisableVersions', 'versionsPage'],
+    props: ['resetSelectItem', 'visableCard', 'editCardOn', 'visableVersions', 'notVisableVersions', 'versionsPage', 'infoCardOn'],
     data() {
         return {
             selectedItem: 3,
             initials: null,
             editCardOn_: this.editCardOn,
             groupsOfUser: [],
+            infoCardOn_: this.infoCardOn,
         }
     },
     watch: {
@@ -72,7 +73,7 @@ export default {
                         document.querySelector('.text_in_span').innerHTML = document.querySelector('.v-item--active .v-list-item__title').innerText;
                     })
                     await this.resetSelectItem();
-                    if (this.user.is_staff) {
+                    if (this.user.is_staff || this.user.is_superuser) {
                         switch (this.selectedItem) {
                             case 0: {
                                 this.onUsers();
@@ -98,15 +99,15 @@ export default {
                     }
                     else {
                         switch (this.selectedItem) {
-                            case 0: {
+                            case 1: {
                                 this.onFeatures();
                                 break;
                             }
-                            case 1: {
+                            case 2: {
                                 this.onUser();
                                 break;
                             }
-                            case 2: {
+                            case 0: {
                                 this.onVersions();
                                 break;
                             }
@@ -132,8 +133,11 @@ export default {
                 actionPut: 'putUser',
             });
             this.updateListType([]);
-            this.updateListItem({ items: [this.user] })
-            this.visableCard();
+            this.updateListItem({ items: [this.user] });
+            setTimeout(() => {
+                this.infoCardOn_.data = true;
+                this.visableCard();
+            }, 500)
         },
         onFeatures() {
             this.notVisableVersions()
@@ -218,6 +222,13 @@ export default {
         onVersions() {
             this.visableVersions()
             this.updateListType([]);
+            this.updateAction({
+                actionGet: '',
+                actionPost: '',
+                actionOneGet: '',
+                actionPut: '',
+                actionDelete: '',
+            });
             this.updateListType(this.groupsOfUser);
             this.updateNameForArray('Версии системы');
         },
@@ -237,9 +248,11 @@ export default {
     width: 28px !important;
     height: 28px !important;
 }
+
 .btn_menu i {
     margin: 0 auto !important;
 }
+
 .card_test {
     font-size: 16px !important;
     left: 16px !important;

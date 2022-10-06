@@ -106,7 +106,7 @@ export default {
         }
         this.objectForCard = this.getObjectForCard;
 
-        if ('geometry' in this.getObjectForCard) {
+        if (this.editCardOn_.data && 'geometry' in this.getObjectForCard) {
           if (this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) {
             this.editCardOn_.data = false;
           }
@@ -234,7 +234,7 @@ export default {
       const layer = this.map.getAllLayers().find(el => el.get('typeId') === typeId);
       const features = layer.getSource().getFeatures();
       let feature = features.find(el => { return el.getId() === id });
-
+      console.log(feature);
       const oldCoordinates = feature.getGeometry().getCoordinates();
       const newCoordinates = fromLonLat(coordinates);
       feature.getGeometry().setCoordinates(newCoordinates);
