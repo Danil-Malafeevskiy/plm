@@ -13,7 +13,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_gis.serializers import GeometryField
 import django.contrib.auth.password_validation as validators
 
-import settings
+from plm import settings
 from app.models import Feature, Type, VersionControl
 from django.contrib.auth import get_user_model
 
