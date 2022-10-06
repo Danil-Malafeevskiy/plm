@@ -1,6 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.mail import send_mail
 from django.utils import timezone
 from django.contrib.gis.geos import GEOSGeometry
 from django.utils.encoding import force_str
@@ -11,6 +12,8 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_gis.serializers import GeometryField
 import django.contrib.auth.password_validation as validators
+
+import settings
 from app.models import Feature, Type, VersionControl
 from django.contrib.auth import get_user_model
 
@@ -205,6 +208,13 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         ordering = ['id']
         model = get_user_model()
+        validators = [
+            UniqueTogetherValidator(
+                queryset=get_user_model().objects.all(),
+                fields=['email'],
+                message="Такой email уже существует!"
+            )
+        ]
         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff', 'groups',
                   'permissions', 'avaible_permission', 'image', 'admin_permissions', 'user_permissions', 'full_name')
 
@@ -379,5 +389,8 @@ class SetNewPasswordSerializer(serializers.Serializer):
 
         user.set_password(password)
         user.save()
+
+        send_mail('Новый пароль', f'Ваш пароль быд изменен на: {password}',
+                  settings.DEFAULT_FROM_EMAIL, [user.email])
 
         return super().validate(attrs)
