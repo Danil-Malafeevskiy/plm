@@ -39,7 +39,7 @@ export default {
                 commit('updateGroup', group);
             });
         },
-        async postGroup({ dispatch }, group) {
+        async postGroup({ dispatch, commit }, group) {
             group.permissions = [];
             await axios.post('/group', group).then((response) => {
                 if (typeof response.data === 'object') {
@@ -52,7 +52,7 @@ export default {
                 }
             })
         },
-        async putGroup({ dispatch }, group) {
+        async putGroup({ dispatch, commit }, group) {
             group = { ...group, ...group.properties };
             delete group.properties;
             await axios.put('/group', group).then((response) => {

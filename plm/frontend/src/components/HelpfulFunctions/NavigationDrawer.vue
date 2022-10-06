@@ -191,6 +191,10 @@ export default {
                         {
                             "text": "full_name",
                             "value": "full_name"
+                        },
+                        {
+                            "text": "email",
+                            "value": "email"
                         }
                     ];
                     this.updateHeaders(headers);

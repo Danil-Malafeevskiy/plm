@@ -4,21 +4,21 @@ axios.defaults.xsrfCookieName = "csrftoken";
 
 export default {
     actions: {
-        async sendEmail({ commit }, emailData){
+        async sendEmail({ commit }, emailData) {
             await axios.post('/password-reset-request', emailData).then((response) => {
                 console.log(response.data)
                 commit('updateEmail', response.data);
             });
         },
 
-        async checkoutPasswordReset({ commit }, path){
+        async checkoutPasswordReset({ commit }, path) {
             await axios.get(`/${path}/get`).then((response) => {
                 commit('updateUserToken', response.data)
             })
         },
 
-        async changePassword({ commit }, data){
-            await axios.put('/password-setnew', data).then((response) =>{
+        async changePassword({ commit }, data) {
+            await axios.put('/password-setnew', data).then((response) => {
                 commit('updateValidateErrors', response.data);
             })
         },
@@ -66,7 +66,7 @@ export default {
         async postUser({ dispatch, commit }, newUser) {
             console.log(newUser);
             await axios.post('/user/admin', newUser).then((response) => {
-                if (typeof response.data === 'object') {
+                if (typeof response.data === 'object' && !('id' in response.data)) {
                     for (let i in response.data) {
                         commit('updateError', response.data[i]);
                     }
@@ -79,22 +79,21 @@ export default {
         async putUser({ dispatch, state, getters, commit }, user) {
             user = { ...user, ...user.properties };
             delete user.properties;
-            await axios.put('/user/admin', user).then(() => {
-                if (getters.allListItem[0] !== state.user) {
+            user.username = user.email;
+            await axios.put('/user/admin', user).then((response) => {
+                if (typeof response.data === 'object') {
+                    for (let i in response.data) {
+                        commit('updateError', response.data[i]);
+                    }
+                }
+                else if (getters.allListItem[0] !== state.user) {
                     dispatch('getUsersOfGroup');
                     if (user.id === state.user.id) {
                         dispatch('getUser');
                     }
                 }
-                else if (getters.allListItem[0] === state.user) {
-                    if (typeof response.data === 'object') {
-                        for (let i in response.data) {
-                            commit('updateError', response.data[i]);
-                        }
-                    }
-                    else if ('password' in user) {
-                        dispatch('logOut');
-                    }
+                else if (getters.allListItem[0] === state.user && 'password' in user && !getters.error) {
+                    dispatch('logOut');
                 }
             })
         },
@@ -119,10 +118,10 @@ export default {
         updateEmail(state, email) {
             state.email = email
         },
-        updateUserToken(state, token){
+        updateUserToken(state, token) {
             state.userResetPasswordData = token
         },
-        updateValidateErrors(state, erorrs){
+        updateValidateErrors(state, erorrs) {
             state.validateErrors = erorrs
         }
     },
@@ -135,13 +134,13 @@ export default {
         },
         userResetPasswordData(state) {
             return state.userResetPasswordData
-        }, 
+        },
 
-        validateErrors(state){
+        validateErrors(state) {
             return state.validateErrors
         },
 
-        validateEmailErrors(state){
+        validateEmailErrors(state) {
             return state.email
         }
     },
