@@ -351,6 +351,8 @@ class TypeView(APIView):
         if id==0:
             ff = DjangoFilterBackend()
             datasets = Type.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
+            if request.user.is_superuser:
+                datasets = ff.filter_queryset(request, Type.objects.all(), self)
             if 'group' in request.query_params:
                 datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
             dataset = ff.filter_queryset(request, datasets, self)
