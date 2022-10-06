@@ -8,7 +8,6 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
-from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone, dateformat
 from django.utils.encoding import smart_bytes, smart_str
@@ -37,7 +36,10 @@ class TowerAPI(APIView):
 
     def get(self, request, id=0):
         if id == 0:
-            datasets = Type.objects.filter(group__in=list(request.user.groups.values_list('id', flat=True)))
+            groups = list(request.user.groups.values_list('id', flat=True))
+            if request.user.is_superuser:
+                groups = Group.objects.all()
+            datasets = Type.objects.filter(group__in=groups)
             if 'group' in request.query_params:
                 datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
             ff = DjangoFilterBackend()
@@ -87,10 +89,11 @@ class TowerAPI(APIView):
                     'content': 'Все объекты добавлены и обновлены!'
                 }
             )
-            try:
-                VersionControl.objects.filter(date_update__gte=VersionControl.objects.get(flag=True, dataset=dataset).date_update, dataset=dataset).delete()
-            except Exception as e:
-                print("Ваша версия максимальна!")
+
+            if VersionControl.objects.filter(date_update__gte=VersionControl.objects.get(flag=True, dataset=dataset).date_update, dataset=dataset).exists():
+                VersionControl.objects.filter(
+                    date_update__gte=VersionControl.objects.get(flag=True, dataset=dataset).date_update,
+                    dataset=dataset).delete()
 
             OldVersionSerializer = VersionControlSerializer(
                 data={"user": request.user.username, "version": version,
@@ -405,6 +408,8 @@ class VersionControlView(APIView):
         if id==0:
             ff = DjangoFilterBackend()
             datasets = list(request.user.groups.values_list('id', flat=True))
+            if request.user.is_superuser:
+                datasets = Group.objects.all()
             if 'dataset' in request.query_params:
                 datasets = [Group.objects.filter(name=request.query_params['dataset'])[0].id]
             version = ff.filter_queryset(request, VersionControl.objects.filter(dataset__in=datasets).order_by('id'), self)
