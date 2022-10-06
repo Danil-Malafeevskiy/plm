@@ -18,7 +18,6 @@ from rest_framework.parsers import MultiPartParser, FileUploadParser
 
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.renderers import TemplateHTMLRenderer
 
 from app.permissions import TowerPerm, FileUploadPerm, GroupPerm, UserPerm, TypePerm, VersionPerm
 from plm import settings
@@ -132,7 +131,10 @@ class FileUploadView(APIView):
 
         lis = []
         dict_1 = {}
-        type = Type.objects.get(name=filename, group=Group.objects.get(name=request.data['group']).id)
+        try:
+            type = Type.objects.get(name=filename, group=Group.objects.get(name=request.data['group']).id)
+        except Exception:
+            return Response({"error": "Создайте тип такой же как имя файла!"})
         dict_1['name'] = type.id
         dict_1['type'] = 'Feature'
         dict_1['properties'] = {}
@@ -194,9 +196,9 @@ class LoginView(APIView):
                 login(request, user)
                 return Response("Success login")
             else:
-                return Response("A user not active.")
+                return Response({"error": "Пользователь не активный"})
         else:
-            return Response("A user with this username and password is not found.")
+            return Response({"error": "Такого пользователя не найдено. Проверьте данные входа."})
 
 class LogoutView(APIView):
     authentication_classes = [SessionAuthentication]
@@ -235,7 +237,7 @@ class GroupView(APIView):
                 user.save()
             return Response("Success new group!")
 
-        return Response(group_serializer.errors)
+        return Response({group_serializer.errors['name']: "Группа с таким именем уже существует!"})
 
     def put(self, request):
         change_group = Group.objects.get(id=request.data['id'])
@@ -243,7 +245,7 @@ class GroupView(APIView):
         if group_serializer.is_valid():
             group_serializer.save()
             return Response("Success up group!")
-        return Response(group_serializer.errors)
+        return Response({group_serializer.errors['name']: "Группа с таким именем уже существует!"})
 
     def delete(self, request):
         id = request.query_params.get('id')
@@ -298,32 +300,38 @@ class UserAdminView(APIView):
 
         reg = UserSerializer(data=request.data, context={'permissions': request.data['permissions'], 'groups': request.data['groups']})
         if reg.is_valid():
-            registr = reg.save()
-            send_mail('Пароль для входа на сайт', f'Ваш пароль: {request.data["password"]}',
-                      settings.DEFAULT_FROM_EMAIL, [registr.email])
+            try:
+                send_mail('Пароль для входа на сайт', f'Ваш пароль: {request.data["password"]}',
+                      settings.DEFAULT_FROM_EMAIL, [request.data['email']])
+            except Exception:
+                return Response({"error": "Неккоректный email."})
+            reg.save()
             return Response({"id": reg.data['id']})
-        return Response(reg.errors)
+        return Response({"email": "Такой email уже зарегистрирован!"})
 
     def put(self, request):
         user = get_user_model().objects.get(id=request.data['id'])
         if 'password' in request.data.keys():
             user_serializer = UserSerializer(user, data=request.data)
-            send_mail('Пароль для входа на сайт изменен', f'Ваш новый пароль: {request.data["password"]}',
-                      settings.DEFAULT_FROM_EMAIL, [request.data["email"]])
         else:
+            user_serializer = UserSerializer(user, data=request.data, remove_fields=['password'],
+                                             context={'permissions': request.data['permissions'],
+                                                      'groups': request.data['groups']})
+
+        if user_serializer.is_valid():
+            if 'password' in request.data.keys():
+                send_mail('Пароль для входа на сайт изменен', f'Ваш новый пароль: {request.data["password"]}',
+                          settings.DEFAULT_FROM_EMAIL, [request.data["email"]])
+
             if request.data['email'] != user.email:
                 try:
                     send_mail('Смена почты', 'Ваша почта была изменена на эту!',
                               settings.DEFAULT_FROM_EMAIL, [request.data["email"]])
                 except Exception:
                     return Response({'email': ["Введенная почта некорректна!"]})
-            user_serializer = UserSerializer(user, data=request.data, remove_fields=['password'],
-                                             context={'permissions': request.data['permissions'],
-                                                      'groups': request.data['groups']})
 
-        if user_serializer.is_valid():
             user_serializer.save()
-            return Response({'success': "Success up!"})
+            return Response("Success up!")
         return Response(user_serializer.errors)
 
     def delete(self, request):

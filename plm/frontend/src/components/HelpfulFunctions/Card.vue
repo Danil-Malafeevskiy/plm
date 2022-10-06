@@ -143,7 +143,7 @@
 
                             <ExpansionPanelForCard v-if="allListItem[0] !== user" :objectForCard="objectForCard"
                                 :cardVisable="cardVisable" :infoCardOn="infoCardOn" />
-                            <v-snackbar v-model="snackbar" timeout="2000" color="red accent-2">
+                            <v-snackbar v-model="snackbar" timeout="5000" color="red accent-2">
                                 {{ errorMessege }}
                             </v-snackbar>
                         </v-form>
@@ -168,7 +168,8 @@
                                 </v-col>
                                 <v-col cols="2" sm="6" md="5" lg="6"></v-col>
                                 <v-col cols="2" sm="6" md="5" lg="6" style="display: flex; justify-content: flex-end">
-                                    <v-btn :disabled="password.length < 8 && password_again.length < 8" @click="changePassword" class="ma-0" text v-if="editCardOn.data">
+                                    <v-btn :disabled="password.length < 8 && password_again.length < 8"
+                                        @click="changePassword" class="ma-0" text v-if="editCardOn.data">
                                         Изменить пароль
                                     </v-btn>
                                 </v-col>
@@ -317,27 +318,37 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user']),
+        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
     },
     methods: {
         ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
         ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData']),
         async addNewFeature() {
-            if (this.objectForCard.name != null) {
+            if (this.objectForCard.name && typeof this.objectForCard.name === 'number') {
+                if(!this.objectForCard.geometry.coordinates.length){
+                    this.showSnacker('Создайте объект на карте!');
+                    return;
+                }
                 this.objectForCard.id_ = uuidv4();
                 this.updateArrayEditMode({ item: JSON.parse(JSON.stringify(this.objectForCard)), type: 'post' });
             }
             else {
                 this.checkCorrectFields();
-                
+
                 let object = JSON.parse(JSON.stringify(this.objectForCard));
                 object = { ...object, ...object.properties }
                 delete object.properties;
-                
+
                 await this.postObject(object);
             }
-            this.addCardOn_.data = !this.addCardOn_.data;
-            this.notVisableCard();
+            if (this.error) {
+                this.showSnacker(this.error);
+                return;
+            }
+            else {
+                this.addCardOn_.data = !this.addCardOn_.data;
+                this.notVisableCard();
+            }
         },
         async editObject() {
             if ('type' in this.objectForCard) {
@@ -356,27 +367,38 @@ export default {
                 this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
             }
             else {
-                if(!this.checkCorrectFields()){
+                if (!this.checkCorrectFields()) {
                     return;
                 }
 
                 let object = JSON.parse(JSON.stringify(this.objectForCard));
                 object.properties = { ...object, ...object.properties }
                 delete object.properties.properties;
-                console.log(object);
-                this.putObject(object);
+
+                await this.putObject(object);
             }
-            this.editCardOn_.data = !this.editCardOn_.data;
-            this.infoCardOn_.data = !this.infoCardOn_.data;
+            if (this.error) {
+                this.showSnacker(this.error);
+                return;
+            }
+            else {
+                this.editCardOn_.data = !this.editCardOn_.data;
+                this.infoCardOn_.data = !this.infoCardOn_.data;
+            }
         },
-        changePassword(){
-            if(this.password === this.password_again){
+        async changePassword() {
+            if (this.password === this.password_again) {
                 const user = {
                     id: this.user.id,
                     email: this.user.email,
                     password: this.password,
                 }
-                this.putUser(user);
+                await this.putUser(user);
+
+                if (this.error) {
+                    this.showSnacker(this.error);
+                    return;
+                }
             }
             else {
                 this.showSnacker('Пароли не совпадают');

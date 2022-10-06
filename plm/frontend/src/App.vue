@@ -117,7 +117,6 @@ import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
 import CardConflict from './components/HelpfulFunctions/CardConflict.vue';
 import FIleInputWindow from './components/HelpfulFunctions/FIleInputWindow.vue';
-import axios from 'axios';
 
 export default {
   components: {
@@ -332,11 +331,6 @@ export default {
 
     const chatSocket = new WebSocket("ws://localhost:8000/test");
     chatSocket.onmessage = this.onmessage;
-    axios.get(document.location.href).then((response) => {
-      console.log(response.data);
-    }).catch(error => {
-      console.log(error);
-    });
   }
 }
 </script>
