@@ -2,7 +2,7 @@ import axios from "axios";
 
 export default {
     actions: {
-        async getAllUsersForAdmin({commit}, id) {
+        async getAllUsersForAdmin({ commit }, id) {
             await axios.get(`/user/admin?groups=${id}`).then((response) => {
                 commit('updateAllUsersForAdmin', response.data);
             })
@@ -11,9 +11,9 @@ export default {
             await axios.get('/group').then((response) => {
                 commit('updateAllGroups', response.data);
             })
-        }, 
+        },
 
-        async getAllUserGroups({ commit }){
+        async getAllUserGroups({ commit }) {
             await axios.get('/user').then((response) => {
                 let group = { ...response.data };
                 commit('updateAllUserGroups', group.groups)
@@ -42,16 +42,28 @@ export default {
         async postGroup({ dispatch }, group) {
             group.permissions = [];
             await axios.post('/group', group).then((response) => {
-                console.log(response.data);
-                dispatch('getAllGroups');
+                if (typeof response.data === 'object') {
+                    for (let i in response.data) {
+                        commit('updateError', response.data[i]);
+                    }
+                }
+                else {
+                    dispatch('getAllGroups');
+                }
             })
         },
         async putGroup({ dispatch }, group) {
             group = { ...group, ...group.properties };
             delete group.properties;
             await axios.put('/group', group).then((response) => {
-                console.log(response.data);
-                dispatch('getAllGroups');
+                if (typeof response.data === 'object') {
+                    for (let i in response.data) {
+                        commit('updateError', response.data[i]);
+                    }
+                }
+                else {
+                    dispatch('getAllGroups');
+                }
             })
         },
         async deleteGroup({ dispatch }, id) {
@@ -65,8 +77,8 @@ export default {
                 commit('updateAllGroupsForNav', response.data);
             })
         },
-        
-        
+
+
     },
     mutations: {
         updateAllGroups(state, groups) {
@@ -80,13 +92,13 @@ export default {
         },
         updateGroup(state, group) {
             state.group = group;
-        }, 
-        updateAllUserGroups(state, groups){
+        },
+        updateAllUserGroups(state, groups) {
             state.userGroups = groups
             this.commit('updateListItem', { items: groups })
             this.commit('updateListType', groups)
         },
-        updateAllUsersForAdmin(state, usersAdmin){
+        updateAllUsersForAdmin(state, usersAdmin) {
             state.usersAdmin = usersAdmin
         }
     },
@@ -96,11 +108,11 @@ export default {
         },
         currentGroup(state) {
             return state.group;
-        }, 
-        allUserGroups(state){
+        },
+        allUserGroups(state) {
             return state.userGroups
         },
-        allUsersForAdmin(state){
+        allUsersForAdmin(state) {
             return state.usersAdmin
         }
     },
