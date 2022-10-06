@@ -14,13 +14,13 @@
                         </v-list-item-title>
                     </v-list-item>
 
-                    <v-list-item v-if="user && user.is_staff">
+                    <v-list-item v-if="user && user.is_staff && !user.is_superuser">
                         <v-list-item-title>
                             Версии системы
                         </v-list-item-title>
                     </v-list-item>
 
-                    <v-list-item v-if="user">
+                    <v-list-item v-if="user && !user.is_superuser">
                         <v-list-item-title>
                             База объектов
                         </v-list-item-title>
@@ -57,7 +57,7 @@ export default {
     props: ['resetSelectItem', 'visableCard', 'visableVersions', 'notVisableVersions', 'versionsPage', 'infoCardOn'],
     data() {
         return {
-            selectedItem: 3,
+            selectedItem: 0,
             groupsOfUser: [],
             infoCardOn_: this.infoCardOn
         }
@@ -73,7 +73,23 @@ export default {
                     })
 
                     await this.resetSelectItem();
-                    if (this.user.is_staff) {
+                    if(this.user.is_superuser){
+                        switch (this.selectedItem) {
+                            case 0: {
+                                this.onUsers();
+                                break;
+                            }
+                            case 1: {
+                                this.onDataSet();
+                                break;
+                            }
+                            case 2: {
+                                this.onUser();
+                                break;
+                            }
+                        }
+                    }
+                    else if (this.user.is_staff && !this.user.is_superuser) {
                         switch (this.selectedItem) {
                             case 0: {
                                 this.onUsers();
@@ -97,7 +113,7 @@ export default {
                             }
                         }
                     }
-                    else {
+                    else if (!this.user.is_staff && !this.user.is_superuser) {
                         switch (this.selectedItem) {
                             case 0: {
                                 this.onFeatures();
@@ -105,6 +121,10 @@ export default {
                             }
                             case 1: {
                                 this.onUser();
+                                break;
+                            }
+                            case 2: {
+                                this.onVersions();
                                 break;
                             }
                         }
@@ -137,6 +157,7 @@ export default {
             }, 500);
         },
         onFeatures() {
+            console.log('1')
             this.notVisableVersions()
             this.updateNameForArray('База объектов');
             this.updateListType([]);
