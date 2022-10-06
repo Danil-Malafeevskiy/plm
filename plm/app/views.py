@@ -90,7 +90,7 @@ class TowerAPI(APIView):
                 }
             )
 
-            if VersionControl.objects.filter(date_update__gte=VersionControl.objects.get(flag=True, dataset=dataset).date_update, dataset=dataset).exists():
+            if VersionControl.objects.filter(flag=True, dataset=dataset).exists():
                 VersionControl.objects.filter(
                     date_update__gte=VersionControl.objects.get(flag=True, dataset=dataset).date_update,
                     dataset=dataset).delete()
