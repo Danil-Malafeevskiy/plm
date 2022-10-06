@@ -43,13 +43,20 @@ export default {
             })
         },
 
-        async postUser({ dispatch }, newUser) {
+        async postUser({ dispatch, commit }, newUser) {
             console.log(newUser);
-            await axios.post('/user/admin', newUser).then(() => {
-                dispatch('getUsersOfGroup');
+            await axios.post('/user/admin', newUser).then((response) => {
+                if (typeof response.data === 'object') {
+                    for (let i in response.data) {
+                        commit('updateError', response.data[i]);
+                    }
+                }
+                else {
+                    dispatch('getUsersOfGroup');
+                }
             })
         },
-        async putUser({ dispatch, state, getters }, user) {
+        async putUser({ dispatch, state, getters, commit }, user) {
             user = { ...user, ...user.properties };
             delete user.properties;
             user.username = user.email;
@@ -61,8 +68,15 @@ export default {
                         dispatch('getUser');
                     }
                 }
-                else if(getters.allListItem[0] === state.user && 'password' in user){
-                    dispatch('logOut');
+                else if (getters.allListItem[0] === state.user && 'password' in user) {
+                    if (typeof response.data === 'object') {
+                        for (let i in response.data) {
+                            commit('updateError', response.data[i]);
+                        }
+                    }
+                    else {
+                        dispatch('logOut');
+                    }
                 }
                 console.log(response.data)
             })

@@ -60,6 +60,9 @@ export default {
         },
         updateIsGetAllChange(state){
             state.isGetAllChange = !state.isGetAllChange;
+        },
+        updateError(state, error){
+            state.error = error;
         }
     },
     getters: {
@@ -98,6 +101,9 @@ export default {
         },
         isGetAllChange(state){
             return state.isGetAllChange;
+        },
+        error(state){
+            return state.error;
         }
     },
     state: {
@@ -116,5 +122,6 @@ export default {
         nameForArray: null,
         selectedObjects: {},
         isGetAllChange: false,
+        error: null,
     },
 }
