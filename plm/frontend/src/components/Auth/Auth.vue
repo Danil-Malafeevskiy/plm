@@ -44,12 +44,12 @@
                 </div>
                 <v-card-text>
                     <v-form @submit.prevent="onSendEmail" style="padding: 0 50px">
-                        <v-text-field background-color="#F1F1F1" v-model="emailForResetPassword.email"
+                        <v-text-field  background-color="#F1F1F1" v-model="emailForResetPassword.email"
                             placeholder="vasyly@mail.com" filled :rules="emailRules">
                         </v-text-field>
 
                         <div class="btn">
-                            <v-btn :disabled="disabledBool" class="pa-0 ma-0" color="#EE5E5E" type="submit" style="width: 100%; height: 45px; color: white !important;">
+                            <v-btn :disabled="emailBool" class="pa-0 ma-0" color="#EE5E5E" type="submit" style="width: 100%; height: 45px; color: white !important;">
                                 Восстановить пароль
                             </v-btn>
                         </div>
@@ -87,6 +87,7 @@ export default {
                 v => (/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/).test(v) || 'E-mail must be valid',
             ],
             validateEmailErrors_: null,
+            emailBool: true,
         }
     },
     watch: {
@@ -96,10 +97,21 @@ export default {
 
         validateEmailErrors: {
             handler(){
+                console.log(this.validateEmailErrors)
                 if(this.validateEmailErrors.success){
                     this.validateEmailErrors_ = this.validateEmailErrors.success
                 } else {
                     this.validateEmailErrors_ = this.validateEmailErrors
+                }
+            }
+        },
+
+        'emailForResetPassword.email': {
+            handler(){
+                if(this.emailForResetPassword.email.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)){
+                    this.emailBool = false
+                } else {
+                    this.emailBool = true
                 }
             }
         }
