@@ -237,7 +237,7 @@ class GroupView(APIView):
                 user.save()
             return Response("Success new group!")
 
-        return Response({group_serializer.errors['name']: "Группа с таким именем уже существует!"})
+        return Response({'name': "Группа с таким именем уже существует!"})
 
     def put(self, request):
         change_group = Group.objects.get(id=request.data['id'])
@@ -245,7 +245,7 @@ class GroupView(APIView):
         if group_serializer.is_valid():
             group_serializer.save()
             return Response("Success up group!")
-        return Response({group_serializer.errors['name']: "Группа с таким именем уже существует!"})
+        return Response({'name': "Группа с таким именем уже существует!"})
 
     def delete(self, request):
         id = request.query_params.get('id')
