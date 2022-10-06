@@ -80,6 +80,7 @@ export default {
             user = { ...user, ...user.properties };
             delete user.properties;
             user.username = user.email;
+            console.log(user);
             await axios.put('/user/admin', user).then((response) => {
                 if (typeof response.data === 'object') {
                     for (let i in response.data) {

@@ -131,7 +131,6 @@ export default {
                 actionOneGet: 'getOneUser',
                 actionPut: 'putUser',
             });
-            await this.getOneObject(this.user.id);
             this.updateListType([]);
             this.updateListItem({ items: [this.user] })
             this.visableCard();
@@ -179,7 +178,7 @@ export default {
                 actionPut: 'putTypeObject',
                 actionDelete: 'deleteTypeObject',
             });
-            this.updateListType(this.groupsOfUser);
+            this.allGroupForNav();
             this.getAllTypeForTable();
             this.upadateEmptyObject(object);
         },
