@@ -111,7 +111,7 @@ export default {
         objectForCard: {
             async handler() {
                 this.objectForCard_ = this.objectForCard;
-                if (this.objectForCard.properties && 'username' in this.objectForCard.properties) {
+                if (this.objectForCard.properties && 'first_name' in this.objectForCard.properties) {
                     if (this.user.is_superuser) {
                         await this.getAllUsersForAdmin(this.groupAdminId);
 
@@ -136,10 +136,6 @@ export default {
                         this.permissionList = [...this.user.admin_permissions]
                     } else {
                         this.permissionList = [...this.user.user_permissions]
-                    }
-
-                    if (this.cardVisable.data) {
-                        this.objectForCard_.permissions = this.permissionList
                     }
 
                     this.groupsPermissions();

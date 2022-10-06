@@ -63,8 +63,12 @@ export default {
         async postTypeObject({ dispatch, commit, state }, newType) {
             console.log(newType);
             await axios.post('/dataset/admin', newType).then((response) => {
-                console.log(response.data);
-                if (typeof response.data === 'string') {
+                if (typeof response.data === 'object') {
+                    for (let i in response.data) {
+                        commit('updateError', response.data[i]);
+                    }
+                }
+                else if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');
                 }
                 if (state.pastGroup != null) {
@@ -83,8 +87,12 @@ export default {
                 }
             }
             await axios.put('/dataset/admin', putType).then((response) => {
-                console.log(response.data);
-                if (typeof response.data === 'string') {
+                if (typeof response.data === 'object') {
+                    for (let i in response.data) {
+                        commit('updateError', response.data[i]);
+                    }
+                }
+                else if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');
                 }
                 if (state.pastGroup != null) {

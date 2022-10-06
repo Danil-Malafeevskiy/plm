@@ -191,12 +191,17 @@ export default {
                         {
                             "text": "full_name",
                             "value": "full_name"
+                        },
+                        {
+                            "text": "email",
+                            "value": "email"
                         }
                     ];
                     this.updateHeaders(headers);
                     this.getUsersOfGroup(objectType);
                 }
                 else if (domItem === "Типы объектов") {
+                    console.log(objectType);
                     this.getAllTypeInGroup(objectType.name);
                 }
                 else if (domItem === "Версии системы") {
@@ -228,7 +233,6 @@ export default {
     mounted() {
         setTimeout(async () => {
             await this.getTypeObject();
-            this.selectedItem = 0;
         }, 500);
     },
 }

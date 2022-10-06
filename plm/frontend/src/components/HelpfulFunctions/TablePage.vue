@@ -190,10 +190,12 @@ export default {
     },
     checkequalsItems(item, object) {
       let checkObject = { ...object.properties };
+      
       let putObject = this.arrayEdit.put.find(el => el.id === object.id);
       putObject = putObject ? { ...putObject.properties } : 1;
       let newObject = this.newData.find(el => el.id === object.id);
       newObject = newObject ? { ...newObject.properties } : 1;
+      
       for (let i in this.headers) {
         if (this.headers[i].text != 'id_' && this.headers[i].text != 'id' && checkObject[this.headers[i].text] !== item[this.headers[i].text]) {
           if (!(putObject && newObject && putObject[this.headers[i].text] === item[this.headers[i].text])) {
@@ -204,7 +206,7 @@ export default {
       return true;
     },
     classRow(item) {
-      let classForItem = ''
+      let classForItem = '';
       if (this.infoCardOn_.data || this.editCardOn.data) {
         if ('id_' in this.getObjectForCard) {
           if (item.id_ === this.getObjectForCard.id_ && this.checkequalsItems(item, this.getObjectForCard)) {
