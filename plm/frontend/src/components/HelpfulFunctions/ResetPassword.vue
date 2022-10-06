@@ -32,7 +32,7 @@
                 Эта функция недоступна
             </div>
             <div class="reset-password">
-                <v-btn text @click="toMainPath">Назад</v-btn>
+                <v-btn block text @click="toMainPath">Назад</v-btn>
             </div>
         </v-card>
 

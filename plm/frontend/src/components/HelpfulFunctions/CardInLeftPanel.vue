@@ -14,13 +14,13 @@
                         </v-list-item-title>
                     </v-list-item>
 
-                    <v-list-item v-if="user && user.is_staff && !user.is_superuser">
+                    <v-list-item v-if="user">
                         <v-list-item-title>
                             Версии системы
                         </v-list-item-title>
                     </v-list-item>
 
-                    <v-list-item v-if="user && !user.is_superuser">
+                    <v-list-item v-if="user">
                         <v-list-item-title>
                             База объектов
                         </v-list-item-title>
@@ -51,15 +51,15 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex';
-
 export default {
     name: 'CardInLeftPanel',
-    props: ['resetSelectItem', 'visableCard', 'visableVersions', 'notVisableVersions', 'versionsPage', 'infoCardOn'],
+    props: ['resetSelectItem', 'visableCard', 'editCardOn', 'visableVersions', 'notVisableVersions', 'versionsPage'],
     data() {
         return {
-            selectedItem: 0,
+            selectedItem: 3,
+            initials: null,
+            editCardOn_: this.editCardOn,
             groupsOfUser: [],
-            infoCardOn_: this.infoCardOn
         }
     },
     watch: {
@@ -71,25 +71,8 @@ export default {
                     setTimeout(() => {
                         document.querySelector('.text_in_span').innerHTML = document.querySelector('.v-item--active .v-list-item__title').innerText;
                     })
-
                     await this.resetSelectItem();
-                    if(this.user.is_superuser){
-                        switch (this.selectedItem) {
-                            case 0: {
-                                this.onUsers();
-                                break;
-                            }
-                            case 1: {
-                                this.onDataSet();
-                                break;
-                            }
-                            case 2: {
-                                this.onUser();
-                                break;
-                            }
-                        }
-                    }
-                    else if (this.user.is_staff && !this.user.is_superuser) {
+                    if (this.user.is_staff) {
                         switch (this.selectedItem) {
                             case 0: {
                                 this.onUsers();
@@ -113,7 +96,7 @@ export default {
                             }
                         }
                     }
-                    else if (!this.user.is_staff && !this.user.is_superuser) {
+                    else {
                         switch (this.selectedItem) {
                             case 0: {
                                 this.onFeatures();
@@ -135,8 +118,7 @@ export default {
     },
     computed: mapGetters(['allFeatures', 'user', 'allGroups', 'getList', 'allType', 'actions', 'getObjectForCard', 'allVersions', 'allUserGroups']),
     methods: {
-        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject', 'getOneObject', 'getVersions', 'getAllTypeForTable', 'allGroupForNav', 'getUser', 'allGroupForNav']),
-
+        ...mapActions(['logOut', 'getAllGroups', 'getTypeObject', 'getOneObject', 'getVersions', 'getAllTypeForTable', 'allGroupForNav', 'getUser']),
         ...mapMutations(['updatefilterForFeature', 'updateList', 'updateListItem', 'upadateEmptyObject',
             'updateAction', 'updateHeaders', 'updateListType', 'updateNameForArray', 'updateOneType', 'upadateTitle', 'updateVersions', 'updateAllUserGroups']),
         logOutAndResolve() {
@@ -149,15 +131,12 @@ export default {
                 actionOneGet: 'getOneUser',
                 actionPut: 'putUser',
             });
+            await this.getOneObject(this.user.id);
             this.updateListType([]);
             this.updateListItem({ items: [this.user] })
-            setTimeout(() => {
-                this.visableCard();
-                this.infoCardOn_.data = true;
-            }, 500);
+            this.visableCard();
         },
         onFeatures() {
-            console.log('1')
             this.notVisableVersions()
             this.updateNameForArray('База объектов');
             this.updateListType([]);
@@ -200,7 +179,7 @@ export default {
                 actionPut: 'putTypeObject',
                 actionDelete: 'deleteTypeObject',
             });
-            this.allGroupForNav();
+            this.updateListType(this.groupsOfUser);
             this.getAllTypeForTable();
             this.upadateEmptyObject(object);
         },
@@ -237,17 +216,9 @@ export default {
             });
             this.getAllGroups();
         },
-
         onVersions() {
             this.visableVersions()
             this.updateListType([]);
-            this.updateAction({
-                actionGet: '',
-                actionPost: '',
-                actionOneGet: '',
-                actionPut: '',
-                actionDelete: '',
-            });
             this.updateListType(this.groupsOfUser);
             this.updateNameForArray('Версии системы');
         },
@@ -267,11 +238,9 @@ export default {
     width: 28px !important;
     height: 28px !important;
 }
-
 .btn_menu i {
     margin: 0 auto !important;
 }
-
 .card_test {
     font-size: 16px !important;
     left: 16px !important;
