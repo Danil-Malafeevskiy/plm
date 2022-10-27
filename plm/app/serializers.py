@@ -237,30 +237,22 @@ class UserSerializer(serializers.ModelSerializer):
                 if group != "Admin"]
 
     def get_permissions(self, obj):
-        if obj.is_staff:
-            return [per for per in obj.user_permissions.values_list('name', flat=True)
-                    if ("change" in per or "view" in per) and ("content type" not in per and "session" not in per and "log" not in per and "permission" not in per)]
-        return [per for per in obj.user_permissions.values_list('name', flat=True)
-                if ("change" in per or "view" in per) and ("feature" in per or "version control" in per)]
+        return list(obj.user_permissions.values_list('name', flat=True))
 
     def get_avaible_permission(self, obj):
         perm = list(obj.user_permissions.values_list('name', flat=True))
-        if obj.is_staff:
-            return [per for per in Permission.objects.all().values_list('name', flat=True)
-                    if per not in perm and ("change" in per or "view" in per) and
-                    ("content type" not in per and "session" not in per and "log" not in per and "permission" not in per)]
-        return [per for per in Permission.objects.all().values_list('name', flat=True)
-                    if per not in perm and ("change" in per or "view" in per) and ("feature" in per or "version control" in per)]
-
-    def get_admin_permissions(self, obj):
-        return [per for per in Permission.objects.values_list('name', flat=True)
-                if ("change" in per or "view" in per) and (
-                            "content type" not in per and "session" not in per and "log" not in per and "permission" not in per)]
+        return [per for per in
+                Permission.objects.filter(content_type_id=5).exclude(name__in=["Can add feature", "Can change feature", "Can delete feature", "Can view feature"])
+                if per not in perm]
 
     def get_user_permissions(self, obj):
-        return [per for per in Permission.objects.values_list('name', flat=True)
-                if ("change" in per or "view" in per) and (
-                            "feature" in per or "version control" in per)]
+        if obj.is_superuser:
+            return Permission.objects.filter(content_type_id=5).exclude(name__in=["Can add feature", "Can change feature", "Can delete feature", "Can view feature"])
+        perm = []
+        for group in obj.groups.values_list('name', flat=True):
+            if group != "Admin":
+                perm.append(Permission.objects.get(name=f'Изменение объектов {group.name}'))
+                perm.append(Permission.objects.get(name=f'Просмотр объектов {group.name}'))
 
     def validate(self, data):
         if 'password' in data.keys():

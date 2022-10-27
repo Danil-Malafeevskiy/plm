@@ -5,7 +5,7 @@ import sqlite3
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate, login, logout, get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
@@ -233,6 +233,9 @@ class GroupView(APIView):
         group_serializer = GroupSerializer(data=request.data)
         if group_serializer.is_valid():
             group = group_serializer.save()
+            Permission.objects.create(name=f'Просмотр объектов {group.name}', content_type_id=5, codename=f'view_{group.name}')
+            Permission.objects.create(name=f'Изменение объектов {group.name}',
+                                      content_type_id=5, codename=f'change_{group.name}')
 
             if not request.user.is_superuser:
                 user = get_user_model().objects.get(id=request.user.id)
@@ -251,8 +254,12 @@ class GroupView(APIView):
         return Response({'name': "Группа с таким именем уже существует!"})
 
     def delete(self, request):
-        id = request.query_params.get('id')
-        Group.objects.filter(id__in=id.split(',')).delete()
+        id = request.data.get('id')
+        groups = Group.objects.filter(id__in=id)
+        for group in groups:
+            Permission.objects.get(name=f'Изменение объектов {group.name}').delete()
+            Permission.objects.get(name=f'Просмотр объектов {group.name}').delete()
+        groups.delete()
         return Response("SUCCESS DEL GROUP!")
 
 class UserView(APIView):
@@ -263,9 +270,9 @@ class UserView(APIView):
         if request.user.is_superuser:
             return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'avaible_permission']).data)
         if request.user.is_staff:
-            return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'avaible_permission', 'admin_permissions']).data)
+            return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'avaible_permission']).data)
         return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'avaible_permission',
-                                                                    'admin_permissions', 'user_permissions']).data)
+                                                                    'user_permissions']).data)
 
 class UserAdminView(APIView):
     authentication_classes = [SessionAuthentication]
@@ -289,10 +296,10 @@ class UserAdminView(APIView):
                                                                                           'groups',
                                                                                           'permissions',
                                                                                           'avaible_permission',
-                                                                                          'image', 'admin_permissions', 'user_permissions'])
+                                                                                          'image', 'user_permissions'])
             return Response(user_serializer.data)
 
-        return Response(UserSerializer(get_user_model().objects.get(id=id), remove_fields=['username', 'full_name', 'password', 'is_superuser', 'is_staff', 'admin_permissions', 'user_permissions']).data)
+        return Response(UserSerializer(get_user_model().objects.get(id=id), remove_fields=['username', 'full_name', 'password', 'is_superuser', 'is_staff', 'user_permissions']).data)
 
     def post(self, request):
         if "Admin" in request.data['groups']:
