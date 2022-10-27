@@ -240,17 +240,14 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_avaible_permission(self, obj):
         perm = list(obj.user_permissions.values_list('name', flat=True))
-        return [per for per in
+        return [per.name for per in
                 Permission.objects.filter(content_type_id=5).exclude(name__in=["Can add feature", "Can change feature", "Can delete feature", "Can view feature"])
-                if per not in perm]
+                if per.name not in perm]
 
     def get_user_permissions(self, obj):
         perm = []
         if obj.is_superuser:
-            for perms in Permission.objects.filter(content_type_id=5):
-                if perms.name not in ["Can add feature", "Can change feature", "Can delete feature", "Can view feature"]:
-                    perm.append(perms.name)
-            return perm
+            return [perms.name for perms in Permission.objects.filter(content_type_id=5).exclude(name__in=["Can add feature", "Can change feature", "Can delete feature", "Can view feature"])]
         for group in obj.groups.values_list('name', flat=True):
             if group != "Admin":
                 perm.append(f'Изменение объектов {group.name}')
