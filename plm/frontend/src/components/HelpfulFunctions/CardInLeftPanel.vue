@@ -168,10 +168,12 @@ export default {
             }
             let headers = [
                 {
+                    "text": "id",
+                    "value": "id",
+                },
+                {
                     "text": "name",
-                    "align": "start",
                     "value": "name",
-                    "sortable": false
                 },
             ];
             this.updateHeaders(headers);

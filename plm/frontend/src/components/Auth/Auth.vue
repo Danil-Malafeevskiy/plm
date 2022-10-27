@@ -5,7 +5,7 @@
 
             <v-card class="title" v-if="!resetBool">
                 <div class="text-h6" style="text-align: center; padding: 44px 0;">
-                    Здраствуйте!
+                    Здравствуйте!
                 </div>
                 <v-card-text>
                     <v-form @submit.prevent="onSubmit" style="padding: 0 50px">
