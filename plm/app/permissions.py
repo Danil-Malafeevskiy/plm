@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from models import VersionControl
+from app.models import VersionControl
 
 
 class TowerPerm(permissions.BasePermission):
