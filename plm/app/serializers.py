@@ -250,8 +250,8 @@ class UserSerializer(serializers.ModelSerializer):
             return [perms.name for perms in Permission.objects.filter(content_type_id=5).exclude(name__in=["Can add feature", "Can change feature", "Can delete feature", "Can view feature"])]
         for group in obj.groups.values_list('name', flat=True):
             if group != "Admin":
-                perm.append(f'Изменение объектов {group.name}')
-                perm.append(f'Просмотр объектов {group.name}')
+                perm.append(f'Изменение объектов {group}')
+                perm.append(f'Просмотр объектов {group}')
         return perm
 
     def validate(self, data):
