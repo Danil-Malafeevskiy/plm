@@ -270,7 +270,7 @@ export default {
       }
       for (let key in this.arrayEditMode) {
         if (key != 'messege') {
-          this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})` });
+          this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
         }
       }
       this.resetArrayEditMode();

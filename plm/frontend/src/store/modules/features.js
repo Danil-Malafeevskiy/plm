@@ -4,14 +4,6 @@ import Vue from "vue";
 axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 axios.defaults.xsrfCookieName = "csrftoken";
 
-function getStrId(features) {
-    let strId = [];
-    for (let i in features) {
-        strId.push(features[i].id);
-    }
-    return strId;
-}
-
 function getEditedFeatures(arrayEdited, type) {
     let array = [];
     for (let key in arrayEdited) {
@@ -37,11 +29,12 @@ export default {
         async putFeature({ commit }, features) {
             let data;
             if ('put' in features) {
-                data = [...features.put, ...features.post, getStrId(features.delete), features.messege];
+                data = [...features.put, ...features.post, features.delete.map(el => el.id), features.messege, features.group];
             }
             else {
-                data = [...features, [], '']
+                data = [...features, [], '', features.group];
             }
+            console.log(data);
             await axios.put(`/tower`, data, { headers: { "Content-Type": "application/json" } }).then((response) => {
                 console.log(response.data);
                 if (typeof response.data === 'string') {
@@ -50,7 +43,7 @@ export default {
             }).catch(error => console.log(error));
         },
         async deleteFeature({ commit }, feature) {
-            await axios.put('/tower', [getStrId(feature), '']).then((response) => {
+            await axios.put('/tower', [feature.map(el => el.id), '']).then((response) => {
                 console.log(response.data);
                 if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');

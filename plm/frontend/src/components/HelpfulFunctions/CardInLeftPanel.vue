@@ -2,7 +2,7 @@
     <v-slide-y-transition>
         <v-card class="card_test">
             <v-list dense nav>
-                <v-list-item-group class="menu" v-model="selectedItem" color="#E93030">
+                <v-list-item-group class="menu" v-model="selectedItem" mandatory color="#E93030">
                     <v-list-item v-if="user && user.is_staff">
                         <v-list-item-title>
                             Пользователи
@@ -30,12 +30,12 @@
                         <v-list-item-title>
                             <v-avatar color="#72ABEA" size="35">
                                 <span v-if="!(user.image)" class="white--text text-h11">
-                                    {{user.first_name.slice(0,1)}}{{user.last_name.slice(0,1)}}
+                                    {{ user.first_name.slice(0, 1) }}{{ user.last_name.slice(0, 1) }}
                                 </span>
                                 <img v-else :src="user.image">
                             </v-avatar>
 
-                            {{user.first_name}} {{user.last_name}}
+                            {{ user.first_name }} {{ user.last_name }}
                         </v-list-item-title>
 
                         <v-list-item-icon @click="logOutAndResolve()">
@@ -72,11 +72,10 @@ export default {
                     setTimeout(() => {
                         document.querySelector('.text_in_span').innerHTML = document.querySelector('.v-item--active .v-list-item__title').innerText;
                     })
-                    await this.resetSelectItem();
                     if (this.user.is_staff || this.user.is_superuser) {
                         switch (this.selectedItem) {
                             case 0: {
-                                this.onUsers();
+                                this.onGroups();
                                 break;
                             }
                             case 1: {
@@ -113,6 +112,7 @@ export default {
                             }
                         }
                     }
+                    await this.resetSelectItem();
                 }
             }
         },
@@ -168,10 +168,6 @@ export default {
             }
             let headers = [
                 {
-                    "text": "id",
-                    "value": "id",
-                },
-                {
                     "text": "name",
                     "value": "name",
                 },
@@ -185,10 +181,9 @@ export default {
                 actionDelete: 'deleteTypeObject',
             });
             this.allGroupForNav();
-            this.getAllTypeForTable();
             this.upadateEmptyObject(object);
         },
-        onUsers() {
+        onGroups() {
             this.notVisableVersions()
             this.updateNameForArray('Пользователи');
             this.updateListType([]);
@@ -208,7 +203,6 @@ export default {
                 properties: {
                     name: '',
                 },
-                permissions: [],
             }
             this.upadateEmptyObject(object);
             this.updateHeaders(headers);
