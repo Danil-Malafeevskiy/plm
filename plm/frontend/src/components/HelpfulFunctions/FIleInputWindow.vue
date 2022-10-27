@@ -9,7 +9,7 @@
                 <div>
                     <v-file-input v-model="file" hide-input :key="componentKey" prepend-icon="mdi-file-upload">
                     </v-file-input>
-                    <v-row no-gutters justify="space-between" style="width: 390px; margin: 0 auto">
+                    <v-row no-gutters justify="space-between" style="width: 390px; margin: 0 auto; padding-bottom: 20px">
                         <v-col v-for="el in user.groups" :key="el" style="max-width: 30%; margin-left: 20px !important"
                             cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
                             <v-radio-group hide-details v-model="group">
@@ -19,6 +19,10 @@
                             </v-radio-group>
                         </v-col>
                     </v-row>
+                    <v-text-field
+                        v-model="fileName" label="Имя типа" style="padding: 0 24px"
+                        filled>
+                    </v-text-field>
                 </div>
                 <v-card-text>
                     <div class="btn">
@@ -47,13 +51,14 @@ export default {
             file: null,
             componentKey: 0,
             group: '',
+            fileName: '',
         }
     },
     computed: mapGetters(['user']),
     methods: {
         ...mapActions(['uploadFileWithFeature']),
         fileUpload() {
-            this.uploadFileWithFeature({ file: this.file, group: this.group });
+            this.uploadFileWithFeature({ file: this.file, group: this.group, fileName: this.fileName });
             this.componentKey++;
             this.$emit('offFileInput');
         }

@@ -54,18 +54,18 @@
                                 <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
                                     <v-card-text v-if="objectForCard.properties.first_name != undefined" class="pa-0"
                                         style="font-size: 24px;">{{
-                                        objectForCard.properties.first_name
+                                                objectForCard.properties.first_name
                                         }}
                                     </v-card-text>
                                     <v-card-text v-else-if="'name' in objectForCard" class="pa-0"
                                         style="font-size: 24px;">
                                         {{
-                                        typeForFeature.name
+                                                typeForFeature.name
                                         }}
                                     </v-card-text>
                                     <v-card-text v-else class="pa-0" style="font-size: 24px;">{{
                                     
-                                    objectForCard.properties.name
+                                            objectForCard.properties.name
                                     }}
 
                                     </v-card-text>
@@ -114,26 +114,11 @@
                                             @click:append="showPassword = !showPassword" :label="index"
                                             :placeholder="index" filled :readonly="infoCardOn_.data">
                                         </v-text-field>
-                                        <v-menu offset-y v-else-if="index === 'type'" rounded 
-                                            :close-on-click="true"
-                                            :disabled="infoCardOn.data"
-                                            >
-                                            <template v-slot:activator="{ on, attrs }">
-                                                <v-text-field v-model="objectForCard.properties[index]" :label="index"
-                                                    :placeholder="index" :hide-details="infoCardOn.data" filled
-                                                    readonly :rules="[rules.required]"
-                                                    v-bind="attrs" v-on="on">
-                                                </v-text-field>
-                                            </template>
-                                            <v-list>
-                                                <v-list-item v-for="(item, index) in types" 
-                                                    :key="index" link
-                                                    @click="objectForCard.properties.type = item">
-                                                    <v-list-item-title>{{ item }}</v-list-item-title>
-                                                </v-list-item>
-                                            </v-list>
-                                        </v-menu>
-                                        <v-text-field v-else-if="index != 'all_obj'" v-model="objectForCard.properties[index]" :label="index"
+                                        <v-select v-else-if="index === 'type'" v-model="objectForCard.properties.type"
+                                            filled lable="type" :items="types" :readonly="infoCardOn_.data">
+                                        </v-select>
+                                        <v-text-field v-else-if="index != 'all_obj'"
+                                            v-model="objectForCard.properties[index]" :label="index"
                                             :placeholder="index" :hide-details="infoCardOn.data" filled
                                             :readonly="infoCardOn_.data" :rules="[rules.required]">
                                         </v-text-field>

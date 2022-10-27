@@ -27,28 +27,29 @@
             </p>
             <v-slide-y-transition>
                 <v-list-item-group v-if="fiteredAllTypes.length" class="object__data" v-model="selectedItem"
-                    color="#E93030">
-                    <v-list-item class="pa-3" v-for="key in fiteredAllTypes" :key="key.id" link
-                        style="border-radius: 8px !important;" @click="changeObject(key)">
+                    color="#E93030" :mandatory="actions && actions !== 'getAllGroups' && actions != 'getUsersOfGroup'">
+                    <v-list-item class="pa-3" v-for="(key, index) in fiteredAllTypes" :key="key.id" link
+                        style="border-radius: 8px !important;" @click="changeObject(key, index)">
                         <v-list-item-title class="pa-1" v-if="typeof key === 'object'">
                             <div class="name">
                                 <div>{{ key.name }}</div>
                                 <template v-if="'all_obj' in key">
                                     <div v-if="key.group in arrayEditMode"
                                         style="font-size: 16px; color: #A5A5A6; margin-left: auto;">
-                                        {{key.all_obj + arrayEditMode[key.group].post.filter(el => el.name ===
-                                        key.id).length}}
+                                        {{ key.all_obj + arrayEditMode[key.group].post.filter(el => el.name ===
+                                                key.id).length
+                                        }}
                                     </div>
                                     <div v-else style="font-size: 16px; color: #A5A5A6; margin-left: auto;">
-                                        {{key.all_obj}}
+                                        {{ key.all_obj }}
                                     </div>
                                 </template>
                                 <template v-else-if="'all_user' in key && actions !== 'getTypeObject'">
-                                    <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{key.all_user}}
+                                    <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{ key.all_user }}
                                     </div>
                                 </template>
                                 <template v-else-if="'all_type' in key && actions === 'getTypeObject'">
-                                    <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{key.all_type}}
+                                    <div style="font-size: 16px; color: #A5A5A6; margin-left: auto;">{{ key.all_type }}
                                     </div>
                                 </template>
                             </div>
@@ -85,7 +86,7 @@ export default {
         selectedItem: {
             async handler(newValue, oldValue) {
                 if (this.selectedItem != null) {
-                    if (document.querySelector('.text_in_span').innerHTML === "Пользователи") {
+                    if (this.actions === "getAllGroups") {
                         this.updateAction({
                             actionGet: 'getUsersOfGroup',
                             actionPost: 'postUser',
@@ -109,8 +110,7 @@ export default {
                 }
                 else {
                     this.upadateTitle('');
-                    let domItem = document.querySelector('.text_in_span').innerHTML;
-                    if (domItem === "Пользователи") {
+                    if (this.actions === "getUsersOfGroup") {
                         const headers = [
                             {
                                 "text": "id",
@@ -151,7 +151,7 @@ export default {
         },
         allType: {
             handler() {
-                if (this.fiteredAllTypes.length === 0) {
+                if (!this.fiteredAllTypes.length) {
                     this.clear();
                 }
                 else {
@@ -162,6 +162,10 @@ export default {
                     else {
                         this.fiteredAllTypes = this.allType.filter(el => el.toLowerCase().includes(searchText.toLowerCase()));
                     }
+                }
+                if(this.fiteredAllTypes.length && this.actions && this.actions !== 'getAllGroups'){
+                    this.selectedItem = 0;
+                    this.changeObject(this.fiteredAllTypes[0]);
                 }
             }
         }
@@ -175,44 +179,50 @@ export default {
             this.getGroup(id);
         },
 
-        async changeObject(objectType) {
-            if (this.getToolbarTitle != objectType.name) {
+        async changeObject(objectType, index) {
+            console.log(objectType, this.actions);
+            if (this.selectedItem != index) {
                 this.objectType = objectType;
-                const domItem = document.querySelector('.text_in_span').innerHTML;
                 this.upadateTitle(objectType.name);
-                if (domItem === "Пользователи") {
-                    const headers = [
-                        {
-                            "text": "id",
-                            "align": "start",
-                            "value": "id",
-                            "sortable": false
-                        },
-                        {
-                            "text": "full_name",
-                            "value": "full_name"
-                        },
-                        {
-                            "text": "email",
-                            "value": "email"
-                        }
-                    ];
-                    this.updateHeaders(headers);
-                    this.getUsersOfGroup(objectType);
-                }
-                else if (domItem === "Типы объектов") {
-                    console.log(objectType);
-                    this.getAllTypeInGroup(objectType.name);
-                }
-                else if (domItem === "Версии системы") {
-                    this.getFilteredVersions(objectType);
-                }
-                else {
-                    await this.getOneTypeObjectForFeature({ id: objectType.id });
-                    this.objectType = this.oneType;
-                    this.updateHeaders(this.objectType.headers);
-                    this.updateDrawType(this.objectType.type);
-                    await this.filterForFeature(this.objectType.id);
+                switch (this.actions) {
+                    case 'getUsersOfGroup':
+                    case 'getAllGroups': {
+                        const headers = [
+                            {
+                                "text": "id",
+                                "align": "start",
+                                "value": "id",
+                                "sortable": false
+                            },
+                            {
+                                "text": "full_name",
+                                "value": "full_name"
+                            },
+                            {
+                                "text": "email",
+                                "value": "email"
+                            }
+                        ];
+                        this.updateHeaders(headers);
+                        this.getUsersOfGroup(objectType);
+                        break;
+                    }
+
+                    case 'getTypeObject':
+                        this.getAllTypeInGroup(objectType.name);
+                        break;
+
+                    case 'getFeatures':
+                        await this.getOneTypeObjectForFeature({ id: objectType.id });
+                        this.objectType = this.oneType;
+                        this.updateHeaders(this.objectType.headers);
+                        this.updateDrawType(this.objectType.type);
+                        await this.filterForFeature(this.objectType.id);
+                        break;
+
+                    default:
+                        this.getFilteredVersions(objectType);
+                        break;
                 }
             }
         },
@@ -233,7 +243,7 @@ export default {
     mounted() {
         setTimeout(async () => {
             await this.getTypeObject();
-        }, 500);
+        }, 1000);
     },
 }
 </script>
