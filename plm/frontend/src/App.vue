@@ -209,7 +209,7 @@ export default {
   methods: {
 
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getTypeObject']),
-    ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData']),
+    ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData', 'deleteObjectFromArrayEditMode']),
 
     visableVersions() {
       this.versionsPage.data = true
@@ -233,8 +233,7 @@ export default {
       switch (data.action) {
         case "update": {
           if (this.editMode) {
-            let editObject = this.arrayEditMode[this.oneType.group].put.filter(el => el.id === data.data.id);
-
+            let editObject = this.arrayEditMode[data.data.group].put.filter(el => el.id === data.data.id);
             if (editObject.length && this.searchConflict(editObject[0], data.data)) {
               await this.updateNewData(data.data);
               this.visableConflictCard();
@@ -249,7 +248,7 @@ export default {
           break;
         case 'delete':
           if (this.editMode) {
-            this.arrayEditMode[this.oneType.group].put = this.arrayEditMode[this.oneType.group].put.filter(el => el.id != data.data.id);
+            this.deleteObjectFromArrayEditMode(data.data);
           }
           if (this.getObjectForCard && this.getObjectForCard.id === data.data.id) {
             this.infoCardOn.data = false;

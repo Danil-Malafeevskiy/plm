@@ -68,7 +68,7 @@ export default {
                 commit('updateFeatureForMap', response.data);
             })
         },
-        async uploadFileWithFeature(ctx, file) {
+        async uploadFileWithFeature({ commit }, file) {
             await axios.put('/tower/upload', file, {
                 headers: {
                     "Content-Type": "multipart/form-data",
@@ -167,12 +167,20 @@ export default {
                         else {
                             state.arrayEditMode[item.group].delete.push(item);
                         }
-                    } 
+                    }
                     state.arrayEdit.delete = getEditedFeatures(state.arrayEditMode, 'delete');
 
                     break;
             }
 
+        },
+        deleteObjectFromArrayEditMode(state, object) {
+            if (object.group in state.arrayEditMode) {
+                state.arrayEditMode[object.group].put = state.arrayEditMode[object.group].put.filter(el => el.id != object.id);
+                state.arrayEditMode[object.group].delete = state.arrayEditMode[object.group].delete.filter(el => el.id != object.id);
+                state.arrayEdit.put = state.arrayEdit.put.filter(el => el.id != object.id);
+                state.arrayEdit.put = state.arrayEdit.put.filter(el => el.id != object.id);
+            }
         },
         resetArrayEditMode(state) {
             state.arrayEditMode = {

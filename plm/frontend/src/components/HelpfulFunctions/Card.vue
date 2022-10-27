@@ -103,7 +103,7 @@
                                     <v-col v-for="(f, index) in objectForCard.properties" :key="index" cols="2" sm="6"
                                         md="5" lg="6" v-show="typeof (f) != 'object' && index != 'group'">
                                         <v-text-field
-                                            v-if="index != 'password' && index != 'first_name' && index != 'last_name' && index != 'username'"
+                                            v-if="index != 'password' && index != 'first_name' && index != 'last_name' && index != 'type' && index != 'all_obj'"
                                             v-model="objectForCard.properties[index]" hide-details :label="index"
                                             :placeholder="index" filled :readonly="infoCardOn_.data">
                                         </v-text-field>
@@ -114,7 +114,26 @@
                                             @click:append="showPassword = !showPassword" :label="index"
                                             :placeholder="index" filled :readonly="infoCardOn_.data">
                                         </v-text-field>
-                                        <v-text-field v-else v-model="objectForCard.properties[index]" :label="index"
+                                        <v-menu offset-y v-else-if="index === 'type'" rounded 
+                                            :close-on-click="true"
+                                            :disabled="infoCardOn.data"
+                                            >
+                                            <template v-slot:activator="{ on, attrs }">
+                                                <v-text-field v-model="objectForCard.properties[index]" :label="index"
+                                                    :placeholder="index" :hide-details="infoCardOn.data" filled
+                                                    readonly :rules="[rules.required]"
+                                                    v-bind="attrs" v-on="on">
+                                                </v-text-field>
+                                            </template>
+                                            <v-list>
+                                                <v-list-item v-for="(item, index) in types" 
+                                                    :key="index" link
+                                                    @click="objectForCard.properties.type = item">
+                                                    <v-list-item-title>{{ item }}</v-list-item-title>
+                                                </v-list-item>
+                                            </v-list>
+                                        </v-menu>
+                                        <v-text-field v-else-if="index != 'all_obj'" v-model="objectForCard.properties[index]" :label="index"
                                             :placeholder="index" :hide-details="infoCardOn.data" filled
                                             :readonly="infoCardOn_.data" :rules="[rules.required]">
                                         </v-text-field>
@@ -237,6 +256,7 @@ export default {
             errorMessege: '',
             password: '',
             password_again: '',
+            types: ['Point', 'LineString', 'Polygon']
         }
     },
     watch: {
@@ -317,8 +337,8 @@ export default {
             }
         },
         snackbar: {
-            handler () {
-                if(!this.snackbar){
+            handler() {
+                if (!this.snackbar) {
                     this.updateError(null);
                 }
             }
@@ -332,7 +352,7 @@ export default {
         ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData', 'updateError']),
         async addNewFeature() {
             if (this.objectForCard.name && typeof this.objectForCard.name === 'number') {
-                if(!this.objectForCard.geometry.coordinates.length){
+                if (!this.objectForCard.geometry.coordinates.length) {
                     this.showSnacker('Создайте объект на карте!');
                     return;
                 }
