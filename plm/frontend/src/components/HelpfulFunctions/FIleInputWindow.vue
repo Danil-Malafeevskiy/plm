@@ -19,10 +19,10 @@
                             </v-radio-group>
                         </v-col>
                     </v-row>
-                    <v-text-field
-                        v-model="fileName" label="Имя типа" style="padding: 0 24px"
+                    <v-select
+                        v-model="fileName" :items="allTypeForUpload.map(el => el.name)" label="Имя типа" style="padding: 0 24px"
                         filled>
-                    </v-text-field>
+                    </v-select>
                 </div>
                 <v-card-text>
                     <div class="btn">
@@ -54,7 +54,7 @@ export default {
             fileName: '',
         }
     },
-    computed: mapGetters(['user']),
+    computed: mapGetters(['user', 'allTypeForUpload']),
     methods: {
         ...mapActions(['uploadFileWithFeature']),
         fileUpload() {
