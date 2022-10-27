@@ -201,7 +201,6 @@ class UserSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
     avaible_permission = serializers.SerializerMethodField()
     image = BinaryField(required=False)
-    admin_permissions = serializers.SerializerMethodField()
     user_permissions = serializers.SerializerMethodField()
     email = serializers.EmailField(required=True)
 
@@ -216,7 +215,7 @@ class UserSerializer(serializers.ModelSerializer):
             )
         ]
         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff', 'groups',
-                  'permissions', 'avaible_permission', 'image', 'admin_permissions', 'user_permissions', 'full_name')
+                  'permissions', 'avaible_permission', 'image', 'user_permissions', 'full_name')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -246,13 +245,17 @@ class UserSerializer(serializers.ModelSerializer):
                 if per not in perm]
 
     def get_user_permissions(self, obj):
-        if obj.is_superuser:
-            return Permission.objects.filter(content_type_id=5).exclude(name__in=["Can add feature", "Can change feature", "Can delete feature", "Can view feature"])
         perm = []
+        if obj.is_superuser:
+            for perms in Permission.objects.filter(content_type_id=5):
+                if perms.name not in ["Can add feature", "Can change feature", "Can delete feature", "Can view feature"]:
+                    perm.append(perms.name)
+            return perm
         for group in obj.groups.values_list('name', flat=True):
             if group != "Admin":
-                perm.append(Permission.objects.get(name=f'Изменение объектов {group.name}'))
-                perm.append(Permission.objects.get(name=f'Просмотр объектов {group.name}'))
+                perm.append(f'Изменение объектов {group.name}')
+                perm.append(f'Просмотр объектов {group.name}')
+        return perm
 
     def validate(self, data):
         if 'password' in data.keys():
