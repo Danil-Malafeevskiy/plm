@@ -28,6 +28,11 @@ export default {
                 commit('updateAllTypeForMap', response.data);
             })
         },
+        async getAllTypeForUpload({ commit }) {
+            await axios.get('/dataset').then((response) => {
+                commit('updateAllTypeForUpload', response.data);
+            })
+        },
         async getOneTypeObject({ commit, getters }, id) {
             switch (typeof id) {
                 case 'number': {
@@ -158,8 +163,10 @@ export default {
         updateAllTypeForTable(state, types) {
             state.allTypeForTable = types;
             this.commit('updateListItem', { items: types });
+        },
+        updateAllTypeForUpload(state, types){
+            state.allTypeForUpload = types;
         }
-
     },
     getters: {
         allType(state) {
@@ -182,11 +189,15 @@ export default {
         },
         allTypeForTable(state) {
             return state.allTypeForTable
+        },
+        allTypeForUpload(state){
+            return state.allTypeForUpload;
         }
     },
     state: {
         listType: [],
         allTypeForMap: [],
+        allTypeForUpload: [],
         type: null,
         typeForFeature: {
             id: 0,
