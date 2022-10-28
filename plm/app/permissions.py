@@ -1,10 +1,11 @@
 from rest_framework import permissions
+from rest_framework.response import Response
 
 from app.models import VersionControl
 
 
 class TowerPerm(permissions.BasePermission):
-    message = "Вы не имеете достаточно прав для изменения объектов данной группы!"
+    message = {'errors': ['Вы не имеете достаточно прав для изменения объектов данной группы!']}
 
     def has_permission(self, request, view):
         if request.user.is_superuser or request.user.is_staff or request.method in permissions.SAFE_METHODS:
@@ -16,11 +17,11 @@ class FileUploadPerm(permissions.BasePermission):
     message = {'errors': ['Вы не имеете достаточно прав для изменения объектов данной группы!']}
     def has_permission(self, request, view):
         if request.user.is_superuser or request.user.is_staff:
-            return True
+            return False
         return f'Изменение объектов {request.data["group"]}' in request.user.user_permissions.values_list('name', flat=True)
 
 class GroupPerm(permissions.BasePermission):
-    message = "У вас нет прав для данного действия!"
+    message = {'errors': ['Вы не имеете достаточно прав для изменения объектов данной группы!']}
 
     def has_permission(self, request, view):
         if request.user.is_superuser or request.user.is_staff:
@@ -28,7 +29,7 @@ class GroupPerm(permissions.BasePermission):
         return False
 
 class UserPerm(permissions.BasePermission):
-    message = "У вас нет прав для данного действия!"
+    message = {'errors': ['Вы не имеете достаточно прав для изменения объектов данной группы!']}
 
     def has_permission(self, request, view):
         if request.user.is_superuser or request.user.is_staff:
@@ -36,7 +37,7 @@ class UserPerm(permissions.BasePermission):
         return False
 
 class TypePerm(permissions.BasePermission):
-    message = "У вас нет прав для данного действия!"
+    message = {'errors': ['Вы не имеете достаточно прав для изменения объектов данной группы!']}
 
     def has_permission(self, request, view):
         if request.user.is_superuser or request.user.is_staff:
@@ -44,7 +45,7 @@ class TypePerm(permissions.BasePermission):
         return False
 
 class VersionPerm(permissions.BasePermission):
-    message = "Вы не имеете достаточно прав для изменения объектов данной группы!"
+    message = {'errors': ['Вы не имеете достаточно прав для изменения объектов данной группы!']}
 
     def has_permission(self, request, view):
         if request.user.is_superuser or request.user.is_staff:
