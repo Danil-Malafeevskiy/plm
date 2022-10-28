@@ -13,8 +13,7 @@ class TowerPerm(permissions.BasePermission):
             return f'Изменение объектов {request.data.pop(-1)}' in request.user.user_permissions.values_list('name', flat=True)
 
 class FileUploadPerm(permissions.BasePermission):
-    message = "Вы не имеете достаточно прав для изменения объектов данной группы!"
-
+    message = {'errors': ['Вы не имеете достаточно прав для изменения объектов данной группы!']}
     def has_permission(self, request, view):
         if request.user.is_superuser or request.user.is_staff:
             return True
