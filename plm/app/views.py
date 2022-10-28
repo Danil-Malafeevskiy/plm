@@ -255,7 +255,7 @@ class GroupView(APIView):
         return Response({'name': "Группа с таким именем уже существует!"})
 
     def delete(self, request):
-        id = request.data.get('id')
+        id = request.data['id']
         groups = Group.objects.filter(id__in=id)
         for group in groups:
             Permission.objects.get(name=f'Изменение объектов {group.name}').delete()
