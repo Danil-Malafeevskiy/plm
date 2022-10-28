@@ -1,7 +1,6 @@
 <template>
     <div class="text-center">
-        <v-dialog v-model="dialog" width="500" overlay-color="white" overlay-opacity="0.8" persistent no-click-animation
-            style="filter: blur(1px) !important; backdrop-filter: blur(4px) !important;">
+        <v-dialog class="d" v-model="dialog" width="500" overlay-color="white">
             <v-card class="title">
                 <div class="text-h6" style="text-align: center; padding: 44px 0;">
                     Выберите файл для импорта и группу
@@ -9,7 +8,8 @@
                 <div>
                     <v-file-input v-model="file" hide-input :key="componentKey" prepend-icon="mdi-file-upload">
                     </v-file-input>
-                    <v-row no-gutters justify="space-between" style="width: 390px; margin: 0 auto; padding-bottom: 20px">
+                    <v-row no-gutters justify="space-between"
+                        style="width: 390px; margin: 0 auto; padding-bottom: 20px">
                         <v-col v-for="el in user.groups" :key="el" style="max-width: 30%; margin-left: 20px !important"
                             cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
                             <v-radio-group hide-details v-model="group">
@@ -19,10 +19,9 @@
                             </v-radio-group>
                         </v-col>
                     </v-row>
-                    <v-select
-                        v-model="fileName" :items="allTypeForUpload.map(el => el.name)" label="Имя типа" style="padding: 0 24px"
-                        filled>
-                    </v-select>
+                    <v-text-field v-model="fileName"  label="Имя типа"
+                        style="padding: 0 24px; z-index: 204" filled>
+                    </v-text-field>
                 </div>
                 <v-card-text>
                     <div class="btn">
@@ -52,16 +51,26 @@ export default {
             componentKey: 0,
             group: '',
             fileName: '',
+            types: ['Point', 'LineString', 'Polygon'],
         }
     },
     computed: mapGetters(['user', 'allTypeForUpload']),
     methods: {
-        ...mapActions(['uploadFileWithFeature']),
+        ...mapActions(['uploadFileWithFeature', 'getAllTypeForUpload']),
         fileUpload() {
             this.uploadFileWithFeature({ file: this.file, group: this.group, fileName: this.fileName });
             this.componentKey++;
             this.$emit('offFileInput');
         }
+    },
+    async mounted() {
+        // await this.getAllTypeForUpload();
+        // this.types = [...new Set(this.allTypeForUpload.map(el => el.name))];
+        // this.types = [{ value: 1, title: 'My item 1' },
+        // { value: 2, title: 'My item 2' },
+        // { value: 3, title: 'My item 3' },];
+
+        // console.log(this.types);
     }
 }
 </script>
