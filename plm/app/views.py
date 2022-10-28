@@ -55,6 +55,7 @@ class TowerAPI(APIView):
 
     def put(self, request):
         ids = []
+        print(request.data)
         queryset = []
         comment = request.data.pop(-1)
         delete_mas = request.data.pop(-1)
