@@ -8,10 +8,8 @@ class TowerPerm(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if request.user.is_superuser or request.user.is_staff or request.method in permissions.SAFE_METHODS:
-            print(1)
             return True
         if request.method == 'PUT':
-            print(2)
             return f'Изменение объектов {request.data.pop(-1)}' in request.user.user_permissions.values_list('name', flat=True)
 
 class FileUploadPerm(permissions.BasePermission):
@@ -50,7 +48,6 @@ class VersionPerm(permissions.BasePermission):
     message = "Вы не имеете достаточно прав для изменения объектов данной группы!"
 
     def has_permission(self, request, view):
-
         if request.user.is_superuser or request.user.is_staff:
             return True
         if request.method in permissions.SAFE_METHODS or request.method == 'PUT' or request.method == 'POST' or request.method == 'DELETE':
