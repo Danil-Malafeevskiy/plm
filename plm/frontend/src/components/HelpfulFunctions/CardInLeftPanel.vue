@@ -234,6 +234,9 @@ export default {
         if ('groups' in this.user) {
             this.groupsOfUser = [...this.user.groups];
         }
+        if(!this.user.is_staff && !this.user.is_superuser){
+            this.selectedItem = 1;
+        }
     }
 }
 </script>

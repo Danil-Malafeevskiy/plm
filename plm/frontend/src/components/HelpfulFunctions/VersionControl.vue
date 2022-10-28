@@ -3,7 +3,7 @@
 		<v-scroll-x-reverse-transition>
 			<div id="notification">&nbsp;&nbsp;&nbsp;&nbsp;Развитие версии изменено</div>
 		</v-scroll-x-reverse-transition>
-	
+
 		<div style="margin: 20px 5px 20px 20px; color: #787878; font-weight: 500;">
 			<span v-if="tableArray.length % 10 === 1">{{ tableArray.length }} объект </span>
 			<span v-else-if="tableArray.length % 10 > 1 && tableArray.length % 10 < 5">
@@ -16,19 +16,19 @@
 			width: 95% !important; 
 			background-color: #E5E5E5; 
 			box-shadow: none !important;
-			margin-left: 2% !important;" @click:row="chooseVersion" sort-by="id" :sort-desc="true"
-			>
-	
+			margin-left: 2% !important;" @click:row="chooseVersion" sort-by="id" :sort-desc="true">
+
 			<template v-slot:[`item.select`]="{ item }">
 				<v-btn v-model="item.select" class='columnText' text id="no-background-hover" tile
-					:style="[(item.flag) ? {'color' : '#EE5E5E'} : {'color' : '#b6b3b3'}]">
+					:style="[(item.flag) ? { 'color': '#EE5E5E' } : { 'color': '#b6b3b3' }]">
 					Последняя версия
 				</v-btn>
 			</template>
-	
+
 		</v-data-table>
 
-		<v-btn text id="no-background-hover" class="lastVersion ma-2 pa-2" tile @click="lastVersion">Выбрать текущие данные</v-btn>
+		<v-btn text id="no-background-hover" class="lastVersion ma-2 pa-2" tile @click="lastVersion">Выбрать текущие
+			данные</v-btn>
 	</div>
 </template>
 
@@ -68,9 +68,9 @@ export default {
 					if (element === this.tableArray.filter(element => element.flag)[0]) {
 						this.currentVersion = element
 						this.currentVersionId = element.id
-					} 
+					}
 					else if (!this.tableArray.filter(element => element.flag).length) {
-						if ( id < element.id){
+						if (id < element.id) {
 							this.currentVersion = element
 							this.currentVersionId = element.id
 							id = element.id
@@ -81,16 +81,16 @@ export default {
 		},
 	},
 	computed: {
-		...mapGetters(['allVersions', 'allListItem', 'getList', 'getTypeId', 'allGroups', 'allFilteredVersions', 'user','allUserGroups' ])
+		...mapGetters(['allVersions', 'allListItem', 'getList', 'getTypeId', 'allGroups', 'allFilteredVersions', 'user', 'allUserGroups', 'allType'])
 	},
 	methods: {
-		...mapActions(['getVersions', 'putVersion', 'getGroup', 'getAllGroups', 'getAllUserGroups', 'putLastVersion']),
+		...mapActions(['getVersions', 'putVersion', 'getGroup', 'getAllGroups', 'getAllUserGroups', 'putLastVersion', 'getFilteredVersions']),
 		...mapMutations(['updateVersions', 'updateFilteredVersions', 'updateAllGroups', 'updateAllUserGroups']),
 		chooseVersion(item) {
 			this.putVersion(item.id)
 			document.getElementById('notification').style.display = 'block'
 			this.showNotification()
-			
+
 		},
 		getTimeVersion(time) {
 			let data = new Date(time)
@@ -100,16 +100,16 @@ export default {
 			if (item.id > this.currentVersionId) {
 				return 'noCurrent'
 			}
-		}, 
-		getGroup(){
+		},
+		getGroup() {
 			this.allGroups.forEach(element => {
-				if ( element.id === this.getTypeId){
+				if (element.id === this.getTypeId) {
 					this.nameGroup = element.name
 				}
 			});
 		},
 
-		showNotification(){
+		showNotification() {
 			clearTimeout(this.timeoutId)
 			this.timeoutId = setTimeout(function () {
 				document.getElementById('notification').style.display = 'none'
@@ -126,16 +126,18 @@ export default {
 				});
 				document.getElementById('notification').style.display = 'block'
 				this.showNotification()
-				
+
 				this.putLastVersion(id)
 			}
 		}
-		
+
 	},
 
 	async mounted() {
-		this.getVersions()
-	}, 
+		if (this.allType.length) {
+			this.getFilteredVersions(this.allType[0]);
+		}
+	},
 
 }
 </script>
@@ -147,11 +149,11 @@ export default {
 	font-weight: 500;
 }
 
-.noCurrent{
+.noCurrent {
 	background: #F2F2F2 !important;
 }
 
-.current{
+.current {
 	background: #F2F2F2;
 	color: #EE5E5E !important;
 }
@@ -168,9 +170,10 @@ export default {
 }
 
 #no-background-hover::before {
-   background-color: transparent !important; 
-   display: none !important;
+	background-color: transparent !important;
+	display: none !important;
 }
+
 .lastVersion {
 	left: 77.8%;
 	display: flex;

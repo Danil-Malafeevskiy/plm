@@ -67,7 +67,7 @@ export default {
             })
         },
         async deleteGroup({ dispatch }, groups) {
-            await axios.delete(`/group`, groups.map(el => el.id)).then((response) => {
+            await axios.delete(`/group?id=${groups.map(el=>el.id)}`).then((response) => {
                 console.log(response.data);
                 dispatch('getAllGroups');
             })
