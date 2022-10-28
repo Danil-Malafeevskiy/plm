@@ -1,5 +1,4 @@
 from rest_framework import permissions
-from rest_framework.response import Response
 
 from app.models import VersionControl
 
@@ -48,8 +47,8 @@ class VersionPerm(permissions.BasePermission):
     message = {'errors': ['Вы не имеете достаточно прав для изменения объектов данной группы!']}
 
     def has_permission(self, request, view):
-        if request.user.is_superuser or request.user.is_staff:
+        if request.user.is_superuser or request.user.is_staff or request.method in permissions.SAFE_METHODS:
             return True
-        if request.method in permissions.SAFE_METHODS or request.method == 'PUT' or request.method == 'POST' or request.method == 'DELETE':
+        if request.method == 'PUT' or request.method == 'POST' or request.method == 'DELETE':
             return f'Изменение объектов {VersionControl.objects.get(id=request.resolver_match.args[0]).dataset.name}' \
                    in request.user.user_permissions.values_list('name', flat=True)
