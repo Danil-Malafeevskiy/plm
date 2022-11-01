@@ -18,9 +18,16 @@
             :versionsPage="versionsPage" :infoCardOn="infoCardOn" />
 
         <v-list dense nav>
-            <p
+            <p v-if="actions === 'getFeatures'"
                 style="display: flex; font-size: 16px; color: #5E5E5E; justify-content: space-between; align-items: center;">
                 Типы {{ fiteredAllTypes.length }}
+                <v-autocomplete @click:clear="clear" multiple clearable id='search' dense append-icon hide-details
+                    hint="Поиск" hide-no-data solo label="Поиск" @update:search-input="search">
+                </v-autocomplete>
+            </p>
+            <p v-else
+                style="display: flex; font-size: 16px; color: #5E5E5E; justify-content: space-between; align-items: center;">
+                Гуппы {{ fiteredAllTypes.length }}
                 <v-autocomplete @click:clear="clear" multiple clearable id='search' dense append-icon hide-details
                     hint="Поиск" hide-no-data solo label="Поиск" @update:search-input="search">
                 </v-autocomplete>
@@ -28,7 +35,7 @@
             <v-slide-y-transition>
                 <v-list-item-group v-if="fiteredAllTypes.length" class="object__data" v-model="selectedItem"
                     color="#E93030" :mandatory="actions && actions !== 'getAllGroups' && actions != 'getUsersOfGroup'">
-                    <v-list-item class="pa-3" v-for="(key, index) in fiteredAllTypes" :key="key.id" link
+                    <v-list-item class="mb-2 pa-3" v-for="(key, index) in fiteredAllTypes" :key="key.id" link
                         style="border-radius: 8px !important;" @click="changeObject(key, index)">
                         <v-list-item-title class="pa-1" v-if="typeof key === 'object'">
                             <div class="name">
@@ -163,10 +170,10 @@ export default {
                         this.fiteredAllTypes = this.allType.filter(el => el.toLowerCase().includes(searchText.toLowerCase()));
                     }
                 }
-                if (this.fiteredAllTypes.length && this.actions && this.actions !== 'getAllGroups') {
-                    this.selectedItem = 0;
-                    this.changeObject(this.fiteredAllTypes[0]);
-                }
+                // if (this.fiteredAllTypes.length && this.actions && this.actions !== 'getAllGroups') {
+                //     this.selectedItem = 0;
+                //     this.changeObject(this.fiteredAllTypes[0]);
+                // }
             }
         }
     },
@@ -257,7 +264,9 @@ export default {
 }
 
 .text_in_span {
+    font-weight: 500;
     margin-left: 35px;
+    color: #787878;
 }
 
 

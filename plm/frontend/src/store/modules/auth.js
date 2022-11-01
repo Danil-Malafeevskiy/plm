@@ -73,6 +73,7 @@ export default {
                 }
                 else {
                     dispatch('getUsersOfGroup');
+                    dispatch('allGroupForNav');
                 }
             })
         },
@@ -89,6 +90,7 @@ export default {
                 }
                 else if (getters.allListItem[0] !== state.user) {
                     dispatch('getUsersOfGroup');
+                    dispatch('allGroupForNav');
                     if (user.id === state.user.id) {
                         dispatch('getUser');
                     }
@@ -101,6 +103,7 @@ export default {
         async deleteUser({ dispatch }, idUser) {
             await axios.delete(`/user/admin?id=${idUser}`).then(() => {
                 dispatch('getUsersOfGroup');
+                dispatch('allGroupForNav');
             })
         },
 

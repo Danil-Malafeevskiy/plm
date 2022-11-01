@@ -198,7 +198,7 @@
                         style="margin-right: 15px !important">
                         ОТМЕНА
                     </v-btn>
-                    <v-btn text @click="editObject()">Редактирование</v-btn>
+                    <v-btn text @click="editObject()">применить</v-btn>
 
                 </div>
 
@@ -350,7 +350,6 @@ export default {
                 let object = JSON.parse(JSON.stringify(this.objectForCard));
                 object = { ...object, ...object.properties }
                 delete object.properties;
-
                 await this.postObject(object);
             }
             if (this.error) {
@@ -584,7 +583,7 @@ export default {
 }
 
 .card_of_object {
-    z-index: 1 !important;
+    z-index: 5 !important;
     min-height: 92.08% !important;
     position: absolute !important;
     left: 60.28% !important;
