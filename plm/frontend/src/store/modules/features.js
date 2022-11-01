@@ -67,12 +67,13 @@ export default {
                     "Content-Type": "multipart/form-data",
                 }
             }).then((response) => {
+                console.log(response.data)
                 if (typeof response.data === 'object') {
                     for (let i in response.data) {
                         commit('updateError', response.data[i]);
                     }
                 }
-            })
+            }).catch(error => console.log(error.response.data))
         },
         async getFeatureForMap({ commit }, id) {
             await axios.get(`/tower/${id}`).then((response) => {

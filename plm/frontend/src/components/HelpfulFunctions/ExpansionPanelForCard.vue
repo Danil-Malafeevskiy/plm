@@ -1,7 +1,13 @@
 <template>
     <div>
+        <v-checkbox v-if="user.is_superuser && actions === 'getUsersOfGroup'" v-model="userAdmin" label="Admin" :readonly="objectForCard !== emptyObject" class="ma-2" color="#E93030" style="
+                                    min-height: 37.53% !important; 
+                                    max-height: 37.53% !important;
+                                    margin-left: 24px !important;
+                                ">
+        </v-checkbox>
         <div style="margin: 0 0 10px 24px"
-            v-if="'properties' in objectForCard && ('first_name' in objectForCard.properties || 'type' in objectForCard.properties)">
+            v-if="'properties' in objectForCard &&  ((userAdmin &&'first_name' in objectForCard.properties) || 'type' in objectForCard.properties)">
             <v-expansion-panels accordion flat class="pa-0 ma-0">
                 <v-expansion-panel class="pa-0 ma-0">
                     <v-expansion-panel-header class="pa-0 ma-0">
@@ -12,10 +18,10 @@
                     <v-expansion-panel-content class="ma-0 pa-0">
                         <v-row class="pa-2 ma-0">
                             <template v-if="'groups' in objectForCard">
-                                <v-col v-for="(f, index) in userGroups" :key="f" cols="2" sm="6" md="5" lg="6"
-                                    class="pa-0 ma-0">
+                                <v-col v-for="(f, index) in user.groups" :key="f" cols="2" sm="6" md="5" lg="6"
+                                    class="pa-0 ma-0" v-show="f != 'Admin'">
 
-                                    <v-checkbox v-model="objectForCard_.groups" :label="f" :value="userGroups[index]"
+                                    <v-checkbox v-model="objectForCard_.groups" :label="f" :value="user.groups[index]"
                                         :readonly="infoCardOn.data" class="ma-2" color="#E93030" style="
                                     min-height: 37.53% !important; 
                                     max-height: 37.53% !important;
@@ -24,11 +30,11 @@
                                 </v-col>
                             </template>
                             <template v-else>
-                                <v-col v-for="(f, index) in userGroups" :key="index" cols="2" sm="6" md="5" lg="6"
+                                <v-col v-for="(f, index) in user.groups" :key="index" cols="2" sm="6" md="5" lg="6"
                                     class="pa-0 ma-0">
                                     <v-radio-group hide-details class="ma-0 pa-0"
                                         v-model="objectForCard_.properties.group">
-                                        <v-radio :label="f" :value="userGroups[index]" :readonly="infoCardOn.data"
+                                        <v-radio :label="f" :value="user.groups[index]" :readonly="infoCardOn.data"
                                             class="ma-2" color="#E93030" on-icon="mdi-checkbox-marked"
                                             off-icon="mdi-checkbox-blank-outline" style="
                                     min-height: 37.53% !important; 
@@ -44,31 +50,32 @@
                 </v-expansion-panel>
             </v-expansion-panels>
         </div>
-        <div style="margin: 0 0 10px 24px" v-if="'permissions' in objectForCard">
+        <div style="margin: 0 0 10px 24px" v-else-if="'permissions' in objectForCard">
             <v-expansion-panels accordion flat class="pa-0 ma-0">
                 <v-expansion-panel>
 
                     <v-expansion-panel-header class="pa-0 ma-0">
-                        Права
+                        Группы
                     </v-expansion-panel-header>
 
 
                     <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
                         <v-expansion-panels accordion flat class="pa-0 ma-0">
-                            <v-expansion-panel v-for="el in groups" id="permission" :key="el" cols="2" sm="6" md="5"
-                                lg="6" class="pa-0 ma-0">
+                            <v-expansion-panel v-for="el in user.groups" id="permission" :key="el" cols="2" sm="6"
+                                md="5" lg="6" class="pa-0 ma-0">
 
-                                <v-expansion-panel-header class="pa-0 ma-0" style="margin-left: 0.5em !important;">
+                                <v-expansion-panel-header class="pa-0 ma-0" style="margin-left: 0.5em !important;" v-show="el != 'Admin'">
                                     {{ el }}
                                 </v-expansion-panel-header>
 
                                 <v-expansion-panel-content class="ma-0 pa-0">
                                     <v-row class="pa-2 ma-0">
-                                        <v-col v-for="(name, index) in permissionList" :key="name" cols="2" sm="6"
-                                            md="5" lg="6" class="pa-0 ma-0">
-                                            <v-checkbox v-if="name.includes((el[0] + el.slice(1)).toLowerCase())"
+                                        <v-col v-for="(name, index) in user.user_permissions" :key="name" cols="2"
+                                            sm="6" md="5" lg="6" class="pa-0 ma-0" v-show="name.includes(el)">
+                                            <v-checkbox @click="changeGroups(el)"
                                                 v-model="objectForCard_.permissions" :readonly="infoCardOn.data"
-                                                class="ma-2" color="#E93030" :value="permissionList[index]" style="
+                                                class="ma-2" color="#E93030" :value="user.user_permissions[index]"
+                                                style="
                                                                         min-height: 37.53% !important; 
                                                                         max-height: 37.53% !important;
                                                                     " :label="name">
@@ -104,115 +111,54 @@ export default {
             userPermissions: null,
             groupAdminId: null,
             allGroups_: this.allGroups,
-            usersAdmin: [],
+            userAdmin: false,
+            group: '',
         }
     },
     watch: {
         objectForCard: {
             async handler() {
                 this.objectForCard_ = this.objectForCard;
-                if (this.objectForCard.properties && 'first_name' in this.objectForCard.properties) {
-                    if (this.user.is_superuser) {
-                        await this.getAllUsersForAdmin(this.groupAdminId);
-
-                        if (this.usersAdmin.includes(this.objectForCard_.id)) {
-                            this.permissionList = [...this.user.admin_permissions];
-                            this.objectForCard_.groups.push('Admin')
-                        }
-                    } else {
-                        this.permissionList = [...this.user.user_permissions];
+                console.log(this.objectForCard_)
+            }
+        },
+        'objectForCard.permissions': {
+            handler() {
+                if (this.group) {
+                    if (this.objectForCard_.permissions.find(el => el.includes(this.group))) {
+                        this.objectForCard_.groups.push(this.group);
+                        this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)];
                     }
-                    this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)]
-                    this.groupsPermissions();
-                }
-            }
-        },
-
-        'objectForCard.groups': {
-            handler() {
-                this.objectForCard_ = this.objectForCard;
-                if ('groups' in this.objectForCard) {
-                    if (this.objectForCard_.groups.includes('Admin') && this.user.is_superuser) {
-                        this.permissionList = [...this.user.admin_permissions]
-                    } else {
-                        this.permissionList = [...this.user.user_permissions]
+                    else {
+                        this.objectForCard_.groups = this.objectForCard_.groups.filter(el => el != this.group);
                     }
-
-                    this.groupsPermissions();
+                    console.log(this.objectForCard_.groups);
                 }
             }
         },
-
-        allGroups: {
+        userAdmin: {
             handler() {
-                if (this.user.is_superuser) {
-                    this.allGroups_ = this.allGroups
-                    this.allGroups_.forEach(element => {
-                        if (element.name === 'Admin') {
-                            this.groupAdminId = element.id
-                        }
-                    });
-                    this.getAllUsersForAdmin(this.groupAdminId);
+                if(this.userAdmin){
+                    this.objectForCard_.groups.push('Admin');
                 }
+                else{
+                    this.objectForCard_.groups = this.objectForCard_.groups.filter(el => el != 'Admin');
+                }
+                console.log(this.objectForCard_.groups);
             }
-        },
-        allUsersForAdmin: {
-            handler() {
-                if (this.user.is_superuser) {
-                    this.usersAdmin = this.allUsersForAdmin.map(element => element.id);
-                }
-            }
-        },
-
-        currentGroup: {
-            handler() {
-                if (this.user.is_superuser) {
-                    if (this.cardVisable.data && !this.infoCardOn.data && this.currentGroup.name === 'Admin') {
-                        this.permissionList = [...this.user.admin_permissions]
-                        this.objectForCard_.groups.push(this.currentGroup.name)
-                    } else if (this.cardVisable.data && !this.infoCardOn.data && this.currentGroup.name) {
-                        this.permissionList = [...this.user.user_permissions];
-                        this.objectForCard_.groups.push(this.currentGroup.name)
-                    } else if (this.usersAdmin.includes(this.objectForCard_.id)) {
-                        this.permissionList = [...this.user.admin_permissions]
-                        this.objectForCard_.groups.push('Admin')
-                    } else {
-                        this.permissionList = [...this.user.user_permissions];
-                    }
-                }
-                this.groupsPermissions();
-                this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)]
-            },
-            deep: true,
-        },
+        }
     },
-    computed: mapGetters(['user', 'currentGroup', 'allGroups', 'allUsersForAdmin']),
+    computed: mapGetters(['user', 'currentGroup', 'allGroups', 'allUsersForAdmin', 'emptyObject', 'actions']),
     methods: {
         ...mapActions(['getAllUsersForAdmin', 'getAllGroups', 'getUser']),
         ...mapMutations(['updateAllUsersForAdmin', 'updateAllGroups']),
-        groupsPermissions() {
-            this.groups = []
-            for (let i = 0; i < this.permissionList.length; ++i) {
-                let el = this.permissionList[i].split(" ").pop();
-
-                if (el === 'control') {
-
-                    el = 'Version Control'
-                } else {
-                    el = el[0].toUpperCase() + el.slice(1);
-                }
-                this.groups.push(el);
-            }
-            this.groups = [...new Set(this.groups)]
-        },
+        changeGroups(group) {
+            this.group = group;
+        }
     },
 
     async mounted() {
         await this.getUser();
-        if ('groups' in this.user) {
-            this.userGroups = [...this.user.groups];
-            this.groupsPermissions();
-        }
     }
 }
 </script>

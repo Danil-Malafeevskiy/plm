@@ -163,7 +163,7 @@ export default {
                         this.fiteredAllTypes = this.allType.filter(el => el.toLowerCase().includes(searchText.toLowerCase()));
                     }
                 }
-                if(this.fiteredAllTypes.length && this.actions && this.actions !== 'getAllGroups'){
+                if (this.fiteredAllTypes.length && this.actions && this.actions !== 'getAllGroups') {
                     this.selectedItem = 0;
                     this.changeObject(this.fiteredAllTypes[0]);
                 }
@@ -180,7 +180,6 @@ export default {
         },
 
         async changeObject(objectType, index) {
-            console.log(objectType, this.actions);
             if (this.selectedItem != index) {
                 this.objectType = objectType;
                 this.upadateTitle(objectType.name);
