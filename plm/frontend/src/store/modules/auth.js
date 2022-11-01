@@ -48,8 +48,10 @@ export default {
                 user.properties = { ...user };
                 delete user.properties.id;
                 delete user.properties.image;
+                delete user.properties.is_staff;
+                delete user.properties.is_superuser;
                 for (let key in user) {
-                    if (key != 'properties' && key != 'id' && key != 'image') {
+                    if (key != 'properties' && key != 'id' && key != 'image' && key != 'is_staff' && key != 'is_superuser') {
                         if (typeof user[key] === 'object') {
                             delete user.properties[key];
                         }
@@ -61,7 +63,6 @@ export default {
                 commit('updateObjectForCard', user);
             })
         },
-
 
         async postUser({ dispatch, commit }, newUser) {
             console.log(newUser);

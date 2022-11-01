@@ -114,6 +114,11 @@
                                             @click:append="showPassword = !showPassword" :label="index"
                                             :placeholder="index" filled :readonly="infoCardOn_.data">
                                         </v-text-field>
+                                        <v-text-field v-else-if="!(index != 'first_name' && index != 'last_name' && index != 'email')"
+                                            v-model="objectForCard.properties[index]" :label="index"
+                                            :placeholder="index" :hide-details="infoCardOn.data || !user.is_superuser" filled
+                                            :readonly="infoCardOn_.data || !user.is_superuser" :rules="[rules.required]">
+                                        </v-text-field>
                                         <v-select v-else-if="index === 'type'" v-model="objectForCard.properties.type"
                                             filled lable="type" :items="types" :readonly="infoCardOn_.data">
                                         </v-select>
