@@ -15,7 +15,7 @@
       <div style="margin-top: 20px;" v-if="selected.length != 0">
         <v-menu offset-y v-if="type.length != 0">
           <template v-slot:activator="{ on, attrs }">
-            <v-btn depressed class="ma-0" color="#E5E5E5" v-bind="attrs" v-on="on">
+            <v-btn depressed class="ma-0" color="#FFFFFF" v-bind="attrs" v-on="on">
               <span style="color: #787878">Переместить в </span>
               <v-icon color="#787878">mdi-chevron-down</v-icon>
             </v-btn>
@@ -26,7 +26,7 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        <v-btn color="#E5E5E5" depressed class="ma-0" @click="deleteObjects">
+        <v-btn color="#FFFFFF" depressed class="ma-0" @click="deleteObjects">
           <span style="color: #787878">Удалить</span>
         </v-btn>
       </div>
@@ -42,7 +42,7 @@
       @toggle-select-all="showAll()" :item-class="classRow" style="
         height: 100% !important;
         width: 50% !important; 
-        background-color: #E5E5E5; 
+        background-color: #FFFFFF; 
         box-shadow: none !important;
         margin-left: 2% !important;
       ">

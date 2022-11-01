@@ -1,5 +1,11 @@
 <template>
-  <div id="map_content" style="position: absolute; top: 0; bottom: 0; right: 0; left: 0;"></div>
+  <div id="map_content" style="position: absolute; top: 0; bottom: 0; right: 0; left: 0;">
+  <v-btn style="position: absolute; z-index: 1; right: 0">
+    <v-icon>
+      mdi-filter
+    </v-icon>
+  </v-btn>
+  </div>
 </template>
 
 <script>
