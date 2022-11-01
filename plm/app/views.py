@@ -223,7 +223,7 @@ class GroupView(APIView):
                 groups_list = [group for group in list(request.user.groups.values_list('name', flat=True))
                                                                     if group != "Admin"]
                 groups = Group.objects.filter(name__in=groups_list)
-            group = GroupSerializer(groups, many=True, context=request.user.id)
+            group = GroupSerializer(groups, many=True, context=request.user.id, remove_fields=['users'])
             return Response(group.data)
 
         group = Group.objects.get(id=id)
@@ -234,9 +234,13 @@ class GroupView(APIView):
         group_serializer = GroupSerializer(data=request.data)
         if group_serializer.is_valid():
             group = group_serializer.save()
+
             Permission.objects.create(name=f'Просмотр объектов {group.name}', content_type_id=5, codename=f'view_{group.name}')
             Permission.objects.create(name=f'Изменение объектов {group.name}',
                                       content_type_id=5, codename=f'change_{group.name}')
+
+            for user in request.data['users']:
+                get_user_model().objects.get(username=user).groups.add(Group.objects.get(name=request.data['name']))
 
             if not request.user.is_superuser:
                 user = get_user_model().objects.get(id=request.user.id)
@@ -249,8 +253,19 @@ class GroupView(APIView):
     def put(self, request):
         change_group = Group.objects.get(id=request.data['id'])
         group_serializer = GroupSerializer(change_group, data=request.data)
+        old_users = GroupSerializer(change_group, remove_fields=['all_user']).data['users']
+        print(old_users)
         if group_serializer.is_valid():
             group_serializer.save()
+            for user in request.data['users']:
+                user_groups = get_user_model().objects.get(username=user).groups
+                if request.data['name'] not in user_groups.values_list('name', flat=True):
+                    user_groups.add(Group.objects.get(name=request.data['name']))
+                else:
+                    old_users.remove(user)
+            print(old_users)
+            for user in old_users:
+                get_user_model().objects.get(username=user).groups.remove(Group.objects.get(name=request.data['name']))
             return Response("Success up group!")
         return Response({'name': "Группа с таким именем уже существует!"})
 
@@ -273,7 +288,7 @@ class UserView(APIView):
         if request.user.is_staff:
             return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'avaible_permission']).data)
         return Response(UserSerializer(request.user, remove_fields=['username', 'full_name', 'password', 'avaible_permission',
-                                                                    'user_permissions']).data)
+                                                                    'user_permissions', 'all_users']).data)
 
 class UserAdminView(APIView):
     authentication_classes = [SessionAuthentication]
@@ -297,10 +312,10 @@ class UserAdminView(APIView):
                                                                                           'groups',
                                                                                           'permissions',
                                                                                           'avaible_permission',
-                                                                                          'image', 'user_permissions'])
+                                                                                          'image', 'user_permissions', 'all_users'])
             return Response(user_serializer.data)
 
-        return Response(UserSerializer(get_user_model().objects.get(id=id), remove_fields=['username', 'full_name', 'password', 'user_permissions']).data)
+        return Response(UserSerializer(get_user_model().objects.get(id=id), remove_fields=['username', 'full_name', 'password', 'user_permissions', 'all_users']).data)
 
     def post(self, request):
         request.data['password'] = get_user_model().objects.make_random_password(length=16)

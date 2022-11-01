@@ -176,10 +176,11 @@ class FileSerializer(serializers.Serializer):
 class GroupSerializer(serializers.ModelSerializer):
     all_user = serializers.SerializerMethodField()
     all_type = serializers.SerializerMethodField()
+    users = serializers.SerializerMethodField()
     class Meta:
         ordering = ['id']
         model = Group
-        fields = ('id', 'name', 'all_user', 'all_type')
+        fields = ('id', 'name', 'all_user', 'all_type', 'users')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -195,6 +196,9 @@ class GroupSerializer(serializers.ModelSerializer):
     def get_all_type(self, obj):
         return len(Type.objects.filter(group=obj.id))
 
+    def get_users(self, obj):
+        return list(get_user_model().objects.filter(groups=obj).values_list('username', flat=True))
+
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
     groups = serializers.SerializerMethodField()
@@ -202,6 +206,7 @@ class UserSerializer(serializers.ModelSerializer):
     avaible_permission = serializers.SerializerMethodField()
     image = BinaryField(required=False)
     user_permissions = serializers.SerializerMethodField()
+    all_users = serializers.SerializerMethodField()
     email = serializers.EmailField(required=True)
 
     class Meta:
@@ -215,7 +220,7 @@ class UserSerializer(serializers.ModelSerializer):
             )
         ]
         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff', 'groups',
-                  'permissions', 'avaible_permission', 'image', 'user_permissions', 'full_name')
+                  'permissions', 'avaible_permission', 'image', 'user_permissions', 'full_name', 'all_users')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -253,6 +258,13 @@ class UserSerializer(serializers.ModelSerializer):
                 perm.append(f'Изменение объектов {group}')
                 perm.append(f'Просмотр объектов {group}')
         return perm
+
+    def get_all_users(self, obj):
+        if obj.is_superuser:
+            return list(get_user_model().objects.all().values_list('username', flat=True))
+        if obj.is_staff:
+            return list(get_user_model().objects.all().exclude(groups="Admin").values_list('username', flat=True))
+        return []
 
     def validate(self, data):
         if 'password' in data.keys():
