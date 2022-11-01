@@ -300,12 +300,9 @@ class UserAdminView(APIView):
                                                                                           'image', 'user_permissions'])
             return Response(user_serializer.data)
 
-        return Response(UserSerializer(get_user_model().objects.get(id=id), remove_fields=['username', 'full_name', 'password', 'is_superuser', 'is_staff', 'user_permissions']).data)
+        return Response(UserSerializer(get_user_model().objects.get(id=id), remove_fields=['username', 'full_name', 'password', 'user_permissions']).data)
 
     def post(self, request):
-        if "Admin" in request.data['groups']:
-            request.data['is_staff'] = True
-
         request.data['password'] = get_user_model().objects.make_random_password(length=16)
         request.data['username'] = request.data['email']
 
