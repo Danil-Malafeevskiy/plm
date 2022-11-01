@@ -1,17 +1,18 @@
 <template>
   <v-app>
     <NavigationDrawer :addCardOn="addCardOn" :notVisableVersions="notVisableVersions" :visableCard="visableCard"
-      :editCardOn="editCardOn" :visableVersions="visableVersions" :versionsPage="versionsPage" :infoCardOn="infoCardOn"/>
-
+      :editCardOn="editCardOn" :visableVersions="visableVersions" :versionsPage="versionsPage"
+      :infoCardOn="infoCardOn" />
+    <FIleInputWindow v-if="isFileInput" @offFileInput="offFileInput" />
     <v-main>
       <router-view></router-view>
       <div style="display: none">
         <canvas id="png_icon_of_type">
         </canvas>
-        <v-icon id="svg_icon_of_type" color="#E93030" v-if="typeForLayer">{{typeForLayer.image}}</v-icon>
+        <v-icon id="svg_icon_of_type" color="#E93030" v-if="typeForLayer">{{ typeForLayer.image }}</v-icon>
         <canvas id="png_icon_of_one_type">
         </canvas>
-        <v-icon id="svg_icon_of_one_type" color="#E93030" v-if="oneType">{{oneType.image}}</v-icon>
+        <v-icon id="svg_icon_of_one_type" color="#E93030" v-if="oneType">{{ oneType.image }}</v-icon>
       </div>
 
       <v-toolbar color="#F5F5F4" style="border-bottom: 1px solid #E0E0E0; box-shadow: none;">
@@ -62,9 +63,10 @@
                     <v-icon small>mdi-close</v-icon>
                   </a>
                   <span style="color: #454545;">Редактирование</span>
-                  <span style="color: #454545; margin-left: 20px; font-weight: 500;">{{arrayEdit.put.length + arrayEdit.post.length
-                  +
-                  arrayEdit.delete.length
+                  <span style="color: #454545; margin-left: 20px; font-weight: 500;">{{ arrayEdit.put.length +
+                      arrayEdit.post.length
+                      +
+                      arrayEdit.delete.length
                   }} объектов</span>
                 </div>
                 <div>
@@ -77,7 +79,8 @@
                 </div>
               </div>
               <v-text-field v-model="arrayEditMode.messege" class="pa-2" background-color="#F1F1F1" hide-details
-                label="Комментарий" append-icon="mdi-close" @click:append="arrayEditMode.messege = ''" placeholder="Комментарий" filled>
+                label="Комментарий" append-icon="mdi-close" @click:append="arrayEditMode.messege = ''"
+                placeholder="Комментарий" filled>
               </v-text-field>
             </div>
           </v-slide-y-transition>
@@ -85,7 +88,6 @@
 
             <Auth v-if="getAuth === false && authbool" />
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
-            <FIleInputWindow v-if="isFileInput" @offFileInput="offFileInput" />
 
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data" />
@@ -102,7 +104,7 @@
           </div>
         </v-tab-item>
       </v-tabs-items>
-      
+
     </v-main>
   </v-app>
 </template>
@@ -156,7 +158,7 @@ export default {
       file: null,
       changeElements: [],
       componentKey: 0,
-      authbool: null, 
+      authbool: null,
     }
   },
   watch: {
@@ -182,9 +184,9 @@ export default {
       }
     },
     emptyObject: {
-      handler(){
-        if(this.actions === 'getFeatures')
-        this.emptyObject.group = this.oneType.group;
+      handler() {
+        if (this.actions === 'getFeatures')
+          this.emptyObject.group = this.oneType.group;
       }
     },
     actions: {
@@ -319,7 +321,7 @@ export default {
         this.conflictCard = false;
       }
     },
-    checkPath(){
+    checkPath() {
       if (location.pathname === '/') {
         this.authbool = true
       } else {
@@ -338,7 +340,6 @@ export default {
 }
 </script>
 <style>
-
 * {
   scrollbar-width: thin;
   scrollbar-color: #A9A9A9;

@@ -129,7 +129,6 @@ export default {
                     this.objectForCard_.groups = this.objectForCard_.groups.filter(el => el != 'Admin');
                     this.objectForCard_.is_staff = false;
                 }
-                console.log(this.objectForCard_.groups);
             }
         }
     },
