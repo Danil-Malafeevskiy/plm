@@ -82,6 +82,7 @@ export default {
                 else {
                     dispatch('getAllTypeForTable');
                 }
+                dispatch('allGroupForNav');
             })
         },
         async putTypeObject({ dispatch, commit, state }, type) {
@@ -106,6 +107,7 @@ export default {
                 else{
                     dispatch('getAllTypeForTable');
                 }
+                dispatch('allGroupForNav');
             });
         },
         async deleteTypeObject({ dispatch, commit, state }, id) {
@@ -120,6 +122,7 @@ export default {
                 else {
                     dispatch('getAllTypeForTable');
                 }
+                dispatch('allGroupForNav');
             })
         },
         async getSortType({ commit }, drawType) {

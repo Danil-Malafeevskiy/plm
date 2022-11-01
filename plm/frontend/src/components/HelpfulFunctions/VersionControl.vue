@@ -14,7 +14,7 @@
 		<v-data-table :headers="headers" :items="tableArray" :items-per-page="5" style="
 			height: 100% !important;
 			width: 95% !important; 
-			background-color: #E5E5E5; 
+			background-color: #FFFFFF; 
 			box-shadow: none !important;
 			margin-left: 2% !important;" @click:row="chooseVersion" sort-by="id" :sort-desc="true">
 

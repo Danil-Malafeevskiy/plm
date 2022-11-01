@@ -14,7 +14,7 @@
         <v-icon id="svg_icon_of_one_type" color="#E93030" v-if="oneType">{{oneType.image}}</v-icon>
       </div>
 
-      <v-toolbar color="#E5E5E5" style="border-bottom: 1px solid #E0E0E0; box-shadow: none;">
+      <v-toolbar color="#F5F5F4" style="border-bottom: 1px solid #E0E0E0; box-shadow: none;">
         <v-toolbar-title>{{ getToolbarTitle }}</v-toolbar-title>
         <template v-slot:extension>
 
@@ -24,7 +24,7 @@
             </v-tab>
           </v-tabs>
           <v-btn v-if="actions === 'getFeatures'" @click="editMode = true" class="pa-0"
-            style="margin: 0 10px 0 0 !important" fab small elevation="0" color="#E5E5E5">
+            style="margin: 0 10px 0 0 !important" fab small elevation="0" color="#F5F5F4">
             <v-icon>
               mdi-pencil
             </v-icon>
@@ -37,7 +37,7 @@
               mdi-plus
             </v-icon>
           </v-btn>
-          <v-btn depressed class="pa-0" small fab elevation="0" color="#E5E5E5" @click="isFileInput = !isFileInput">
+          <v-btn depressed class="pa-0" small fab elevation="0" color="#F5F5F4" @click="isFileInput = !isFileInput">
             <v-icon>
               mdi-file-upload
             </v-icon>
@@ -62,19 +62,22 @@
                     <v-icon small>mdi-close</v-icon>
                   </a>
                   <span style="color: #454545;">Редактирование</span>
-                </div>
-                <div>
-                  <span style="color: #454545; margin-right: 20px">{{arrayEdit.put.length + arrayEdit.post.length
+                  <span style="color: #454545; margin-left: 20px; font-weight: 500;">{{arrayEdit.put.length + arrayEdit.post.length
                   +
                   arrayEdit.delete.length
                   }} объектов</span>
+                </div>
+                <div>
+                  <v-btn @click="arrayEditMode.messege = ''" text class="pa-0" style="margin: 0 10px 0 0">
+                    <span style="color: #787878;">Удалить Комментарий</span>
+                  </v-btn>
                   <v-btn @click="editObjects" text class="pa-0" style="margin: 0 10px 0 0">
-                    <span style="color: #454545;">применить</span>
+                    <span style="color: #787878;">применить</span>
                   </v-btn>
                 </div>
               </div>
               <v-text-field v-model="arrayEditMode.messege" class="pa-2" background-color="#F1F1F1" hide-details
-                label="Сообщение" placeholder="Сообщение" filled>
+                label="Комментарий" append-icon="mdi-close" @click:append="arrayEditMode.messege = ''" placeholder="Комментарий" filled>
               </v-text-field>
             </div>
           </v-slide-y-transition>
@@ -275,6 +278,7 @@ export default {
       }
       this.resetArrayEditMode();
       this.editMode = !this.editMode;
+      this.getTypeObject();
     },
     offConflictWindow() {
       this.isConflict = !this.isConflict;
@@ -334,6 +338,7 @@ export default {
 }
 </script>
 <style>
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #A9A9A9;
@@ -383,7 +388,7 @@ export default {
 }
 
 .v-tabs-items {
-  background-color: #E5E5E5 !important;
+  background-color: #FFFFFF !important;
 }
 
 .v-tabs-slider-wrapper {
