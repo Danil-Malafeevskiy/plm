@@ -263,7 +263,7 @@ class UserSerializer(serializers.ModelSerializer):
         if obj.is_superuser:
             return list(get_user_model().objects.all().values_list('username', flat=True))
         if obj.is_staff:
-            return list(get_user_model().objects.all().exclude(groups=Group.objects.get(name="Admin").values_list('username', flat=True)))
+            return list(get_user_model().objects.all().exclude(groups=Group.objects.get(name="Admin")).values_list('username', flat=True))
         return []
 
     def validate(self, data):
