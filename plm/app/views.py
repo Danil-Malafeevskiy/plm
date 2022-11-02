@@ -122,12 +122,19 @@ class FileUploadView(APIView):
         doc = sqlite3.connect(settings.MEDIA_URL + request.FILES['file'].name)
         doc.enable_load_extension(True)
 
-        filename, res = os.path.splitext(self.request.FILES['file'].name)
-
+        filename = request.data['filename']
         doc.execute(f'SELECT load_extension("mod_spatialite.dll")')
+
         cur = doc.cursor()
-        cur.execute(f"SELECT *, st_astext(GEOMETRY) from " + filename)
-        dict_0 = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in cur.fetchall()]
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        dict_0 = []
+        for i in cur.fetchall():
+            try:
+                cur.execute(f"SELECT *, st_astext(GEOMETRY) from " + i[0])
+                dict_0 = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in cur.fetchall()]
+                break
+            except Exception as e:
+                continue
 
         cur.close()
         doc.close()
@@ -227,7 +234,7 @@ class GroupView(APIView):
             return Response(group.data)
 
         group = Group.objects.get(id=id)
-        groups = GroupSerializer(group, remove_fields=['all_user'])
+        groups = GroupSerializer(group, context=request.user.id, remove_fields=['all_user'])
         return Response(groups.data)
 
     def post(self, request):
@@ -254,7 +261,7 @@ class GroupView(APIView):
         change_group = Group.objects.get(id=request.data['id'])
         group_serializer = GroupSerializer(change_group, data=request.data)
         old_users = GroupSerializer(change_group, remove_fields=['all_user']).data['users']
-        print(old_users)
+
         if group_serializer.is_valid():
             group_serializer.save()
             for user in request.data['users']:
@@ -263,7 +270,7 @@ class GroupView(APIView):
                     user_groups.add(Group.objects.get(name=request.data['name']))
                 else:
                     old_users.remove(user)
-            print(old_users)
+
             for user in old_users:
                 get_user_model().objects.get(username=user).groups.remove(Group.objects.get(name=request.data['name']))
             return Response("Success up group!")
@@ -377,7 +384,7 @@ class TypeView(APIView):
                 datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
             dataset = ff.filter_queryset(request, datasets, self)
             return Response(TypeSerializer(dataset, many=True, remove_fields=['type', 'headers',
-                                                                                 'properties', 'image', 'group']).data)
+                                                                                 'properties', 'image', 'group_type', 'all_group_type']).data)
 
         dataset = Type.objects.get(id=id)
         return Response(TypeSerializer(dataset).data)
@@ -396,13 +403,13 @@ class TypeAdminView(APIView):
             if 'group' in request.query_params:
                 datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
             return Response(TypeSerializer(datasets, many=True, remove_fields=['type', 'headers',
-                                                                                 'properties', 'image']).data)
+                                                                                 'properties', 'image', 'group_type', 'all_group_type']).data)
 
         dataset = Type.objects.get(id=id)
         return Response(TypeSerializer(dataset).data)
 
     def post(self, request):
-        dataset_serializer = TypeSerializer(data=request.data, context={'group': request.data['group']})
+        dataset_serializer = TypeSerializer(data=request.data, context={'group': request.data['group'], 'ruls': request.data['ruls']})
         if dataset_serializer.is_valid():
             dataset_serializer.save()
             return Response("Success new dataset!")
@@ -410,7 +417,7 @@ class TypeAdminView(APIView):
 
     def put(self, request):
         dataset = Type.objects.get(id=request.data['id'])
-        dataset_serializer = TypeSerializer(dataset, data=request.data, context={'group': request.data['group']})
+        dataset_serializer = TypeSerializer(dataset, data=request.data, context={'group': request.data['group'], 'ruls': request.data['ruls']})
         if dataset_serializer.is_valid():
             dataset_serializer.save()
             return Response("Success update dataset!")

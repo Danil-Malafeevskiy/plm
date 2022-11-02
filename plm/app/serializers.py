@@ -14,7 +14,7 @@ from rest_framework_gis.serializers import GeometryField
 import django.contrib.auth.password_validation as validators
 
 from plm import settings
-from app.models import Feature, Type, VersionControl
+from app.models import Feature, Type, VersionControl, Ruls
 from django.contrib.auth import get_user_model
 
 class BinaryField(serializers.Field):
@@ -172,6 +172,7 @@ class FeatureSerializer(serializers.ModelSerializer):
 class FileSerializer(serializers.Serializer):
     file = serializers.FileField()
     group = serializers.CharField()
+    filename = serializers.CharField()
 
 class GroupSerializer(serializers.ModelSerializer):
     all_user = serializers.SerializerMethodField()
@@ -197,7 +198,7 @@ class GroupSerializer(serializers.ModelSerializer):
         return len(Type.objects.filter(group=obj.id))
 
     def get_users(self, obj):
-        return list(get_user_model().objects.filter(groups=obj).values_list('username', flat=True))
+        return list(get_user_model().objects.filter(groups=obj).exclude(id=self.context).values_list('username', flat=True))
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
@@ -261,9 +262,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_all_users(self, obj):
         if obj.is_superuser:
-            return list(get_user_model().objects.all().values_list('username', flat=True))
+            return list(get_user_model().objects.all().exclude(
+                id=obj.id).values_list('username', flat=True))
         if obj.is_staff:
-            return list(get_user_model().objects.all().exclude(groups=Group.objects.get(name="Admin")).values_list('username', flat=True))
+            return list(get_user_model().objects.all().exclude(groups=Group.objects.get(name="Admin")).exclude(
+                id=obj.id).values_list('username', flat=True))
         return []
 
     def validate(self, data):
@@ -313,10 +316,12 @@ class TypeSerializer(serializers.ModelSerializer):
     properties = serializers.JSONField(required=False, default=[""])
     image = BinaryField(required=False)
     all_obj = serializers.SerializerMethodField()
+    all_group_type = serializers.SerializerMethodField()
+    group_type = serializers.SerializerMethodField()
     class Meta:
         ordering = ['id']
         model = Type
-        fields = ('id', 'name', 'type', 'headers', 'properties', 'image', 'group', 'all_obj')
+        fields = ('id', 'name', 'type', 'headers', 'properties', 'image', 'group', 'all_obj', 'all_group_type', 'group_type')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -338,6 +343,12 @@ class TypeSerializer(serializers.ModelSerializer):
 
         return super(TypeSerializer, self).validate(data)
 
+    def get_all_group_type(self, obj):
+        return list(Type.objects.filter(group=obj.group).exclude(id=obj.id).values_list('name', flat=True))
+
+    def get_group_type(self, obj):
+        return [type.type_2.name for type in Ruls.objects.filter(type_1=obj).exclude(type_2=obj)]
+
     def get_all_obj(self, obj):
         return len(Feature.objects.filter(name=obj.id))
 
@@ -346,11 +357,30 @@ class TypeSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['group'] = Group.objects.get(name=self.context['group'])
-        return super(TypeSerializer, self).create(validated_data)
+        type = super(TypeSerializer, self).create(validated_data)
+        for ruls in self.context['ruls']:
+            type_new = Type.objects.get(name=ruls)
+            Ruls.objects.create(type_1=type, type_2=type_new)
+            Ruls.objects.create(type_1=type_new, type_2=type)
+        Ruls.objects.create(type_1=type, type_2=type)
+        return type
 
     def update(self, instance, validated_data):
         validated_data['group'] = Group.objects.get(name=self.context['group'])
-        return super(TypeSerializer, self).update(instance, validated_data)
+        type = super(TypeSerializer, self).update(instance, validated_data)
+        ruls_1 = [type.type_2.name for type in Ruls.objects.filter(type_1=type).exclude(type_1=type, type_2=type)]
+        for ruls in self.context['ruls']:
+            type_new = Type.objects.get(name=ruls, group=validated_data['group'])
+            if not Ruls.objects.filter(type_1=type, type_2=type_new).exists():
+                Ruls.objects.create(type_1=type, type_2=type_new)
+                Ruls.objects.create(type_1=type_new, type_2=type)
+            else:
+                ruls_1.remove(type_new.name)
+        for r in ruls_1:
+            type_new = Type.objects.get(name=r, group=validated_data['group'])
+            Ruls.objects.get(type_1=type_new, type_2=type).delete()
+            Ruls.objects.get(type_1=type, type_2=type_new).delete()
+        return type
 
 class VersionControlSerializer(serializers.ModelSerializer):
     date_update = serializers.DateTimeField(required=False, default=timezone.now, format="%Y-%m-%d %H:%M:%S")

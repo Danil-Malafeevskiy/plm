@@ -30,6 +30,6 @@ class VersionControl(models.Model):
     comment = models.CharField(max_length=100, default="", blank=True)
     flag = models.BooleanField(default=False)
 
-'''class Ruls(models.Model):
-    type_1 = models.ForeignKey(Type, on_delete=models.CASCADE)
-    type_2 = models.ForeignKey(Type, on_delete=models.CASCADE)'''
+class Ruls(models.Model):
+    type_1 = models.ForeignKey(Type, on_delete=models.CASCADE, related_name='FirstType')
+    type_2 = models.ForeignKey(Type, on_delete=models.CASCADE, related_name='SecondType')
