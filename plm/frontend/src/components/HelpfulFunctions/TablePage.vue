@@ -213,12 +213,12 @@ export default {
       let classForItem = '';
       if (this.infoCardOn_.data || this.editCardOn.data) {
         if ('id_' in this.getObjectForCard) {
-          if (item.id_ === this.getObjectForCard.id_ && this.checkequalsItems(item, this.getObjectForCard)) {
+          if (item.id_ === this.getObjectForCard.id_){ //&& this.checkequalsItems(item, this.getObjectForCard)) {
             classForItem += 'v-data-table__selected';
           }
         }
         else {
-          if (item.id === this.getObjectForCard.id && this.checkequalsItems(item, this.getObjectForCard)) {
+          if (item.id === this.getObjectForCard.id){ //&& this.checkequalsItems(item, this.getObjectForCard)) {
             classForItem += 'v-data-table__selected';
           }
         }

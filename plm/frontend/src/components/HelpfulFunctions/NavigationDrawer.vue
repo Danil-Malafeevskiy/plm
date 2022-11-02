@@ -170,7 +170,7 @@ export default {
                         this.fiteredAllTypes = this.allType.filter(el => el.toLowerCase().includes(searchText.toLowerCase()));
                     }
                 }
-                if (this.fiteredAllTypes.length && this.actions && this.actions !== 'getAllGroups') {
+                if (this.fiteredAllTypes.length && (this.actions || this.actions === '') && this.actions !== 'getAllGroups') {
                     this.selectedItem = 0;
                     this.changeObject(this.fiteredAllTypes[0]);
                 }
@@ -189,7 +189,7 @@ export default {
         async changeObject(objectType, index) {
             if (this.selectedItem != index) {
                 this.objectType = objectType;
-                this.upadateTitle(objectType.name);
+                this.upadateTitle(typeof objectType === 'string' ? objectType : objectType.name);
                 switch (this.actions) {
                     case 'getUsersOfGroup':
                     case 'getAllGroups': {
@@ -268,7 +268,6 @@ export default {
     margin-left: 35px;
     color: #787878;
 }
-
 
 .name {
     display: flex;

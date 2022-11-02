@@ -15,8 +15,10 @@
         <v-icon id="svg_icon_of_one_type" color="#E93030" v-if="oneType">{{ oneType.image }}</v-icon>
       </div>
 
-      <v-toolbar color="#F5F5F4" style="border-bottom: 1px solid #E0E0E0; box-shadow: none;">
-        <v-toolbar-title>{{ getToolbarTitle }}</v-toolbar-title>
+      <v-toolbar color="#F5F5F4" style="border-bottom: 1px solid #E0E0E0; box-shadow: none;" :class="{
+        'features': actions === 'getFeatures'
+      }">
+        <v-toolbar-title><span style="font-size: 24px">{{ getToolbarTitle }}</span></v-toolbar-title>
         <template v-slot:extension>
 
           <v-tabs v-model="tab" align-with-title color="#E93030">
@@ -24,26 +26,36 @@
               <span>{{ item }}</span>
             </v-tab>
           </v-tabs>
-          <v-btn v-if="actions === 'getFeatures'" @click="editMode = true" class="pa-0"
-            style="margin: 0 10px 0 0 !important" fab small elevation="0" color="#F5F5F4">
-            <v-icon color="#A5A5A6">
-              mdi-pencil
-            </v-icon>
-          </v-btn>
+          <template v-if="actions === 'getFeatures'">
+            <v-btn @click="editMode = true" class="pa-0" style="margin: 0 10px 0 0 !important" fab small elevation="0"
+              color="#F5F5F4">
+              <v-icon color="#A5A5A6">
+                mdi-pencil
+              </v-icon>
+            </v-btn>
 
-          <v-btn :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')" style="border-radius: 4px; margin-right: 10px !important" class="show__card"
-            height="28px" width="80px" color="#EE5E5E"
-            @click="addCardOn.data = !addCardOn.data; visableCard();">
-            <v-icon color="white !default" dark>
-              mdi-plus
-            </v-icon>
-          </v-btn>
-          <v-btn depressed class="pa-0" small fab elevation="0" color="#F5F5F4" @click="isFileInput = !isFileInput">
-            <v-icon color="#A5A5A6">
-              mdi-file-upload
-            </v-icon>
-          </v-btn>
+            <v-btn :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')"
+              style="border-radius: 4px; margin-right: 10px !important" class="show__card" height="28px" width="80px"
+              color="#EE5E5E" @click="addCardOn.data = !addCardOn.data; visableCard();">
+              <v-icon color="white !default" dark>
+                mdi-plus
+              </v-icon>
+            </v-btn>
+            <v-btn depressed class="pa-0 mr-0" small fab elevation="0" color="#F5F5F4"
+              @click="isFileInput = !isFileInput">
+              <v-icon color="#A5A5A6">
+                mdi-file-upload
+              </v-icon>
+            </v-btn>
+          </template>
         </template>
+        <v-btn v-if="actions !== 'getFeatures'" :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')"
+          style="border-radius: 4px; margin-right: 10px !important; margin-bottom: 10px;" class="show__card"
+          height="28px" width="80px" color="#EE5E5E" @click="addCardOn.data = !addCardOn.data; visableCard();">
+          <v-icon color="white !default" dark>
+            mdi-plus
+          </v-icon>
+        </v-btn>
       </v-toolbar>
 
       <v-tabs-items v-model="tab" style="height: 89.7%">
@@ -88,12 +100,9 @@
 
             <Auth v-if="getAuth === false && authbool" />
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
-
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data" />
-
             <VersionControl v-if="versionsPage.data" :versionsPage="versionsPage" />
-
           </div>
         </v-tab-item>
         <v-tab-item>
@@ -104,7 +113,6 @@
           </div>
         </v-tab-item>
       </v-tabs-items>
-
     </v-main>
   </v-app>
 </template>
@@ -192,6 +200,12 @@ export default {
     actions: {
       handler() {
         this.notVisableCard();
+        if (this.actions === 'getFeatures') {
+          this.items = ['список', 'карта'];
+        }
+        else {
+          this.items = ['список'];
+        }
         setTimeout(() => {
           this.infoCardOn.data = false;
           this.addCardOn.data = false;
@@ -405,8 +419,12 @@ export default {
 }
 
 .v-toolbar {
-  min-height: 10.3% !important;
-  max-height: 10.3% !important;
+  /* min-height: 10.3% !important; */
+  max-height: 6.74% !important;
+}
+
+.features {
+  max-height: 10% !important;
 }
 
 .v-input__prepend-outer {
@@ -429,9 +447,15 @@ export default {
   border-radius: 8px;
 }
 
-.v-toolbar__content {
+.features .v-toolbar__content {
   min-height: 50% !important;
   max-height: 50% !important;
+}
+
+.v-toolbar__content {
+  /* min-height: 100% !important; */
+  justify-content: space-between;
+  max-height: 100% !important;
 }
 
 .v-toolbar__extension {
@@ -473,6 +497,28 @@ html {
 
 .blur {
   filter: blur(3px) !important;
+}
+
+@media (min-width: 1025px) and (max-width: 1919px) {
+  .v-toolbar {
+    /* min-height: 10.3% !important; */
+    max-height: 6.74% !important;
+  }
+
+  .features {
+    max-height: 12% !important;
+  }
+
+  .features .v-toolbar__content {
+    min-height: 50% !important;
+    max-height: 50% !important;
+  }
+
+  .v-toolbar__content {
+    /* min-height: 100% !important; */
+    justify-content: space-between;
+    max-height: 100% !important;
+  }
 }
 </style>
 
