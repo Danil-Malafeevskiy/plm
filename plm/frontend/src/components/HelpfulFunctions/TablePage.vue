@@ -38,15 +38,15 @@
       <span class="object" v-else>{{ tableArrayItems.length }} объектов </span>
     </div>
     <v-data-table @click:row="showCard" :headers="headers" v-model="arrObjects[`${nameArray}`]" show-select
-      :item-key="headers[0].text" :items="tableArrayItems" :items-per-page="5" class="pa-0"
-      @toggle-select-all="showAll()" :item-class="classRow" style="
+      :item-key="headers[0].text" :items="tableArrayItems" :items-per-page="heightTable"
+      :footer-props="{ 'items-per-page-options': rowsPerPage }" class="pa-0" @toggle-select-all="showAll()"
+      :item-class="classRow" style="
         height: 100% !important;
         width: 50% !important; 
         background-color: #FFFFFF; 
         box-shadow: none !important;
         margin-left: 2% !important;
       ">
-
     </v-data-table>
   </div>
 </template>
@@ -63,6 +63,8 @@ export default {
       addCardOn_: this.addCardOn,
       editCardOn_: this.editCardOn,
       tableArrayItems: [],
+      heightTable: null,
+      rowsPerPage: [],
     }
   },
   watch: {
@@ -74,7 +76,7 @@ export default {
     allListItem: {
       handler() {
         this.tableArrayItems = [...this.allListItem];
-        if (this.oneType && this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length ) {
+        if (this.oneType && this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length) {
           for (let i in this.arrayEdit.post) {
             this.tableArrayItems.push({ ...this.arrayEdit.post[i].properties, id_: this.arrayEdit.post[i].id_ });
           }
@@ -190,16 +192,16 @@ export default {
     },
     checkequalsItems(item, object) {
       let checkObject = { ...object.properties };
-      
-      if('first_name' in checkObject){
+
+      if ('first_name' in checkObject) {
         checkObject.full_name = checkObject.first_name + ' ' + checkObject.last_name;
       }
-      
+
       let putObject = this.arrayEdit.put.find(el => el.id === object.id);
       putObject = putObject ? { ...putObject.properties } : 1;
       let newObject = this.newData.find(el => el.id === object.id);
       newObject = newObject ? { ...newObject.properties } : 1;
-      
+
       for (let i in this.headers) {
         if (this.headers[i].text != 'id_' && this.headers[i].text != 'id' && checkObject[this.headers[i].text] !== item[this.headers[i].text]) {
           if (!(putObject && newObject && putObject[this.headers[i].text] === item[this.headers[i].text])) {
@@ -213,12 +215,12 @@ export default {
       let classForItem = '';
       if (this.infoCardOn_.data || this.editCardOn.data) {
         if ('id_' in this.getObjectForCard) {
-          if (item.id_ === this.getObjectForCard.id_){ //&& this.checkequalsItems(item, this.getObjectForCard)) {
+          if (item.id_ === this.getObjectForCard.id_) { //&& this.checkequalsItems(item, this.getObjectForCard)) {
             classForItem += 'v-data-table__selected';
           }
         }
         else {
-          if (item.id === this.getObjectForCard.id){ //&& this.checkequalsItems(item, this.getObjectForCard)) {
+          if (item.id === this.getObjectForCard.id) { //&& this.checkequalsItems(item, this.getObjectForCard)) {
             classForItem += 'v-data-table__selected';
           }
         }
@@ -250,6 +252,12 @@ export default {
     },
   },
   mounted() {
+    this.heightTable = Math.round((document.querySelector('.v-window__container').offsetHeight - 64 - 69 - 58) / 48);
+    let countPage = 5;
+    for (let i = 1; countPage * i < this.heightTable; i++) {
+      this.rowsPerPage.push(countPage * i);
+    }
+    this.rowsPerPage.push(this.heightTable);
   },
 }
 </script>
