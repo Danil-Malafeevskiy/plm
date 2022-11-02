@@ -6,7 +6,7 @@
                     Выберите файл для импорта и группу
                 </div>
                 <div>
-                    <v-file-input v-model="file" hide-input :key="componentKey" prepend-icon="mdi-file-upload">
+                    <v-file-input v-model="file" hide_details prepend-icon="mdi-file-upload">
                     </v-file-input>
                     <v-row no-gutters justify="space-between"
                         style="width: 390px; margin: 0 auto; padding-bottom: 20px">
@@ -19,13 +19,15 @@
                             </v-radio-group>
                         </v-col>
                     </v-row>
-                    <v-text-field v-model="fileName"  label="Имя типа"
-                        style="padding: 0 24px; z-index: 204" filled>
-                    </v-text-field>
+                    <v-select v-model="fileName" @click="test" :items="allTypeForUpload.map(el => el.name)"
+                        label="Имя типа" style="padding: 0 24px; z-index: 204" filled>
+                    </v-select>
                 </div>
                 <v-card-text>
                     <div class="btn">
-                        <v-btn @click="fileUpload" color="#EE5E5E" block style="height: 45px; color: white !important;">
+                        <v-btn @click="fileUpload"
+                            :disabled="!file || !group || !fileName || (user.permissions.filter(el => el.includes(group)).length != 2 && (!user.is_staff || !user.is_superuser))"
+                            color="#EE5E5E" block style="height: 45px; color: white !important;">
                             ок
                         </v-btn>
                         <v-btn @click="$emit('offFileInput')" color="#EE5E5E" block
@@ -61,16 +63,22 @@ export default {
             this.uploadFileWithFeature({ file: this.file, group: this.group, fileName: this.fileName });
             this.componentKey++;
             this.$emit('offFileInput');
+        },
+        test() {
+            setTimeout(() => {
+                let element = document.querySelectorAll('.v-menu__content');
+                if (element.length == 2) {
+                    element = element[1];
+                }
+                else {
+                    element = element[0];
+                }
+                element.style.setProperty('height', `${[...new Set(this.allTypeForUpload.map(el => el.name))].length * 48 + 16}px`, 'important');
+            }, 100)
         }
     },
     async mounted() {
-        // await this.getAllTypeForUpload();
-        // this.types = [...new Set(this.allTypeForUpload.map(el => el.name))];
-        // this.types = [{ value: 1, title: 'My item 1' },
-        // { value: 2, title: 'My item 2' },
-        // { value: 3, title: 'My item 3' },];
-
-        // console.log(this.types);
+        await this.getAllTypeForUpload();
     }
 }
 </script>
@@ -107,5 +115,10 @@ export default {
 <style>
 .v-icon.v-icon::after {
     background-color: transparent !important;
+}
+
+.v-menu__content .v-select-list {
+    max-width: 100% !important;
+    width: 100% !important;
 }
 </style>
