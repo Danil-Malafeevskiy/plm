@@ -5,10 +5,7 @@
 		</v-scroll-x-reverse-transition>
 
 		<div style="margin: 20px 5px 20px 20px; color: #787878; font-weight: 500;">
-			<span v-if="tableArray.length % 10 === 1">{{ tableArray.length }} объект </span>
-			<span v-else-if="tableArray.length % 10 > 1 && tableArray.length % 10 < 5">
-				{{ tableArray.length }} объекта </span>
-			<span v-else>{{ tableArray.length }} объектов </span>
+			<span >{{ tableArray.length }} версий </span>
 		</div>
 
 		<v-data-table :headers="headers" :items="tableArray" :items-per-page="5" style="
@@ -17,11 +14,18 @@
 			background-color: #FFFFFF; 
 			box-shadow: none !important;
 			margin-left: 2% !important;" @click:row="chooseVersion" sort-by="id" :sort-desc="true">
-
+			
 			<template v-slot:[`item.select`]="{ item }">
-				<v-btn v-model="item.select" class='columnText' text id="no-background-hover" tile
-					:style="[(item.flag) ? { 'color': '#EE5E5E' } : { 'color': '#b6b3b3' }]">
-					Последняя версия
+
+				<v-btn v-model="item.select" plain small class='columnText' fab 
+					style="
+						border-radius: 100% !important; 
+						padding: 4px 10px !important; 
+						max-height: 20px !important; 
+						max-width: 20px !important;
+					"
+					id="no-background-hover"
+					:style="[(item.flag) ? { 'background-color': '#E93030' } : (item.id <= currentVersionId) ? {'background-color': '#F8BFBF'} : { 'background-color': '#DDDDDD' }]">
 				</v-btn>
 			</template>
 
@@ -43,14 +47,14 @@ export default {
 				{
 					text: '',
 					value: 'select',
-					align: 'center',
+					align: 'start',
 					sortable: false,
+					width: '0%'
 				},
-				// { text: 'id', value: 'id' },
-				{ text: 'Дата', value: 'date_update', align: 'start' },
-				{ text: 'Автор', value: 'user', align: 'start' },
+				{ text: 'Дата', value: 'date_update', align: 'start', width: '7%' },
+				{ text: 'Время', value: 'time', align: 'start', width: '7%' },
+				{ text: 'Автор', value: 'user', align: 'start', width: '15%' },
 				{ text: 'Комментарий', value: 'comment', align: 'start' },
-				// { text: 'Flag', value: 'flag' },
 			],
 			tableArray: [],
 			currentVersionId: null,
@@ -65,6 +69,8 @@ export default {
 				this.tableArray = this.allVersions
 				let id = 0
 				this.tableArray.forEach(element => {
+					element.time = element.date_update.split(' ')[1].slice(0, -3);
+					element.date_update = element.date_update.split(' ')[0];
 					if (element === this.tableArray.filter(element => element.flag)[0]) {
 						this.currentVersion = element
 						this.currentVersionId = element.id
@@ -142,7 +148,24 @@ export default {
 }
 </script>
 
-<style >
+<style scoped>
+
+* >>> td:first-child {
+	border: hidden !important;
+}
+
+* >>> th:first-child {
+	border: hidden !important;
+}
+
+* >>> .v-data-footer {
+	margin-left: 6.4em;
+}
+</style>
+
+
+<style>
+
 .object {
 	margin: 20px 5px 20px 20px;
 	color: #787878;
@@ -167,12 +190,14 @@ export default {
 	text-align: right;
 	letter-spacing: 1.25px;
 	text-transform: uppercase;
+	border-bottom: thin solid white !important;
 }
 
 #no-background-hover::before {
 	background-color: transparent !important;
 	display: none !important;
 }
+
 
 .lastVersion {
 	left: 77.8%;
@@ -187,4 +212,7 @@ export default {
 	color: #D7153A;
 	display: none;
 }
+
+
+
 </style>
