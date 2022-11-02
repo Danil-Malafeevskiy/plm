@@ -170,10 +170,10 @@ export default {
                         this.fiteredAllTypes = this.allType.filter(el => el.toLowerCase().includes(searchText.toLowerCase()));
                     }
                 }
-                // if (this.fiteredAllTypes.length && this.actions && this.actions !== 'getAllGroups') {
-                //     this.selectedItem = 0;
-                //     this.changeObject(this.fiteredAllTypes[0]);
-                // }
+                if (this.fiteredAllTypes.length && this.actions && this.actions !== 'getAllGroups') {
+                    this.selectedItem = 0;
+                    this.changeObject(this.fiteredAllTypes[0]);
+                }
             }
         }
     },

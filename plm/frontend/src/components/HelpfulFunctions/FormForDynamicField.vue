@@ -117,7 +117,7 @@ export default {
 }
 
 .btn_on_card {
-    height: 50px !important;
-    border-radius: 8px !important;
+    height: 56px !important;
+    border-radius: 4px !important;
 }
 </style>
