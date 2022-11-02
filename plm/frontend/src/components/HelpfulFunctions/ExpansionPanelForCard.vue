@@ -96,6 +96,31 @@
                 </v-expansion-panel>
             </v-expansion-panels>
         </div>
+        <div style="margin: 0 0 10px 24px" v-else-if="'users' in objectForCard">
+            <v-expansion-panels accordion flat class="pa-0 ma-0">
+                <v-expansion-panel>
+
+                    <v-expansion-panel-header class="pa-0 ma-0">
+                        Пользователи
+                    </v-expansion-panel-header>
+
+
+                    <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
+                        <v-row class="pa-2 ma-0">
+                            <v-col v-for="el in user.all_users" :key="el" cols="2" sm="6" md="5" lg="6"
+                                class="pa-0 ma-0">
+                                <v-checkbox v-model="objectForCard_.users" :readonly="infoCardOn.data" class="ma-2"
+                                    color="#E93030" :value="el" :label="el" style="
+                                        min-height: 37.53% !important; 
+                                        max-height: 37.53% !important;">
+                                </v-checkbox>
+                            </v-col>
+                        </v-row>
+                    </v-expansion-panel-content>
+
+                </v-expansion-panel>
+            </v-expansion-panels>
+        </div>
     </div>
 </template>
 
