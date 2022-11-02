@@ -76,14 +76,14 @@
                                         style="font-size: 24px; display: flex; justify-content: flex-end;">
                                         <v-btn @click="editOn" depressed class="ma-0 btn" fab small elevation="0"
                                             style="background-color: white !important" color="white"
-                                            :disabled="(!editMode && 'type' in this.objectForCard) || (user.permissions.filter(el => el.includes(objectForCard.group)).length != 2 && (!user.is_staff || !user.is_superuser))"
+                                            :disabled="(!editMode && 'type' in this.objectForCard) || (user.permissions.filter(el => el.includes(objectForCard.group)).length != 2 && (!user.is_staff && !user.is_superuser))"
                                             :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
                                             <v-icon color="#A5A5A6">
                                                 mdi-pencil
                                             </v-icon>
                                         </v-btn>
                                         <v-btn @click="deleteObjectOnCard()" class="ma-0 btn" fab small elevation="0"
-                                            :disabled="(!editMode && 'type' in this.objectForCard) || (user.permissions.filter(el => el.includes(objectForCard.group)).length != 2 && (!user.is_staff || !user.is_superuser))"
+                                            :disabled="(!editMode && 'type' in this.objectForCard) || (user.permissions.filter(el => el.includes(objectForCard.group)).length != 2 && (!user.is_staff && !user.is_superuser))"
                                             style="background-color: white !important"
                                             :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
                                             <v-icon color="#A5A5A6">

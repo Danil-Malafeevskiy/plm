@@ -43,7 +43,7 @@ export default {
             }).catch(error => console.log(error));
         },
         async deleteFeature({ commit }, feature) {
-            await axios.put('/tower', [feature.map(el => el.id), '']).then((response) => {
+            await axios.put('/tower', [feature.map(el => el.id), '', feature[0].group]).then((response) => {
                 console.log(response.data);
                 if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');
