@@ -71,24 +71,29 @@
 
 
                     <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                        <div v-for="el in user.groups" :key="el" style="display: flex; justify-content: space-between;"
+                        <v-icon style="max-height: 34px; margin: 8px">mdi-file-eye-outline</v-icon>
+                        <v-icon style="max-height: 34px;  margin: 8px; margin-left: 15px;">mdi-file-edit-outline</v-icon>
+                        <span style="color: #A5A5A6; font-weight: 500; margin-left: 15px;">Группы пользователей</span>
+                        <div v-for="el in user.groups" :key="el" style="display: flex;"
                             v-show="el != 'Admin'">
-                            <span class="mt-3">{{ el }}</span>
                             <div style="display: flex">
                                 <v-checkbox @click="changeGroups(el)" v-model="objectForCard_.permissions"
-                                    :readonly="infoCardOn.data" class="ma-2" color="#E93030"
+                                    :readonly="infoCardOn.data" class="ma-2" color="#E93030" hide-details
                                     :value="user.user_permissions.filter(element => element.includes(el))[1]" style="
                                         min-height: 37.53% !important; 
                                         max-height: 37.53% !important;">
                                 </v-checkbox>
-                                <v-icon class="mt-1  mr-2" style="max-height: 34px">mdi-book-open-blank-variant</v-icon>
+                                
                                 <v-checkbox @click="changeGroups(el)" v-model="objectForCard_.permissions"
-                                    :readonly="infoCardOn.data" class="ma-2" color="#E93030"
+                                    :readonly="infoCardOn.data" class="ma-2" color="#E93030" hide-details
                                     :value="user.user_permissions.filter(element => element.includes(el))[0]" style="
                                         min-height: 37.53% !important; 
                                         max-height: 37.53% !important;">
                                 </v-checkbox>
-                                <v-icon class="mt-1" style="max-height: 34px">mdi-pencil</v-icon>
+                                <span class="mt-3" style="margin-left: 6px; color: #C2C2C2"
+                                :class="{
+                                    'selected_group': objectForCard_.permissions.find(element => element.includes(el)), 
+                                }">{{ el }}</span>
                             </div>
                         </div>
                     </v-expansion-panel-content>
@@ -207,5 +212,7 @@ export default {
 </script>
 
 <style>
-
+.selected_group{
+    color: #454545 !important;
+}
 </style>
