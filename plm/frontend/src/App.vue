@@ -26,20 +26,20 @@
           </v-tabs>
           <v-btn v-if="actions === 'getFeatures'" @click="editMode = true" class="pa-0"
             style="margin: 0 10px 0 0 !important" fab small elevation="0" color="#F5F5F4">
-            <v-icon>
+            <v-icon color="#A5A5A6">
               mdi-pencil
             </v-icon>
           </v-btn>
 
-          <v-btn :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')" class="show__card"
-            height="28px" width="80px" depressed color="#EE5E5E"
+          <v-btn :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')" style="border-radius: 4px; margin-right: 10px !important" class="show__card"
+            height="28px" width="80px" color="#EE5E5E"
             @click="addCardOn.data = !addCardOn.data; visableCard();">
             <v-icon color="white !default" dark>
               mdi-plus
             </v-icon>
           </v-btn>
           <v-btn depressed class="pa-0" small fab elevation="0" color="#F5F5F4" @click="isFileInput = !isFileInput">
-            <v-icon>
+            <v-icon color="#A5A5A6">
               mdi-file-upload
             </v-icon>
           </v-btn>

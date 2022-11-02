@@ -78,15 +78,15 @@
                                             style="background-color: white !important" color="white"
                                             :disabled="(!editMode && 'type' in this.objectForCard) || (user.permissions.filter(el => el.includes(objectForCard.group)).length != 2 && (!user.is_staff || !user.is_superuser))"
                                             :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
-                                            <v-icon>
+                                            <v-icon color="#A5A5A6">
                                                 mdi-pencil
                                             </v-icon>
                                         </v-btn>
                                         <v-btn @click="deleteObjectOnCard()" class="ma-0 btn" fab small elevation="0"
-                                        :disabled="(!editMode && 'type' in this.objectForCard) || (user.permissions.filter(el => el.includes(objectForCard.group)).length != 2 && (!user.is_staff || !user.is_superuser))"
+                                            :disabled="(!editMode && 'type' in this.objectForCard) || (user.permissions.filter(el => el.includes(objectForCard.group)).length != 2 && (!user.is_staff || !user.is_superuser))"
                                             style="background-color: white !important"
                                             :class="{ 'btn_disabled': !editMode && actions === 'getFeatures' }">
-                                            <v-icon>
+                                            <v-icon color="#A5A5A6">
                                                 mdi-delete-outline
                                             </v-icon>
                                         </v-btn>
@@ -114,10 +114,12 @@
                                             @click:append="showPassword = !showPassword" :label="index"
                                             :placeholder="index" filled :readonly="infoCardOn_.data">
                                         </v-text-field>
-                                        <v-text-field v-else-if="!(index != 'first_name' && index != 'last_name' && index != 'email')"
+                                        <v-text-field
+                                            v-else-if="!(index != 'first_name' && index != 'last_name' && index != 'email')"
                                             v-model="objectForCard.properties[index]" :label="index"
-                                            :placeholder="index" :hide-details="infoCardOn.data || !user.is_superuser" filled
-                                            :readonly="infoCardOn_.data || !user.is_superuser" :rules="[rules.required]">
+                                            :placeholder="index" :hide-details="infoCardOn.data || !user.is_superuser"
+                                            filled :readonly="infoCardOn_.data || !user.is_superuser"
+                                            :rules="[rules.required]">
                                         </v-text-field>
                                         <v-select v-else-if="index === 'type'" v-model="objectForCard.properties.type"
                                             filled lable="type" :items="types" :readonly="infoCardOn_.data">
@@ -187,9 +189,9 @@
                     </v-card-text>
                 </div>
                 <div class="card__footer" v-if="addCardOn_.data">
-                    <v-btn text @click="notVisableCard(); addCardOn_.data = !addCardOn_.data">ОТМЕНА
+                    <v-btn text @click="notVisableCard(); addCardOn_.data = !addCardOn_.data" color="#787878">ОТМЕНА
                     </v-btn>
-                    <v-btn text @click="addNewFeature()">Создать</v-btn>
+                    <v-btn text @click="addNewFeature()" color="#787878">Создать</v-btn>
                 </div>
                 <div class="card__footer" v-else-if="editCardOn.data">
                     <v-btn @click="changeItem(isOldItem = !isOldItem)"
@@ -198,12 +200,12 @@
                         оригинал
                     </v-btn>
 
-                    <v-btn v-if="allListItem[0] != user" text
+                    <v-btn v-if="allListItem[0] != user" text color="#787878"
                         @click="notVisableCard(); editCardOn_.data = !editCardOn_.data"
                         style="margin-right: 15px !important">
                         ОТМЕНА
                     </v-btn>
-                    <v-btn text @click="editObject()">применить</v-btn>
+                    <v-btn text @click="editObject()" color="#787878">применить</v-btn>
 
                 </div>
 
