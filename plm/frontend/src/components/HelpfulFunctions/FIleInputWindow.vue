@@ -19,7 +19,7 @@
                             </v-radio-group>
                         </v-col>
                     </v-row>
-                    <v-select v-model="fileName" @click="test" :items="allTypeForUpload.map(el => el.name)"
+                    <v-select v-model="fileName" @click="test" :items="allTypeForUpload.filter(el => el.group === group).map(el => el.name)"
                         label="Имя типа" style="padding: 0 24px; z-index: 204" filled>
                     </v-select>
                 </div>
@@ -73,7 +73,7 @@ export default {
                 else {
                     element = element[0];
                 }
-                element.style.setProperty('height', `${[...new Set(this.allTypeForUpload.map(el => el.name))].length * 48 + 16}px`, 'important');
+                element.style.setProperty('height', `${[...new Set(this.allTypeForUpload.filter(el => el.group === this.group))].length * 48 + 16}px`, 'important');
             }, 100)
         }
     },
