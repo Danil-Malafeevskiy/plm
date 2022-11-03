@@ -1,5 +1,4 @@
 import json
-import os
 import sqlite3
 
 from asgiref.sync import async_to_sync
@@ -7,11 +6,13 @@ from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.utils import timezone, dateformat
 from django.utils.encoding import smart_bytes, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.parsers import MultiPartParser, FileUploadParser
 
@@ -23,11 +24,26 @@ from plm import settings
 from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
 
-from app.models import Feature, Type, VersionControl
+from app.models import Feature, Type, VersionControl, Ruls
 from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, TypeSerializer, \
     VersionControlSerializer, SetNewPasswordSerializer
 from rest_framework.response import Response
 from django.core.mail import send_mail
+
+def check_conflict_geometry(request):
+    conflicts = []
+    for obj in request.data:
+        type_obj = Type.objects.get(id=obj['name'])
+        conflict = Feature.objects.filter(geometry__intersects=GEOSGeometry(f'{obj["geometry"]}'), name__in=Type.objects.filter(group=Type.objects.get(id=obj['name']).group))
+        conflict_obj = [obj]
+        for con in conflict:
+            if Ruls.objects.filter(type_1=type_obj, type_2=con.name).exists():
+                conflict_obj.append(FeatureSerializer(con).data)
+        if len(conflict_obj)>1:
+            conflicts.append(conflict_obj)
+    if len(conflicts)>0:
+        return Response(conflicts, status=status.HTTP_409_CONFLICT)
+    return Response({"success": "Конфликтов нет!"}, status.HTTP_200_OK)
 
 class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
@@ -59,6 +75,11 @@ class TowerAPI(APIView):
         group = request.data.pop(-1)
         comment = request.data.pop(-1)
         delete_mas = request.data.pop(-1)
+
+        conflict = check_conflict_geometry(request)
+        if conflict.status_code == status.HTTP_409_CONFLICT:
+            return Response(conflict.data, status=status.HTTP_409_CONFLICT)
+
         if len(delete_mas)!=0:
             queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
                 name__in=Type.objects.filter(group=Feature.objects.get(id=delete_mas[0]).name.group.id))
@@ -92,9 +113,12 @@ class TowerAPI(APIView):
             )
 
             if VersionControl.objects.filter(flag=True, dataset=dataset).exists():
-                VersionControl.objects.filter(
+                dis_version = VersionControl.objects.filter(
                     date_update__gte=VersionControl.objects.get(flag=True, dataset=dataset).date_update,
-                    dataset=dataset).delete()
+                    dataset=dataset, disabled=False)
+                for vers in dis_version:
+                    vers.disabled = True
+                    vers.save()
 
             OldVersionSerializer = VersionControlSerializer(
                 data={"user": request.user.username, "version": version,
@@ -461,7 +485,7 @@ class VersionControlView(APIView):
         if (len(version_now)!=0 and version_now[0].date_update > version.date_update):
             all_version = VersionControl.objects.filter(
                 dataset=versionSer['dataset'],
-                date_update__gte=version.date_update, date_update__lt=version_now[0].date_update).order_by('-id')
+                date_update__gte=version.date_update, date_update__lt=version_now[0].date_update, disabled=False).order_by('-id')
             version.flag = True
             version.save()
 
@@ -469,11 +493,11 @@ class VersionControlView(APIView):
             if 'flag' in request.data.keys():
                 all_version = VersionControl.objects.filter(
                     dataset=versionSer['dataset'],
-                    date_update__gte=version_now[0].date_update, date_update__lte=dateformat.format(timezone.now(), 'Y-m-d H:i:s')).order_by('id')
+                    date_update__gte=version_now[0].date_update, date_update__lte=dateformat.format(timezone.now(), 'Y-m-d H:i:s'), disabled=False).order_by('id')
             else:
                 all_version = VersionControl.objects.filter(
                     dataset=versionSer['dataset'],
-                    date_update__gte=version_now[0].date_update, date_update__lt=version.date_update).order_by('id')
+                    date_update__gte=version_now[0].date_update, date_update__lt=version.date_update, disabled=False).order_by('id')
 
                 version.flag = True
                 version.save()
@@ -483,7 +507,7 @@ class VersionControlView(APIView):
         else:
             all_version = VersionControl.objects.filter(
                 dataset=versionSer['dataset'],
-                date_update__gte=version.date_update, date_update__lte=dateformat.format(timezone.now(), 'Y-m-d H:i:s')).order_by('-id')
+                date_update__gte=version.date_update, date_update__lte=dateformat.format(timezone.now(), 'Y-m-d H:i:s'), disabled=False).order_by('-id')
             version.flag = True
             version.save()
 

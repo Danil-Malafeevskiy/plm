@@ -29,6 +29,7 @@ class VersionControl(models.Model):
     dataset = models.ForeignKey(Group, on_delete=models.CASCADE, default=1)
     comment = models.CharField(max_length=100, default="", blank=True)
     flag = models.BooleanField(default=False)
+    disabled = models.BooleanField(default=False)
 
 class Ruls(models.Model):
     type_1 = models.ForeignKey(Type, on_delete=models.CASCADE, related_name='FirstType')

@@ -387,7 +387,7 @@ class VersionControlSerializer(serializers.ModelSerializer):
     class Meta:
         ordering = ['id']
         model = VersionControl
-        fields = ('id', 'user', 'date_update', 'version', 'comment', 'dataset', 'version', 'new_version', 'flag')
+        fields = ('id', 'user', 'date_update', 'version', 'comment', 'dataset', 'version', 'new_version', 'flag', 'disabled')
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
