@@ -1,6 +1,6 @@
 <template>
     <v-slide-y-transition>
-        <v-card class="card_test">
+        <v-card class="card_test" style="z-index: 2 !important;">
             <v-list dense nav>
                 <v-list-item-group class="menu" v-model="selectedItem" mandatory color="#E93030">
                     <v-list-item v-if="user && user.is_staff">
