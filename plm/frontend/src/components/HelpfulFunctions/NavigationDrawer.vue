@@ -37,7 +37,7 @@
                     color="#E93030" :mandatory="actions && actions !== 'getAllGroups' && actions != 'getUsersOfGroup'">
                     <v-list-item class="mb-2 pa-3" v-for="(key, index) in fiteredAllTypes" :key="key.id" link
                         style="border-radius: 8px !important;" @click="changeObject(key, index)">
-                        <v-list-item-title class="pa-1" v-if="typeof key === 'object'">
+                        <v-list-item-title style="z-index: 1" class="pa-1" v-if="typeof key === 'object'">
                             <div class="name">
                                 <div>{{ key.name }}</div>
                                 <template v-if="'all_obj' in key">
@@ -170,7 +170,11 @@ export default {
                         this.fiteredAllTypes = this.allType.filter(el => el.toLowerCase().includes(searchText.toLowerCase()));
                     }
                 }
-                if (this.fiteredAllTypes.length && (this.actions || this.actions === '') && this.actions !== 'getAllGroups') {
+            }
+        },
+        actions: {
+            handler(){
+                if (this.fiteredAllTypes.length && this.actions !== 'getAllGroups') {
                     this.selectedItem = 0;
                     this.changeObject(this.fiteredAllTypes[0]);
                 }
@@ -271,5 +275,16 @@ export default {
 
 .name {
     display: flex;
+}
+
+.v-list-item__title{
+    z-index: 1 !important;
+}
+
+.theme--light.v-list-item--active:hover::before, .theme--light.v-list-item--active::before{
+    opacity: 1 !important;
+    background-color: #FDEDED !important;
+    border-radius: 8px !important;
+    transition: 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
 }
 </style>
