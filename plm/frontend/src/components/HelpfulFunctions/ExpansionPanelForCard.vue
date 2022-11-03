@@ -1,20 +1,46 @@
 <template>
     <div>
-        <div style="display: flex">
-            <v-checkbox v-if="user.is_superuser && actions === 'getUsersOfGroup'" v-model="objectForCard_.is_staff"
+        <div style="display: flex" v-if="user.is_superuser && actions === 'getUsersOfGroup'">
+            <v-checkbox v-model="objectForCard_.is_staff"
                 label="Admin" :readonly="infoCardOn.data" class="ma-2" color="#E93030" style="
                                     min-height: 37.53% !important; 
                                     max-height: 37.53% !important;
                                     margin-left: 24px !important;
                                 ">
             </v-checkbox>
-            <v-checkbox v-if="user.is_superuser && actions === 'getUsersOfGroup'" v-model="objectForCard_.is_superuser"
+            <v-checkbox v-model="objectForCard_.is_superuser"
                 label="Super User" :readonly="infoCardOn.data" class="ma-2" color="#E93030" style="
                                     min-height: 37.53% !important; 
                                     max-height: 37.53% !important;
                                     margin-left: 24px !important;
                                 ">
             </v-checkbox>
+        </div>
+        <div style="margin: 0 0 10px 24px" v-if="'properties' in objectForCard && 'all_group_type' in objectForCard.properties">
+            <v-expansion-panels accordion flat class="pa-0 ma-0">
+                <v-expansion-panel class="pa-0 ma-0">
+
+                    <v-expansion-panel-header class="pa-0 ma-0">
+                        Запрет на пересечение
+                    </v-expansion-panel-header>
+
+                    <v-expansion-panel-content class="ma-0 pa-0">
+                        <v-row class="pa-2 ma-0">
+                                <v-col v-for="(f) in objectForCard.properties.all_group_type" :key="f" cols="2" sm="6" md="5" lg="6"
+                                    class="pa-0 ma-0" v-show="f != 'Admin'">
+
+                                    <v-checkbox v-model="objectForCard_.ruls" :label="f" :value="f" hide-details
+                                        :readonly="infoCardOn.data" class="ma-2" color="#E93030" style="
+                                    min-height: 37.53% !important; 
+                                    max-height: 37.53% !important;
+                                ">
+                                    </v-checkbox>
+                                </v-col>
+                        </v-row>
+                    </v-expansion-panel-content>
+
+                </v-expansion-panel>
+            </v-expansion-panels>
         </div>
         <div style="margin: 0 0 10px 24px"
             v-if="'properties' in objectForCard && ((objectForCard_.is_staff && 'first_name' in objectForCard.properties) || 'type' in objectForCard.properties)">
@@ -32,7 +58,7 @@
                                 <v-col v-for="(f, index) in user.groups" :key="f" cols="2" sm="6" md="5" lg="6"
                                     class="pa-0 ma-0" v-show="f != 'Admin'">
 
-                                    <v-checkbox v-model="objectForCard_.groups" :label="f" :value="user.groups[index]"
+                                    <v-checkbox v-model="objectForCard_.groups" :label="f" :value="user.groups[index]" hide-details
                                         :readonly="infoCardOn.data" class="ma-2" color="#E93030" style="
                                     min-height: 37.53% !important; 
                                     max-height: 37.53% !important;
@@ -45,7 +71,7 @@
                                     class="pa-0 ma-0">
                                     <v-radio-group hide-details class="ma-0 pa-0"
                                         v-model="objectForCard_.properties.group">
-                                        <v-radio :label="f" :value="user.groups[index]" :readonly="infoCardOn.data"
+                                        <v-radio :label="f" :value="user.groups[index]" :readonly="infoCardOn.data" hide-details
                                             class="ma-2" color="#E93030" on-icon="mdi-checkbox-marked"
                                             off-icon="mdi-checkbox-blank-outline" style="
                                     min-height: 37.53% !important; 
@@ -71,24 +97,29 @@
 
 
                     <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                        <div v-for="el in user.groups" :key="el" style="display: flex; justify-content: space-between;"
+                        <v-icon style="max-height: 34px; margin: 8px">mdi-file-eye-outline</v-icon>
+                        <v-icon style="max-height: 34px;  margin: 8px; margin-left: 15px;">mdi-file-edit-outline</v-icon>
+                        <span style="color: #A5A5A6; font-weight: 500; margin-left: 15px;">Группы пользователей</span>
+                        <div v-for="el in user.groups" :key="el" style="display: flex;"
                             v-show="el != 'Admin'">
-                            <span class="mt-3">{{ el }}</span>
                             <div style="display: flex">
                                 <v-checkbox @click="changeGroups(el)" v-model="objectForCard_.permissions"
-                                    :readonly="infoCardOn.data" class="ma-2" color="#E93030"
+                                    :readonly="infoCardOn.data" class="ma-2" color="#E93030" hide-details
                                     :value="user.user_permissions.filter(element => element.includes(el))[1]" style="
                                         min-height: 37.53% !important; 
                                         max-height: 37.53% !important;">
                                 </v-checkbox>
-                                <v-icon class="mt-1  mr-2" style="max-height: 34px">mdi-book-open-blank-variant</v-icon>
+                                
                                 <v-checkbox @click="changeGroups(el)" v-model="objectForCard_.permissions"
-                                    :readonly="infoCardOn.data" class="ma-2" color="#E93030"
+                                    :readonly="infoCardOn.data" class="ma-2" color="#E93030" hide-details
                                     :value="user.user_permissions.filter(element => element.includes(el))[0]" style="
                                         min-height: 37.53% !important; 
                                         max-height: 37.53% !important;">
                                 </v-checkbox>
-                                <v-icon class="mt-1" style="max-height: 34px">mdi-pencil</v-icon>
+                                <span class="mt-3" style="margin-left: 6px; color: #C2C2C2"
+                                :class="{
+                                    'selected_group': objectForCard_.permissions.find(element => element.includes(el)), 
+                                }">{{ el }}</span>
                             </div>
                         </div>
                     </v-expansion-panel-content>
@@ -109,7 +140,7 @@
                         <v-row class="pa-2 ma-0">
                             <v-col v-for="el in user.all_users" :key="el" cols="2" sm="6" md="5" lg="6"
                                 class="pa-0 ma-0">
-                                <v-checkbox v-model="objectForCard_.users" :readonly="infoCardOn.data" class="ma-2"
+                                <v-checkbox v-model="objectForCard_.users" hide-details :readonly="infoCardOn.data" class="ma-2"
                                     color="#E93030" :value="el" :label="el" style="
                                         min-height: 37.53% !important; 
                                         max-height: 37.53% !important;">
@@ -148,7 +179,9 @@ export default {
         objectForCard: {
             async handler() {
                 this.objectForCard_ = this.objectForCard;
-                console.log(this.objectForCard_)
+                if('properties' in this.objectForCard && 'all_group_type' in this.objectForCard.properties){
+                    this.objectForCard_.ruls = [...this.objectForCard_.properties.group_type];
+                }
             }
         },
         'objectForCard.is_staff': {
@@ -207,5 +240,7 @@ export default {
 </script>
 
 <style>
-
+.selected_group{
+    color: #454545 !important;
+}
 </style>

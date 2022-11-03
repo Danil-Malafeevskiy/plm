@@ -1,10 +1,39 @@
 <template>
   <div id="map_content" style="position: absolute; top: 0; bottom: 0; right: 0; left: 0;">
-  <v-btn style="position: absolute; z-index: 1; right: 0">
-    <v-icon>
-      mdi-filter
-    </v-icon>
-  </v-btn>
+    <v-btn icon style="position: absolute; z-index: 1; right: 0" @click="isFilter = !isFilter">
+      <v-icon color="#A5A5A6">
+        mdi-filter
+      </v-icon>
+    </v-btn>
+    <v-scroll-x-reverse-transition>
+      <v-card v-if="isFilter" style="position: absolute; z-index: 2; right: 0; margin: 16px 24px 16px 0px" width="310"
+        height="400">
+        <v-btn text style="position: absolute; z-index: 1; right: 0" @click="isFilter = !isFilter">
+          <v-icon color="#A5A5A6">
+            mdi-close
+          </v-icon>
+        </v-btn>
+        <p style="font-weight: 500; margin: 25px 0 0 24px">Типы объектов</p>
+        <div style="margin: 15px 0 0 24px; overflow-y: scroll; max-height: 70%;">
+          <v-checkbox v-model="allTypesSelected" class="ma-2" color="#E93030" label="все"></v-checkbox>
+
+          <v-checkbox v-for="(el) in allType" :key="el.id" v-model="filteredTypes" class="ma-2" color="#E93030"
+            :value="el" :label="el.name">
+          </v-checkbox>
+        </div>
+        <v-divider style="position: absolute; bottom: 60px; width: 100%;"></v-divider>
+        <div
+          style="display: flex; justify-content: flex-end; align-items: center; position: absolute; bottom: 0; right: 0;">
+          <v-btn class="mt-2" color="#787878" text @click="closeFilter">
+            отмена
+          </v-btn>
+          <v-btn class="mt-2" color="#787878" text @click="filteredLayer">
+            примеить
+          </v-btn>
+        </div>
+      </v-card>
+
+    </v-scroll-x-reverse-transition>
   </div>
 </template>
 
@@ -60,6 +89,10 @@ export default {
       counter: 0,
       oldFeature: null,
       arrFeatureForDraw: [],
+      isFilter: false,
+      filteredTypes: this.allType,
+      deletedLayers: [],
+      allTypesSelected: true,
     }
   },
 
@@ -202,13 +235,27 @@ export default {
         }
       },
       deep: true,
+    },
+    allType: {
+      handler() {
+        this.filteredTypes = this.allType.map(el => el);
+      }
+    },
+    allTypesSelected: {
+      handler() {
+        if (this.allTypesSelected) {
+          this.filteredTypes = this.allType;
+        }
+        else {
+          this.filteredTypes = [];
+        }
+      }
     }
   },
   computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData']),
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode']),
     ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
-
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
       this.feature.properties['Широта'] = cord[0];
@@ -624,6 +671,29 @@ export default {
         });
       }
     },
+    filteredLayer() {
+      const allLayers = this.map.getAllLayers().filter(el => el.get('typeId') != undefined);
+      allLayers.forEach(layer => {
+        if (!this.filteredTypes.find(el => el.id === layer.get('typeId'))) {
+          this.deletedLayers.push(layer);
+          this.map.removeLayer(layer);
+        }
+      });
+      this.filteredTypes.forEach(type => {
+        if (!allLayers.find(el => el.get('typeId') === type.id)) {
+          this.map.addLayer(this.deletedLayers.find(el => el.get('typeId') === type.id))
+        }
+      })
+    },
+    closeFilter() {
+      this.isFilter = !this.isFilter;
+      const allLayers = this.map.getAllLayers().filter(el => el.get('typeId') != undefined);
+      allLayers.forEach(layer => {
+        if (!this.filteredTypes.find(el => el.id === layer.get('typeId'))) {
+          this.filteredTypes.push(this.allType.find(el => el.id === layer.get('typeId')))
+        }
+      });
+    }
   },
   async mounted() {
     await this.getAllType();
@@ -648,6 +718,7 @@ export default {
       this.addInteraction();
     }
     this.resizeMap();
+    this.filteredTypes = this.allType;
   }
 }
 </script>
