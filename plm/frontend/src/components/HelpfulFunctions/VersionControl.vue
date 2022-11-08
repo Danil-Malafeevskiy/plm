@@ -8,7 +8,7 @@
 			<span >{{ tableArray.length }} версий </span>
 		</div>
 
-		<v-data-table :headers="headers" :items="tableArray" :items-per-page="5" style="
+		<v-data-table :headers="headers" :item-class="rowStyles" :items="tableArray" :items-per-page="5" style="
 			height: 100% !important;
 			width: 95% !important; 
 			background-color: #FFFFFF; 
@@ -25,7 +25,7 @@
 						max-width: 20px !important;
 					"
 					id="no-background-hover"
-					:style="[(item.flag) ? { 'background-color': '#E93030' } : (item.id <= currentVersionId) ? {'background-color': '#F8BFBF'} : { 'background-color': '#DDDDDD' }]">
+					:style="[(item.disabled) ? { 'background-color': '#F2F2F2', 'left': '55%' } : (item.flag) ? { 'background-color': '#E93030' } : (item.id <= currentVersionId) ? {'background-color': '#F8BFBF'} : { 'background-color': '#DDDDDD' }]">
 				</v-btn>
 			</template>
 
@@ -49,7 +49,7 @@ export default {
 					value: 'select',
 					align: 'start',
 					sortable: false,
-					width: '0%'
+					width: '5%'
 				},
 				{ text: 'Дата', value: 'date_update', align: 'start', width: '7%' },
 				{ text: 'Время', value: 'time', align: 'start', width: '7%' },
@@ -90,30 +90,16 @@ export default {
 		...mapGetters(['allVersions', 'allListItem', 'getList', 'getTypeId', 'allGroups', 'allFilteredVersions', 'user', 'allUserGroups', 'allType'])
 	},
 	methods: {
-		...mapActions(['getVersions', 'putVersion', 'getGroup', 'getAllGroups', 'getAllUserGroups', 'putLastVersion', 'getFilteredVersions']),
+		...mapActions(['getVersions', 'putVersion',  'getAllGroups', 'getAllUserGroups', 'putLastVersion', 'getFilteredVersions']),
 		...mapMutations(['updateVersions', 'updateFilteredVersions', 'updateAllGroups', 'updateAllUserGroups']),
 		chooseVersion(item) {
-			this.putVersion(item.id)
-			document.getElementById('notification').style.display = 'block'
-			this.showNotification()
-
-		},
-		getTimeVersion(time) {
-			let data = new Date(time)
-			return data
-		},
-		currentVersionStyle(item) {
-			if (item.id > this.currentVersionId) {
-				return 'noCurrent'
+			if(!item.disabled){
+				this.putVersion(item.id)
+				document.getElementById('notification').style.display = 'block'
+				this.showNotification()
 			}
 		},
-		getGroup() {
-			this.allGroups.forEach(element => {
-				if (element.id === this.getTypeId) {
-					this.nameGroup = element.name
-				}
-			});
-		},
+
 
 		showNotification() {
 			clearTimeout(this.timeoutId)
@@ -126,6 +112,7 @@ export default {
 			if (this.tableArray.filter(el => el.flag).length) {
 				let id = 0
 				this.tableArray.forEach(element => {
+					console.log(this.tableArray)
 					if (element.id > id) {
 						id = element.id
 					}
@@ -135,7 +122,13 @@ export default {
 
 				this.putLastVersion(id)
 			}
-		}
+		},
+
+		rowStyles(item){
+			if(item.disabled){
+				return 'disabled'
+			}
+		},	
 
 	},
 
@@ -161,25 +154,11 @@ export default {
 * >>> .v-data-footer {
 	margin-left: 6.4em;
 }
+
 </style>
 
 
 <style>
-
-.object {
-	margin: 20px 5px 20px 20px;
-	color: #787878;
-	font-weight: 500;
-}
-
-.noCurrent {
-	background: #F2F2F2 !important;
-}
-
-.current {
-	background: #F2F2F2;
-	color: #EE5E5E !important;
-}
 
 .columnText {
 	font-weight: 500;
@@ -198,7 +177,6 @@ export default {
 	display: none !important;
 }
 
-
 .lastVersion {
 	left: 77.8%;
 	display: flex;
@@ -213,6 +191,8 @@ export default {
 	display: none;
 }
 
-
+.disabled{
+	color: #C2C2C2 !important;
+}
 
 </style>
