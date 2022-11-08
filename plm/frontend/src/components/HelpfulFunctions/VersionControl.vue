@@ -5,27 +5,29 @@
 		</v-scroll-x-reverse-transition>
 
 		<div style="margin: 20px 5px 20px 20px; color: #787878; font-weight: 500;">
-			<span >{{ tableArray.length }} версий </span>
+			<span>{{ tableArray.length }} версий </span>
 		</div>
 
-		<v-data-table :headers="headers" :item-class="rowStyles" :items="tableArray" :items-per-page="5" style="
-			height: 100% !important;
+
+		<v-data-table :headers="headers" :item-class="rowStyles" :items="tableArray" :items-per-page="heightTable"
+			:footer-props="{ 'items-per-page-options': rowsPerPage }" style=" height: 100% !important; 
 			width: 95% !important; 
 			background-color: #FFFFFF; 
-			box-shadow: none !important;
+			box-shadow: none !important; 
 			margin-left: 2% !important;" @click:row="chooseVersion" sort-by="id" :sort-desc="true">
-			
+
 			<template v-slot:[`item.select`]="{ item }">
 
-				<v-btn v-model="item.select" plain small class='columnText' fab 
-					style="
+				<v-btn v-model="item.select" plain small class='columnText' fab style="
 						border-radius: 100% !important; 
 						padding: 4px 10px !important; 
 						max-height: 20px !important; 
 						max-width: 20px !important;
+
 					"
 					id="no-background-hover"
 					:style="[(item.disabled) ? { 'background-color': '#F2F2F2', 'left': '55%' } : (item.flag) ? { 'background-color': '#E93030' } : (item.id <= currentVersionId) ? {'background-color': '#F8BFBF'} : { 'background-color': '#DDDDDD' }]">
+
 				</v-btn>
 			</template>
 
@@ -61,6 +63,8 @@ export default {
 			currentVersion: null,
 			nameGroup: null,
 			timeoutId: null,
+			heightTable: null,
+			rowsPerPage: [],
 		}
 	},
 	watch: {
@@ -132,26 +136,31 @@ export default {
 
 	},
 
-	async mounted() {
+	mounted() {
 		if (this.allType.length) {
 			this.getFilteredVersions(this.allType[0]);
 		}
+		this.heightTable = Math.round((document.querySelector('.v-window__container').offsetHeight - 64 - 69 - 58) / 48);
+		let countPage = 5;
+		for (let i = 1; countPage * i < this.heightTable; i++) {
+			this.rowsPerPage.push(countPage * i);
+		}
+		this.rowsPerPage.push(this.heightTable);
 	},
 
 }
 </script>
 
 <style scoped>
-
-* >>> td:first-child {
+*>>>td:first-child {
 	border: hidden !important;
 }
 
-* >>> th:first-child {
+*>>>th:first-child {
 	border: hidden !important;
 }
 
-* >>> .v-data-footer {
+*>>>.v-data-footer {
 	margin-left: 6.4em;
 }
 

@@ -101,7 +101,7 @@
                                 </v-col>
                                 <template v-if="!('name' in objectForCard)">
                                     <v-col v-for="(f, index) in objectForCard.properties" :key="index" cols="2" sm="6"
-                                        md="5" lg="6" v-show="typeof (f) != 'object' && index != 'group'">
+                                        md="5" lg="6" v-show="typeof (f) != 'object' && index != 'group' && index != 'image'">
                                         <v-text-field
                                             v-if="index != 'password' && index != 'first_name' && index != 'last_name' && index != 'type' && index != 'all_obj'"
                                             v-model="objectForCard.properties[index]" hide-details :label="index"

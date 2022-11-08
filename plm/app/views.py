@@ -35,6 +35,8 @@ def check_conflict_geometry(request):
     for obj in request.data:
         type_obj = Type.objects.get(id=obj['name'])
         conflict = Feature.objects.filter(geometry__intersects=GEOSGeometry(f'{obj["geometry"]}'), name__in=Type.objects.filter(group=Type.objects.get(id=obj['name']).group))
+        if 'id' in obj.keys():
+            conflict = conflict.exclude(id=obj['id'])
         conflict_obj = [obj]
         for con in conflict:
             if Ruls.objects.filter(type_1=type_obj, type_2=con.name).exists():
@@ -113,8 +115,11 @@ class TowerAPI(APIView):
             )
 
             if VersionControl.objects.filter(flag=True, dataset=dataset).exists():
+                version_now = VersionControl.objects.get(flag=True, dataset=dataset)
+                version_now.flag = False
+                version_now.save()
                 dis_version = VersionControl.objects.filter(
-                    date_update__gte=VersionControl.objects.get(flag=True, dataset=dataset).date_update,
+                    date_update__gte=version_now.date_update,
                     dataset=dataset, disabled=False)
                 for vers in dis_version:
                     vers.disabled = True

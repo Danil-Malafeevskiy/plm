@@ -359,7 +359,7 @@ class TypeSerializer(serializers.ModelSerializer):
         validated_data['group'] = Group.objects.get(name=self.context['group'])
         type = super(TypeSerializer, self).create(validated_data)
         for ruls in self.context['ruls']:
-            type_new = Type.objects.get(name=ruls)
+            type_new = Type.objects.get(name=ruls, group=validated_data['group'])
             Ruls.objects.create(type_1=type, type_2=type_new)
             Ruls.objects.create(type_1=type_new, type_2=type)
         Ruls.objects.create(type_1=type, type_2=type)
