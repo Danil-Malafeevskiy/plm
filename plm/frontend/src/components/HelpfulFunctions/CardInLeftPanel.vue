@@ -163,6 +163,8 @@ export default {
                     headers: [],
                     properties: [],
                     group: '',
+                    all_group_type: [],
+                    group_type: [],
                 },
                 image: '',
             }
