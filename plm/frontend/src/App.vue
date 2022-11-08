@@ -49,7 +49,7 @@
             </v-btn>
           </template>
         </template>
-        <v-btn v-if="actions !== 'getFeatures'" :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')"
+        <v-btn v-if="actions !== '' && actions !== 'getFeatures'" :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')"
           style="border-radius: 4px; margin-right: 10px !important; margin-bottom: 10px;" class="show__card"
           height="28px" width="80px" color="#EE5E5E" @click="addCardOn.data = !addCardOn.data; visableCard();">
           <v-icon color="white !default" dark>
@@ -102,7 +102,7 @@
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data" />
-            <VersionControl v-if="versionsPage.data" :versionsPage="versionsPage" />
+            <VersionControl v-if="versionsPage.data" :versionsPage="versionsPage"/>
           </div>
         </v-tab-item>
         <v-tab-item>
@@ -461,7 +461,12 @@ export default {
 .v-toolbar__extension {
   min-height: 50% !important;
   max-height: 50% !important;
+  padding-bottom: 0 !important;
 }
+
+.v-toolbar__extension .v-tabs{
+  height: 100% !important;
+} 
 
 html {
   overflow: hidden !important;

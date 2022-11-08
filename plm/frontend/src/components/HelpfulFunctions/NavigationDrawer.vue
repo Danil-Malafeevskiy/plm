@@ -170,18 +170,14 @@ export default {
                         this.fiteredAllTypes = this.allType.filter(el => el.toLowerCase().includes(searchText.toLowerCase()));
                     }
                 }
-            }
-        },
-        actions: {
-            handler(){
                 if (this.fiteredAllTypes.length && this.actions !== 'getAllGroups') {
                     this.selectedItem = 0;
                     this.changeObject(this.fiteredAllTypes[0]);
                 }
             }
-        }
+        },
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions', 'getToolbarTitle']) },
+    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions', 'getToolbarTitle', 'allTypeForTable']) },
     methods: {
         ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAllTypeInGroup', 'getFilteredVersions']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
@@ -219,7 +215,9 @@ export default {
                     }
 
                     case 'getTypeObject':
-                        this.getAllTypeInGroup(objectType.name);
+                        await this.getAllTypeInGroup(objectType.name);
+                        console.log(this.allTypeForTable);
+                        this.emptyObject.properties.all_group_type = this.allTypeForTable.map(el => el.name);
                         break;
 
                     case 'getFeatures':

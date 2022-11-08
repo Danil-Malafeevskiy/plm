@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div style="display: flex" v-if="user.is_superuser && actions === 'getUsersOfGroup'">
+        <div style="display: flex" v-if="user && user.is_superuser && actions === 'getUsersOfGroup'">
             <v-checkbox v-model="objectForCard_.is_staff"
                 label="Admin" :readonly="infoCardOn.data" class="ma-2" color="#E93030" style="
                                     min-height: 37.53% !important; 

@@ -68,7 +68,7 @@ export default {
     }
   },
   watch: {
-    oneType: {
+    select: {
       handler() {
         this.getSortType(this.oneType.type);
       }
