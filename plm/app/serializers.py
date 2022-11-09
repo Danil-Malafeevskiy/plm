@@ -49,13 +49,14 @@ class FeatureListSerializer(serializers.ListSerializer):
             feature = feature_old.get(obj_feature['id'], None)
             if (feature!=None):
                 type = FeatureSerializer(feature).data
-                if self.context!=False and type['geometry']['type'] == 'Point' and (type['geometry']['coordinates']!=FeatureSerializer(obj_feature).data['geometry']['coordinates']):
+                type_up = FeatureSerializer(obj_feature).data
+                if type['geometry']['type'] == 'Point' and (type['geometry']['coordinates']!=type_up['geometry']['coordinates']):
                     for line in self.context:
                         up_flag = False
                         copy_line = FeatureSerializer(Feature.objects.get(id=line['id'])).data
                         for lineIndex in range(len(line['geometry']['coordinates'])):
                             if type['geometry']['coordinates'] == line['geometry']['coordinates'][lineIndex]:
-                                line['geometry']['coordinates'][lineIndex] = FeatureSerializer(obj_feature).data['geometry']['coordinates']
+                                line['geometry']['coordinates'][lineIndex] = type_up['geometry']['coordinates']
                                 up_flag = True
                                 break
                         if up_flag:
@@ -66,7 +67,7 @@ class FeatureListSerializer(serializers.ListSerializer):
                                 up_dict[copy_line['id']] = copy_line
                             new_line_dict[copy_line['id']] = line['geometry']
 
-                new_version['update'].append(FeatureSerializer(obj_feature).data)
+                new_version['update'].append(type_up)
                 version['update'].append(type)
                 if obj_feature['geometry'].geom_type == 'LineString':
                     if obj_feature['id'] not in up_dict.keys():
