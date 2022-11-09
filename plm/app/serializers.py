@@ -261,12 +261,13 @@ class UserSerializer(serializers.ModelSerializer):
         return perm
 
     def get_all_users(self, obj):
+        all_groups = list(Group.objects.all())
         if obj.is_superuser:
-            return list(get_user_model().objects.all().exclude(
-                id=obj.id).values_list('username', flat=True))
+            return {group.name: list(get_user_model().objects.filter(groups=group).values_list('username', flat=True)) for group in all_groups}
         if obj.is_staff:
-            return list(get_user_model().objects.all().exclude(groups=Group.objects.get(name="Admin")).exclude(
-                id=obj.id).values_list('username', flat=True))
+            return {group.name: list(get_user_model().objects.filter(groups=group).exclude(
+                id=obj.id).values_list('username', flat=True)) for
+                    group in all_groups if group != "Admin"}
         return []
 
     def validate(self, data):
