@@ -1,15 +1,15 @@
 <template>
-    <v-row justify="start">
+    <v-row justify="start" :class="{ 'conflict_row': conflictCard }">
         <template v-if="'properties' in objectForCard && 'type' in objectForCard.properties">
             <p class="attributes ma-0">Основные атрибуты</p>
-                    <v-col v-for="(el, index) in objectForCard.properties.headers" :key="index" cols="2" sm="6" md="5"
-                    lg="6" v-show="el.text != 'id'">
-                    <v-text-field v-model="objectForCard_.properties.headers[index].text" :label="el.text"
-                        :placeholder="el.text" filled :readonly="infoCardOn.data" :rules="[rules.required, rules.main]"
-                        @input="textToValue(index)" append-icon="mdi-delete-outline"
-                        @click:append="deleteMainAttribute(index)">
-                    </v-text-field>
-                </v-col>
+            <v-col v-for="(el, index) in objectForCard.properties.headers" :key="index" cols="2" sm="6" md="5" lg="6"
+                v-show="el.text != 'id'">
+                <v-text-field v-model="objectForCard_.properties.headers[index].text" :label="el.text"
+                    :placeholder="el.text" filled :readonly="infoCardOn.data" :rules="[rules.required, rules.main]"
+                    @input="textToValue(index)" append-icon="mdi-delete-outline"
+                    @click:append="deleteMainAttribute(index)">
+                </v-text-field>
+            </v-col>
             <v-col cols="2" sm="6" md="5" lg="6">
                 <v-btn class="ma-0 pa-0 btn_on_card" :disabled="infoCardOn.data" width="100%" depressed color="#EE5E5E"
                     @click="addMainAttribute">
@@ -41,15 +41,25 @@
         <template v-if="'name' in objectForCard">
             <p v-if="typeForFeature.properties.length" class="attributes ma-0">Допольнительные атрибуты
             </p>
-            <v-col v-for="el in typeForFeature.properties" :key="el" cols="2" sm="6" md="5" lg="6" v-show="el != 'id'">
-                <v-text-field v-if="checkEqualityOfFieads(el)" v-model="objectForCard_.properties[el]" hide-details
-                    :label="el" :placeholder="el" filled :readonly="infoCardOn.data">
-                </v-text-field>
-                <v-text-field v-else v-model="objectForCard_.properties[el]" background-color="#C9C8ED" color="#0F0CA7"
-                    hide-details :label="el" :placeholder="el" filled :readonly="infoCardOn.data"
-                    append-icon="mdi-progress-question" @click:append="changeConflictField(el)">
-                </v-text-field>
-            </v-col>
+            <template v-for="el in typeForFeature.properties">
+                <v-col v-if="conflictCard" :key="`origin-element-${el}`" cols="3" sm="6" md="5" lg="6" v-show="el != 'id'">
+                    <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el) }"
+                        v-model="objectForConflict_.properties[el]" hide-details :label="el" :placeholder="el" filled
+                        :disabled="checkEqualityOfFieads(el)">
+                    </v-text-field>
+                </v-col>
+                <v-btn v-if="!checkEqualityOfFieads(el)" small icon :key="`change-field-button-${el}`" style="
+                    max-height: 100% !important;
+                    margin: auto 0 !important;
+                ">
+                    <v-icon>mdi-arrow-right</v-icon>
+                </v-btn>
+                <v-col :key="`new-element-${el}`" cols="3" sm="6" md="5" lg="6" v-show="el != 'id'">
+                    <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el) }"
+                        v-model="objectForCard_.properties[el]" hide-details :label="el" :placeholder="el" filled>
+                    </v-text-field>
+                </v-col>
+            </template>
         </template>
     </v-row>
 </template>
@@ -59,7 +69,7 @@ import { mapGetters } from 'vuex';
 
 export default {
     name: 'FormForDynamicField',
-    props: ['objectForCard', 'infoCardOn', 'checkEqualityOfFieads', 'changeConflictField'],
+    props: ['objectForCard', 'infoCardOn', 'checkEqualityOfFieads', 'changeConflictField', 'conflictCard', 'objectForConflict'],
     data() {
         return {
             objectForCard_: this.objectForCard,
@@ -67,6 +77,7 @@ export default {
                 required: el => this.checkDoubleFields(el) || 'Одинаковые имена атрибутов',
                 main: el => !!el || 'Обяательный атрибут'
             },
+            objectForConflict_: this.objectForConflict
         }
     },
     watch: {
@@ -74,6 +85,9 @@ export default {
             handler() {
                 this.objectForCard_ = this.objectForCard;
             }
+        },
+        objectForConflict: function () {
+            this.objectForConflict_ = this.objectForConflict;
         }
     },
     computed: mapGetters(['typeForFeature', 'allListItem']),
@@ -119,5 +133,19 @@ export default {
 .btn_on_card {
     height: 56px !important;
     border-radius: 4px !important;
+}
+
+.conflict_row .col-sm-6 {
+    width: 46%;
+    max-width: 46%;
+    flex-basis: 46%;
+}
+
+@media (min-width: 1025px) and (max-width: 1919px) {
+    .conflict_row .col-sm-6 {
+        width: 45%;
+        max-width: 45%;
+        flex-basis: 45%;
+    }
 }
 </style>

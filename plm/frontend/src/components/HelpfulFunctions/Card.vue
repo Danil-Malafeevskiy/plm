@@ -1,6 +1,6 @@
 <template>
     <v-scroll-x-reverse-transition>
-        <v-card class="card_of_object" v-show="cardVisable_.data === true">
+        <v-card class="card_of_object" v-if="cardVisable_.data">
             <div class="card__window">
                 <p style="display: none">{{ objectForCard }}</p>
                 <v-card
@@ -101,7 +101,8 @@
                                 </v-col>
                                 <template v-if="!('name' in objectForCard)">
                                     <v-col v-for="(f, index) in objectForCard.properties" :key="index" cols="2" sm="6"
-                                        md="5" lg="6" v-show="typeof (f) != 'object' && index != 'group' && index != 'image'">
+                                        md="5" lg="6"
+                                        v-show="typeof (f) != 'object' && index != 'group' && index != 'image'">
                                         <v-text-field
                                             v-if="index != 'password' && index != 'first_name' && index != 'last_name' && index != 'type' && index != 'all_obj'"
                                             v-model="objectForCard.properties[index]" hide-details :label="index"
@@ -132,26 +133,18 @@
                                     </v-col>
                                 </template>
                                 <template v-else-if="('name' in objectForCard)">
-                                    <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="2" sm="6" md="5"
+                                    <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="1" sm="6" md="5"
                                         lg="6" v-show="el.text != 'id'">
-                                        <v-text-field v-if="el.text != 'id' && checkEqualityOfFieads(el.text)"
+                                        <v-text-field v-if="el.text != 'id'"
                                             v-model="objectForCard.properties[el.text]" hide-details :label="el.text"
                                             :placeholder="el.text" filled :readonly="infoCardOn_.data">
-                                        </v-text-field>
-                                        <v-text-field v-else-if="el.text != 'id'"
-                                            v-model="objectForCard.properties[el.text]" background-color="#C9C8ED"
-                                            color="#0F0CA7" hide-details :label="el.text" :placeholder="el.text" filled
-                                            :readonly="infoCardOn_.data" append-icon="mdi-progress-question"
-                                            @click:append="changeConflictField(el.text)">
                                         </v-text-field>
                                     </v-col>
                                 </template>
                             </v-row>
-
-                            <FormForDynamicField v-if="allListItem[0] !== user" :objectForCard="objectForCard"
-                                :infoCardOn="infoCardOn" :checkEqualityOfFieads="checkEqualityOfFieads"
-                                :changeConflictField="changeConflictField" />
-
+                                    <FormForDynamicField v-if="allListItem[0] !== user" :objectForCard="objectForCard"
+                                        :infoCardOn="infoCardOn" :checkEqualityOfFieads="checkEqualityOfFieads"
+                                        :changeConflictField="changeConflictField" />
                             <ExpansionPanelForCard v-if="allListItem[0] !== user" :objectForCard="objectForCard"
                                 :cardVisable="cardVisable" :infoCardOn="infoCardOn" />
                             <v-snackbar v-model="snackbar" timeout="5000" color="red accent-2">
@@ -255,9 +248,6 @@ export default {
         cardVisable: {
             handler() {
                 this.cardVisable_ = this.cardVisable;
-                if (this.cardVisable_.data) {
-                    document.querySelector('.card_of_object').style.cssText = 'width: 38.05% !important; left: 60.28% !important;';
-                }
             }, deep: true
         },
         addCardOn: {
@@ -390,8 +380,9 @@ export default {
                 }
 
                 let object = JSON.parse(JSON.stringify(this.objectForCard));
-                object.properties = { ...object, ...object.properties }
-                delete object.properties.properties;
+                object.properties = { ...object, ...object.properties };
+                console.log(object)
+                //delete object.properties.properties;
 
                 await this.putObject(object);
             }
@@ -590,6 +581,7 @@ export default {
 }
 
 .card_of_object {
+    width: 38.05% !important;
     z-index: 5 !important;
     min-height: 92.08% !important;
     position: absolute !important;
@@ -603,7 +595,6 @@ export default {
 }
 
 .card__footer {
-    /* align-items: flex-end; */
     display: flex;
     bottom: 0px;
     justify-content: flex-end;

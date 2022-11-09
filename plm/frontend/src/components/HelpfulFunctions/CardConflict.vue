@@ -1,6 +1,6 @@
 <template>
     <v-scroll-x-reverse-transition>
-        <v-card class="card_of_object_1" v-if="conflictCard === true">
+        <v-card class="card_of_object" v-show="conflictCard === true">
             <div class="card__window">
                 <p style="display: none">{{ objectForCard }}</p>
                 <v-card
@@ -12,8 +12,8 @@
                         <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
                             style="max-width: 48px !important" class="ma-0">
                             <v-radio-group hide-details class="pa-0 ma-0" v-model="objectForCard.image">
-                                <v-radio :value="el" readonly class="ma-2" color="#E93030"
-                                    :on-icon="el" :off-icon="el" style="
+                                <v-radio :value="el.text" readonly class="ma-2" color="#E93030" :on-icon="el.text"
+                                    :off-icon="el.text" style="
                                     min-height: 2em !important; 
                                     min-width: 2em !important;
                                 "></v-radio>
@@ -33,40 +33,60 @@
                 </v-file-input>
 
                 <template v-if="!('properties' in objectForCard && 'type' in objectForCard.properties)">
-                    <v-img v-if="objectForCard.image" :src="objectForCard.image" class="one_picture" width="100%" height="37.53%"></v-img>
+                    <v-img v-if="objectForCard.image" :src="objectForCard.image" class="one_picture" width="100%"
+                        height="37.53%"></v-img>
                 </template>
 
                 <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
                     <v-card-text class="pa-0">
+                        <div style="display: flex">
+                            <v-card-text style="font-size: 16px; color: #787878; font-weight: 500; padding: 16px 24px;">
+                                Версия в системе
+                            </v-card-text>
+                            <v-card-text style="font-size: 16px; color: #787878; font-weight: 500; padding: 16px 30px;">
+                                Новая версия
+                            </v-card-text>
+                        </div>
                         <v-form>
                             <v-row justify="start" style="padding-bottom: 0 !important;">
-                                <v-col cols="2" sm="6" md="5" lg="6">
-                                    <v-card-text style="font-size: 24px; padding: 16px 0;">Оригинал
-                                    </v-card-text>
-                                </v-col>
-                                <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="2" sm="6" md="5" lg="6"
-                                    v-show="el.text != 'id'">
-                                    <v-text-field v-if="el.text != 'id' && checkEqualityOfFieads(el.text)"
-                                        v-model="objectForCard.properties[el.text]" hide-details :label="el.text"
-                                        :placeholder="el.text" filled readonly>
-                                    </v-text-field>
-                                    <v-text-field v-else-if="el.text != 'id'"
-                                        v-model="objectForCard.properties[el.text]" background-color="#C9C8ED"
-                                        color="#0F0CA7" hide-details :label="el.text" :placeholder="el.text" filled
-                                        readonly append-icon="mdi-progress-question">
-                                    </v-text-field>
-                                </v-col>
+                                <template v-for="el in typeForFeature.headers">
+                                    <v-col v-if="true" :key="`origin-element-${el.text}`" cols="3" sm="6" md="5" lg="6"
+                                        v-show="el != 'id'">
+                                        <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el.text) }"
+                                            v-model="objectForConflict_.properties[el.text]" hide-details :label="el.text"
+                                            :placeholder="el.text" filled :disabled="checkEqualityOfFieads(el.text)">
+                                        </v-text-field>
+                                    </v-col>
+                                    <v-btn v-if="checkEqualityOfFieads(el.text)" small icon
+                                        :key="`change-field-button-${el.text}`" style="
+                                        max-height: 100% !important;
+                                        margin: auto 0 !important;
+                                    ">
+                                        <v-icon>mdi-arrow-right</v-icon>
+                                    </v-btn>
+                                    <v-col :key="`new-element-${el.text}`" cols="3" sm="6" md="5" lg="6"
+                                        v-show="el != 'id'">
+                                        <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el.text) }"
+                                            v-model="objectForCard.properties[el.text]" hide-details :label="el.text"
+                                            :placeholder="el.text" filled>
+                                        </v-text-field>
+                                    </v-col>
+                                </template>
                             </v-row>
 
-                            <FormForDynamicField :objectForCard="objectForCard" :infoCardOn="{data: true}"
-                                :checkEqualityOfFieads="checkEqualityOfFieads" />
+                            <FormForDynamicField :objectForCard="objectForCard" :infoCardOn="{ data: true }"
+                                :checkEqualityOfFieads="checkEqualityOfFieads" :conflictCard="conflictCard" :objectForConflict="objectForConflict"/>
 
-                            <ExpansionPanelForCard :objectForCard="objectForCard" :infoCardOn="{data: true}" />
-                            <v-snackbar v-model="snackbar" timeout="2000" color="red accent-2">
-                                Не может быть атрибутов с одинаковыми именами
-                            </v-snackbar>
                         </v-form>
                     </v-card-text>
+                </div>
+                <div class="card__footer">
+                    <v-btn text color="#787878" @click="notVisableCard(); editCardOn_.data = !editCardOn_.data"
+                        style="margin-right: 15px !important">
+                        ОТМЕНА
+                    </v-btn>
+                    <v-btn text @click="editObject()" color="#787878">применить</v-btn>
+
                 </div>
             </div>
         </v-card>
@@ -76,16 +96,14 @@
 <script>
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket } from '@mdi/js'
-import ExpansionPanelForCard from './ExpansionPanelForCard.vue'
 import FormForDynamicField from './FormForDynamicField.vue';
 
 export default {
     name: 'CardConflict',
     components: {
-        ExpansionPanelForCard,
         FormForDynamicField,
     },
-    props: ['cardVisable', 'conflictCard', 'editMode', 'objectForCard_'],
+    props: ['cardVisable', 'conflictCard', 'editMode', 'notVisableCard', 'objectForConflict'],
     data() {
         return {
             cardVisable_: this.cardVisable,
@@ -94,26 +112,17 @@ export default {
             listMdiIcons: [mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket],
             listSelectedIcons: [],
             isOldItem: false,
-            snackbar: false,
-            objectForCard: this.objectForCard_
+            objectForConflict_: this.objectForConflict
         }
     },
     watch: {
         cardVisable: {
             handler() {
                 this.cardVisable_ = this.cardVisable;
-                if (this.cardVisable_.data) {
-                    setTimeout(() => {
-                        let card = document.querySelector('.card_of_object_1');
-                        if (card != undefined) {
-                            card.style.cssText = 'width: 38.05% !important;';
-                        }
-                    });
-                }
             }, deep: true
         },
-        objectForCard_: function(){
-            this.objectForCard = this.objectForCard_;
+        objectForConflict: function () {
+            this.objectForConflict_ = this.objectForConflict;
         }
     },
     computed: {
@@ -122,6 +131,21 @@ export default {
     methods: {
         ...mapActions(['getOneTypeObjectForFeature']),
         ...mapMutations(['updateOneType', 'updateObjectForCard']),
+        async editObject() {
+                this.updateArrayEditMode({ item: this.objectForCard, type: 'put' });
+                this.deleteItemFromNewData(this.objectForCard);
+                this.allListItem.forEach(element => {
+
+                    if (element.id === this.objectForCard.id) {
+                        for (let el in element) {
+                            if (el != 'id') {
+                                element[el] = this.objectForCard.properties[el];
+                            }
+                        }
+                    }
+                });
+                this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
+        },
         changeItem(isOldItem) {
             let newPutobject;
             if (isOldItem) {
@@ -202,15 +226,16 @@ export default {
     opacity: 0.5;
 }
 
-.card_of_object_1 {
-    z-index: 1 !important;
+.card_of_object {
     width: 38.05% !important;
+    z-index: 5 !important;
     min-height: 92.08% !important;
     position: absolute !important;
-    left: 21.28% !important;
+    left: 60.28% !important;
     top: 4.19% !important;
     border-radius: 12px !important;
 }
+
 
 .card__info {
     align-items: center;
@@ -301,6 +326,29 @@ export default {
 .v-icon::after {
     background-color: none !important;
 }
+
+.card__footer {
+    display: flex;
+    bottom: 0px;
+    justify-content: flex-end;
+    border-top: 1px solid #E0E0E0;
+    border-radius: 0 0 12px 12px !important;
+    background-color: white;
+}
+
+.col-sm-6 {
+    width: 46%;
+    max-width: 46%;
+    flex-basis: 46%;
+}
+
+@media (min-width: 1025px) and (max-width: 1919px) {
+    .col-sm-6 {
+        width: 45%;
+        max-width: 45%;
+        flex-basis: 45%;
+    }
+}
 </style>
 
 <style>
@@ -311,5 +359,10 @@ export default {
     min-height: 100% !important;
     justify-content: center !important;
     align-items: center !important;
+}
+
+.blue_field {
+    background-color: #C9C8ED !important;
+    color: #0F0CA7 !important;
 }
 </style>
