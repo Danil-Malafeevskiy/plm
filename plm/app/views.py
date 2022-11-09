@@ -45,7 +45,7 @@ def check_conflict_geometry(request):
                 conflict_obj.append(FeatureSerializer(con).data)
         if len(conflict_obj)>1:
             conflicts.append(conflict_obj)
-    if len(conflicts)>1:
+    if len(conflicts)>0:
         return Response(conflicts, status=status.HTTP_409_CONFLICT)
     return Response({"success": "Конфликтов нет!"}, status.HTTP_200_OK)
 
