@@ -60,7 +60,7 @@ export default {
     methods: {
         ...mapActions(['uploadFileWithFeature', 'getAllTypeForUpload']),
         fileUpload() {
-            this.uploadFileWithFeature({ file: this.file, group: this.group, fileName: this.fileName });
+            this.uploadFileWithFeature({ file: this.file, group: this.group, filename: this.fileName });
             this.componentKey++;
             this.$emit('offFileInput');
         },

@@ -37,8 +37,8 @@
         {{ tableArrayItems.length }} объекта </span>
       <span class="object" v-else>{{ tableArrayItems.length }} объектов </span>
     </div>
-    <v-data-table @click:row="showCard" :headers="headers" v-model="arrObjects[`${nameArray}`]" show-select
-      :item-key="headers[0].text" :items="tableArrayItems" :items-per-page="heightTable"
+    <v-data-table v-if="oneType" @click:row="showCard" :headers="headersForTale" v-model="selected" show-select
+      item-key="id" :items="tableArrayItems" :items-per-page="heightTable"
       :footer-props="{ 'items-per-page-options': rowsPerPage }" class="pa-0" @toggle-select-all="showAll()"
       :item-class="classRow" style="
         height: 100% !important;
@@ -53,6 +53,7 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex';
+import Vue from "vue";
 
 export default {
   name: 'TablePage',
@@ -65,13 +66,22 @@ export default {
       tableArrayItems: [],
       heightTable: null,
       rowsPerPage: [],
+      headersForTale: [],
+      arrObjects: {},
     }
   },
   watch: {
-    select: {
+    oneType: {
       handler() {
         this.getSortType(this.oneType.type);
+        this.headersForTale = this.oneType.headers;
+        if(!(`${this.oneType?.name} ${this.oneType?.group}` in this.arrObjects)){
+          Vue.set(this.arrObjects, `${this.oneType?.name} ${this.oneType?.group}`, [])
+        }
       }
+    },
+    headers: function (){
+      this.headersForTale = this.headers;
     },
     allListItem: {
       handler() {
@@ -96,22 +106,22 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['allListItem', 'getObjectForCard', 'headers', 'arrObjects', 'nameArray',
+    ...mapGetters(['allListItem', 'getObjectForCard', 'headers',
       'drawType', 'getToolbarTitle', 'arrayEditMode', 'newData', 'oneType',
       'selectedDrawType', 'actions', 'allGroups', 'user', 'arrayEdit']),
     selected: {
       get() {
-        if (this.arrObjects[`${this.nameArray}`] != undefined) {
-          return this.arrObjects[`${this.nameArray}`];
+        if (this.oneType && this.arrObjects[`${this.oneType.name} ${this.oneType.group}`]) {
+          return this.arrObjects[`${this.oneType.name} ${this.oneType.group}`];
         }
         else {
           return [];
         }
       },
-      set(value) { this.updateSelectedObejcts({ objects: value, name: this.nameArray }); }
+      set(items) { this.arrObjects[`${this.oneType.name} ${this.oneType.group}`] = items }
     },
     type() {
-      if ('username' in this.arrObjects[`${this.nameArray}`][0]) {
+      if ('username' in this.selected[0]) {
         return this.allGroups.filter(el => el.name != this.getToolbarTitle)
       }
       else {
@@ -157,15 +167,15 @@ export default {
       }
     },
     resetSelected() {
-      this.arrObjects[`${this.nameArray}`] = [];
+      this.selected = [];
     },
     async deleteObjects() {
-      this.deleteObject(this.arrObjects[`${this.nameArray}`]);
+      this.deleteObject(this.selected);
       this.resetSelected();
     },
     async moveObject(type) {
       let arrPut = [];
-      for (const element of this.arrObjects[`${this.nameArray}`]) {
+      for (const element of this.selected) {
         await this.getOneObject(element.id);
         if (this.actions === 'getFeatures') {
           this.getObjectForCard.name = type.id;
