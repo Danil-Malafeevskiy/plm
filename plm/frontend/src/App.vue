@@ -282,18 +282,18 @@ export default {
     },
     editObjects() {
       if (this.newData.length) {
-        this.isConflict = true;
-        return;
-      }
-      for (let key in this.arrayEditMode) {
-        if (key != 'messege') {
-          this.checkConflictGeometry([...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post])
-          //this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
-        }
-      }
-      // this.resetArrayEditMode();
-      // this.editMode = !this.editMode;
-      // this.getTypeObject();
+this.isConflict = true;
+return;
+}
+for (let key in this.arrayEditMode) {
+if (key != 'messege') {
+// this.checkConflictGeometry([...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post])
+this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
+}
+}
+this.resetArrayEditMode();
+this.editMode = !this.editMode;
+this.getTypeObject();
     },
     offConflictWindow() {
       this.isConflict = !this.isConflict;

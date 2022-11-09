@@ -49,6 +49,23 @@ def check_conflict_geometry(request):
         return Response(conflicts, status=status.HTTP_409_CONFLICT)
     return Response({"success": "Конфликтов нет!"}, status.HTTP_200_OK)
 
+def check_conflict_geometry_2(request):
+    conflicts = []
+    for obj in request.data:
+        type_obj = Type.objects.get(id=obj['name'])
+        conflict = Feature.objects.filter(geometry__intersects=GEOSGeometry(f'{obj["geometry"]}'), name__in=Type.objects.filter(group=Type.objects.get(id=obj['name']).group))
+        if 'id' in obj.keys():
+            conflict = conflict.exclude(id=obj['id'])
+        conflict_obj = [obj]
+        for con in conflict:
+            if Ruls.objects.filter(type_1=type_obj, type_2=con.name).exists():
+                conflict_obj.append(FeatureSerializer(con).data)
+        if len(conflict_obj)>1:
+            conflicts.append(conflict_obj)
+    if len(conflicts)>0:
+        return Response(conflicts, status=status.HTTP_409_CONFLICT)
+    return Response({"success": "Конфликтов нет!"}, status.HTTP_200_OK)
+
 class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, TowerPerm]
@@ -80,25 +97,21 @@ class TowerAPI(APIView):
         comment = request.data.pop(-1)
         delete_mas = request.data.pop(-1)
 
-        conflict = check_conflict_geometry(request)
+        conflict = check_conflict_geometry_2(request)
         if conflict.status_code == status.HTTP_409_CONFLICT:
             return Response(conflict.data, status=status.HTTP_409_CONFLICT)
 
         if len(delete_mas)!=0:
             for id in delete_mas:
                 if Feature.objects.get(id=id).geometry.geom_type == "Point":
-                    for obj in Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
-                               name__in=Type.objects.filter(group=Feature.objects.get(id=id).name.group.id), geometry__intersects=Feature.objects.get(id=id).geometry):
-                        if obj not in queryset:
-                            queryset.append(obj)
+                    queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                               name__in=Type.objects.filter(group=Feature.objects.get(id=id).name.group.id))
 
         for data in request.data:
             if 'id' in data.keys():
-                if data['geometry']['type'] == "Point":
-                    for obj in Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
-                               name__in=Type.objects.filter(group=Feature.objects.get(id=data['id']).name.group.id), geometry__intersects=GEOSGeometry(f'{data["geometry"]}')):
-                        if obj not in queryset:
-                            queryset.append(obj)
+                if data['geometry']['type'] == "Point" and len(queryset)!=0:
+                    queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                               name__in=Type.objects.filter(group=Feature.objects.get(id=data['id']).name.group.id))
                 ids.append(data['id'])
 
         ids = ids + delete_mas
