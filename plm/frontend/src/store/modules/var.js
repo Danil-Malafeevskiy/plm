@@ -45,15 +45,14 @@ export default {
         updateDrawType(state, drawType) {
             state.drawType = drawType;
         },
-        upadateTitle(state, title){
+        upadateTitle(state, { title, group }){
             state.toolbarTitle = title;
-            this.commit('updateNameForArray', title);
+            this.commit('updateNameForArray', title + ' ' + group);
         },
         updateSelectedObejcts(state, {objects, name}){
             state.selectedObjects[`${name}`] = objects;
         },
         updateNameForArray(state, name){
-            state.nameForArray = name;
             if(!(name in state.selectedObjects)){
                 Vue.set(state.selectedObjects, name, []);
             }
@@ -93,9 +92,6 @@ export default {
         arrObjects(state){
             return state.selectedObjects;
         },
-        nameArray(state){
-            return state.nameForArray;
-        },
         actions(state){
             return state.actionGet;
         },
@@ -119,7 +115,6 @@ export default {
         headers: [{ text: '' }],
         drawType: '',
         toolbarTitle: null,
-        nameForArray: null,
         selectedObjects: {},
         isGetAllChange: false,
         error: null,
