@@ -55,6 +55,7 @@ export default {
         async putGroup({ dispatch, commit }, group) {
             group = { ...group, ...group.properties };
             delete group.properties;
+            console.log(group);
             await axios.put('/group', group).then((response) => {
                 if (typeof response.data === 'object') {
                     for (let i in response.data) {
