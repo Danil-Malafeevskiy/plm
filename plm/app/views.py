@@ -106,10 +106,11 @@ class TowerAPI(APIView):
                 if Feature.objects.get(id=id).geometry.geom_type == "Point":
                     queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
                                name__in=Type.objects.filter(group=Feature.objects.get(id=id).name.group.id))
+                    break
 
         for data in request.data:
             if 'id' in data.keys():
-                if data['geometry']['type'] == "Point" and len(queryset)!=0:
+                if data['geometry']['type'] == "Point" and len(queryset)==0:
                     queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
                                name__in=Type.objects.filter(group=Feature.objects.get(id=data['id']).name.group.id))
                 ids.append(data['id'])
