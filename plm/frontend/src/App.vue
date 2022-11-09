@@ -227,7 +227,7 @@ export default {
     'newData', 'actions', 'typeForLayer', 'isGetAllChange', 'arrayEdit', 'allListItem', 'user']),
   methods: {
 
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getTypeObject']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getTypeObject', 'checkConflictGeometry']),
     ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData', 'deleteObjectFromArrayEditMode']),
 
     visableVersions() {
@@ -263,8 +263,6 @@ export default {
           }
           break;
         }
-        case "create":
-          break;
         case 'delete':
           if (this.editMode) {
             this.deleteObjectFromArrayEditMode(data.data);
@@ -289,12 +287,13 @@ export default {
       }
       for (let key in this.arrayEditMode) {
         if (key != 'messege') {
-          this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
+          this.checkConflictGeometry([...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post])
+          //this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
         }
       }
-      this.resetArrayEditMode();
-      this.editMode = !this.editMode;
-      this.getTypeObject();
+      // this.resetArrayEditMode();
+      // this.editMode = !this.editMode;
+      // this.getTypeObject();
     },
     offConflictWindow() {
       this.isConflict = !this.isConflict;
