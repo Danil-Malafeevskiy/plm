@@ -346,10 +346,10 @@ class TypeSerializer(serializers.ModelSerializer):
         return super(TypeSerializer, self).validate(data)
 
     def get_all_group_type(self, obj):
-        return list(Type.objects.filter(group=obj.group).exclude(id=obj.id).values_list('name', flat=True))
+        return list(Type.objects.filter(group=obj.group).values_list('name', flat=True))
 
     def get_group_type(self, obj):
-        return [type.type_2.name for type in Ruls.objects.filter(type_1=obj).exclude(type_2=obj)]
+        return [type.type_2.name for type in Ruls.objects.filter(type_1=obj)]
 
     def get_all_obj(self, obj):
         return len(Feature.objects.filter(name=obj.id))
@@ -364,7 +364,6 @@ class TypeSerializer(serializers.ModelSerializer):
             type_new = Type.objects.get(name=ruls, group=validated_data['group'])
             Ruls.objects.create(type_1=type, type_2=type_new)
             Ruls.objects.create(type_1=type_new, type_2=type)
-        Ruls.objects.create(type_1=type, type_2=type)
         return type
 
     def update(self, instance, validated_data):
