@@ -62,6 +62,7 @@ export default {
             })
         },
         async uploadFileWithFeature({ commit }, file) {
+            console.log(file);
             await axios.put('/tower/upload', file, {
                 headers: {
                     "Content-Type": "multipart/form-data",

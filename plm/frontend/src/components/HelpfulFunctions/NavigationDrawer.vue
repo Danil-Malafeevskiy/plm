@@ -189,7 +189,10 @@ export default {
         async changeObject(objectType, index) {
             if (this.selectedItem != index) {
                 this.objectType = objectType;
-                this.upadateTitle(typeof objectType === 'string' ? objectType : objectType.name);
+                this.upadateTitle({
+                    title: typeof objectType === 'string' ? objectType : objectType.name, 
+                    group: 'group' in objectType ? objectType.groups : objectType
+                });
                 switch (this.actions) {
                     case 'getUsersOfGroup':
                     case 'getAllGroups': {
@@ -221,11 +224,27 @@ export default {
                         break;
 
                     case 'getFeatures':
+                        // if (objectType.id === 8) {
+                        //     this.updateHeaders([
+                        //         {
+                        //             "text": "Номер опоры",
+                        //             "value": "Номер опоры"
+                        //         }
+                        //     ])
+                        // }
+                        // else if (objectType.id === 9) {
+                        //     this.updateHeaders([
+                        //         {
+                        //             "text": "id",
+                        //             "value": "id"
+                        //         }
+                        //     ])
+                        // }
                         await this.getOneTypeObjectForFeature({ id: objectType.id });
                         this.objectType = this.oneType;
-                        this.updateHeaders(this.objectType.headers);
+                        //this.updateHeaders(this.objectType.headers);
                         this.updateDrawType(this.objectType.type);
-                        await this.filterForFeature(this.objectType.id);
+                        this.filterForFeature(this.objectType.id);
                         break;
 
                     default:
@@ -275,11 +294,12 @@ export default {
     display: flex;
 }
 
-.v-list-item__title{
+.v-list-item__title {
     z-index: 1 !important;
 }
 
-.theme--light.v-list-item--active:hover::before, .theme--light.v-list-item--active::before{
+.theme--light.v-list-item--active:hover::before,
+.theme--light.v-list-item--active::before {
     opacity: 1 !important;
     background-color: #FDEDED !important;
     border-radius: 8px !important;
