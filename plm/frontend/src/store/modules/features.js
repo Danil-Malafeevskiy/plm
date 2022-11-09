@@ -34,7 +34,7 @@ export default {
             else {
                 data = [...features, [], '', features.group];
             }
-            console.log(data);
+            console.log(JSON.stringify(data));
             await axios.put(`/tower`, data, { headers: { "Content-Type": "application/json" } }).then((response) => {
                 console.log(response.data);
                 if (typeof response.data === 'string') {
@@ -84,7 +84,7 @@ export default {
         async checkConflictGeometry(ctx, features){
             await axios.put('/geometry-check', features).then((response) => {
                 console.log(response.data);
-            }).catch((error) => console.log(error))
+            }).catch((error) => console.log(error.response.data))
         }
     },
     mutations: {

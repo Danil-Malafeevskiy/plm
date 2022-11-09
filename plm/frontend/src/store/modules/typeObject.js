@@ -86,12 +86,14 @@ export default {
             })
         },
         async putTypeObject({ dispatch, commit, state }, type) {
+            console.log(type);
             let putType = { ...type.properties };
             for (let key in type) {
                 if (key != 'properties') {
                     putType[key] = type[key]
                 }
             }
+            console.log(putType);
             await axios.put('/dataset/admin', putType).then((response) => {
                 if (typeof response.data === 'object') {
                     for (let i in response.data) {

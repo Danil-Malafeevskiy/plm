@@ -59,10 +59,11 @@
       </v-toolbar>
 
       <v-tabs-items v-model="tab" style="height: 89.7%">
-        <CardConflict v-show="cardVisable.data" :cardVisable="cardVisable" :conflictCard="conflictCard"
-          :editMode="editMode" :objectForCard_="objectForConflict" />
 
-        <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
+        <CardConflict v-if="conflictCard" :cardVisable="cardVisable" :conflictCard="conflictCard"
+          :editMode="editMode" :objectForConflict="objectForConflict" :notVisableCard="notVisableCard" />
+
+        <CardInfo v-else :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
           :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
 
         <v-tab-item>
@@ -128,8 +129,8 @@ import VersionControl from './components/HelpfulFunctions/VersionControl.vue';
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
-import CardConflict from './components/HelpfulFunctions/CardConflict.vue';
 import FIleInputWindow from './components/HelpfulFunctions/FIleInputWindow.vue';
+import CardConflict from './components/HelpfulFunctions/CardConflict.vue';
 
 export default {
   components: {
@@ -139,10 +140,10 @@ export default {
     NavigationDrawer,
     Auth,
     ConflicWindow,
-    CardConflict,
     VersionControl,
-    FIleInputWindow
-  },
+    FIleInputWindow,
+    CardConflict
+},
 
   data() {
     return {
@@ -282,18 +283,19 @@ export default {
     },
     editObjects() {
       if (this.newData.length) {
-this.isConflict = true;
-return;
-}
-for (let key in this.arrayEditMode) {
-if (key != 'messege') {
-// this.checkConflictGeometry([...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post])
-this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
-}
-}
-this.resetArrayEditMode();
-this.editMode = !this.editMode;
-this.getTypeObject();
+        this.isConflict = true;
+        return;
+      }
+      for (let key in this.arrayEditMode) {
+        if (key != 'messege') {
+          // this.checkConflictGeometry([...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post])
+          this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
+        }
+      }
+      this.resetArrayEditMode();
+      this.editMode = !this.editMode;
+      this.getTypeObject();
+
     },
     offConflictWindow() {
       this.isConflict = !this.isConflict;
