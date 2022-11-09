@@ -299,7 +299,7 @@ class GroupView(APIView):
     def put(self, request):
         change_group = Group.objects.get(id=request.data['id'])
         group_serializer = GroupSerializer(change_group, data=request.data)
-        old_users = GroupSerializer(change_group, remove_fields=['all_user']).data['users']
+        old_users = GroupSerializer(change_group, remove_fields=['all_user'], context=request.user.id).data['users']
 
         if group_serializer.is_valid():
             group_serializer.save()
