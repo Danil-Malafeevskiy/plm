@@ -92,7 +92,7 @@ export default {
       isFilter: false,
       filteredTypes: this.allType,
       deletedLayers: [],
-      allTypesSelected: true,
+      allTypesSelected: true, 
     }
   },
 
@@ -287,7 +287,6 @@ export default {
       const layer = this.map.getAllLayers().find(el => el.get('typeId') === typeId);
       const features = layer.getSource().getFeatures();
       let feature = features.find(el => { return el.getId() === id });
-      console.log(feature);
       const oldCoordinates = feature.getGeometry().getCoordinates();
       const newCoordinates = fromLonLat(coordinates);
       feature.getGeometry().setCoordinates(newCoordinates);
@@ -571,6 +570,14 @@ export default {
           }),
         });
 
+        if (layer.getSource().getFeatures()[0].getGeometry().getType() === 'Point' && layer.getSource().getFeatures().length) {
+          layer.setZIndex(Infinity)
+        } else if (layer.getSource().getFeatures()[0].getGeometry().getType() === 'LineString' && layer.getSource().getFeatures().length) {
+          layer.setZIndex(2)
+        } else if (layer.getSource().getFeatures()[0].getGeometry().getType() === 'Polygon' && layer.getSource().getFeatures().length) {
+          layer.setZIndex(0)
+        }
+
         await this.getOneTypeObject({ id: element.id, forFeature: true });
         layer.set('typeId', this.typeForLayer.id);
         layer.set('type', this.typeForLayer.type);
@@ -596,8 +603,10 @@ export default {
       let selectStyle;
       if (this.typeForLayer.type === 'LineString') {
         selectStyle = new Style({
-          stroke: new Stroke({ color: "red" })
+          stroke: new Stroke({ color: "red" }),
+          zIndex: Infinity,
         });
+        
       }
       else if (this.typeForLayer.type === 'Point' && !(this.typeForLayer.image === '')) {
         this.updataDomElements();
@@ -616,6 +625,7 @@ export default {
             anchorYUnits: 'pixels',
             src: blackIcon,
           }),
+          zIndex: Infinity,
         });
         layer.setStyle(style)
 
@@ -626,6 +636,7 @@ export default {
             anchorYUnits: 'pixels',
             src: redIcon,
           }),
+          zIndex: Infinity,
         });
       }
       else if (this.typeForLayer.type === 'Point' && (this.typeForLayer.image === '')) {
@@ -636,7 +647,8 @@ export default {
             fill: new Fill({ color: 'rgba(255,255,255,0.4)' })
           }),
           stroke: new Stroke({ color: "red" }),
-          fill: new Fill({ color: 'rgba(255,255,255,0.4)' })
+          fill: new Fill({ color: 'rgba(255,255,255,0.4)' }),
+          zIndex: Infinity,
         });
       }
 
@@ -644,6 +656,29 @@ export default {
         style: selectStyle,
         layers: [layer],
       });
+
+      
+      this.selectInteraction.on('select', function (e) {
+        console.log(e.selected.length)
+        if (e.selected.length) {
+          e.selected.forEach(element => {
+            if (element.getGeometry().getType() === 'LineString') {
+              let selectStyle = new Style({
+                stroke: new Stroke({ color: '#3399CC', width: 1.25 }),
+              });
+              element.setStyle(selectStyle)
+            } else if (element.getGeometry().getType() === 'Polygon') {
+              let selectStyle = new Style({
+                stroke: new Stroke({ color: '#3399CC', width: 1.25 }),
+                fill: new Fill({
+                  color: [255, 255, 255, 0.4],
+                }),
+              })
+              element.setStyle(selectStyle)
+            }
+          });
+        }
+      })
 
       this.map.addInteraction(this.selectInteraction);
 
