@@ -81,7 +81,11 @@ export default {
                 commit('updateFeatureInMap', response.data[0])
             });
         },
-
+        async checkConflictGeometry(ctx, features){
+            await axios.put('/geometry-check', features).then((response) => {
+                console.log(response.data);
+            }).catch((error) => console.log(error))
+        }
     },
     mutations: {
         updateFeatures(state, features) {
