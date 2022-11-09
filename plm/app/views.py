@@ -14,6 +14,7 @@ from django.utils.encoding import smart_bytes, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import api_view
 from rest_framework.parsers import MultiPartParser, FileUploadParser
 
 from rest_framework.permissions import IsAuthenticated
@@ -30,6 +31,7 @@ from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, 
 from rest_framework.response import Response
 from django.core.mail import send_mail
 
+@api_view(["PUT"])
 def check_conflict_geometry(request):
     conflicts = []
     for obj in request.data:
@@ -83,12 +85,20 @@ class TowerAPI(APIView):
             return Response(conflict.data, status=status.HTTP_409_CONFLICT)
 
         if len(delete_mas)!=0:
-            queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
-                name__in=Type.objects.filter(group=Feature.objects.get(id=delete_mas[0]).name.group.id))
+            for id in delete_mas:
+                if Feature.objects.get(id=id).geometry.geom_type == "Point":
+                    for obj in Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                               name__in=Type.objects.filter(group=Feature.objects.get(id=id).name.group.id), geometry__intersects=Feature.objects.get(id=id).geometry):
+                        if obj not in queryset:
+                            queryset.append(obj)
+
         for data in request.data:
             if 'id' in data.keys():
-                if data['geometry']['type'] == "Point" and len(queryset)==0:
-                    queryset = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(name__in=Type.objects.filter(group=Feature.objects.get(id=data['id']).name.group.id))
+                if data['geometry']['type'] == "Point":
+                    for obj in Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                               name__in=Type.objects.filter(group=Feature.objects.get(id=data['id']).name.group.id), geometry__intersects=GEOSGeometry(f'{data["geometry"]}')):
+                        if obj not in queryset:
+                            queryset.append(obj)
                 ids.append(data['id'])
 
         ids = ids + delete_mas
