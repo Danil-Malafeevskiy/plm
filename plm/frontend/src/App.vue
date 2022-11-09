@@ -295,6 +295,7 @@ export default {
       this.resetArrayEditMode();
       this.editMode = !this.editMode;
       this.getTypeObject();
+
     },
     offConflictWindow() {
       this.isConflict = !this.isConflict;
