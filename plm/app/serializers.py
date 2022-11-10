@@ -50,7 +50,7 @@ class FeatureListSerializer(serializers.ListSerializer):
             if (feature!=None):
                 type = FeatureSerializer(feature).data
                 type_up = FeatureSerializer(obj_feature).data
-                if type['geometry']['type'] == 'Point' and (type['geometry']['coordinates']!=type_up['geometry']['coordinates']):
+                if self.context != False and type['geometry']['type'] == 'Point' and (type['geometry']['coordinates']!=type_up['geometry']['coordinates']):
                     for line in self.context:
                         up_flag = False
                         copy_line = FeatureSerializer(Feature.objects.get(id=line['id'])).data
@@ -262,13 +262,10 @@ class UserSerializer(serializers.ModelSerializer):
         return perm
 
     def get_all_users(self, obj):
-        all_groups = list(Group.objects.all())
         if obj.is_superuser:
-            return {group.name: list(get_user_model().objects.filter(groups=group).values_list('username', flat=True)) for group in all_groups}
+            return list(get_user_model().objects.all().exclude(id=obj.id).values_list('username', flat=True))
         if obj.is_staff:
-            return {group.name: list(get_user_model().objects.filter(groups=group).exclude(
-                id=obj.id).values_list('username', flat=True)) for
-                    group in all_groups if group != "Admin"}
+            return list(get_user_model().objects.all().exclude(id=obj.id).exclude(groups=Group.objects.get(name="Admin")).values_list('username', flat=True))
         return []
 
     def validate(self, data):
