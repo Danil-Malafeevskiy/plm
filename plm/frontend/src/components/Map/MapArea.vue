@@ -483,9 +483,24 @@ export default {
           type: this.drawType,
           style: this.drawLayer.getStyle(),
         });
+
+        this.arrFeatureForDraw = []
+        const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString')
+        for (let i in layerOfLineString) {
+          this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfLineString[i].getSource().getFeatures()];
+        }
+
+        const source = new VectorSource({ features: this.arrFeatureForDraw });
+        this.drawLayer = new VectorLayer({
+          source: source
+        });
+
+        const snap = new Snap({ source: source });
+
         this.map.addLayer(this.drawLayer);
         this.map.addInteraction(this.draw);
         this.map.addInteraction(this.modify);
+        this.map.addInteraction(snap);
       }
       else if (this.drawType === 'LineString') {
         this.arrFeatureForDraw = [];
@@ -504,8 +519,19 @@ export default {
           type: this.drawType,
         });
 
+
+        this.modify = new Modify({
+          source: this.drawLayer.getSource(),
+          style: this.drawLayer.getStyle()
+        });
+
+
+        this.modifyEdit.on('modifystart', this.takeCoordinates);
+        this.modifyEdit.on('modifyend', this.changeCoordinates);
+
         const snap = new Snap({ source: source });
         this.map.addLayer(this.drawLayer);
+        this.map.addInteraction(this.modify);
         this.map.addInteraction(this.draw);
         this.map.addInteraction(snap);
       }
@@ -570,11 +596,11 @@ export default {
           }),
         });
 
-        if (layer.getSource().getFeatures()[0].getGeometry().getType() === 'Point' && layer.getSource().getFeatures().length) {
+        if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'Point') {
           layer.setZIndex(Infinity)
-        } else if (layer.getSource().getFeatures()[0].getGeometry().getType() === 'LineString' && layer.getSource().getFeatures().length) {
+        } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'LineString') {
           layer.setZIndex(2)
-        } else if (layer.getSource().getFeatures()[0].getGeometry().getType() === 'Polygon' && layer.getSource().getFeatures().length) {
+        } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'Polygon') {
           layer.setZIndex(0)
         }
 
@@ -659,22 +685,22 @@ export default {
 
       
       this.selectInteraction.on('select', function (e) {
-        console.log(e.selected.length)
+        console.log(e.selected)
         if (e.selected.length) {
           e.selected.forEach(element => {
             if (element.getGeometry().getType() === 'LineString') {
-              let selectStyle = new Style({
+              let selectedStyle = new Style({
                 stroke: new Stroke({ color: '#3399CC', width: 1.25 }),
               });
-              element.setStyle(selectStyle)
+              element.setStyle(selectedStyle)
             } else if (element.getGeometry().getType() === 'Polygon') {
-              let selectStyle = new Style({
+              let selectedStyle = new Style({
                 stroke: new Stroke({ color: '#3399CC', width: 1.25 }),
                 fill: new Fill({
                   color: [255, 255, 255, 0.4],
                 }),
               })
-              element.setStyle(selectStyle)
+              element.setStyle(selectedStyle)
             }
           });
         }
