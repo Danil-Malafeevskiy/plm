@@ -425,6 +425,7 @@ export default {
       }
       else if (feature_ && this.addCardOn_.data && this.drawType === 'Point') {
         this.drawLayer.getSource().refresh()
+        console.log(1)
       }
       else {
         this.updateCoordinates();
@@ -471,18 +472,6 @@ export default {
           const interaction = this.map.getInteractions().getArray().find(el => el.get('typeId') === this.oneType.id);
           this.drawLayer.setStyle(interaction.get('style'));
         }
-        this.modify = new Modify({
-          source: this.drawLayer.getSource(),
-          style: this.drawLayer.getStyle()
-        });
-
-        this.modify.on('modifyend', this.changeCoordinates);
-
-        this.draw = new Draw({
-          source: this.drawLayer.getSource(),
-          type: this.drawType,
-          style: this.drawLayer.getStyle(),
-        });
 
         this.arrFeatureForDraw = []
         const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString')
@@ -491,9 +480,22 @@ export default {
         }
 
         const source = new VectorSource({ features: this.arrFeatureForDraw });
-        this.drawLayer = new VectorLayer({
-          source: source
+        // this.drawLayer = new VectorLayer({
+        //   source: source
+        // });
+
+        this.draw = new Draw({
+          source: this.drawLayer.getSource(),
+          type: this.drawType,
+          style: this.drawLayer.getStyle(),
         });
+
+        this.modify = new Modify({
+          source: this.drawLayer.getSource(),
+          style: this.drawLayer.getStyle()
+        });
+
+        this.modify.on('modifyend', this.changeCoordinates);
 
         const snap = new Snap({ source: source });
 
