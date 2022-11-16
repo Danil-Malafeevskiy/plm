@@ -298,6 +298,8 @@ export default {
         filterLayer: el => el.get('type') === 'LineString',
       });
 
+      
+
       geom.forEach((element) => {
         element.getGeometry().getCoordinates().forEach((coord, index) => {
           if (toStringXY(coord, 7) === toStringXY(oldCoordinates, 7)) {
@@ -423,10 +425,10 @@ export default {
           this.editCardOn_.data = false;
         }, 500)
       }
-      else if (feature_ && this.addCardOn_.data && this.drawType === 'Point') {
-        this.drawLayer.getSource().refresh()
-        console.log(1)
-      }
+      // else if (feature_ && this.addCardOn_.data && this.drawType === 'Point') {
+      //   this.drawLayer.getSource().refresh()
+      //   console.log(1)
+      // }
       else {
         this.updateCoordinates();
       }
