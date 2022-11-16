@@ -412,7 +412,6 @@ export default {
         this.returnCoordinateForLineString(this.editedPointCoordinates, event.features.getArray()[0].getGeometry().getCoordinates())
         this.objectForCard.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
       }
-      console.log(toLonLat(event.features.getArray()[0].getGeometry().getCoordinates()))
     },
     createSubArrays() {
       let subArrays = {};
@@ -452,16 +451,17 @@ export default {
           type: this.drawType,
           style: this.drawLayer.getStyle(),
         });
-        this.draw.on('drawstart', this.checkDrawCoordinates)
+
         this.arrFeatureForDraw = []
         const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString')
         for (let i in layerOfLineString) {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfLineString[i].getSource().getFeatures()];
         }
         const source = new VectorSource({ features: this.arrFeatureForDraw });
-        // this.drawLayer = new VectorLayer({
-        //   source: source
-        // });
+        this.drawLayer = new VectorLayer({
+          source: source
+        });
+
         const snap = new Snap({ source: source });
         this.map.addLayer(this.drawLayer);
         this.map.addInteraction(this.draw);
