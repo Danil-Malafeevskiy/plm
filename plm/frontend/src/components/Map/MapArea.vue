@@ -92,6 +92,11 @@ export default {
       filteredTypes: this.allType,
       deletedLayers: [],
       allTypesSelected: true, 
+      oldDrawCoordinates: null,
+      indexDraw: null,
+      drawCoord: null,
+      drawFeature: null,
+      oneFeature_: this.oneFeature,
     }
   },
   watch: {
@@ -139,6 +144,7 @@ export default {
           this.oldFeature = this.getObjectForCard;
         }
         this.objectForCard = this.getObjectForCard;
+        console.log(this.objectForCard)
         if (this.editCardOn_.data && 'geometry' in this.getObjectForCard) {
           if (this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) {
             this.editCardOn_.data = false;
@@ -241,12 +247,17 @@ export default {
           this.filteredTypes = [];
         }
       }
+    }, 
+    getOneFeatureId: {
+      handler(){
+        this.oneFeature_ = this.oneFeature
+      }
     }
   },
-  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData']),
+  computed: mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData']),
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode']),
-    ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
+    ...mapActions(['getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
       this.feature.properties['Широта'] = cord[0];
@@ -397,9 +408,6 @@ export default {
           this.editCardOn_.data = false;
         }, 500)
       }
-      // else if (feature_ && this.addCardOn_.data && this.drawType === 'Point') {
-      //   this.drawLayer.getSource().refresh()
-      // }
       else {
         this.updateCoordinates();
       }
@@ -451,16 +459,13 @@ export default {
           type: this.drawType,
           style: this.drawLayer.getStyle(),
         });
-
+        this.draw.on('drawstart', this.checkDrawCoordinates)
         this.arrFeatureForDraw = []
         const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString')
         for (let i in layerOfLineString) {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfLineString[i].getSource().getFeatures()];
         }
         const source = new VectorSource({ features: this.arrFeatureForDraw });
-        this.drawLayer = new VectorLayer({
-          source: source
-        });
 
         const snap = new Snap({ source: source });
         this.map.addLayer(this.drawLayer);
@@ -567,11 +572,36 @@ export default {
       });
     },
     takeCoordinates(event) {
-      this.editedPointCoordinates = event.features.getArray()[0].getGeometry().getCoordinates()
+      this.editedPointCoordinates = event.features.getArray()[0].getGeometry().getCoordinates() 
     },
-    checkDrawCoordinates(event) {
-      console.log(toLonLat(event.feature.getGeometry().getCoordinates()))
+
+    async checkDrawCoordinates(event) {
+      this.drawCoord = event.feature.getGeometry().getCoordinates()
+      if (this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(this.drawCoord)).length) {
+        this.drawFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(this.drawCoord))[0]
+        this.oldDrawCoordinates = this.drawFeature.getGeometry().getCoordinates()
+        this.indexDraw = -1
+        for (let i = 0; i < this.oldDrawCoordinates.length - 1; i++) {
+          this.drawFeature.getGeometry().setCoordinates([this.drawFeature.getGeometry().getCoordinates()[i], this.drawFeature.getGeometry().getCoordinates()[i + 1]])
+          if (this.drawFeature.getGeometry().intersectsCoordinate(this.drawCoord)) {
+            this.indexDraw = i + 1
+            // console.log(this.drawFeature.getGeometry().intersectsCoordinate(this.drawCoord))
+          }
+          this.drawFeature.getGeometry().setCoordinates(this.oldDrawCoordinates)
+        }
+
+        if ((this.indexDraw != -1) && (this.indexDraw != 0) && (this.indexDraw != this.oldDrawCoordinates.length)) {
+          this.oldDrawCoordinates.splice(this.indexDraw, 0, this.drawCoord)
+          for (let i = 0; i < this.oldDrawCoordinates.length; i++) {
+            this.oldDrawCoordinates[i] = toLonLat(this.oldDrawCoordinates[i])
+          }
+          await this.getOneFeatureId(this.drawFeature.getId())
+          this.oneFeature.geometry.coordinates = this.oldDrawCoordinates
+          this.updateArrayEditMode({ item: this.oneFeature, type: 'put' });
+        }
+      }
     },
+
     async svgToSpan() {
       let v = await Canvg.from(this.canvas.getContext('2d'), this.svg.parentNode.innerHTML.trim());
       v.start();
