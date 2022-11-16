@@ -423,9 +423,9 @@ export default {
           this.editCardOn_.data = false;
         }, 500)
       }
-      else if (feature_ && this.addCardOn_.data && this.drawType === 'Point') {
-        this.drawLayer.getSource().refresh()
-      }
+      // else if (feature_ && this.addCardOn_.data && this.drawType === 'Point') {
+      //   this.drawLayer.getSource().refresh()
+      // }
       else {
         this.updateCoordinates();
       }
@@ -439,6 +439,7 @@ export default {
 
         this.objectForCard.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
       }
+      console.log(toLonLat(event.features.getArray()[0].getGeometry().getCoordinates()))
     },
     createSubArrays() {
       let subArrays = {};
@@ -484,6 +485,9 @@ export default {
           style: this.drawLayer.getStyle(),
         });
 
+
+        this.draw.on('drawstart', this.checkDrawCoordinates)
+
         this.arrFeatureForDraw = []
         const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString')
         for (let i in layerOfLineString) {
@@ -491,9 +495,9 @@ export default {
         }
 
         const source = new VectorSource({ features: this.arrFeatureForDraw });
-        this.drawLayer = new VectorLayer({
-          source: source
-        });
+        // this.drawLayer = new VectorLayer({
+        //   source: source
+        // });
 
         const snap = new Snap({ source: source });
 
@@ -620,6 +624,9 @@ export default {
     takeCoordinates(event) {
       this.editedPointCoordinates = event.features.getArray()[0].getGeometry().getCoordinates()
     },
+    checkDrawCoordinates(event) {
+      console.log(toLonLat(event.feature.getGeometry().getCoordinates()))
+    },
     async svgToSpan() {
       let v = await Canvg.from(this.canvas.getContext('2d'), this.svg.parentNode.innerHTML.trim());
       v.start();
@@ -685,7 +692,7 @@ export default {
 
       
       this.selectInteraction.on('select', function (e) {
-        console.log(e.selected)
+        // console.log(e.selected)
         if (e.selected.length) {
           e.selected.forEach(element => {
             if (element.getGeometry().getType() === 'LineString') {
