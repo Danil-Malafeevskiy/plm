@@ -18,7 +18,7 @@
           <v-checkbox v-model="allTypesSelected" class="ma-2" color="#E93030" label="все"></v-checkbox>
 
           <v-checkbox v-for="(el) in allType" :key="el.id" v-model="filteredTypes" class="ma-2" color="#E93030"
-            :value="el" :label="el.name">
+            :value="el" :label="user.is_superuser || user.groups.length > 1 ? el.name + ' (' + el.group + ')' : el.name">
           </v-checkbox>
         </div>
         <v-divider style="position: absolute; bottom: 60px; width: 100%;"></v-divider>
@@ -252,7 +252,7 @@ export default {
       }
     }
   },
-  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData']),
+  computed: mapGetters(['drawType', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'user']),
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode']),
     ...mapActions(['getOneFeature', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
@@ -394,6 +394,8 @@ export default {
     },
 
     async getFeature_(event) {
+      this.updateCoordinates();
+
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
 
       if (feature_ && !this.addCardOn_.data) {
@@ -422,12 +424,6 @@ export default {
           this.infoCardOn_.data = false;
           this.editCardOn_.data = false;
         }, 500)
-      }
-      else if (feature_ && this.addCardOn_.data && this.drawType === 'Point') {
-        this.drawLayer.getSource().refresh()
-      }
-      else {
-        this.updateCoordinates();
       }
     },
     changeCoordinates(event) {
@@ -570,11 +566,11 @@ export default {
           }),
         });
 
-        if (layer.getSource().getFeatures()[0].getGeometry().getType() === 'Point' && layer.getSource().getFeatures().length) {
+        if (this.typeForLayer.type === 'Point') {
           layer.setZIndex(Infinity)
-        } else if (layer.getSource().getFeatures()[0].getGeometry().getType() === 'LineString' && layer.getSource().getFeatures().length) {
+        } else if (this.typeForLayer.type === 'LineString') {
           layer.setZIndex(2)
-        } else if (layer.getSource().getFeatures()[0].getGeometry().getType() === 'Polygon' && layer.getSource().getFeatures().length) {
+        } else if (this.typeForLayer.type === 'Polygon') {
           layer.setZIndex(0)
         }
 
@@ -582,6 +578,8 @@ export default {
         layer.set('typeId', this.typeForLayer.id);
         layer.set('type', this.typeForLayer.type);
         layer.set('group', this.typeForLayer.group);
+
+
 
         this.map.addLayer(layer);
         this.canvas.height = 25;

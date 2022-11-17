@@ -1,6 +1,6 @@
 <template>
-    <v-row justify="start" :class="{ 'conflict_row': conflictCard }">
-        <template v-if="'properties' in objectForCard && 'type' in objectForCard.properties">
+    <v-row justify="space-between" :class="{ 'conflict_row': conflictCard }">
+        <template v-if="objectForCard && 'properties' in objectForCard && 'type' in objectForCard.properties">
             <p class="attributes ma-0">Основные атрибуты</p>
             <v-col v-for="(el, index) in objectForCard.properties.headers" :key="index" cols="2" sm="6" md="5" lg="6"
                 v-show="el.text != 'id'">
@@ -19,7 +19,7 @@
                 </v-btn>
             </v-col>
         </template>
-        <template v-if="'properties' in objectForCard && 'type' in objectForCard.properties">
+        <template v-if="objectForCard && 'properties' in objectForCard && 'type' in objectForCard.properties">
             <p class="attributes ma-0">Допольнительные атрибуты</p>
             <v-col v-for="(el, index) in objectForCard.properties.properties"
                 :key="objectForCard.properties.headers.length + index" cols="2" sm="6" md="5" lg="6"
@@ -38,25 +38,28 @@
                 </v-btn>
             </v-col>
         </template>
-        <template v-if="'name' in objectForCard">
+        <template v-if="objectForCard && 'name' in objectForCard">
             <p v-if="typeForFeature.properties.length" class="attributes ma-0">Допольнительные атрибуты
             </p>
             <template v-for="el in typeForFeature.properties">
-                <v-col v-if="conflictCard" :key="`origin-element-${el}`" cols="3" sm="6" md="5" lg="6" v-show="el != 'id'">
+                <v-col v-if="conflictCard" :key="`origin-element-${el}`" cols="3" sm="6" md="5" lg="6"
+                    v-show="el != 'id'">
                     <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el) }"
                         v-model="objectForConflict_.properties[el]" hide-details :label="el" :placeholder="el" filled
-                        :disabled="checkEqualityOfFieads(el)">
+                        disabled>
                     </v-text-field>
                 </v-col>
-                <v-btn v-if="!checkEqualityOfFieads(el)" small icon :key="`change-field-button-${el}`" style="
+                <v-btn v-if="!checkEqualityOfFieads(el) && notConflictObject" small icon :key="`change-field-button-${el}`" @click="changeItem(el)" style="
                     max-height: 100% !important;
                     margin: auto 0 !important;
                 ">
-                    <v-icon>mdi-arrow-right</v-icon>
+                    <v-icon v-if="notConflictObject.properties[el] === objectForCard.properties[el]">mdi-arrow-right</v-icon>
+                    <v-icon v-else>mdi-arrow-left</v-icon>
                 </v-btn>
-                <v-col :key="`new-element-${el}`" cols="3" sm="6" md="5" lg="6" v-show="el != 'id'">
+                <v-col v-if="objectForCard" cols="3" sm="6" md="5" lg="6" v-show="el != 'id'" :key="`new-element-${el}`">
                     <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el) }"
-                        v-model="objectForCard_.properties[el]" hide-details :label="el" :placeholder="el" filled>
+                        v-model="objectForCard_.properties[el]" hide-details :label="el"
+                        :readonly="infoCardOn.data && !conflictCard" :placeholder="el" filled>
                     </v-text-field>
                 </v-col>
             </template>
@@ -69,7 +72,7 @@ import { mapGetters } from 'vuex';
 
 export default {
     name: 'FormForDynamicField',
-    props: ['objectForCard', 'infoCardOn', 'checkEqualityOfFieads', 'changeConflictField', 'conflictCard', 'objectForConflict'],
+    props: ['objectForCard', 'infoCardOn', 'checkEqualityOfFieads', 'changeConflictField', 'conflictCard', 'objectForConflict', 'changeItem', 'notConflictObject'],
     data() {
         return {
             objectForCard_: this.objectForCard,
