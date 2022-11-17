@@ -1,88 +1,109 @@
 <template>
     <v-scroll-x-reverse-transition>
-        <v-card class="card_of_object" v-show="conflictCard === true">
+        <v-card class="card_of_object" v-show="conflictCard === true && cardVisable.data === true">
             <div class="card__window">
                 <p style="display: none">{{ objectForCard }}</p>
-                <v-card
-                    v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'"
-                    class="one_picture pa-0 ma-0 background_color_gray" tile flat
-                    style="width: 100% !important; height: 59.45% !important; overflow-y: scroll !important;">
+                <template v-if="objectForConflict && objectForCard && objectForConflict.image === objectForCard.image">
+                    <v-img v-if="objectForCard.image" :src="objectForCard.image" class="one_picture">
+                    </v-img>
 
-                    <v-row no-gutters justify="start">
-                        <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
-                            style="max-width: 48px !important" class="ma-0">
-                            <v-radio-group hide-details class="pa-0 ma-0" v-model="objectForCard.image">
-                                <v-radio :value="el.text" readonly class="ma-2" color="#E93030" :on-icon="el.text"
-                                    :off-icon="el.text" style="
-                                    min-height: 2em !important; 
-                                    min-width: 2em !important;
-                                "></v-radio>
-                            </v-radio-group>
-                        </v-col>
-                    </v-row>
-                </v-card>
-                <v-file-input v-else-if="'properties' in objectForCard && 'type' in objectForCard.properties"
-                    accept="image/*" class="pa-0 ma-0 background_color_red" height="37.53%" :prepend-icon="icon"
-                    disabled hide-input>
-                </v-file-input>
-
-                <v-file-input v-else-if="!objectForCard.image" accept="image/*" :class="{
-                    'background_color_red': !('properties' in objectForCard && 'username' in objectForCard.properties),
-                    'background_color_gray': ('properties' in objectForCard && 'username' in objectForCard.properties)
-                }" class="pa-0 ma-0" height="37.53%" :prepend-icon="icon" disabled hide-input>
-                </v-file-input>
-
-                <template v-if="!('properties' in objectForCard && 'type' in objectForCard.properties)">
-                    <v-img v-if="objectForCard.image" :src="objectForCard.image" class="one_picture" width="100%"
-                        height="37.53%"></v-img>
+                    <v-file-input v-else class="pa-0 ma-0 background_color_red" :prepend-icon="icon" disabled
+                        hide-input>
+                    </v-file-input>
                 </template>
-
-                <div style="overflow-y: scroll; overflow-x: hidden; height: 100%">
-                    <v-card-text class="pa-0">
-                        <div style="display: flex">
-                            <v-card-text style="font-size: 16px; color: #787878; font-weight: 500; padding: 16px 24px;">
-                                Версия в системе
-                            </v-card-text>
-                            <v-card-text style="font-size: 16px; color: #787878; font-weight: 500; padding: 16px 30px;">
-                                Новая версия
-                            </v-card-text>
-                        </div>
-                        <v-form>
-                            <v-row justify="start" style="padding-bottom: 0 !important;">
-                                <template v-for="el in typeForFeature.headers">
-                                    <v-col v-if="true" :key="`origin-element-${el.text}`" cols="3" sm="6" md="5" lg="6"
-                                        v-show="el != 'id'">
-                                        <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el.text) }"
-                                            v-model="objectForConflict_.properties[el.text]" hide-details :label="el.text"
-                                            :placeholder="el.text" filled :disabled="checkEqualityOfFieads(el.text)">
-                                        </v-text-field>
-                                    </v-col>
-                                    <v-btn v-if="checkEqualityOfFieads(el.text)" small icon
-                                        :key="`change-field-button-${el.text}`" style="
+                <div v-else-if="objectForConflict && objectForCard" class="conflict_pictures">
+                    <v-img v-if="objectForConflict.image" :src="objectForConflict.image" class="two_pictures">
+                    </v-img>
+                    <v-file-input v-else class="pa-0 ma-0 two_background_color_red" :prepend-icon="icon" disabled
+                        hide-input>
+                    </v-file-input>
+                    <v-btn small icon @click="changeImage" style="
                                         max-height: 100% !important;
                                         margin: auto 0 !important;
                                     ">
-                                        <v-icon>mdi-arrow-right</v-icon>
-                                    </v-btn>
-                                    <v-col :key="`new-element-${el.text}`" cols="3" sm="6" md="5" lg="6"
-                                        v-show="el != 'id'">
-                                        <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el.text) }"
-                                            v-model="objectForCard.properties[el.text]" hide-details :label="el.text"
-                                            :placeholder="el.text" filled>
-                                        </v-text-field>
-                                    </v-col>
-                                </template>
-                            </v-row>
-
-                            <FormForDynamicField :objectForCard="objectForCard" :infoCardOn="{ data: true }"
-                                :checkEqualityOfFieads="checkEqualityOfFieads" :conflictCard="conflictCard" :objectForConflict="objectForConflict"/>
-
-                        </v-form>
-                    </v-card-text>
+                        <v-icon v-if="notConflictObject.image === objectForCard.image">
+                            mdi-arrow-right</v-icon>
+                        <v-icon v-else>mdi-arrow-left</v-icon>
+                    </v-btn>
+                    <v-img v-if="objectForCard.image" :src="objectForCard.image" class="two_pictures">
+                    </v-img>
+                    <v-file-input v-else class="pa-0 ma-0 two_background_color_red" :prepend-icon="icon" disabled
+                        hide-input>
+                    </v-file-input>
                 </div>
+
+                <v-tabs v-model="tab" align-with-title color="#E93030">
+                    <v-tab v-for="item in items" :key="item" class="ma-0">
+                        <span>{{ item }}</span>
+                    </v-tab>
+                </v-tabs>
+                <v-divider></v-divider>
+                <v-tabs-items v-model="tab">
+                    <v-tab-item>
+
+                        <div style="overflow-y: hidden; overflow-x: hidden; height: 100%">
+                            <v-card-text class="pa-0">
+                                <div style="display: flex">
+                                    <v-card-text
+                                        style="font-size: 16px; color: #787878; font-weight: 500; padding: 16px 24px;">
+                                        Версия в системе
+                                    </v-card-text>
+                                    <v-card-text
+                                        style="font-size: 16px; color: #787878; font-weight: 500; padding: 16px 30px;">
+                                        Новая версия
+                                    </v-card-text>
+                                </div>
+                                <v-form v-if="objectForConflict_ !== undefined">
+                                    <v-row justify="space-between" style="padding-bottom: 0 !important;">
+                                        <template v-for="el in typeForFeature.headers">
+                                            <v-col :key="`origin-element-${el.text}`" cols="3" sm="6" md="5" lg="6"
+                                                v-if="el.text != 'id'">
+                                                <v-text-field v-if="objectForConflict_"
+                                                    :class="{ 'blue_field': !checkEqualityOfFieads(el.text) }"
+                                                    v-model="objectForConflict_.properties[el.text]" hide-details
+                                                    :label="el.text" :placeholder="el.text" filled disabled>
+                                                </v-text-field>
+                                            </v-col>
+                                            <v-btn v-if="!checkEqualityOfFieads(el.text) && el.text != 'id'" small icon
+                                                :key="`change-field-button-${el.text}`" @click="changeItem(el.text)"
+                                                style="
+                                        max-height: 100% !important;
+                                        margin: auto 0 !important;
+                                    ">
+                                                <v-icon
+                                                    v-if="notConflictObject.properties[el.text] === objectForCard.properties[el.text]">
+                                                    mdi-arrow-right</v-icon>
+                                                <v-icon v-else>mdi-arrow-left</v-icon>
+                                            </v-btn>
+                                            <v-col v-if="objectForCard && el.text != 'id'"
+                                                :key="`new-element-${el.text}`" cols="3" sm="6" md="5" lg="6"
+                                                v-show="el != 'id'">
+                                                <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el.text) }"
+                                                    v-model="objectForCard.properties[el.text]" hide-details
+                                                    :label="el.text" :placeholder="el.text" filled>
+                                                </v-text-field>
+                                            </v-col>
+                                        </template>
+                                    </v-row>
+
+                                    <FormForDynamicField :objectForCard="objectForCard" :infoCardOn="{ data: true }"
+                                        :checkEqualityOfFieads="checkEqualityOfFieads" :conflictCard="conflictCard"
+                                        :objectForConflict="objectForConflict" :changeItem="changeItem"
+                                        :notConflictObject="notConflictObject" />
+
+                                </v-form>
+                            </v-card-text>
+                        </div>
+
+                    </v-tab-item>
+                    <v-tab-item>
+
+
+                    </v-tab-item>
+                </v-tabs-items>
+
                 <div class="card__footer">
-                    <v-btn text color="#787878" @click="notVisableCard(); editCardOn_.data = !editCardOn_.data"
-                        style="margin-right: 15px !important">
+                    <v-btn text color="#787878" @click="notVisableCard()" style="margin-right: 15px !important">
                         ОТМЕНА
                     </v-btn>
                     <v-btn text @click="editObject()" color="#787878">применить</v-btn>
@@ -95,7 +116,7 @@
 
 <script>
 import { mapActions, mapGetters, mapMutations } from 'vuex';
-import { mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket } from '@mdi/js'
+import { mdiImagePlusOutline } from '@mdi/js';
 import FormForDynamicField from './FormForDynamicField.vue';
 
 export default {
@@ -107,15 +128,22 @@ export default {
     data() {
         return {
             cardVisable_: this.cardVisable,
-            icon: mdiImagePlusOutline,
             showPassword: false,
-            listMdiIcons: [mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket],
+            icon: mdiImagePlusOutline,
             listSelectedIcons: [],
             isOldItem: false,
-            objectForConflict_: this.objectForConflict
+            objectForConflict_: { properties: {} },
+            objectForCard: this.getObjectForCard,
+            notConflictObject: { properties: {} },
+            tab: null,
+            items: ['Конфликт версий', 'Конфликт положений'],
         }
     },
     watch: {
+        getObjectForCard: function () {
+            this.objectForCard = this.getObjectForCard;
+            this.objectForConflict_ = this.getObjectForCard;
+        },
         cardVisable: {
             handler() {
                 this.cardVisable_ = this.cardVisable;
@@ -123,39 +151,37 @@ export default {
         },
         objectForConflict: function () {
             this.objectForConflict_ = this.objectForConflict;
-        }
+            this.notConflictObject = JSON.parse(JSON.stringify(this.objectForCard));
+        },
     },
     computed: {
-        ...mapGetters(['getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'arrayEdit', 'newData', 'actions', 'user']),
+        ...mapGetters(['getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'arrayEdit', 'newData', 'actions', 'user', 'allListItem']),
     },
     methods: {
         ...mapActions(['getOneTypeObjectForFeature']),
-        ...mapMutations(['updateOneType', 'updateObjectForCard']),
+        ...mapMutations(['updateOneType', 'updateObjectForCard', 'updateArrayEditMode', 'deleteItemFromNewData']),
         async editObject() {
-                this.updateArrayEditMode({ item: this.objectForCard, type: 'put' });
-                this.deleteItemFromNewData(this.objectForCard);
-                this.allListItem.forEach(element => {
+            this.updateArrayEditMode({ item: this.notConflictObject, type: 'put' });
+            this.deleteItemFromNewData(this.notConflictObject);
+            this.allListItem.forEach(element => {
 
-                    if (element.id === this.objectForCard.id) {
-                        for (let el in element) {
-                            if (el != 'id') {
-                                element[el] = this.objectForCard.properties[el];
-                            }
+                if (element.id === this.notConflictObject.id) {
+                    for (let el in element) {
+                        if (el != 'id') {
+                            element[el] = this.notConflictObject.properties[el];
                         }
                     }
-                });
-                this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
+                }
+            });
+            await this.updateObjectForCard(JSON.parse(JSON.stringify(this.notConflictObject)));
         },
-        changeItem(isOldItem) {
-            let newPutobject;
-            if (isOldItem) {
-                newPutobject = this.newData.filter(el => el.id === this.objectForCard.id);
+        changeItem(field) {
+            if (this.notConflictObject.properties[field] == this.objectForCard.properties[field]) {
+                this.notConflictObject.properties[field] = this.objectForConflict_.properties[field];
             }
             else {
-                newPutobject = this.arrayEdit.put.filter(el => el.id === this.objectForCard.id);
+                this.notConflictObject.properties[field] = this.objectForCard.properties[field];
             }
-
-            this.updateObjectForCard(JSON.parse(JSON.stringify(newPutobject[0])));
         },
         checkEqualityOfFieads(field) {
             if (this.newData.length) {
@@ -186,11 +212,10 @@ export default {
                 return true;
             }
             return false;
+        },
+        changeImage(){
+            this.notConflictObject.image = this.notConflictObject.image === this.objectForCard.image ? this.objectForConflict.image : this.objectForCard.image;
         }
-
-    },
-    mounted() {
-
     }
 }
 </script>
@@ -250,21 +275,14 @@ export default {
     background-color: white;
 }
 
-.v-icon--link .v-icon__svg {
-    min-width: 133.33px !important;
-    min-height: 133.33px !important;
-    fill: #FFFFFF !important;
-}
-
 .card__window {
+    display: flex !important;
+    flex-direction: column !important;
     position: absolute;
     top: 0;
     bottom: 0;
     min-width: 100%;
     max-width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
     border-radius: 12px;
 }
 
@@ -276,14 +294,11 @@ export default {
     background-color: rgba(255, 255, 255, 0) !important;
 }
 
-.v-file-input {
-    min-height: 37.53%;
-    max-height: 37.53%;
-    border-radius: 12px 12px 0 0;
-}
-
 .background_color_red {
     background-color: #EE5E5E !important;
+    max-height: 22.48% !important;
+    min-height: 22.48% !important;
+    border-radius: 12px 12px 0 0;
 }
 
 .background_color_gray {
@@ -298,21 +313,28 @@ export default {
 
 .one_picture {
     position: relative !important;
+    max-height: 22.48% !important;
     border-radius: 12px 12px 0 0 !important;
 }
 
-.not_one_picture {
-    position: absolute !important;
-    border-radius: 12px 12px 0 0 !important;
-}
-
-.background_img {
-    z-index: 1;
-    background-color: #000;
-    opacity: 0.3;
-    min-height: 37.53%;
-    max-height: 37.53%;
+.conflict_pictures{
+    display: flex;
+    justify-content: space-between;
+    background-color: #C9C8ED;
+    padding: 34px 50px;
     border-radius: 12px 12px 0 0;
+    max-height: 22.48%;
+}
+
+.two_pictures{
+    max-width: 42% !important;
+    border-radius: 4px;
+}
+
+.two_background_color_red{
+    background-color: #EE5E5E !important;
+    max-width: 42% !important;
+    border-radius: 4px;
 }
 
 .row {
@@ -340,6 +362,10 @@ export default {
     width: 46%;
     max-width: 46%;
     flex-basis: 46%;
+}
+
+.v-window {
+    height: 100% !important;
 }
 
 @media (min-width: 1025px) and (max-width: 1919px) {

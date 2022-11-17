@@ -49,7 +49,8 @@
             </v-btn>
           </template>
         </template>
-        <v-btn v-if="actions !== '' && actions !== 'getFeatures'" :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')"
+        <v-btn v-if="actions !== '' && actions !== 'getFeatures'"
+          :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')"
           style="border-radius: 4px; margin-right: 10px !important; margin-bottom: 10px;" class="show__card"
           height="28px" width="80px" color="#EE5E5E" @click="addCardOn.data = !addCardOn.data; visableCard();">
           <v-icon color="white !default" dark>
@@ -58,13 +59,13 @@
         </v-btn>
       </v-toolbar>
 
-      <v-tabs-items v-model="tab" style="height: 89.7%">
+      <v-tabs-items v-model="tab" :style="{ height: heightVItem }">
 
-        <CardConflict v-if="conflictCard" :cardVisable="cardVisable" :conflictCard="conflictCard"
-          :editMode="editMode" :objectForConflict="objectForConflict" :notVisableCard="notVisableCard" />
+        <CardConflict v-show="conflictCard" :cardVisable="cardVisable" :conflictCard="conflictCard" :editMode="editMode"
+          :objectForConflict="objectForConflict" :notVisableCard="notVisableCard" />
 
-        <CardInfo v-else :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
-          :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
+        <CardInfo v-show="!conflictCard" :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn"
+          :editCardOn="editCardOn" :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
 
         <v-tab-item>
 
@@ -103,7 +104,7 @@
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
               :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data" />
-            <VersionControl v-if="versionsPage.data" :versionsPage="versionsPage"/>
+            <VersionControl v-if="versionsPage.data" :versionsPage="versionsPage" />
           </div>
         </v-tab-item>
         <v-tab-item>
@@ -143,7 +144,7 @@ export default {
     VersionControl,
     FIleInputWindow,
     CardConflict
-},
+  },
 
   data() {
     return {
@@ -224,8 +225,18 @@ export default {
       }
     },
   },
-  computed: mapGetters(['allFeatures', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
+  computed: {...mapGetters(['allFeatures', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
     'newData', 'actions', 'typeForLayer', 'isGetAllChange', 'arrayEdit', 'allListItem', 'user']),
+    
+    heightVItem(){
+      if(this.actions === 'getFeatures'){
+        return '89.7%';
+      }
+      else{
+        return '94%';
+      }
+    }
+  },
   methods: {
 
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getTypeObject', 'checkConflictGeometry']),
@@ -254,6 +265,7 @@ export default {
         case "update": {
           if (this.editMode) {
             let editObject = this.arrayEditMode[data.data.group].put.filter(el => el.id === data.data.id);
+
             if (editObject.length && this.searchConflict(editObject[0], data.data)) {
               await this.updateNewData(data.data);
               this.visableConflictCard();
@@ -288,13 +300,13 @@ export default {
       }
       for (let key in this.arrayEditMode) {
         if (key != 'messege') {
-          // this.checkConflictGeometry([...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post])
-          this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
+          this.checkConflictGeometry([...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post])
+          //this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
         }
       }
-      this.resetArrayEditMode();
-      this.editMode = !this.editMode;
-      this.getTypeObject();
+      // this.resetArrayEditMode();
+      // this.editMode = !this.editMode;
+      // this.getTypeObject();
 
     },
     offConflictWindow() {
@@ -329,6 +341,7 @@ export default {
     visableConflictCard() {
       let object = this.newData.find(el => el.id === this.getObjectForCard.id);
       if (object) {
+        console.log(1);
         this.objectForConflict = object
         this.conflictCard = true;
       }
@@ -354,6 +367,7 @@ export default {
   }
 }
 </script>
+
 <style>
 * {
   scrollbar-width: thin;
@@ -435,6 +449,12 @@ export default {
   margin: 0 !important;
 }
 
+.two_background_color_red .v-icon--link .v-icon__svg {
+  min-width: 70px !important;
+  min-height: 70px !important;
+  fill: #FFFFFF !important;
+}
+
 .v-icon--link .v-icon__svg {
   min-width: 133.33px !important;
   min-height: 133.33px !important;
@@ -465,9 +485,9 @@ export default {
   padding-bottom: 0 !important;
 }
 
-.v-toolbar__extension .v-tabs{
+.v-toolbar__extension .v-tabs {
   height: 100% !important;
-} 
+}
 
 html {
   overflow: hidden !important;
@@ -527,5 +547,6 @@ html {
   }
 }
 </style>
+
 
 

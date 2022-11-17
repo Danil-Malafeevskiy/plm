@@ -39,7 +39,7 @@
                         style="border-radius: 8px !important;" @click="changeObject(key, index)">
                         <v-list-item-title style="z-index: 1" class="pa-1" v-if="typeof key === 'object'">
                             <div class="name">
-                                <div>{{ key.name }}</div>
+                                <div>{{ key.name }} <span v-if="actions === 'getFeatures' && (user.groups.length > 1 || user.is_superuser)">({{key.group}})</span></div>
                                 <template v-if="'all_obj' in key">
                                     <div v-if="key.group in arrayEditMode"
                                         style="font-size: 16px; color: #A5A5A6; margin-left: auto;">
@@ -177,7 +177,7 @@ export default {
             }
         },
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions', 'getToolbarTitle', 'allTypeForTable']) },
+    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions', 'getToolbarTitle', 'allTypeForTable', 'user']) },
     methods: {
         ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAllTypeInGroup', 'getFilteredVersions']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
