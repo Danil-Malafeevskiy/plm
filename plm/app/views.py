@@ -38,6 +38,7 @@ def check_conflict_geometry(request):
 
 def check_conflict_geometry_2(request):
     conflicts = []
+    print(request.data)
     for obj in request.data:
         type_obj = Type.objects.get(id=obj['name'])
         conflict = Feature.objects.filter(geometry__intersects=GEOSGeometry(f'{obj["geometry"]}'), name__in=Type.objects.filter(group=Type.objects.get(id=obj['name']).group))
