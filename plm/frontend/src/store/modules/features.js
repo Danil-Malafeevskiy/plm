@@ -277,7 +277,7 @@ export default {
         newData: [],
         featureForMap: [],
         featureInMap: {},
-        conflictArrays: []
+        conflictArrays: [],
         oneFeature: {},
     },
 }
