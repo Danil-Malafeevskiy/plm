@@ -319,7 +319,7 @@ export default {
 
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode', 'deleteObjectFromArrayEditMode']),
-    ...mapActions(['getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),,
+    ...mapActions(['getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
 
     async returnCoordinates() {
       let object;
@@ -377,7 +377,7 @@ export default {
       });
       geom.forEach((element) => {
         if (element.getGeometry().getType() === 'LineString') {
-          element.getGeometry().getCoordinates().forEach((coord, index) => {
+          element.getGeometry().getCoordinates().forEach(async (coord, index) => {
             if (toStringXY(coord, 7) === toStringXY(oldCoordinates, 7)) {
               let lineStingCooradinates = element.getGeometry().getCoordinates();
               lineStingCooradinates[index] = newCoordinates;
@@ -400,7 +400,7 @@ export default {
             if (typeof element.getId() === 'string') {
               this.changeNewLineString(element.getId(), element.getGeometry().getCoordinates());
             }
-          });
+          }});
         }
       })
     },
