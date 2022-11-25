@@ -139,7 +139,7 @@ export default {
 		if (this.allType.length) {
 			this.getFilteredVersions(this.allType[0]);
 		}
-		this.heightTable = Math.round((document.querySelector('.v-window__container').offsetHeight - 64 - 69 - 58 - 72) / 48);
+		this.heightTable = Math.round((document.querySelector('.v-window__container').offsetHeight - 64 - 69 - 58) / 48) - 2;
 		let countPage = 5;
 		for (let i = 1; countPage * i < this.heightTable; i++) {
 			this.rowsPerPage.push(countPage * i);
