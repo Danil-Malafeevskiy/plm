@@ -3,7 +3,8 @@
         <v-card class="card_of_object" v-show="conflictCard === true && cardVisable.data === true">
             <div class="card__window">
                 <p style="display: none">{{ objectForCard }}</p>
-                <template v-if="objectForConflict && objectForCard && objectForConflict.image === objectForCard.image">
+                <template
+                    v-if="objectForConflict_ && objectForCard && objectForConflict_.image === objectForCard.image">
                     <v-img v-if="objectForCard.image" :src="objectForCard.image" class="one_picture">
                     </v-img>
 
@@ -11,8 +12,8 @@
                         hide-input>
                     </v-file-input>
                 </template>
-                <div v-else-if="objectForConflict && objectForCard" class="conflict_pictures">
-                    <v-img v-if="objectForConflict.image" :src="objectForConflict.image" class="two_pictures">
+                <div v-else-if="objectForConflict_ && objectForCard" class="conflict_pictures">
+                    <v-img v-if="objectForConflict_.image" :src="objectForConflict_.image" class="two_pictures">
                     </v-img>
                     <v-file-input v-else class="pa-0 ma-0 two_background_color_red" :prepend-icon="icon" disabled
                         hide-input>
@@ -39,7 +40,7 @@
                 </v-tabs>
                 <v-divider></v-divider>
                 <v-tabs-items v-model="tab">
-                    <v-tab-item>
+                    <v-tab-item v-if="items.find(el => el === 'Конфликт версий')">
 
                         <div style="overflow-y: hidden; overflow-x: hidden; height: 100%">
                             <v-card-text class="pa-0">
@@ -91,14 +92,35 @@
                                         :objectForConflict="objectForConflict" :changeItem="changeItem"
                                         :notConflictObject="notConflictObject" />
 
+                                    <v-row justify="space-between" style="padding-bottom: 0 !important;">
+                                        <v-col cols="3" sm="6" md="5" lg="6">
+                                            <v-card-text>Новая геометрия</v-card-text>
+                                        </v-col>
+                                        <v-btn small icon @click="changeCoordinates()" style="
+                                        max-height: 100% !important;
+                                        margin: auto 0 !important;
+                                    ">
+                                            <v-icon
+                                                v-if="'geometry' in objectForConflict && objectForCard.geometry.coordinates !== objectForConflict.geometry.coordinates">
+                                                mdi-arrow-right</v-icon>
+                                            <v-icon v-else>mdi-arrow-left</v-icon>
+                                        </v-btn>
+                                        <v-col cols="3" sm="6" md="5" lg="6">
+                                            <v-card-text>Текущая геометрия</v-card-text>
+                                        </v-col>
+                                    </v-row>
                                 </v-form>
                             </v-card-text>
                         </div>
 
                     </v-tab-item>
                     <v-tab-item>
-
-
+                        <v-card-text style="font-size: 16px; color: #454545; font-weight: 400; padding: 16px 30px;">
+                            Конфликтующие объекты
+                        </v-card-text>
+                        <v-data-table :headers="headers" item-key="id" :items="itemsForTable" hide-default-footer
+                            style="background-color: #FFFFFF; padding: 16px 30px;">
+                        </v-data-table>
                     </v-tab-item>
                 </v-tabs-items>
 
@@ -137,12 +159,42 @@ export default {
             notConflictObject: { properties: {} },
             tab: null,
             items: ['Конфликт версий', 'Конфликт положений'],
+            headers: [
+                {
+                    text: 'Имя объекта',
+                    value: 'id'
+                },
+                {
+                    text: 'Тип объекта',
+                    value: 'type'
+                },
+            ],
+            itemsForTable: [],
         }
     },
     watch: {
         getObjectForCard: function () {
             this.objectForCard = this.getObjectForCard;
             this.objectForConflict_ = this.getObjectForCard;
+            this.notConflictObject = JSON.parse(JSON.stringify(this.objectForCard));
+            if (this.newData.find(el => el.id === this.getObjectForCard.id)) {
+                this.items[0] = 'Конфликт версий';
+            }
+            else {
+                this.items.filter(el => el != 'Конфликт версий')
+            }
+            if (this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.getObjectForCard.id : element.id_ === this.getObjectForCard.id_))) {
+                this.itemsForTable = [];
+                this.items[this.items.length] = 'Конфликт положений';
+                let array = this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.getObjectForCard.id : element.id_ === this.getObjectForCard.id_))
+                array.forEach(element => {
+                    this.itemsForTable.push({ id: element.id, type: this.allType.find(el => el.id === element.name).name })
+                })
+            }
+            else {
+                this.items.filter(el => el != 'Конфликт положений')
+            }
+            this.items = [...new Set(this.items)];
         },
         cardVisable: {
             handler() {
@@ -155,12 +207,13 @@ export default {
         },
     },
     computed: {
-        ...mapGetters(['getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'arrayEdit', 'newData', 'actions', 'user', 'allListItem']),
+        ...mapGetters(['getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'arrayEdit', 'newData', 'actions', 'allListItem', 'conflictArrays', 'allType']),
     },
     methods: {
         ...mapActions(['getOneTypeObjectForFeature']),
         ...mapMutations(['updateOneType', 'updateObjectForCard', 'updateArrayEditMode', 'deleteItemFromNewData']),
         async editObject() {
+            this.notConflictObject.geometry.coordinates = this.objectForCard.geometry.coordinates;
             this.updateArrayEditMode({ item: this.notConflictObject, type: 'put' });
             this.deleteItemFromNewData(this.notConflictObject);
             this.allListItem.forEach(element => {
@@ -174,6 +227,8 @@ export default {
                 }
             });
             await this.updateObjectForCard(JSON.parse(JSON.stringify(this.notConflictObject)));
+            this.objectForConflict_ = { properties: {} };
+            this.notVisableCard();
         },
         changeItem(field) {
             if (this.notConflictObject.properties[field] == this.objectForCard.properties[field]) {
@@ -213,8 +268,17 @@ export default {
             }
             return false;
         },
-        changeImage(){
+        changeImage() {
             this.notConflictObject.image = this.notConflictObject.image === this.objectForCard.image ? this.objectForConflict.image : this.objectForCard.image;
+        },
+        changeCoordinates() {
+            if (this.objectForCard.geometry.coordinates !== this.objectForConflict_.geometry.coordinates) {
+                this.objectForCard.geometry.coordinates = this.objectForConflict_.geometry.coordinates;
+            }
+            else {
+                this.objectForCard.geometry.coordinates = this.notConflictObject.geometry.coordinates;
+
+            }
         }
     }
 }
@@ -317,7 +381,7 @@ export default {
     border-radius: 12px 12px 0 0 !important;
 }
 
-.conflict_pictures{
+.conflict_pictures {
     display: flex;
     justify-content: space-between;
     background-color: #C9C8ED;
@@ -326,12 +390,12 @@ export default {
     max-height: 22.48%;
 }
 
-.two_pictures{
+.two_pictures {
     max-width: 42% !important;
     border-radius: 4px;
 }
 
-.two_background_color_red{
+.two_background_color_red {
     background-color: #EE5E5E !important;
     max-width: 42% !important;
     border-radius: 4px;

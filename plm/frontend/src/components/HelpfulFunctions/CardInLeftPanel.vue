@@ -165,6 +165,7 @@ export default {
                     group: '',
                     all_group_type: [],
                     group_type: [],
+                    ruls: [],
                 },
                 image: '',
             }
