@@ -1,6 +1,6 @@
 <template>
     <v-scroll-x-reverse-transition>
-        <v-card class="card_of_object" v-if="cardVisable_.data">
+        <v-card class="card_of_object" v-show="cardVisable_.data">
             <div class="card__window">
                 <p style="display: none">{{ objectForCard }}</p>
                 <v-card
@@ -261,7 +261,8 @@ export default {
         getObjectForCard: {
             handler() {
                 this.objectForCard = this.getObjectForCard;
-            }
+            },
+            deep: true,
         },
         oneType: {
             handler() {
@@ -381,7 +382,6 @@ export default {
 
                 let object = JSON.parse(JSON.stringify(this.objectForCard));
                 object.properties = { ...object, ...object.properties };
-                console.log(object)
                 //delete object.properties.properties;
 
                 await this.putObject(object);
