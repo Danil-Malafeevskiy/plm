@@ -18,7 +18,8 @@
           <v-checkbox v-model="allTypesSelected" class="ma-2" color="#E93030" label="все"></v-checkbox>
 
           <v-checkbox v-for="(el) in allType" :key="el.id" v-model="filteredTypes" class="ma-2" color="#E93030"
-            :value="el" :label="user.is_superuser || user.groups.length > 1 ? el.name + ' (' + el.group + ')' : el.name">
+            :value="el"
+            :label="user.is_superuser || user.groups.length > 1 ? el.name + ' (' + el.group + ')' : el.name">
           </v-checkbox>
         </div>
         <v-divider style="position: absolute; bottom: 60px; width: 100%;"></v-divider>
@@ -49,13 +50,13 @@ import GeoJSON from 'ol/format/GeoJSON';
 import { Draw, Modify, Snap } from 'ol/interaction';
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
-import { Icon, Style } from 'ol/style';
-import Circle from 'ol/geom/Circle';
+import { Icon, Style, Fill, Stroke } from 'ol/style';
+//import Circle from 'ol/geom/Circle';
 import Select from 'ol/interaction/Select';
 import { Canvg } from 'canvg';
-import Stroke from 'ol/style/Stroke';
-import Fill from 'ol/style/Fill';
 import { toStringXY } from 'ol/coordinate';
+import Feature from 'ol/Feature';
+
 export default {
   components: {
   },
@@ -99,7 +100,6 @@ export default {
       oneFeature_: this.oneFeature,
       pointCoordInLine: null,
       pointCoordInLineIndex: null,
-
     }
   },
   watch: {
@@ -111,7 +111,15 @@ export default {
         }
         if (this.map != null) {
           await this.deleteOldLayers();
-          this.addNewLayers();
+          await this.addNewLayers();
+          this.map.removeInteraction(this.selectInteraction);
+
+          this.selectInteraction = new Select({
+            style: this.getStyleFromSelect,
+            layers: this.map.getAllLayers(),
+          });
+
+          this.map.addInteraction(this.selectInteraction);
         }
       }
     },
@@ -156,17 +164,35 @@ export default {
               this.objectForCard.name, this.objectForCard.geometry.coordinates);
           }
         }
-        if ('name' in this.objectForCard && typeof this.objectForCard.name === 'number') {
-          this.map.getAllLayers().filter(el => el.get('typeId') === this.objectForCard.name).forEach(el => {
-            el.getSource().getFeatures().forEach(element => {
-              if (element.getId() === this.getObjectForCard.id) {
-                let interaction = this.map.getInteractions().getArray().filter(this.clearFeaturesInInteractionAndFindInteraction);
-                if (interaction.length && (interaction[0].getFeatures().getArray().length && interaction[0].getFeatures().getArray()[0].getId() != this.objectForCard.id) || !(interaction[0].getFeatures().getArray().length)) {
-                  interaction[0].getFeatures().push(element);
-                }
+        if (this.newData.find(el => el.id === this.objectForCard.id) || this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.objectForCard.id : element.id_ === this.objectForCard.id_))) {
+          this.map.getInteractions().getArray().forEach(element => {
+
+            if (element instanceof Modify) {
+              element.setActive(true);
+            }
+          });
+        }
+        else {
+          this.map.getInteractions().getArray().forEach(element => {
+
+            if (element instanceof Modify) {
+              element.setActive(this.editCardOn_.data);
+            }
+          });
+        }
+      }
+    },
+    'getObjectForCard.geometry.coordinates': {
+      handler() {
+        if (this.oldFeature === this.getObjectForCard) {
+          const layer = this.map.getAllLayers().find(layer => layer.get('typeId') === this.getObjectForCard.name);
+          let features = layer.getSource().getFeatures();
+
+            for(let i in features){
+              if(features[i].getId() === this.oldFeature.id){
+                features[i].getGeometry().setCoordinates(this.coordinatesFromLonLat(this.oldFeature.geometry.coordinates));
               }
-            })
-          })
+            }
         }
       }
     },
@@ -176,7 +202,6 @@ export default {
         arrayIdLayer.forEach(async el => {
           await this.filterForFeatureForMap(el);
           const layer = this.map.getAllLayers().find(element => {
-            console.log(element.get('typeId'), el);
             return element.get('typeId') === el && element.get('typeId') != undefined;
           });
           const source = new VectorSource({
@@ -257,7 +282,7 @@ export default {
         this.editCardOn_ = this.editCardOn
         this.map.getInteractions().getArray().forEach(element => {
           if (element instanceof Modify) {
-            element.setActive(!element.getActive())
+            element.setActive(this.editCardOn_.data)
           }
         });
         if (!this.editCardOn.data && !this.infoCardOn.data) {
@@ -269,7 +294,7 @@ export default {
     cardVisable: {
       handler() {
         if (!this.cardVisable.data) {
-          this.map.getInteractions().getArray().filter(el => el.get('typeId') !== undefined).forEach(element => element.getFeatures().clear())
+          this.selectInteraction.getFeatures().clear();
         }
       },
       deep: true,
@@ -290,16 +315,12 @@ export default {
       }
     },
   },
-
-  computed: mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user']),
+  computed: mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays']),
 
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode', 'deleteObjectFromArrayEditMode']),
-    ...mapActions(['getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
-    updateLonLat(cord) {
-      this.feature.properties['Долгота'] = cord[1];
-      this.feature.properties['Широта'] = cord[0];
-    },
+    ...mapActions(['getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),,
+
     async returnCoordinates() {
       let object;
       if ('id_' in this.oldFeature) {
@@ -341,20 +362,25 @@ export default {
       const layer = this.map.getAllLayers().find(el => el.get('typeId') === typeId);
       const features = layer.getSource().getFeatures();
       let feature = features.find(el => { return el.getId() === id });
+
       const oldCoordinates = feature.getGeometry().getCoordinates();
-      const newCoordinates = fromLonLat(coordinates);
+      const newCoordinates = this.coordinatesFromLonLat(coordinates);
       feature.getGeometry().setCoordinates(newCoordinates);
-      this.returnCoordinateForLineString(oldCoordinates, newCoordinates);
+      if (layer.get('type') === 'Point') {
+        this.returnCoordinateForLineString(oldCoordinates, newCoordinates);
+      }
+
     },
     returnCoordinateForLineString(oldCoordinates, newCoordinates) {
       const geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(oldCoordinates), {
         filterLayer: el => el.get('type') === 'LineString',
       });
       geom.forEach((element) => {
-        element.getGeometry().getCoordinates().forEach(async (coord, index) => {
-          if (toStringXY(coord, 7) === toStringXY(oldCoordinates, 7)) {
-            let lineStingCooradinates = element.getGeometry().getCoordinates();
-            lineStingCooradinates[index] = newCoordinates;
+        if (element.getGeometry().getType() === 'LineString') {
+          element.getGeometry().getCoordinates().forEach((coord, index) => {
+            if (toStringXY(coord, 7) === toStringXY(oldCoordinates, 7)) {
+              let lineStingCooradinates = element.getGeometry().getCoordinates();
+              lineStingCooradinates[index] = newCoordinates;
             element.getGeometry().setCoordinates(lineStingCooradinates);
             
             console.log(lineStingCooradinates)
@@ -374,15 +400,9 @@ export default {
             if (typeof element.getId() === 'string') {
               this.changeNewLineString(element.getId(), element.getGeometry().getCoordinates());
             }
-          }
-        });
+          });
+        }
       })
-    },
-    clearFeaturesInInteractionAndFindInteraction(el) {
-      if (el.get('typeId') != undefined && el.getFeatures().getArray().length && el.getFeatures().getArray()[0].getId() != this.objectForCard.id) {
-        el.getFeatures().clear();
-      }
-      return el.get('typeId') === this.getObjectForCard.name
     },
     deleteNewObjectFromMap(feature, arr) {
       feature = feature.filter(function (element) {
@@ -406,36 +426,63 @@ export default {
       for (let i in coordinates) {
         coordinates[i] = toLonLat(coordinates[i]);
       }
+
       lineSting.geometry.coordinates = coordinates;
       this.updateArrayEditMode({ item: lineSting, type: 'put' });
+    },
+    coordinatesToLonLat(coordinates) {
+      if (typeof coordinates[0] === 'object') {
+        for (let i in coordinates) {
+          if (typeof coordinates[i][0] === 'object') {
+            for (let j in coordinates[i]) {
+              coordinates[i][j] = toLonLat(coordinates[i][j]);
+              //this.updateLonLat(coordinate[0][0]);
+            }
+          }
+          else {
+            coordinates[i] = toLonLat(coordinates[i]);
+          }
+        }
+      }
+      else {
+        coordinates = toLonLat(coordinates);
+        //this.updateLonLat(coordinate);
+      }
+      return coordinates;
+    },
+    coordinatesFromLonLat(coordinates) {
+      if (typeof coordinates[0] === 'object') {
+        for (let i in coordinates) {
+          if (typeof coordinates[i][0] === 'object') {
+            for (let j in coordinates[i]) {
+              coordinates[i][j] = fromLonLat(coordinates[i][j]);
+              //this.updateLonLat(coordinate[0][0]);
+            }
+          }
+          else {
+            coordinates[i] = fromLonLat(coordinates[i]);
+          }
+        }
+      }
+      else {
+        coordinates = fromLonLat(coordinates);
+        //this.updateLonLat(coordinate);
+      }
+      return coordinates;
     },
     updateCoordinates() {
       if (this.drawLayer.getSource().getFeatures().length === 1 || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
         this.map.removeInteraction(this.draw);
+        let coordinates;
+
         if (this.drawLayer.getSource().getFeatures().length === 1) {
-          this.coord = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
+          coordinates = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
         }
         else {
-          this.coord = this.drawLayer.getSource().getFeatures().find(el => el.getGeometry().getType() === 'LineString').getGeometry().getCoordinates();
+          coordinates = this.drawLayer.getSource().getFeatures().find(el => el.getGeometry().getType() === 'LineString').getGeometry().getCoordinates();
         }
-        if (typeof this.coord[0] === 'object') {
-          for (let i in this.coord) {
-            if (typeof this.coord[i][0] === 'object') {
-              for (let j in this.coord[i]) {
-                this.coord[i][j] = toLonLat(this.coord[i][j]);
-                this.updateLonLat(this.coord[0][0]);
-              }
-            }
-            else {
-              this.coord[i] = toLonLat(this.coord[i]);
-            }
-          }
-        }
-        else {
-          this.coord = toLonLat(this.coord);
-          this.updateLonLat(this.coord);
-        }
-        this.feature.geometry.coordinates = this.coord;
+
+        this.feature.geometry.coordinates = this.coordinatesToLonLat(coordinates);
         this.feature.type = 'Feature';
         this.feature.geometry.type = this.drawType;
       }
@@ -455,7 +502,6 @@ export default {
     },
     async getFeature_(event) {
       this.updateCoordinates();
-
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
       if (feature_ && !this.addCardOn_.data) {
         let item = this.findItem(feature_.id_)
@@ -483,12 +529,13 @@ export default {
       }
     },
     changeCoordinates(event) {
+      const coordinates = event.features.getArray()[0].getGeometry().getCoordinates();
       if (this.addCardOn_.data) {
-        this.feature.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates());
+        this.feature.geometry.coordinates = this.coordinatesToLonLat(coordinates);
       }
       else {
-        this.returnCoordinateForLineString(this.editedPointCoordinates, event.features.getArray()[0].getGeometry().getCoordinates())
-        this.objectForCard.geometry.coordinates = toLonLat(event.features.getArray()[0].getGeometry().getCoordinates())
+        this.returnCoordinateForLineString(this.editedPointCoordinates, coordinates)
+        this.objectForCard.geometry.coordinates = this.coordinatesToLonLat(coordinates);
       }
     },
     createSubArrays() {
@@ -609,8 +656,9 @@ export default {
       this.canvas = document.getElementById('png_icon_of_type');
       this.svg = document.querySelector('#svg_icon_of_type svg');
     },
-    addNewLayers() {
-      this.allTypeForMap.forEach(async element => {
+    async addNewLayers() {
+      for (let i in this.allTypeForMap) {
+        let element = this.allTypeForMap[i];
         let features = {
           type: 'FeatureCollection',
           features: this.features.features.filter(el => el.name === element.id),
@@ -624,24 +672,24 @@ export default {
           }),
         });
 
-        if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'Point') {
-          layer.setZIndex(Infinity)
-        } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'LineString') {
-          layer.setZIndex(2)
-        } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'Polygon') {
-
-          layer.setZIndex(0)
-        }
         await this.getOneTypeObject({ id: element.id, forFeature: true });
         layer.set('typeId', this.typeForLayer.id);
         layer.set('type', this.typeForLayer.type);
         layer.set('group', this.typeForLayer.group);
 
+        if (this.typeForLayer.type === 'Point') {
+          layer.setZIndex(Infinity)
+        } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'LineString') {
+          layer.setZIndex(2)
+        } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'Polygon') {
+          layer.setZIndex(0)
+        }
+
         this.map.addLayer(layer);
         this.canvas.height = 25;
         this.canvas.width = 25;
         this.addModify(layer);
-      });
+      }
     },
     takeCoordinates(event) {
       this.editedPointCoordinates = event.features.getArray()[0].getGeometry().getCoordinates()
@@ -682,81 +730,102 @@ export default {
       v.start();
       v.stop();
     },
-    async addModify(layer) {
-      let selectStyle;
-      if (this.typeForLayer.type === 'LineString') {
-        selectStyle = new Style({
-          stroke: new Stroke({ color: "red" }),
-          zIndex: 2,
-        });
-
-      }
-      else if (this.typeForLayer.type === 'Point' && !(this.typeForLayer.image === '')) {
-        this.updataDomElements();
-        await this.svgToSpan();
-        const blackIcon = this.canvas.toDataURL('image/png');
-        this.canvas.getContext("2d").fillStyle = window.getComputedStyle(this.svg, null).getPropertyValue('color');
-        await this.svgToSpan();
-        const redIcon = this.canvas.toDataURL('image/png');
-        let style = new Style({
+    getStyleFromLayer(feature) {
+      const type = feature.getGeometry().getType();
+      if (type === 'Point') {
+        const layer = feature.getLayer(this.map);
+        const conflictObject = this.conflictArrays.find(el => el.find(element => element.id === feature.getId())) || this.newData.find(el => el.id === feature.getId());
+        return new Style({
           image: new Icon({
             anchor: [0.5, 0, 5],
             anchorXUnits: 'fraction',
             anchorYUnits: 'pixels',
-            src: blackIcon,
+            src: conflictObject ? layer.get('conflictIcon') : layer.get('standartIcon'),
           }),
           zIndex: Infinity,
         });
-        layer.setStyle(style)
-        selectStyle = new Style({
+      }
+      else if (type === 'LineString') {
+        return new Style({
+          stroke: new Stroke({ color: "blue", width: 2 }),
+          zIndex: 2,
+        });
+      }
+      else {
+        return new Style({
+          stroke: new Stroke({
+            color: 'blue',
+            width: 3,
+          }),
+          fill: new Fill({
+            color: 'rgba(0, 0, 255, 0.1)',
+          }),
+          zIndex: 0,
+        });
+      }
+    },
+    getStyleFromSelect(feature) {
+      const type = feature.getGeometry().getType();
+      if (type === 'Point') {
+        const layer = feature.getLayer(this.map);
+        return new Style({
           image: new Icon({
-            anchor: [0.5, 0.5],
+            anchor: [0.5, 0, 5],
             anchorXUnits: 'fraction',
             anchorYUnits: 'pixels',
-            src: redIcon,
+            src: layer.get('selectIcon'),
           }),
           zIndex: Infinity,
         });
       }
-      else if (this.typeForLayer.type === 'Point' && (this.typeForLayer.image === '')) {
-        selectStyle = new Style({
-          image: new Circle({
-            stroke: new Stroke({ color: "red" }),
-            radius: 7,
-            fill: new Fill({ color: 'rgba(255,255,255,0.4)' })
-          }),
-          stroke: new Stroke({ color: "red" }),
-          fill: new Fill({ color: 'rgba(255,255,255,0.4)' }),
-          zIndex: Infinity,
+      else if (type === 'LineString') {
+        return new Style({
+          stroke: new Stroke({ color: "red", width: 2 }),
         });
       }
-      this.selectInteraction = new Select({
-        style: selectStyle,
-        layers: [layer],
-      });
+      else {
+        return new Style({
+          stroke: new Stroke({
+            color: 'red',
+            width: 3,
+          }),
+          fill: new Fill({
+            color: 'rgba(255, 0, 0, 0.1)',
+          }),
+        });
+      }
+    },
+    async addModify(layer) {
+      if (this.typeForLayer.type === 'Point' && !(this.typeForLayer.image === '')) {
+        this.updataDomElements();
 
-      this.map.addInteraction(this.selectInteraction);
+        await this.svgToSpan();
+        const blackIcon = this.canvas.toDataURL('image/png');
+
+        this.canvas.getContext("2d").fillStyle = window.getComputedStyle(this.svg, null).getPropertyValue('color');
+        await this.svgToSpan();
+        const redIcon = this.canvas.toDataURL('image/png');
+
+        this.canvas.getContext("2d").fillStyle = '#27258B';
+        await this.svgToSpan();
+        const blueIcon = this.canvas.toDataURL('image/png');
+
+        layer.set('standartIcon', blackIcon);
+        layer.set('selectIcon', redIcon);
+        layer.set('conflictIcon', blueIcon);
+      }
+
       if (this.typeForLayer.type !== 'LineString') {
         this.modifyEdit = new Modify({
+          //style: this.getStyleFromSelect,
           features: this.selectInteraction.getFeatures(),
-          style: selectStyle
         })
         this.map.addInteraction(this.modifyEdit);
         this.modifyEdit.on('modifystart', this.takeCoordinates);
         this.modifyEdit.on('modifyend', this.changeCoordinates);
         this.modifyEdit.setActive(false);
       }
-      this.selectInteraction.set('typeId', this.typeForLayer.id);
-      this.selectInteraction.set('style', selectStyle);
-      if ((this.infoCardOn.data || this.editCardOn.data) && this.selectInteraction.get('typeId') === this.getObjectForCard.name) {
-        this.map.getAllLayers().filter(el => el.get('typeId') === this.getObjectForCard.name).forEach(el => {
-          el.getSource().getFeatures().forEach(element => {
-            if (element.getId() === this.getObjectForCard.id) {
-              this.selectInteraction.getFeatures().push(element);
-            }
-          });
-        });
-      }
+      layer.setStyle(this.getStyleFromLayer);
     },
     filteredLayer() {
       const allLayers = this.map.getAllLayers().filter(el => el.get('typeId') != undefined);
@@ -797,13 +866,59 @@ export default {
         constrainResolution: true,
       })
     });
-    this.addNewLayers();
+    Feature.prototype.getLayer = function (map) {
+      var this_ = this, layer_, layersToLookFor = [];
+      /**
+       * Populates array layersToLookFor with only
+       * layers that have features
+       */
+      var check = function (layer) {
+        var source = layer.getSource();
+        if (source instanceof VectorSource) {
+          var features = source.getFeatures();
+          if (features.length > 0) {
+            layersToLookFor.push({
+              layer: layer,
+              features: features
+            });
+          }
+        }
+      };
+      //loop through map layers
+      map.getLayers().forEach(function (layer) {
+        check(layer);
+      });
+      layersToLookFor.forEach(function (obj) {
+        var found = obj.features.some(function (feature) {
+          return this_ === feature;
+        });
+        if (found) {
+          //this is the layer we want
+          layer_ = obj.layer;
+        }
+      });
+      return layer_;
+    };
+
+    this.selectInteraction = new Select();
+
+    await this.addNewLayers();
+
     this.map.on('click', this.getFeature_);
     if (this.addCardOn_.data) {
       this.addInteraction();
     }
+
+    this.selectInteraction = new Select({
+      style: this.getStyleFromSelect,
+      layers: this.map.getAllLayers(),
+    });
+
+    this.map.addInteraction(this.selectInteraction);
+
     this.resizeMap();
     this.filteredTypes = this.allType;
+
   }
 }
 </script>

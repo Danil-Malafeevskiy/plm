@@ -64,7 +64,7 @@
         <CardConflict v-show="conflictCard" :cardVisable="cardVisable" :conflictCard="conflictCard" :editMode="editMode"
           :objectForConflict="objectForConflict" :notVisableCard="notVisableCard" />
 
-        <CardInfo v-show="!conflictCard" :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn"
+        <CardInfo v-if="!conflictCard" :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn"
           :editCardOn="editCardOn" :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
 
         <v-tab-item>
@@ -215,18 +215,9 @@ export default {
         }, 280);
       }
     },
-    isGetAllChange: {
-      handler() {
-        this.getFeatures();
-        if (this.actions === 'getFeatures') {
-          this.getTypeObject();
-          this.filterForFeature(this.oneType.id);
-        }
-      }
-    },
   },
   computed: {...mapGetters(['allFeatures', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
-    'newData', 'actions', 'typeForLayer', 'isGetAllChange', 'arrayEdit', 'allListItem', 'user']),
+    'newData', 'actions', 'typeForLayer', 'arrayEdit', 'allListItem', 'user', 'conflictArrays']),
     
     heightVItem(){
       if(this.actions === 'getFeatures'){
@@ -239,7 +230,7 @@ export default {
   },
   methods: {
 
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getTypeObject', 'checkConflictGeometry']),
+    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getTypeObject']),
     ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData', 'deleteObjectFromArrayEditMode']),
 
     visableVersions() {
@@ -293,20 +284,21 @@ export default {
           break;
       }
     },
-    editObjects() {
-      if (this.newData.length) {
+    async editObjects() {
+      for (let key in this.arrayEditMode) {
+        if (key != 'messege') {
+          await this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
+        }
+      }
+
+      if (this.conflictArrays.length || this.newData.length){
         this.isConflict = true;
         return;
       }
-      for (let key in this.arrayEditMode) {
-        if (key != 'messege') {
-          this.checkConflictGeometry([...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post])
-          //this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
-        }
-      }
-      // this.resetArrayEditMode();
-      // this.editMode = !this.editMode;
-      // this.getTypeObject();
+
+      this.resetArrayEditMode();
+      this.editMode = !this.editMode;
+      this.getTypeObject();
 
     },
     offConflictWindow() {
@@ -341,11 +333,13 @@ export default {
     visableConflictCard() {
       let object = this.newData.find(el => el.id === this.getObjectForCard.id);
       if (object) {
-        console.log(1);
         this.objectForConflict = object
         this.conflictCard = true;
       }
-      else {
+      else if (this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.getObjectForCard.id : element.id_ === this.getObjectForCard.id_ ))) {
+        this.conflictCard = true;
+      }
+      else{
         this.conflictCard = false;
       }
     },
