@@ -24,6 +24,5 @@ urlpatterns = [
     re_path(r'^password-reset-request', views.RequestResetPassword.as_view()),
     path('password-reset/<uidb64>/<token>', TemplateView.as_view(template_name='index.html'), name='password-reset'),
     path('password-reset/<uidb64>/<token>/get', views.ResetPassword.as_view()),
-    re_path(r'^password-setnew', views.SetNewPassword.as_view()),
-    re_path(r'^geometry-check', views.check_conflict_geometry)
+    re_path(r'^password-setnew', views.SetNewPassword.as_view())
 ]
