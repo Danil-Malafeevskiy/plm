@@ -26,6 +26,13 @@ export default {
                 commit('updateObjectForCard', response.data[0]);
             }).catch(error => console.log(error));
         },
+
+        async getOneFeatureId({ commit }, id) {
+            await axios.get(`/tower/${id}`).then((response) => {
+                commit('updateOneFeature', response.data[0]);
+            }).catch(error => console.log(error));
+        },
+        
         async putFeature({ commit }, features) {
             let data;
             if ('put' in features) {
@@ -109,6 +116,9 @@ export default {
         },
         updatefeatureTypeId(state, nameType) {
             state.featureTypeId = nameType;
+        },
+        updateOneFeature(state, data) {
+            state.oneFeature = data;
         },
         updateArrayEditMode(state, { item, type }) {
             if (!(item.group in state.arrayEditMode)) {
@@ -237,6 +247,9 @@ export default {
         },
         featureInMap(state) {
             return state.featureInMap;
+        }, 
+        oneFeature(state){
+            return state.oneFeature
         }
     },
     state: {
@@ -259,5 +272,6 @@ export default {
         newData: [],
         featureForMap: [],
         featureInMap: {},
+        oneFeature: {},
     },
 }
