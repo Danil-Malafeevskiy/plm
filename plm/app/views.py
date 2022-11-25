@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils import timezone, dateformat
 from django.utils.encoding import smart_bytes, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.db import transaction, IntegrityError
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view
@@ -30,28 +31,6 @@ from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, 
     VersionControlSerializer, SetNewPasswordSerializer
 from rest_framework.response import Response
 from django.core.mail import send_mail
-
-@api_view(["PUT"])
-def check_conflict_geometry(request):
-    conflict = check_conflict_geometry_2(request)
-    return Response(conflict.data, status=conflict.status_code)
-
-def check_conflict_geometry_2(request):
-    conflicts = []
-    for obj in request.data:
-        type_obj = Type.objects.get(id=obj['name'])
-        conflict = Feature.objects.filter(geometry__intersects=GEOSGeometry(f'{obj["geometry"]}'), name__in=Type.objects.filter(group=Type.objects.get(id=obj['name']).group))
-        if 'id' in obj.keys():
-            conflict = conflict.exclude(id=obj['id'])
-        conflict_obj = [obj]
-        for con in conflict:
-            if Ruls.objects.filter(type_1=type_obj, type_2=con.name).exists():
-                conflict_obj.append(FeatureSerializer(con).data)
-        if len(conflict_obj)>1:
-            conflicts.append(conflict_obj)
-    if len(conflicts)>0:
-        return Response(conflicts, status=status.HTTP_409_CONFLICT)
-    return Response({"success": "Конфликтов нет!"}, status.HTTP_200_OK)
 
 class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
@@ -84,10 +63,6 @@ class TowerAPI(APIView):
         comment = request.data.pop(-1)
         delete_mas = request.data.pop(-1)
 
-        conflict = check_conflict_geometry_2(request)
-        if conflict.status_code == status.HTTP_409_CONFLICT:
-            return Response(conflict.data, status=status.HTTP_409_CONFLICT)
-
         if len(delete_mas)!=0:
             for id in delete_mas:
                 if Feature.objects.get(id=id).geometry.geom_type == "Point":
@@ -119,7 +94,14 @@ class TowerAPI(APIView):
 
         feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=FeatureSerializer(queryset, many=True).data)
         if feature_serializer.is_valid():
-            version, new_version = feature_serializer.save()
+            try:
+                with transaction.atomic():
+                    version, new_version, conflict = feature_serializer.save()
+                    if len(conflict) > 0:
+                        raise IntegrityError
+            except IntegrityError:
+                return Response(conflict, status=status.HTTP_409_CONFLICT)
+
             layer = get_channel_layer()
             async_to_sync(layer.group_send)(
                 group_name,

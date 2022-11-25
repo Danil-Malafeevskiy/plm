@@ -32,7 +32,10 @@ class FeatureListSerializer(serializers.ListSerializer):
         new_version = {"create": [], "update": [], "delete": []}
 
         feature_old = {feature.id: feature for feature in instance}
-        feature_update = [feature for feature in validated_data if 'id' in feature.keys() and feature['id'] in feature_old.keys()]
+        feature_update_line = [feature for feature in validated_data if 'id' in feature.keys() and feature['id'] in feature_old.keys() and feature['geometry'].geom_type=="LineString"]
+        feature_update_other = [feature for feature in validated_data if 'id' in feature.keys() and feature['id'] in feature_old.keys() and feature['geometry'].geom_type!="LineString"]
+
+        feature_update = feature_update_line+feature_update_other
 
         update_id = [feature['id'] for feature in validated_data if 'id' in feature.keys() and feature['id'] in feature_old.keys()]
 
@@ -44,7 +47,6 @@ class FeatureListSerializer(serializers.ListSerializer):
             version['delete'].append(obj['id'])
 
         up_dict = {}
-        new_line_dict = {}
         for obj_feature in feature_update:
             feature = feature_old.get(obj_feature['id'], None)
             if (feature!=None):
@@ -58,22 +60,19 @@ class FeatureListSerializer(serializers.ListSerializer):
                             if type['geometry']['coordinates'] == line['geometry']['coordinates'][lineIndex]:
                                 line['geometry']['coordinates'][lineIndex] = type_up['geometry']['coordinates']
                                 up_flag = True
-                                break
                         if up_flag:
                             feat = Feature.objects.get(id=line['id'])
                             feat.geometry = GEOSGeometry(f'{line["geometry"]}')
                             feat.save()
                             if copy_line['id'] not in up_dict.keys():
                                 up_dict[copy_line['id']] = copy_line
-                            new_line_dict[copy_line['id']] = line['geometry']
 
                 new_version['update'].append(type_up)
                 version['update'].append(type)
                 if obj_feature['geometry'].geom_type == 'LineString':
                     if obj_feature['id'] not in up_dict.keys():
                         up_dict[obj_feature['id']] = type
-                if obj_feature['id'] in new_line_dict.keys():
-                    obj_feature['geometry'] = GEOSGeometry(f'{new_line_dict[obj_feature["id"]]}')
+
                 self.child.update(feature, obj_feature)
 
         del_line = []
@@ -142,7 +141,21 @@ class FeatureListSerializer(serializers.ListSerializer):
             new_version['update'] = new_update
             version['update'] = old_update
 
-        return version, new_version
+        conflicts = []
+        for vers in (new_version['create']+new_version['update']):
+            type_obj = Type.objects.get(id=vers['name'])
+            conflict = Feature.objects.filter(geometry__intersects=GEOSGeometry(f'{vers["geometry"]}'),
+                                              name__in=Type.objects.filter(
+                                                  group=Type.objects.get(id=vers['name']).group))
+            conflict = conflict.exclude(id=vers['id'])
+            conflict_obj = [vers]
+            for con in conflict:
+                if Ruls.objects.filter(type_1=type_obj, type_2=con.name).exists():
+                    conflict_obj.append(FeatureSerializer(con).data)
+            if len(conflict_obj) > 1:
+                conflicts.append(conflict_obj)
+
+        return version, new_version, conflicts
 
 class FeatureSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
@@ -325,7 +338,6 @@ class TypeSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
         super(TypeSerializer, self).__init__(*args, **kwargs)
-
         if remove_fields:
             for field_name in remove_fields:
                 self.fields.pop(field_name)

@@ -18,7 +18,7 @@
           <v-checkbox v-model="allTypesSelected" class="ma-2" color="#E93030" label="все"></v-checkbox>
 
           <v-checkbox v-for="(el) in allType" :key="el.id" v-model="filteredTypes" class="ma-2" color="#E93030"
-            :value="el" :label="el.name">
+            :value="el" :label="user.is_superuser || user.groups.length > 1 ? el.name + ' (' + el.group + ')' : el.name">
           </v-checkbox>
         </div>
         <v-divider style="position: absolute; bottom: 60px; width: 100%;"></v-divider>
@@ -290,7 +290,9 @@ export default {
       }
     },
   },
-  computed: mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject']),
+
+  computed: mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user']),
+
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode', 'deleteObjectFromArrayEditMode']),
     ...mapActions(['getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
@@ -452,6 +454,8 @@ export default {
       return item;
     },
     async getFeature_(event) {
+      this.updateCoordinates();
+
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
       if (feature_ && !this.addCardOn_.data) {
         let item = this.findItem(feature_.id_)
@@ -476,9 +480,6 @@ export default {
           this.infoCardOn_.data = false;
           this.editCardOn_.data = false;
         }, 500)
-      }
-      else {
-        this.updateCoordinates();
       }
     },
     changeCoordinates(event) {
@@ -622,17 +623,20 @@ export default {
               }),
           }),
         });
+
         if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'Point') {
           layer.setZIndex(Infinity)
         } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'LineString') {
           layer.setZIndex(2)
         } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'Polygon') {
+
           layer.setZIndex(0)
         }
         await this.getOneTypeObject({ id: element.id, forFeature: true });
         layer.set('typeId', this.typeForLayer.id);
         layer.set('type', this.typeForLayer.type);
         layer.set('group', this.typeForLayer.group);
+
         this.map.addLayer(layer);
         this.canvas.height = 25;
         this.canvas.width = 25;
