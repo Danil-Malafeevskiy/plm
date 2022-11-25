@@ -97,7 +97,9 @@ export default {
       drawCoord: null,
       drawFeature: null,
       oneFeature_: this.oneFeature,
-      arrayEdit_: this.arrayEdit,
+      pointCoordInLine: null,
+      pointCoordInLineIndex: null,
+
     }
   },
   watch: {
@@ -115,7 +117,6 @@ export default {
     },
     arrayEdit: {
       async handler() {
-        this.arrayEdit_ = this.arrayEdit
         let arraysOfNewObject = this.createSubArrays();
         let arrayOfLayers = this.map.getAllLayers();
         for (let i in arraysOfNewObject) {
@@ -207,12 +208,42 @@ export default {
       handler() {
         this.addCardOn_ = this.addCardOn;
         if (!this.addCardOn_.data) {
-          console.log(this.emptyObject)
           const checkFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.emptyObject.geometry.coordinates)))
-          if (checkFeature.length && checkFeature[0].getGeometry().getType() === 'LineString'){
-            console.log(this.emptyObject)
-            console.log(checkFeature[0].getGeometry().getType())
-            console.log(this.arrayEdit_)
+          if (checkFeature.length && checkFeature[0].getGeometry().getType() === 'LineString') {
+            let havePostPoint = this.arrayEdit.post.some((el) => {
+              return this.checkEqualCoordinates(el.geometry.coordinates, this.emptyObject.geometry.coordinates)
+            })
+
+            if (!havePostPoint) {
+              this.arrayEdit.put.forEach(async element => {
+                if (element.geometry.type === 'LineString') {
+                  this.comparePointLine(this.emptyObject.geometry.coordinates, element.geometry.coordinates)
+                  element.geometry.coordinates.splice(this.pointCoordInLineIndex, 1)
+                  this.updateArrayEditMode({ item: element, type: 'put' });
+                  let newCoord = element.geometry.coordinates
+                  newCoord.forEach((el, i) => {
+                    newCoord[i] = fromLonLat(el)
+                  });
+                  checkFeature[0].getGeometry().setCoordinates(newCoord)
+                  newCoord.forEach((el, i) => {
+                    newCoord[i] = toLonLat(el)
+                  });
+
+                  await this.getOneFeatureId(element.id)
+
+                  if (JSON.stringify(this.oneFeature) === JSON.stringify(element)) {
+                    console.log(this.oneFeature)
+                    let checkLine = this.oneFeature.geometry.coordinates.every((el, index) => {
+                      return this.checkEqualCoordinates(el, element.geometry.coordinates[index])
+                    })
+                    if (checkLine) {
+                      this.deleteObjectFromArrayEditMode(this.oneFeature)
+                    }
+                  }
+
+                }
+              });
+            }
           }
         }
         if (this.map) {
@@ -258,15 +289,10 @@ export default {
         }
       }
     },
-    getOneFeatureId: {
-      handler() {
-        this.oneFeature_ = this.oneFeature
-      }
-    }
   },
   computed: mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject']),
   methods: {
-    ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode']),
+    ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode', 'deleteObjectFromArrayEditMode']),
     ...mapActions(['getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
     updateLonLat(cord) {
       this.feature.properties['Долгота'] = cord[1];
@@ -291,6 +317,24 @@ export default {
         this.oldFeature = this.objectForCard;
       }
     },
+    checkEqualCoordinates(coord1, coord2){
+      if(coord1[0] === coord2[0] && coord1[1] === coord2[1]){
+        return true
+      } else {
+        return false
+      }
+    },
+
+    comparePointLine(coordPoint, coordLine){
+      coordLine.forEach((element, index) => {
+        if(this.checkEqualCoordinates(coordPoint, element)){
+          if(index != coordLine.length && index != 0){
+            this.pointCoordInLine = coordPoint
+            this.pointCoordInLineIndex = index
+          }
+        }
+      });
+    },
     returnCoordinateForPoint(id, typeId, coordinates) {
       const layer = this.map.getAllLayers().find(el => el.get('typeId') === typeId);
       const features = layer.getSource().getFeatures();
@@ -305,11 +349,26 @@ export default {
         filterLayer: el => el.get('type') === 'LineString',
       });
       geom.forEach((element) => {
-        element.getGeometry().getCoordinates().forEach((coord, index) => {
+        element.getGeometry().getCoordinates().forEach(async (coord, index) => {
           if (toStringXY(coord, 7) === toStringXY(oldCoordinates, 7)) {
             let lineStingCooradinates = element.getGeometry().getCoordinates();
             lineStingCooradinates[index] = newCoordinates;
             element.getGeometry().setCoordinates(lineStingCooradinates);
+            
+            console.log(lineStingCooradinates)
+            if(Number.isInteger(element.getId())){
+              await this.getOneFeatureId(element.getId())
+              this.arrayEdit.put.forEach(putElement => {
+                if(putElement.id === element.getId()){
+                  lineStingCooradinates.forEach((element, index) => {
+                    lineStingCooradinates[index] = toLonLat(element)
+                  });
+                  putElement.geometry.coordinates = lineStingCooradinates
+                }
+              });
+
+            }
+
             if (typeof element.getId() === 'string') {
               this.changeNewLineString(element.getId(), element.getGeometry().getCoordinates());
             }
@@ -624,7 +683,7 @@ export default {
       if (this.typeForLayer.type === 'LineString') {
         selectStyle = new Style({
           stroke: new Stroke({ color: "red" }),
-          zIndex: Infinity,
+          zIndex: 2,
         });
 
       }
