@@ -1,6 +1,6 @@
 <template>
     <v-scroll-x-reverse-transition>
-        <v-card class="card_of_object" v-show="conflictCard === true && cardVisable.data === true">
+        <v-card class="card_of_object" v-show="cardVisable.data === true">
             <div class="card__window">
                 <p style="display: none">{{ objectForCard }}</p>
                 <template
@@ -175,7 +175,7 @@ export default {
     watch: {
         getObjectForCard: function () {
             this.objectForCard = this.getObjectForCard;
-            this.objectForConflict_ = this.getObjectForCard;
+            //this.objectForConflict_ = this.getObjectForCard;
             this.notConflictObject = JSON.parse(JSON.stringify(this.objectForCard));
             if (this.newData.find(el => el.id === this.getObjectForCard.id)) {
                 this.items[0] = 'Конфликт версий';
@@ -272,12 +272,11 @@ export default {
             this.notConflictObject.image = this.notConflictObject.image === this.objectForCard.image ? this.objectForConflict.image : this.objectForCard.image;
         },
         changeCoordinates() {
-            if (this.objectForCard.geometry.coordinates !== this.objectForConflict_.geometry.coordinates) {
-                this.objectForCard.geometry.coordinates = this.objectForConflict_.geometry.coordinates;
+            if (this.objectForCard.geometry !== this.objectForConflict_.geometry) {
+                this.objectForCard.geometry = this.objectForConflict_.geometry;
             }
             else {
-                this.objectForCard.geometry.coordinates = this.notConflictObject.geometry.coordinates;
-
+                this.objectForCard.geometry = this.notConflictObject.geometry;
             }
         }
     }

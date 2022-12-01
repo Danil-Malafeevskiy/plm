@@ -42,7 +42,7 @@
             <p v-if="typeForFeature.properties.length" class="attributes ma-0">Допольнительные атрибуты
             </p>
             <template v-for="el in typeForFeature.properties">
-                <v-col v-if="conflictCard" :key="`origin-element-${el}`" cols="3" sm="6" md="5" lg="6"
+                <v-col v-if="conflictCard && el" :key="`origin-element-${el}`" cols="3" sm="6" md="5" lg="6"
                     v-show="el != 'id'">
                     <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el) }"
                         v-model="objectForConflict_.properties[el]" hide-details :label="el" :placeholder="el" filled
@@ -56,7 +56,7 @@
                     <v-icon v-if="notConflictObject.properties[el] === objectForCard.properties[el]">mdi-arrow-right</v-icon>
                     <v-icon v-else>mdi-arrow-left</v-icon>
                 </v-btn>
-                <v-col v-if="objectForCard" cols="3" sm="6" md="5" lg="6" v-show="el != 'id'" :key="`new-element-${el}`">
+                <v-col v-if="objectForCard && el" cols="3" sm="6" md="5" lg="6" v-show="el != 'id'" :key="`new-element-${el}`">
                     <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el) }"
                         v-model="objectForCard_.properties[el]" hide-details :label="el"
                         :readonly="infoCardOn.data && !conflictCard" :placeholder="el" filled>
