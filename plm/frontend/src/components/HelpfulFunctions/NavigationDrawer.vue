@@ -39,7 +39,9 @@
                         style="border-radius: 8px !important;" @click="changeObject(key, index)">
                         <v-list-item-title style="z-index: 1" class="pa-1" v-if="typeof key === 'object'">
                             <div class="name">
-                                <div>{{ key.name }} <span v-if="actions === 'getFeatures' && (user.groups.length > 1 || user.is_superuser)">({{key.group}})</span></div>
+                                <div>{{ key.name }} <span
+                                        v-if="actions === 'getFeatures' && (user.groups.length > 1 || user.is_superuser)">({{ key.group }})</span>
+                                </div>
                                 <template v-if="'all_obj' in key">
                                     <div v-if="key.group in arrayEditMode"
                                         style="font-size: 16px; color: #A5A5A6; margin-left: auto;">
@@ -170,12 +172,16 @@ export default {
                         this.fiteredAllTypes = this.allType.filter(el => el.toLowerCase().includes(searchText.toLowerCase()));
                     }
                 }
-                // if (this.fiteredAllTypes.length && this.actions !== 'getAllGroups') {
-                //     this.selectedItem = 0;
-                //     this.changeObject(this.fiteredAllTypes[0]);
-                // }
             }
         },
+        actions: {
+            handler() {
+                if (this.fiteredAllTypes.length && this.actions !== 'getAllGroups') {
+                    this.selectedItem = 0;
+                    this.changeObject(this.fiteredAllTypes[0]);
+                }
+            }
+        }
     },
     computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions', 'getToolbarTitle', 'allTypeForTable', 'user']) },
     methods: {
@@ -190,7 +196,7 @@ export default {
             if (this.selectedItem != index) {
                 this.objectType = objectType;
                 this.upadateTitle({
-                    title: typeof objectType === 'string' ? objectType : objectType.name, 
+                    title: typeof objectType === 'string' ? objectType : objectType.name,
                     group: 'group' in objectType ? objectType.groups : objectType
                 });
                 switch (this.actions) {
@@ -224,25 +230,8 @@ export default {
                         break;
 
                     case 'getFeatures':
-                        // if (objectType.id === 8) {
-                        //     this.updateHeaders([
-                        //         {
-                        //             "text": "Номер опоры",
-                        //             "value": "Номер опоры"
-                        //         }
-                        //     ])
-                        // }
-                        // else if (objectType.id === 9) {
-                        //     this.updateHeaders([
-                        //         {
-                        //             "text": "id",
-                        //             "value": "id"
-                        //         }
-                        //     ])
-                        // }
                         await this.getOneTypeObjectForFeature({ id: objectType.id });
                         this.objectType = this.oneType;
-                        //this.updateHeaders(this.objectType.headers);
                         this.updateDrawType(this.objectType.type);
                         this.filterForFeature(this.objectType.id);
                         break;
@@ -270,6 +259,10 @@ export default {
     mounted() {
         setTimeout(async () => {
             await this.getTypeObject();
+            if (this.fiteredAllTypes.length && this.actions !== 'getAllGroups') {
+                this.selectedItem = 0;
+                this.changeObject(this.fiteredAllTypes[0]);
+            }
         }, 1000);
     },
 }
