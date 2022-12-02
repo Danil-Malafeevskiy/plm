@@ -1,18 +1,11 @@
 <template>
     <v-scroll-x-reverse-transition>
-        <v-card class="card_of_object" v-show="cardVisable.data === true">
+        <v-card class="card_of_object" v-if="cardVisable.data === true">
             <div class="card__window">
                 <p style="display: none">{{ objectForCard }}</p>
-                <template
-                    v-if="objectForConflict_ && objectForCard && objectForConflict_.image === objectForCard.image">
-                    <v-img v-if="objectForCard.image" :src="objectForCard.image" class="one_picture">
-                    </v-img>
 
-                    <v-file-input v-else class="pa-0 ma-0 background_color_red" :prepend-icon="icon" disabled
-                        hide-input>
-                    </v-file-input>
-                </template>
-                <div v-else-if="objectForConflict_ && objectForCard" class="conflict_pictures">
+                <div v-if="objectForConflict_ && objectForCard && objectForConflict_.image !== objectForCard.image && objectForCard.id === objectForConflict.id"
+                    class="conflict_pictures">
                     <v-img v-if="objectForConflict_.image" :src="objectForConflict_.image" class="two_pictures">
                     </v-img>
                     <v-file-input v-else class="pa-0 ma-0 two_background_color_red" :prepend-icon="icon" disabled
@@ -32,6 +25,16 @@
                         hide-input>
                     </v-file-input>
                 </div>
+
+                <template
+                    v-else-if="objectForCard">
+                    <v-img v-if="objectForCard.image" :src="objectForCard.image" class="one_picture">
+                    </v-img>
+
+                    <v-file-input v-else class="pa-0 ma-0 background_color_red" :prepend-icon="icon" disabled
+                        hide-input>
+                    </v-file-input>
+                </template>
 
                 <v-tabs v-model="tab" align-with-title color="#E93030">
                     <v-tab v-for="item in items" :key="item" class="ma-0">
@@ -175,26 +178,7 @@ export default {
     watch: {
         getObjectForCard: function () {
             this.objectForCard = this.getObjectForCard;
-            //this.objectForConflict_ = this.getObjectForCard;
             this.notConflictObject = JSON.parse(JSON.stringify(this.objectForCard));
-            if (this.newData.find(el => el.id === this.getObjectForCard.id)) {
-                this.items[0] = 'Конфликт версий';
-            }
-            else {
-                this.items.filter(el => el != 'Конфликт версий')
-            }
-            if (this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.getObjectForCard.id : element.id_ === this.getObjectForCard.id_))) {
-                this.itemsForTable = [];
-                this.items[this.items.length] = 'Конфликт положений';
-                let array = this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.getObjectForCard.id : element.id_ === this.getObjectForCard.id_))
-                array.forEach(element => {
-                    this.itemsForTable.push({ id: element.id, type: this.allType.find(el => el.id === element.name).name })
-                })
-            }
-            else {
-                this.items.filter(el => el != 'Конфликт положений')
-            }
-            this.items = [...new Set(this.items)];
         },
         cardVisable: {
             handler() {
