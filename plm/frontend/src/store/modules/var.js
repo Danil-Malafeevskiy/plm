@@ -16,7 +16,7 @@ export default {
         },
         async deleteObject({ dispatch, state }, id) {
             await dispatch(`${state.actionDelete}`, id);
-        },
+        }
     },
     mutations: {
         updateList(state, list) {

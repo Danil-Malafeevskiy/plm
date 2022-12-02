@@ -36,7 +36,8 @@ export default {
         async putFeature({ commit }, features) {
             let data;
             if ('put' in features) {
-                data = [...features.put, ...features.post, features.delete.map(el => el.id), features.messege, features.group];
+                data = [...features.put, ...features.post, features.delete.map(el => el.id), features.messege, features.group, features.offPoints.map(el => el.id)];
+                console.log(features.offPoints)
             }
             else {
                 data = [...features, [], '', features.group];
@@ -92,6 +93,9 @@ export default {
                 commit('updateFeatureInMap', response.data[0])
             });
         },
+        setOffPointsFlag({commit}, flag){
+            commit('updateOffPointsFlag', flag);
+        }
     },
     mutations: {
         updateFeatures(state, features) {
@@ -124,7 +128,8 @@ export default {
                 Vue.set(state.arrayEditMode, item.group, {
                     put: [],
                     post: [],
-                    delete: []
+                    delete: [], 
+                    offPoints: [],
                 });
             }
             switch (type) {
@@ -179,6 +184,11 @@ export default {
                     state.arrayEdit.delete = getEditedFeatures(state.arrayEditMode, 'delete');
 
                     break;
+                
+                case 'offPoints':
+                    state.arrayEditMode[item.group].offPoints.push(item);
+                    state.arrayEdit.offPoints.push(item);
+                    break;
             }
 
         },
@@ -198,6 +208,7 @@ export default {
                 put: [],
                 post: [],
                 delete: [],
+                offPoints: [],
             }
         },
         updateNewData(state, item) {
@@ -217,6 +228,9 @@ export default {
         },
         updateConflictArrays(state, newConlicts){
             state.conflictArrays = newConlicts;
+        },
+        updateOffPointsFlag(state, flag){
+            state.offPointsFlag = flag;
         }
     },
     getters: {
@@ -254,7 +268,10 @@ export default {
             return state.conflictArrays;
         }, 
         oneFeature(state){
-            return state.oneFeature
+            return state.oneFeature;
+        },
+        offPointsFlag(state){
+            return state.offPointsFlag;
         }
     },
     state: {
@@ -273,11 +290,13 @@ export default {
             put: [],
             post: [],
             delete: [],
+            offPoints: [],
         },
         newData: [],
         featureForMap: [],
         featureInMap: {},
         conflictArrays: [],
         oneFeature: {},
+        offPointsFlag: false,
     },
 }
