@@ -58,27 +58,13 @@ class TowerAPI(APIView):
 
     def put(self, request):
         ids = []
-        queryset = []
+        disabled_flexibilities = request.data.pop(-1)
         group = request.data.pop(-1)
         comment = request.data.pop(-1)
         delete_mas = request.data.pop(-1)
 
-        if len(delete_mas)!=0:
-            for id in delete_mas:
-                if Feature.objects.get(id=id).geometry.geom_type == "Point":
-                    for obj in Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
-                               name__in=Type.objects.filter(group=Feature.objects.get(id=id).name.group.id), geometry__intersects=Feature.objects.get(id=id).geometry):
-                        if obj not in queryset:
-                            queryset.append(obj)
-
         for data in request.data:
             if 'id' in data.keys():
-                if data['geometry']['type'] == "Point":
-                    for obj in Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
-                               name__in=Type.objects.filter(group=Feature.objects.get(id=data['id']).name.group.id),
-                               geometry__intersects=Feature.objects.get(id=data['id']).geometry):
-                        if obj not in queryset:
-                            queryset.append(obj)
                 ids.append(data['id'])
 
         ids = ids + delete_mas
@@ -92,7 +78,7 @@ class TowerAPI(APIView):
             dataset = feature[0].name.group.id
             group_name = feature[0].name.group.name
 
-        feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=FeatureSerializer(queryset, many=True).data)
+        feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=disabled_flexibilities)
         if feature_serializer.is_valid():
             try:
                 with transaction.atomic():
@@ -203,9 +189,37 @@ class FileUploadView(APIView):
         for i in range(len(lis)):
             lis[i] = json.loads(lis[i])
 
-        feature_serializer = FeatureSerializer(data=lis, many=True, context=False)
+        feature_serializer = FeatureSerializer([], data=lis, many=True, context=False)
         if feature_serializer.is_valid():
-            feature_serializer.save()
+            try:
+                with transaction.atomic():
+                    version, new_version, conflict = feature_serializer.save()
+                    if len(conflict) > 0:
+                        raise IntegrityError
+            except IntegrityError:
+                return Response({"conflicts": conflict, "data": new_version['create']}, status=status.HTTP_409_CONFLICT)
+
+            dataset = Group.objects.get(name=request.data['group'])
+            if VersionControl.objects.filter(flag=True, dataset=dataset.id).exists():
+                version_now = VersionControl.objects.get(flag=True, dataset=dataset.id)
+                version_now.flag = False
+                version_now.save()
+                dis_version = VersionControl.objects.filter(
+                    date_update__gte=version_now.date_update,
+                    dataset=dataset.id, disabled=False)
+                for vers in dis_version:
+                    vers.disabled = True
+                    vers.save()
+
+            OldVersionSerializer = VersionControlSerializer(
+                data={"user": request.user.username, "version": version,
+                      'dataset': dataset.id, 'comment': f"Добавление новых объектов! {dataset.name}",
+                      "new_version": new_version})
+            if OldVersionSerializer.is_valid():
+                OldVersionSerializer.save()
+            else:
+                return Response(OldVersionSerializer.errors)
+
             layer = get_channel_layer()
             async_to_sync(layer.group_send)(
                 request.data['group'],

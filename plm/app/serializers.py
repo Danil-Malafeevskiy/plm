@@ -46,14 +46,19 @@ class FeatureListSerializer(serializers.ListSerializer):
             new_version['create'].append(obj)
             version['delete'].append(obj['id'])
 
+        context_all = {}
         up_dict = {}
         for obj_feature in feature_update:
             feature = feature_old.get(obj_feature['id'], None)
             if (feature!=None):
                 type = FeatureSerializer(feature).data
                 type_up = FeatureSerializer(obj_feature).data
-                if self.context != False and type['geometry']['type'] == 'Point' and (type['geometry']['coordinates']!=type_up['geometry']['coordinates']):
-                    for line in self.context:
+                if (self.context != False) and (type['geometry']['type'] == 'Point') and (type['geometry']['coordinates'] != type_up['geometry']['coordinates'])\
+                        and (type['id'] not in self.context):
+                    context = FeatureSerializer(Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                              name__in=Type.objects.filter(group=Feature.objects.get(id=type['id']).name.group.id),
+                              geometry__intersects=Feature.objects.get(id=type['id']).geometry)).data
+                    for line in context:
                         up_flag = False
                         copy_line = FeatureSerializer(Feature.objects.get(id=line['id'])).data
                         for lineIndex in range(len(line['geometry']['coordinates'])):
@@ -64,6 +69,7 @@ class FeatureListSerializer(serializers.ListSerializer):
                             feat = Feature.objects.get(id=line['id'])
                             feat.geometry = GEOSGeometry(f'{line["geometry"]}')
                             feat.save()
+                            context_all[line['id']] = line
                             if copy_line['id'] not in up_dict.keys():
                                 up_dict[copy_line['id']] = copy_line
 
@@ -80,8 +86,11 @@ class FeatureListSerializer(serializers.ListSerializer):
         for feature_id, feature in feature_old.items():
             if feature_id not in update_id:
                 type = FeatureSerializer(feature).data
-                if self.context != False and type['geometry']['type'] == 'Point':
-                    for line in self.context:
+                if self.context != False and type['geometry']['type'] == 'Point' and (type['id'] not in self.context):
+                    context = FeatureSerializer(Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                              name__in=Type.objects.filter(group=Feature.objects.get(id=type['id']).name.group.id),
+                              geometry__intersects=Feature.objects.get(id=type['id']).geometry)).data
+                    for line in context:
                         lineCoord = []
                         del_flag = False
                         try:
@@ -105,7 +114,7 @@ class FeatureListSerializer(serializers.ListSerializer):
                                 feat = Feature.objects.get(id=line['id'])
                                 feat.geometry = GEOSGeometry(f'{line["geometry"]}')
                                 feat.save()
-
+                                context_all[line['id']] = line
                             if copy_line['id'] not in up_dict.keys():
                                 up_dict[copy_line['id']] = copy_line
 
@@ -115,7 +124,7 @@ class FeatureListSerializer(serializers.ListSerializer):
                     feature.delete()
 
         if (len(up_dict)!=0 or len(del_line)!=0) and self.context!=False:
-            for line in self.context:
+            for line_id, line in context_all.items():
                 if line['id'] in del_line:
                     version['create'].append(up_dict[line['id']])
                 elif line['id'] in up_dict.keys() and line['id'] not in new_version['delete']:
@@ -142,6 +151,8 @@ class FeatureListSerializer(serializers.ListSerializer):
             version['update'] = old_update
 
         conflicts = []
+        print(new_version)
+        print(version)
         for vers in (new_version['create']+new_version['update']):
             type_obj = Type.objects.get(id=vers['name'])
             conflict = Feature.objects.filter(geometry__intersects=GEOSGeometry(f'{vers["geometry"]}'),
@@ -176,6 +187,10 @@ class FeatureSerializer(serializers.ModelSerializer):
         if remove_fields:
             for field_name in remove_fields:
                 self.fields.pop(field_name)
+
+    #def create(self, validated_data):
+        #for obj in validated_data:
+
 
     def get_group(self, obj):
         try:

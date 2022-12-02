@@ -133,6 +133,9 @@
                                     </v-col>
                                 </template>
                                 <template v-else-if="('name' in objectForCard)">
+
+                                    <v-checkbox v-if="objectForCard.geometry.type === 'Point' && editCardOn_.data" label="Открепить точку" v-model="offPointsFlag_"></v-checkbox>
+                                    
                                     <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="1" sm="6" md="5"
                                         lg="6" v-show="el.text != 'id'">
                                         <v-text-field v-if="el.text != 'id'"
@@ -241,7 +244,8 @@ export default {
             errorMessege: '',
             password: '',
             password_again: '',
-            types: ['Point', 'LineString', 'Polygon']
+            types: ['Point', 'LineString', 'Polygon'],
+            offPointsFlag_: false,
         }
     },
     watch: {
@@ -301,6 +305,12 @@ export default {
                     };
                     this.updateOneType({ type: emptyType, forFeature: true });
                 }
+
+                if(this.objectForCard.geometry.type === 'Point'){
+                    this.offPointsFlag_ = false
+                    this.setOffPointsFlag(false)
+                }
+                
             },
         },
         allListItem: {
@@ -325,14 +335,19 @@ export default {
                     this.updateError(null);
                 }
             }
+        },
+        offPointsFlag_: {
+            handler(){
+                this.setOffPointsFlag(this.offPointsFlag_)
+            }
         }
     },
     computed: {
-        ...mapGetters(['getTypeId', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
+        ...mapGetters(['getTypeId', 'offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
     },
     methods: {
-        ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
-        ...mapMutations(['updateFunction', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData', 'updateError']),
+        ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'setOffPointsFlag', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
+        ...mapMutations(['updateFunction', 'updateOffPointsFlag', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData', 'updateError']),
         async addNewFeature() {
             if (this.objectForCard.name && typeof this.objectForCard.name === 'number') {
                 if (!this.objectForCard.geometry.coordinates.length) {
@@ -394,6 +409,10 @@ export default {
             else {
                 this.editCardOn_.data = !this.editCardOn_.data;
                 this.infoCardOn_.data = !this.infoCardOn_.data;
+            }
+            if(this.offPointsFlag_ && this.objectForCard.geometry.type === 'Point'){
+                console.log(this.arrayEditMode)
+                this.updateArrayEditMode({ item: this.objectForCard, type: 'offPoints' })
             }
         },
         async changePassword() {
@@ -545,7 +564,7 @@ export default {
     },
 
     mounted() {
-
+        this.setOffPointsFlag(false)
     }
 }
 </script>

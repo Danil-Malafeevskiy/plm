@@ -297,11 +297,11 @@ export default {
       }
     },
   },
-  computed: mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays']),
+  computed: mapGetters(['drawType', 'oneFeature', 'offPointsFlag', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays']),
 
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode', 'deleteObjectFromArrayEditMode']),
-    ...mapActions(['getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
+    ...mapActions(['getOneFeature', 'getOneFeatureId', 'setOffPointsFlag', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
     addChangedObjectOnMap() {
       let arraysOfNewObject = this.createSubArrays();
       let arrayOfLayers = this.map.getAllLayers();
@@ -373,37 +373,40 @@ export default {
 
     },
     returnCoordinateForLineString(oldCoordinates, newCoordinates) {
-      const geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(oldCoordinates), {
-        filterLayer: el => el.get('type') === 'LineString',
-      });
-      geom.forEach((element) => {
-        if (element.getGeometry().getType() === 'LineString') {
-          element.getGeometry().getCoordinates().forEach(async (coord, index) => {
-            if (toStringXY(coord, 7) === toStringXY(oldCoordinates, 7)) {
-              let lineStingCooradinates = element.getGeometry().getCoordinates();
-              lineStingCooradinates[index] = newCoordinates;
-              element.getGeometry().setCoordinates(lineStingCooradinates);
+      if (!this.offPointsFlag) {
+        const geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(oldCoordinates), {
+          filterLayer: el => el.get('type') === 'LineString',
+        });
+        geom.forEach((element) => {
+          if (element.getGeometry().getType() === 'LineString') {
+            element.getGeometry().getCoordinates().forEach(async (coord, index) => {
+              if (toStringXY(coord, 7) === toStringXY(oldCoordinates, 7)) {
+                let lineStingCooradinates = element.getGeometry().getCoordinates();
+                lineStingCooradinates[index] = newCoordinates;
+                element.getGeometry().setCoordinates(lineStingCooradinates);
 
-              if (Number.isInteger(element.getId())) {
-                await this.getOneFeatureId(element.getId())
-                this.arrayEdit.put.forEach(putElement => {
-                  if (putElement.id === element.getId()) {
-                    lineStingCooradinates.forEach((element, index) => {
-                      lineStingCooradinates[index] = toLonLat(element)
-                    });
-                    putElement.geometry.coordinates = lineStingCooradinates
-                  }
-                });
+                if (Number.isInteger(element.getId())) {
+                  await this.getOneFeatureId(element.getId())
+                  this.arrayEdit.put.forEach(putElement => {
+                    if (putElement.id === element.getId()) {
+                      lineStingCooradinates.forEach((element, index) => {
+                        lineStingCooradinates[index] = toLonLat(element)
+                      });
+                      putElement.geometry.coordinates = lineStingCooradinates
+                    }
+                  });
 
+                }
+
+                if (typeof element.getId() === 'string') {
+                  this.changeNewLineString(element.getId(), element.getGeometry().getCoordinates());
+                }
               }
+            });
+          }
+        })
+      }
 
-              if (typeof element.getId() === 'string') {
-                this.changeNewLineString(element.getId(), element.getGeometry().getCoordinates());
-              }
-            }
-          });
-        }
-      })
     },
     deleteNewObjectFromMap(feature, arr) {
       feature = feature.filter(function (element) {
