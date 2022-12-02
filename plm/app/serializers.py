@@ -31,6 +31,10 @@ class FeatureListSerializer(serializers.ListSerializer):
         version = {"create": [], "update": [], "delete": []}
         new_version = {"create": [], "update": [], "delete": []}
 
+        disabled_flexibilities = []
+        if self.context != False:
+            disabled_flexibilities = self.context
+
         feature_old = {feature.id: feature for feature in instance}
         feature_update_line = [feature for feature in validated_data if 'id' in feature.keys() and feature['id'] in feature_old.keys() and feature['geometry'].geom_type=="LineString"]
         feature_update_other = [feature for feature in validated_data if 'id' in feature.keys() and feature['id'] in feature_old.keys() and feature['geometry'].geom_type!="LineString"]
@@ -54,11 +58,12 @@ class FeatureListSerializer(serializers.ListSerializer):
                 type = FeatureSerializer(feature).data
                 type_up = FeatureSerializer(obj_feature).data
                 if (self.context != False) and (type['geometry']['type'] == 'Point') and (type['geometry']['coordinates'] != type_up['geometry']['coordinates'])\
-                        and (type['id'] not in self.context):
-                    context = FeatureSerializer(Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                        and (type['id'] not in disabled_flexibilities):
+                    context = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
                               name__in=Type.objects.filter(group=Feature.objects.get(id=type['id']).name.group.id),
-                              geometry__intersects=Feature.objects.get(id=type['id']).geometry)).data
-                    for line in context:
+                              geometry__intersects=Feature.objects.get(id=type['id']).geometry)
+                    for line_o in context:
+                        line = FeatureSerializer(line_o).data
                         up_flag = False
                         copy_line = FeatureSerializer(Feature.objects.get(id=line['id'])).data
                         for lineIndex in range(len(line['geometry']['coordinates'])):
@@ -86,11 +91,12 @@ class FeatureListSerializer(serializers.ListSerializer):
         for feature_id, feature in feature_old.items():
             if feature_id not in update_id:
                 type = FeatureSerializer(feature).data
-                if self.context != False and type['geometry']['type'] == 'Point' and (type['id'] not in self.context):
-                    context = FeatureSerializer(Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
+                if self.context != False and type['geometry']['type'] == 'Point' and (type['id'] not in disabled_flexibilities):
+                    context = Feature.objects.extra(where=["geometrytype(geometry) LIKE 'LINESTRING'"]).filter(
                               name__in=Type.objects.filter(group=Feature.objects.get(id=type['id']).name.group.id),
-                              geometry__intersects=Feature.objects.get(id=type['id']).geometry)).data
-                    for line in context:
+                              geometry__intersects=Feature.objects.get(id=type['id']).geometry)
+                    for line_o in context:
+                        line = FeatureSerializer(line_o).data
                         lineCoord = []
                         del_flag = False
                         try:
@@ -151,8 +157,6 @@ class FeatureListSerializer(serializers.ListSerializer):
             version['update'] = old_update
 
         conflicts = []
-        print(new_version)
-        print(version)
         for vers in (new_version['create']+new_version['update']):
             type_obj = Type.objects.get(id=vers['name'])
             conflict = Feature.objects.filter(geometry__intersects=GEOSGeometry(f'{vers["geometry"]}'),
@@ -187,10 +191,6 @@ class FeatureSerializer(serializers.ModelSerializer):
         if remove_fields:
             for field_name in remove_fields:
                 self.fields.pop(field_name)
-
-    #def create(self, validated_data):
-        #for obj in validated_data:
-
 
     def get_group(self, obj):
         try:

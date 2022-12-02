@@ -36,11 +36,11 @@ export default {
         async putFeature({ commit }, features) {
             let data;
             if ('put' in features) {
-                data = [...features.put, ...features.post, features.delete.map(el => el.id), features.messege, features.group, features.offPoints.map(el => el.id)];
-                console.log(features.offPoints)
+                data = [...features.put, ...features.post, features.delete.map(el => el.id), features.offPoints.map(el => el.id), features.messege, features.group];
+                //console.log(features.offPoints)
             }
             else {
-                data = [...features, [], '', features.group];
+                data = [...features, [], [], '', features.group];
             }
             await axios.put(`/tower`, data, { headers: { "Content-Type": "application/json" } }).then((response) => {
                 console.log(response.data);
@@ -55,7 +55,7 @@ export default {
             });
         },
         async deleteFeature({ commit }, feature) {
-            await axios.put('/tower', [feature.map(el => el.id), '', feature[0].group]).then((response) => {
+            await axios.put('/tower', [feature.map(el => el.id), '', feature[0].group, []]).then((response) => {
                 console.log(response.data);
                 if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');

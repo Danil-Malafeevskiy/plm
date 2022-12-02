@@ -58,9 +58,10 @@ class TowerAPI(APIView):
 
     def put(self, request):
         ids = []
-        disabled_flexibilities = request.data.pop(-1)
+        
         group = request.data.pop(-1)
         comment = request.data.pop(-1)
+        disabled_flexibilities = request.data.pop(-1)
         delete_mas = request.data.pop(-1)
 
         for data in request.data:
