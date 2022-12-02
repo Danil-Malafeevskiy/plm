@@ -26,6 +26,13 @@ export default {
                 commit('updateObjectForCard', response.data[0]);
             }).catch(error => console.log(error));
         },
+
+        async getOneFeatureId({ commit }, id) {
+            await axios.get(`/tower/${id}`).then((response) => {
+                commit('updateOneFeature', response.data[0]);
+            }).catch(error => console.log(error));
+        },
+        
         async putFeature({ commit }, features) {
             let data;
             if ('put' in features) {
@@ -38,8 +45,13 @@ export default {
                 console.log(response.data);
                 if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');
+                    commit('updateConflictArrays', []);
                 }
-            }).catch(error => console.log(error));
+            }).catch(error => {
+                if(error.response.status === 409){
+                    commit('updateConflictArrays', error.response.data)
+                }
+            });
         },
         async deleteFeature({ commit }, feature) {
             await axios.put('/tower', [feature.map(el => el.id), '', feature[0].group]).then((response) => {
@@ -80,12 +92,6 @@ export default {
                 commit('updateFeatureInMap', response.data[0])
             });
         },
-        async checkConflictGeometry(ctx, features){
-            console.log(features);
-            await axios.put('/geometry-check', features).then((response) => {
-                console.log(response.data);
-            }).catch((error) => console.log(error.response.data))
-        }
     },
     mutations: {
         updateFeatures(state, features) {
@@ -109,6 +115,9 @@ export default {
         },
         updatefeatureTypeId(state, nameType) {
             state.featureTypeId = nameType;
+        },
+        updateOneFeature(state, data) {
+            state.oneFeature = data;
         },
         updateArrayEditMode(state, { item, type }) {
             if (!(item.group in state.arrayEditMode)) {
@@ -205,6 +214,9 @@ export default {
         },
         updateFeatureInMap(state, feature) {
             state.featureInMap = feature;
+        },
+        updateConflictArrays(state, newConlicts){
+            state.conflictArrays = newConlicts;
         }
     },
     getters: {
@@ -237,6 +249,12 @@ export default {
         },
         featureInMap(state) {
             return state.featureInMap;
+        },
+        conflictArrays(state){
+            return state.conflictArrays;
+        }, 
+        oneFeature(state){
+            return state.oneFeature
         }
     },
     state: {
@@ -259,5 +277,7 @@ export default {
         newData: [],
         featureForMap: [],
         featureInMap: {},
+        conflictArrays: [],
+        oneFeature: {},
     },
 }

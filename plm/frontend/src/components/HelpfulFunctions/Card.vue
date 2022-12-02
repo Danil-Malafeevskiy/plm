@@ -6,7 +6,7 @@
                 <v-card
                     v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'"
                     class="one_picture pa-0 ma-0 background_color_gray" tile flat
-                    style="width: 100% !important; height: 59.45% !important; overflow-y: scroll !important;">
+                    style="width: 100% !important; min-height: 37.53% !important; overflow-y: scroll !important;">
 
                     <v-row no-gutters justify="start">
                         <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
@@ -343,7 +343,9 @@ export default {
                 this.updateArrayEditMode({ item: JSON.parse(JSON.stringify(this.objectForCard)), type: 'post' });
             }
             else {
-                this.checkCorrectFields();
+                if (!this.checkCorrectFields()) {
+                    return;
+                }
 
                 let object = JSON.parse(JSON.stringify(this.objectForCard));
                 object = { ...object, ...object.properties }
@@ -382,7 +384,6 @@ export default {
 
                 let object = JSON.parse(JSON.stringify(this.objectForCard));
                 object.properties = { ...object, ...object.properties };
-                //delete object.properties.properties;
 
                 await this.putObject(object);
             }

@@ -135,31 +135,18 @@
                         Пользователи
                     </v-expansion-panel-header>
 
-
                     <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                        <v-expansion-panels accordion flat class="pa-0 ma-0">
-                            <v-expansion-panel v-for="(group, index) in user.all_users" :key="index">
-
-                                <v-expansion-panel-header class="pa-0 ma-0">
-                                    {{ index }}
-                                </v-expansion-panel-header>
-                                <v-expansion-panel-content cols="2" sm="6" md="5" lg="6" class="pa-0 ma-0">
-                                    <v-row class="pa-2 ma-0">
-                                        <v-col v-for="user in user.all_users[`${index}`]" :key="user" cols="2" sm="6" md="5"
-                                            lg="6" class="pa-0 ma-0">
-                                            <v-checkbox v-model="objectForCard_.users" hide-details
-                                                :readonly="infoCardOn.data" class="ma-2" color="#E93030" :value="user"
-                                                :label="user" style="
+                        <v-row class="pa-2 ma-0">
+                            <v-col v-for="user in user.all_users" :key="user" cols="2" sm="6" md="5" lg="6"
+                                class="pa-0 ma-0">
+                                <v-checkbox v-model="objectForCard_.users" hide-details :readonly="infoCardOn.data"
+                                    class="ma-2" color="#E93030" :value="user" :label="user" style="
                                         min-height: 37.53% !important; 
                                         max-height: 37.53% !important;">
-                                            </v-checkbox>
-                                        </v-col>
-                                    </v-row>
-                                </v-expansion-panel-content>
-                            </v-expansion-panel>
-                        </v-expansion-panels>
+                                </v-checkbox>
+                            </v-col>
+                        </v-row>
                     </v-expansion-panel-content>
-
                 </v-expansion-panel>
             </v-expansion-panels>
         </div>
