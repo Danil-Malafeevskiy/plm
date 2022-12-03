@@ -285,11 +285,16 @@ export default {
       }
     },
     async editObjects() {
+      let arrayEditModeFromPut = {};
       for (let key in this.arrayEditMode) {
         if (key != 'messege') {
-          await this.putFeature({ ...this.arrayEditMode[key], messege: this.arrayEditMode.messege + `(${key})`, group: key });
+          arrayEditModeFromPut[key] = [...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post, 
+          this.arrayEditMode[key].delete.map(el => el.id), this.arrayEditMode[key].offPoints.map(el => el.id)];
         }
       }
+      arrayEditModeFromPut.messege = this.arrayEditMode.messege;
+      await this.putFeature(arrayEditModeFromPut);
+
 
       if (this.conflictArrays.length || this.newData.length){
         this.isConflict = true;
