@@ -26,7 +26,7 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        <v-btn color="#FFFFFF" depressed class="ma-0" @click="deleteObjects">
+        <v-btn color="#FFFFFF" depressed class="ma-0" @click="deleteObjects(oneType.group)">
           <span style="color: #787878">Удалить</span>
         </v-btn>
       </div>
@@ -169,8 +169,10 @@ export default {
     resetSelected() {
       this.selected = [];
     },
-    async deleteObjects() {
-      this.deleteObject(this.selected);
+    async deleteObjects(group) {
+      let deleteArray = {message: ''};
+      deleteArray[group] = this.selected;
+      this.deleteObject(deleteArray);
       this.resetSelected();
     },
     async moveObject(type) {
