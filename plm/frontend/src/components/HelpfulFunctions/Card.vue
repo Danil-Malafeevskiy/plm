@@ -306,7 +306,7 @@ export default {
                     this.updateOneType({ type: emptyType, forFeature: true });
                 }
 
-                if(this.objectForCard.geometry.type === 'Point'){
+                if(this.objectForCard && this.objectForCard.geometry && this.objectForCard.geometry.type === 'Point'){
                     this.offPointsFlag_ = false
                     this.setOffPointsFlag(false)
                 }
