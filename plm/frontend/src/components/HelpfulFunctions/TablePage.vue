@@ -131,7 +131,7 @@ export default {
   },
   methods: {
     ...mapActions(['getAllObject', 'getOneObject', 'deleteObject', 'putObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getSortType']),
-    ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts', 'updateOneType', 'updateObjectForCard']),
+    ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts', 'updateOneType', 'updateObjectForCard', 'updateArrayEditMode']),
 
     async showCard(obj) {
       if (!this.addCardOn.data) {
@@ -171,15 +171,18 @@ export default {
     },
     async deleteObjects(group) {
       let deleteArray;
+      console.log(this.actions);
       if(this.actions === 'getFeatures'){
         deleteArray = {};
-        deleteArray[group] = [this.selected.map(el => el.id)];
-        deleteArray.message = '';
+        deleteArray.delete = this.selected;
+        deleteArray.group = group;
+        this.updateArrayEditMode({item: deleteArray, type: 'delete'});
+        this.$emit('openEditMode');
       }
       else{
         deleteArray = this.selected;
+        this.deleteObject(deleteArray);
       }
-      this.deleteObject(deleteArray);
       this.resetSelected();
     },
     async moveObject(type) {
