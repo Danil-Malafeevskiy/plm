@@ -113,7 +113,7 @@ export default {
             });
         },
         async deleteTypeObject({ dispatch, commit, state }, id) {
-            await axios.delete(`/dataset/admin?id=${id}`).then((response) => {
+            await axios.delete(`/dataset/admin?id=${[id.map(el => el.id)]}`).then((response) => {
                 console.log(response.data);
                 if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');
