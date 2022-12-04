@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.serializers import geojson
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.utils import timezone, dateformat
@@ -15,7 +16,6 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.db import transaction, IntegrityError
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.decorators import api_view
 from rest_framework.parsers import MultiPartParser, FileUploadParser
 
 from rest_framework.permissions import IsAuthenticated
@@ -57,38 +57,61 @@ class TowerAPI(APIView):
             return Response(feature_serializer.data)
 
     def put(self, request):
-        ids = []
-        
-        group = request.data.pop(-1)
-        comment = request.data.pop(-1)
-        disabled_flexibilities = request.data.pop(-1)
-        delete_mas = request.data.pop(-1)
+        comment = request.data.pop('messege')
+        groups_names = []
+        conflicts = []
+        try:
+            with transaction.atomic():
+                for group, groups_data in request.data.items():
+                    ids = []
+                    disabled_flexibilities = groups_data.pop(-1)
+                    delete_mas = groups_data.pop(-1)
 
-        for data in request.data:
-            if 'id' in data.keys():
-                ids.append(data['id'])
+                    for data in groups_data:
+                        if 'id' in data.keys():
+                            ids.append(data['id'])
 
-        ids = ids + delete_mas
+                    ids = ids + delete_mas
 
-        feature = Feature.objects.filter(id__in=ids)
+                    feature = Feature.objects.filter(id__in=ids)
 
-        if len(ids)==0:
-            dataset = Type.objects.get(id=request.data[0]['name']).group.id
-            group_name = Type.objects.get(id=request.data[0]['name']).group.name
-        else:
-            dataset = feature[0].name.group.id
-            group_name = feature[0].name.group.name
+                    dataset = Group.objects.get(name=group).id
+                    groups_names.append(group)
 
-        feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=disabled_flexibilities)
-        if feature_serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    version, new_version, conflict = feature_serializer.save()
-                    if len(conflict) > 0:
-                        raise IntegrityError
-            except IntegrityError:
-                return Response(conflict, status=status.HTTP_409_CONFLICT)
+                    feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=disabled_flexibilities)
+                    if feature_serializer.is_valid():
+                        version, new_version, conflict = feature_serializer.save()
+                        conflicts += conflict
 
+                        if VersionControl.objects.filter(flag=True, dataset=dataset).exists():
+                            version_now = VersionControl.objects.get(flag=True, dataset=dataset)
+                            version_now.flag = False
+                            version_now.save()
+                            dis_version = VersionControl.objects.filter(
+                                date_update__gte=version_now.date_update,
+                                dataset=dataset, disabled=False)
+                            for vers in dis_version:
+                                vers.disabled = True
+                                vers.save()
+
+                        OldVersionSerializer = VersionControlSerializer(
+                            data={"user": request.user.username, "version": version,
+                                  'dataset': dataset, 'comment': comment,
+                                  "new_version": new_version})
+                        if OldVersionSerializer.is_valid():
+                            OldVersionSerializer.save()
+                        else:
+                            raise RuntimeError(OldVersionSerializer.errors)
+                    else:
+                        raise RuntimeError(feature_serializer.errors)
+                if len(conflicts) > 0:
+                    raise IntegrityError
+        except RuntimeError as e:
+            return Response(e.message)
+        except IntegrityError:
+            return Response(conflicts, status=status.HTTP_409_CONFLICT)
+
+        for group_name in groups_names:
             layer = get_channel_layer()
             async_to_sync(layer.group_send)(
                 group_name,
@@ -98,28 +121,7 @@ class TowerAPI(APIView):
                 }
             )
 
-            if VersionControl.objects.filter(flag=True, dataset=dataset).exists():
-                version_now = VersionControl.objects.get(flag=True, dataset=dataset)
-                version_now.flag = False
-                version_now.save()
-                dis_version = VersionControl.objects.filter(
-                    date_update__gte=version_now.date_update,
-                    dataset=dataset, disabled=False)
-                for vers in dis_version:
-                    vers.disabled = True
-                    vers.save()
-
-            OldVersionSerializer = VersionControlSerializer(
-                data={"user": request.user.username, "version": version,
-                      'dataset': dataset, 'comment': comment,
-                      "new_version": new_version})
-            if OldVersionSerializer.is_valid():
-                OldVersionSerializer.save()
-            else:
-                return Response(OldVersionSerializer.errors)
-            return Response("Success up!")
-
-        return Response(feature_serializer.errors)
+        return Response("Success up!")
 
 class FileUploadView(APIView):
 
@@ -155,10 +157,9 @@ class FileUploadView(APIView):
 
         lis = []
         dict_1 = {}
-        try:
-            type = Type.objects.get(name=filename, group=Group.objects.get(name=request.data['group']).id)
-        except Exception:
-            return Response({"error": "Создайте тип такой же как имя файла!"})
+
+        type = Type.objects.get(name=filename, group=Group.objects.get(name=request.data['group']).id)
+
         dict_1['name'] = type.id
         dict_1['type'] = 'Feature'
         dict_1['properties'] = {}
@@ -189,8 +190,11 @@ class FileUploadView(APIView):
 
         for i in range(len(lis)):
             lis[i] = json.loads(lis[i])
+            lis[i]['geometry'] = {"type": GEOSGeometry(lis[i]['geometry']).geom_type, "coordinates": GEOSGeometry(lis[i]['geometry']).coords}
 
-        feature_serializer = FeatureSerializer([], data=lis, many=True, context=False)
+        return Response(lis)
+
+        '''feature_serializer = FeatureSerializer([], data=lis, many=True, context=False)
         if feature_serializer.is_valid():
             try:
                 with transaction.atomic():
@@ -230,7 +234,7 @@ class FileUploadView(APIView):
                 }
             )
             return Response("Success new")
-        return Response(feature_serializer.errors)
+        return Response(feature_serializer.errors)'''
 
 class LoginView(APIView):
     authentication_classes = [SessionAuthentication]
