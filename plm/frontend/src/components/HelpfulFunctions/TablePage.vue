@@ -37,7 +37,7 @@
         {{ tableArrayItems.length }} объекта </span>
       <span class="object" v-else>{{ tableArrayItems.length }} объектов </span>
     </div>
-    <v-data-table v-if="oneType" @click:row="showCard" :headers="headersForTale" v-model="selected" show-select
+    <v-data-table @click:row="showCard" :headers="headersForTale" v-model="selected" show-select
       item-key="id" :items="tableArrayItems" :items-per-page="heightTable"
       :footer-props="{ 'items-per-page-options': rowsPerPage }" class="pa-0" @toggle-select-all="showAll()"
       :item-class="classRow" style="
@@ -131,7 +131,7 @@ export default {
   },
   methods: {
     ...mapActions(['getAllObject', 'getOneObject', 'deleteObject', 'putObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getSortType']),
-    ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts', 'updateOneType', 'updateObjectForCard']),
+    ...mapMutations(['emptyFeature', 'updateFeature', 'addSelectedObject', 'updateSelectedObejcts', 'updateOneType', 'updateObjectForCard', 'updateArrayEditMode']),
 
     async showCard(obj) {
       if (!this.addCardOn.data) {
@@ -170,9 +170,19 @@ export default {
       this.selected = [];
     },
     async deleteObjects(group) {
-      let deleteArray = {message: ''};
-      deleteArray[group] = this.selected;
-      this.deleteObject(deleteArray);
+      let deleteArray;
+      console.log(this.actions);
+      if(this.actions === 'getFeatures'){
+        deleteArray = {};
+        deleteArray.delete = this.selected;
+        deleteArray.group = group;
+        this.updateArrayEditMode({item: deleteArray, type: 'delete'});
+        this.$emit('openEditMode');
+      }
+      else{
+        deleteArray = this.selected;
+        this.deleteObject(deleteArray);
+      }
       this.resetSelected();
     },
     async moveObject(type) {

@@ -103,7 +103,7 @@
             <Auth v-if="getAuth === false && authbool" />
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data" />
+              :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data" @openEditMode="editMode = true" />
             <VersionControl v-if="versionsPage.data" :versionsPage="versionsPage" />
           </div>
         </v-tab-item>
@@ -294,7 +294,6 @@ export default {
       }
       arrayEditModeFromPut.messege = this.arrayEditMode.messege;
       await this.putFeature(arrayEditModeFromPut);
-
 
       if (this.conflictArrays.length || this.newData.length){
         this.isConflict = true;

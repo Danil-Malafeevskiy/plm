@@ -47,14 +47,15 @@ export default {
                 }
             });
         },
-        // async deleteFeature({ commit }, feature) {
-        //     await axios.put('/tower', [feature.map(el => el.id), '', feature[0].group, []]).then((response) => {
-        //         console.log(response.data);
-        //         if (typeof response.data === 'string') {
-        //             commit('updateIsGetAllChange');
-        //         }
-        //     })
-        // },
+        async deleteFeature({ commit }, features) {
+            console.log(features)
+            await axios.put('/tower', features).then((response) => {
+                console.log(response.data);
+                if (typeof response.data === 'string') {
+                    commit('updateIsGetAllChange');
+                }
+            })
+        },
         async filterForFeature({ commit, state }, typeId = state.featureTypeId) {
             state.featureTypeId = typeId;
             await axios.get(`/tower?name=${typeId}`).then((response) => {
@@ -163,7 +164,7 @@ export default {
                         state.arrayEditMode[item.group].post = state.arrayEditMode[item.group].post.filter(el => el.id_ != item.id_);
                         state.arrayEdit.post = state.arrayEdit.post.filter(el => el.id_ != item.id_);
                     }
-                    else {
+                    else if(!('delete' in item)) {
                         state.arrayEditMode[item.group].put = state.arrayEditMode[item.group].put.filter(el => el.id != item.id);
                         state.arrayEdit.put = state.arrayEdit.put.filter(el => el.id != item.id);
 
@@ -173,6 +174,10 @@ export default {
                         else {
                             state.arrayEditMode[item.group].delete.push(item);
                         }
+                    }
+                    else{
+                        state.arrayEditMode[item.group].delete = [...state.arrayEditMode[item.group].delete, ...item.delete];
+                        state.arrayEditMode[item.group].delete = [...new Set(state.arrayEditMode[item.group].delete)];
                     }
                     state.arrayEdit.delete = getEditedFeatures(state.arrayEditMode, 'delete');
 
