@@ -47,14 +47,15 @@ export default {
                 }
             });
         },
-        // async deleteFeature({ commit }, feature) {
-        //     await axios.put('/tower', [feature.map(el => el.id), '', feature[0].group, []]).then((response) => {
-        //         console.log(response.data);
-        //         if (typeof response.data === 'string') {
-        //             commit('updateIsGetAllChange');
-        //         }
-        //     })
-        // },
+        async deleteFeature({ commit }, features) {
+            console.log(features)
+            await axios.put('/tower', features).then((response) => {
+                console.log(response.data);
+                if (typeof response.data === 'string') {
+                    commit('updateIsGetAllChange');
+                }
+            })
+        },
         async filterForFeature({ commit, state }, typeId = state.featureTypeId) {
             state.featureTypeId = typeId;
             await axios.get(`/tower?name=${typeId}`).then((response) => {
