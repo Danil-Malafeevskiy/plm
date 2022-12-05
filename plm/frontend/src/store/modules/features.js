@@ -7,7 +7,7 @@ axios.defaults.xsrfCookieName = "csrftoken";
 function getEditedFeatures(arrayEdited, type) {
     let array = [];
     for (let key in arrayEdited) {
-        if (key != 'messege') {
+        if (key != 'message') {
             array = [...array, ...arrayEdited[key][type]];
         }
     }
@@ -35,7 +35,8 @@ export default {
         
         async putFeature({ commit }, features) {
             console.log(features);
-            await axios.put(`/tower`, features, { headers: { "Content-Type": "application/json" } }).then((response) => {
+            features.messege = features.message;
+            await axios.put(`/tower`, features).then((response) => {
                 console.log(response.data);
                 if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');
@@ -68,7 +69,6 @@ export default {
             })
         },
         async uploadFileWithFeature({ commit }, file) {
-            console.log(file);
             await axios.put('/tower/upload', file, {
                 headers: {
                     "Content-Type": "multipart/form-data",
@@ -200,7 +200,7 @@ export default {
         },
         resetArrayEditMode(state) {
             state.arrayEditMode = {
-                messege: '',
+                message: '',
             }
             state.arrayEdit = {
                 put: [],
@@ -282,7 +282,7 @@ export default {
             geometry: {},
         },
         arrayEditMode: {
-            messege: '',
+            message: '',
         },
         arrayEdit: {
             put: [],

@@ -64,7 +64,6 @@ export default {
   data() {
     return {
       coord: [],
-      coordEdit: [],
       features: {
         type: 'FeatureCollection',
         features: this.allFeatures,
@@ -74,7 +73,6 @@ export default {
       drawLayer: new VectorLayer({
         source: new VectorSource()
       }),
-      interactionId: null,
       draw: null,
       modify: null,
       modifyEdit: null,
@@ -261,7 +259,7 @@ export default {
     },
     editCardOn: {
       async handler() {
-        this.editCardOn_ = this.editCardOn
+        this.editCardOn_ = this.editCardOn;
         this.map.getInteractions().getArray().forEach(element => {
           if (element instanceof Modify) {
             element.setActive(this.editCardOn_.data)
@@ -297,8 +295,9 @@ export default {
       }
     },
   },
-  computed: mapGetters(['drawType', 'oneFeature', 'offPointsFlag', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays']),
-
+  computed:{ 
+    ...mapGetters(['drawType', 'oneFeature', 'offPointsFlag', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays']),
+},
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode', 'deleteObjectFromArrayEditMode']),
     ...mapActions(['getOneFeature', 'getOneFeatureId', 'setOffPointsFlag', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
@@ -458,7 +457,6 @@ export default {
           if (typeof coordinates[i][0] === 'object') {
             for (let j in coordinates[i]) {
               coordinates[i][j] = fromLonLat(coordinates[i][j]);
-              //this.updateLonLat(coordinate[0][0]);
             }
           }
           else {
@@ -468,7 +466,6 @@ export default {
       }
       else {
         coordinates = fromLonLat(coordinates);
-        //this.updateLonLat(coordinate);
       }
       return coordinates;
     },
@@ -554,6 +551,7 @@ export default {
     async addInteraction() {
       this.map.removeInteraction(this.modify);
       this.drawLayer.getSource().refresh();
+
       if (this.drawType === 'Point') {
         await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
         this.drawLayer = new VectorLayer({
@@ -561,6 +559,7 @@ export default {
             features: []
           }),
         });
+
         const layer = this.map.getAllLayers().find(el => el.get('typeId') === this.oneType.id);
         this.drawLayer.set('standartIcon', layer.get('standartIcon'));
         this.drawLayer.setStyle(this.getStyleFromLayer);
@@ -569,23 +568,24 @@ export default {
           source: this.drawLayer.getSource(),
           style: this.drawLayer.getStyle()
         });
+
         this.modify.on('modifyend', this.changeCoordinates);
         this.draw = new Draw({
           source: this.drawLayer.getSource(),
           type: this.drawType,
           style: this.drawLayer.getStyle(),
         });
+
         this.draw.on('drawstart', this.checkDrawCoordinates)
         this.arrFeatureForDraw = []
         const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString')
+
         for (let i in layerOfLineString) {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfLineString[i].getSource().getFeatures()];
         }
+
         const source = new VectorSource({ features: this.arrFeatureForDraw });
         const snap = new Snap({ source: source });
-        this.map.addLayer(this.drawLayer);
-        this.map.addInteraction(this.draw);
-        this.map.addInteraction(this.modify);
         this.map.addInteraction(snap);
       }
       else if (this.drawType === 'LineString') {
@@ -606,12 +606,7 @@ export default {
           source: this.drawLayer.getSource(),
           style: this.drawLayer.getStyle()
         });
-        this.modifyEdit.on('modifystart', this.takeCoordinates);
-        this.modifyEdit.on('modifyend', this.changeCoordinates);
         const snap = new Snap({ source: source });
-        this.map.addLayer(this.drawLayer);
-        this.map.addInteraction(this.modify);
-        this.map.addInteraction(this.draw);
         this.map.addInteraction(snap);
       }
       else {
@@ -626,15 +621,14 @@ export default {
         });
         this.modify.on('modifyend', this.changeCoordinates);
         this.draw = new Draw({
-          source: this.drawLayer.getSource(),
           type: this.drawType,
           style: this.drawLayer.getStyle(),
+          source: this.drawLayer.getSource()
         });
-        this.map.addLayer(this.drawLayer);
-        this.map.addInteraction(this.draw);
-        this.map.addInteraction(this.modify);
       }
-      this.interactionId = this.map.getInteractions().getArray().length - 1;
+      this.map.addLayer(this.drawLayer);
+      this.map.addInteraction(this.draw);
+      this.map.addInteraction(this.modify);
     },
     resizeMap() {
       setTimeout(() => {
@@ -814,17 +808,6 @@ export default {
         layer.set('selectIcon', redIcon);
         layer.set('conflictIcon', blueIcon);
       }
-
-      if (this.typeForLayer.type !== 'LineString') {
-        this.modifyEdit = new Modify({
-          //style: this.getStyleFromSelect,
-          features: this.selectInteraction.getFeatures(),
-        })
-        this.map.addInteraction(this.modifyEdit);
-        this.modifyEdit.on('modifystart', this.takeCoordinates);
-        this.modifyEdit.on('modifyend', this.changeCoordinates);
-        this.modifyEdit.setActive(false);
-      }
       layer.setStyle(this.getStyleFromLayer);
     },
     filteredLayer() {
@@ -853,6 +836,7 @@ export default {
   },
   async mounted() {
     await this.getAllType();
+    
     this.map = new Map({
       target: 'map_content',
       layers: [
@@ -866,12 +850,10 @@ export default {
         constrainResolution: true,
       })
     });
+    
     Feature.prototype.getLayer = function (map) {
       var this_ = this, layer_, layersToLookFor = [];
-      /**
-       * Populates array layersToLookFor with only
-       * layers that have features
-       */
+
       var check = function (layer) {
         var source = layer.getSource();
         if (source instanceof VectorSource) {
@@ -884,7 +866,6 @@ export default {
           }
         }
       };
-      //loop through map layers
       map.getLayers().forEach(function (layer) {
         check(layer);
       });
@@ -893,7 +874,6 @@ export default {
           return this_ === feature;
         });
         if (found) {
-          //this is the layer we want
           layer_ = obj.layer;
         }
       });
@@ -913,12 +893,19 @@ export default {
       style: this.getStyleFromSelect,
       layers: this.map.getAllLayers(),
     });
-
+    this.modifyEdit = new Modify({
+      //style: this.getStyleFromSelect,
+      features: this.selectInteraction.getFeatures(),
+    })
+    this.modifyEdit.on('modifystart', this.takeCoordinates);
+    this.modifyEdit.on('modifyend', this.changeCoordinates);
+    this.modifyEdit.setActive(false);
+    
+    this.map.addInteraction(this.modifyEdit);
     this.map.addInteraction(this.selectInteraction);
 
     this.resizeMap();
     this.filteredTypes = this.allType;
-
   }
 }
 </script>

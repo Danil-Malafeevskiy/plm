@@ -37,10 +37,9 @@
         {{ tableArrayItems.length }} объекта </span>
       <span class="object" v-else>{{ tableArrayItems.length }} объектов </span>
     </div>
-    <v-data-table @click:row="showCard" :headers="headersForTale" v-model="selected" show-select
-      item-key="id" :items="tableArrayItems" :items-per-page="heightTable"
-      :footer-props="{ 'items-per-page-options': rowsPerPage }" class="pa-0" @toggle-select-all="showAll()"
-      :item-class="classRow" style="
+    <v-data-table @click:row="showCard" :headers="headersForTale" v-model="selected" show-select item-key="id"
+      :items="tableArrayItems" :items-per-page="heightTable" :footer-props="{ 'items-per-page-options': rowsPerPage }"
+      class="pa-0" @toggle-select-all="showAll()" :item-class="classRow" style="
         height: 100% !important;
         width: 50% !important; 
         background-color: #FFFFFF; 
@@ -64,10 +63,9 @@ export default {
       addCardOn_: this.addCardOn,
       editCardOn_: this.editCardOn,
       tableArrayItems: [],
-      heightTable: null,
-      rowsPerPage: [],
       headersForTale: [],
       arrObjects: {},
+      objectOnTable: null,
     }
   },
   watch: {
@@ -75,12 +73,12 @@ export default {
       handler() {
         this.getSortType(this.oneType.type);
         this.headersForTale = this.oneType.headers;
-        if(!(`${this.oneType?.name} ${this.oneType?.group}` in this.arrObjects)){
+        if (!(`${this.oneType?.name} ${this.oneType?.group}` in this.arrObjects)) {
           Vue.set(this.arrObjects, `${this.oneType?.name} ${this.oneType?.group}`, [])
         }
       }
     },
-    headers: function (){
+    headers: function () {
       this.headersForTale = this.headers;
     },
     allListItem: {
@@ -127,6 +125,26 @@ export default {
       else {
         return this.selectedDrawType.filter(el => el.name != this.getToolbarTitle && el.group === this.oneType.group);
       }
+    },
+    heightTable() {
+      return Math.round((document.querySelector('.v-window__container').offsetHeight - 64 - 69 - 58 - 75) / 48) - 1;
+    },
+    rowsPerPage() {
+      let rows = [];
+      let countPage = 5;
+      for (let i = 1; countPage * i < this.heightTable; i++) {
+        rows.push(countPage * i);
+      }
+      rows.push(this.heightTable);
+      return rows;
+    },
+    oldPutObject(){
+      const putObject = this.arrayEdit.put.find(el => el.id === this.objectOnTable.id);
+      return putObject ? { ...putObject.properties } : 1;
+    },
+    newPutObject(){
+      const newObject = this.newData.find(el => el.id === this.objectOnTable.id);
+      return newObject ? { ...newObject.properties } : 1;
     }
   },
   methods: {
@@ -171,15 +189,14 @@ export default {
     },
     async deleteObjects(group) {
       let deleteArray;
-      console.log(this.actions);
-      if(this.actions === 'getFeatures'){
+      if (this.actions === 'getFeatures') {
         deleteArray = {};
         deleteArray.delete = this.selected;
         deleteArray.group = group;
-        this.updateArrayEditMode({item: deleteArray, type: 'delete'});
+        this.updateArrayEditMode({ item: deleteArray, type: 'delete' });
         this.$emit('openEditMode');
       }
-      else{
+      else {
         deleteArray = this.selected;
         this.deleteObject(deleteArray);
       }
@@ -213,16 +230,15 @@ export default {
       }
     },
     checkequalsItems(item, object) {
+      this.objectOnTable = object;
       let checkObject = { ...object.properties };
 
       if ('first_name' in checkObject) {
         checkObject.full_name = checkObject.first_name + ' ' + checkObject.last_name;
       }
 
-      let putObject = this.arrayEdit.put.find(el => el.id === object.id);
-      putObject = putObject ? { ...putObject.properties } : 1;
-      let newObject = this.newData.find(el => el.id === object.id);
-      newObject = newObject ? { ...newObject.properties } : 1;
+      let putObject = this.oldPutObject;
+      let newObject = this.newPutObject;
 
       for (let i in this.headers) {
         if (this.headers[i].text != 'id_' && this.headers[i].text != 'id' && checkObject[this.headers[i].text] !== item[this.headers[i].text]) {
@@ -272,14 +288,6 @@ export default {
 
       return classForItem;
     },
-  },
-  mounted() {
-    this.heightTable = Math.round((document.querySelector('.v-window__container').offsetHeight - 64 - 69 - 58 - 75) / 48) - 1;
-    let countPage = 5;
-    for (let i = 1; countPage * i < this.heightTable; i++) {
-      this.rowsPerPage.push(countPage * i);
-    }
-    this.rowsPerPage.push(this.heightTable);
   },
 }
 </script>
