@@ -7,7 +7,6 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.gis.geos import GEOSGeometry
-from django.contrib.gis.serializers import geojson
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.utils import timezone, dateformat
@@ -26,7 +25,7 @@ from plm import settings
 from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
 
-from app.models import Feature, Type, VersionControl, Ruls
+from app.models import Feature, Type, VersionControl
 from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, TypeSerializer, \
     VersionControlSerializer, SetNewPasswordSerializer
 from rest_framework.response import Response
@@ -60,12 +59,16 @@ class TowerAPI(APIView):
         comment = request.data.pop('message')
         groups_names = []
         conflicts = []
+
+        groups_count = 0
         try:
             with transaction.atomic():
                 for group, groups_data in request.data.items():
                     ids = []
                     disabled_flexibilities = groups_data.pop(-1)
                     delete_mas = groups_data.pop(-1)
+
+                    groups_count += 1
 
                     for data in groups_data:
                         if 'id' in data.keys():
@@ -118,8 +121,7 @@ class TowerAPI(APIView):
                     'content': 'Все объекты добавлены и обновлены!'
                 }
             )
-
-        return Response("Success up!")
+        return Response({"groups_count": groups_count})
 
 class FileUploadView(APIView):
 
