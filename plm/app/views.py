@@ -57,7 +57,7 @@ class TowerAPI(APIView):
             return Response(feature_serializer.data)
 
     def put(self, request):
-        comment = request.data.pop('messege')
+        comment = request.data.pop('message')
         groups_names = []
         conflicts = []
         try:
