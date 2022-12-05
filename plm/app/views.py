@@ -78,7 +78,7 @@ class TowerAPI(APIView):
                     dataset = Group.objects.get(name=group).id
                     groups_names.append(group)
 
-                    feature_serializer = FeatureSerializer(feature, data=request.data, many=True, context=disabled_flexibilities)
+                    feature_serializer = FeatureSerializer(feature, data=groups_data, many=True, context=disabled_flexibilities)
                     if feature_serializer.is_valid():
                         version, new_version, conflict = feature_serializer.save()
                         conflicts += conflict
@@ -100,14 +100,12 @@ class TowerAPI(APIView):
                                   "new_version": new_version})
                         if OldVersionSerializer.is_valid():
                             OldVersionSerializer.save()
-                        else:
-                            raise RuntimeError(OldVersionSerializer.errors)
                     else:
-                        raise RuntimeError(feature_serializer.errors)
+                        raise ValueError(feature_serializer.errors)
                 if len(conflicts) > 0:
                     raise IntegrityError
-        except RuntimeError as e:
-            return Response(e.message)
+        except ValueError:
+            return Response(feature_serializer.errors)
         except IntegrityError:
             return Response(conflicts, status=status.HTTP_409_CONFLICT)
 
