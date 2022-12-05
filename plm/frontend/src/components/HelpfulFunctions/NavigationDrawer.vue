@@ -21,26 +21,28 @@
             <p v-if="actions === 'getFeatures'"
                 style="display: flex; font-size: 16px; color: #5E5E5E; justify-content: space-between; align-items: center;">
                 Типы {{ fiteredAllTypes.length }}
-                <v-autocomplete @click:clear="clear" multiple clearable id='search' dense append-icon hide-details
-                    hint="Поиск" hide-no-data solo label="Поиск" @update:search-input="search">
-                </v-autocomplete>
+                <v-text-field  @click:clear="clear" multiple clearable id='search' dense append-icon hide-details
+                    hint="Поиск" hide-no-data solo label="Поиск">
+                </v-text-field>
             </p>
             <p v-else
                 style="display: flex; font-size: 16px; color: #5E5E5E; justify-content: space-between; align-items: center;">
                 Группы {{ fiteredAllTypes.length }}
-                <v-autocomplete @click:clear="clear" multiple clearable id='search' dense append-icon hide-details
-                    hint="Поиск" hide-no-data solo label="Поиск" @update:search-input="search">
+                <v-autocomplete @click:clear="clear" multiple clearable id='search' dense
+                    append-icon hide-details hint="Поиск" hide-no-data solo label="Поиск">
                 </v-autocomplete>
             </p>
             <v-slide-y-transition>
                 <v-list-item-group v-if="fiteredAllTypes.length" class="object__data" v-model="selectedItem"
                     color="#E93030" :mandatory="actions && actions !== 'getAllGroups' && actions != 'getUsersOfGroup'">
-                    <v-list-item class="mb-2 pa-3" v-for="(key, index) in fiteredAllTypes" :key="key.id" link
+                    <v-list-item v-for="(key, index) in types" :key="key.id" class="mb-2 pa-3" link
                         style="border-radius: 8px !important;" @click="changeObject(key, index)">
                         <v-list-item-title style="z-index: 1" class="pa-1" v-if="typeof key === 'object'">
                             <div class="name">
                                 <div>{{ key.name }} <span
-                                        v-if="actions === 'getFeatures' && (user.groups.length > 1 || user.is_superuser)">({{ key.group }})</span>
+                                        v-if="actions === 'getFeatures' && (user.groups.length > 1 || user.is_superuser)">({{
+                                                key.group
+                                        }})</span>
                                 </div>
                                 <template v-if="'all_obj' in key">
                                     <div v-if="key.group in arrayEditMode"
@@ -79,29 +81,33 @@ import CardInLeftPanel from './CardInLeftPanel.vue';
 
 export default {
     name: "CardInfo",
-    comments: {
-        CardInLeftPanel
-    },
-    props: ['addCardOn', 'visableCard', 'editCardOn', 'visableVersions', 'notVisableVersions', 'versionsPage', 'infoCardOn'],
+    components: { CardInLeftPanel },
+    props: ["addCardOn", "visableCard", "editCardOn", "visableVersions", "notVisableVersions", "versionsPage", "infoCardOn"],
     data() {
         return {
             selectedItem: null,
             showCard: false,
             fiteredAllTypes: [],
             objectType: null,
+            searchText: '',
         };
     },
     watch: {
+        searchText:{
+            handeler(){
+                console.log(this.searchText);
+            }
+        },
         selectedItem: {
             async handler(newValue, oldValue) {
                 if (this.selectedItem != null) {
                     if (this.actions === "getAllGroups") {
                         this.updateAction({
-                            actionGet: 'getUsersOfGroup',
-                            actionPost: 'postUser',
-                            actionOneGet: 'getOneUser',
-                            actionPut: 'putUser',
-                            actionDelete: 'deleteUser',
+                            actionGet: "getUsersOfGroup",
+                            actionPost: "postUser",
+                            actionOneGet: "getOneUser",
+                            actionPut: "putUser",
+                            actionDelete: "deleteUser",
                         });
                         if (oldValue === null) {
                             const object = {
@@ -112,13 +118,13 @@ export default {
                                 },
                                 groups: [],
                                 permissions: [],
-                            }
+                            };
                             this.upadateEmptyObject(object);
                         }
                     }
                 }
                 else {
-                    this.upadateTitle('');
+                    this.upadateTitle("");
                     if (this.actions === "getUsersOfGroup") {
                         const headers = [
                             {
@@ -133,20 +139,20 @@ export default {
                             }
                         ];
                         this.updateAction({
-                            actionGet: 'getAllGroups',
-                            actionPost: 'postGroup',
-                            actionOneGet: 'getGroup',
-                            actionPut: 'putGroup',
-                            actionDelete: 'deleteGroup',
+                            actionGet: "getAllGroups",
+                            actionPost: "postGroup",
+                            actionOneGet: "getGroup",
+                            actionPut: "putGroup",
+                            actionDelete: "deleteGroup",
                         });
                         this.updateListItem({ items: this.allGroups });
                         this.updateHeaders(headers);
                         if (oldValue === null) {
                             const object = {
                                 properties: {
-                                    name: '',
+                                    name: "",
                                 },
-                            }
+                            };
                             this.upadateEmptyObject(object);
                         }
                     }
@@ -164,8 +170,8 @@ export default {
                     this.clear();
                 }
                 else {
-                    const searchText = document.querySelector('#search').value;
-                    if (this.allType.length && typeof this.allType[0] === 'object') {
+                    const searchText = document.querySelector("#search").value;
+                    if (this.allType.length && typeof this.allType[0] === "object") {
                         this.fiteredAllTypes = this.allType.filter(el => el.name.toLowerCase().includes(searchText.toLowerCase()));
                     }
                     else {
@@ -176,34 +182,40 @@ export default {
         },
         actions: {
             handler() {
-                if (this.fiteredAllTypes.length && this.actions !== 'getAllGroups') {
+                if (this.fiteredAllTypes.length && this.actions !== "getAllGroups") {
                     this.selectedItem = 0;
                     this.changeObject(this.fiteredAllTypes[0]);
                 }
             }
         }
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions', 'getToolbarTitle', 'allTypeForTable', 'user']) 
-                    
-},
+    computed: {
+        ...mapGetters(["allFeatures", "getList", "allType", "emptyObject", "allGroups", "oneType", "arrayEditMode", "actions", "getToolbarTitle", "allTypeForTable", "user"]),
+        types() {
+            if (this.allType.length && typeof this.allType[0] === "object") {
+                return this.allType.filter(el => el.name.toLowerCase().includes(this.searchText.toLowerCase()));
+            }
+            else {
+                return this.allType.filter(el => el.toLowerCase().includes(this.searchText.toLowerCase()));
+            }
+        }
+    },
     methods: {
-        ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAllTypeInGroup', 'getFilteredVersions']),
-        ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
-            'updateListType', 'updateListItem']),
+        ...mapActions(["getGroup", "getTypeObject", "getUsersOfGroup", "filterForFeature", "getOneTypeObjectForFeature", "getAllTypeInGroup", "getFilteredVersions"]),
+        ...mapMutations(["upadateEmptyObject", "updateHeaders", "updateDrawType", "updateAction", "upadateTitle", "updateListType", "updateListItem"]),
         getOneGroup(id) {
             this.getGroup(id);
         },
-
         async changeObject(objectType, index) {
             if (this.selectedItem != index) {
                 this.objectType = objectType;
                 this.upadateTitle({
-                    title: typeof objectType === 'string' ? objectType : objectType.name,
-                    group: 'group' in objectType ? objectType.groups : objectType
+                    title: typeof objectType === "string" ? objectType : objectType.name,
+                    group: "group" in objectType ? objectType.groups : objectType
                 });
                 switch (this.actions) {
-                    case 'getUsersOfGroup':
-                    case 'getAllGroups': {
+                    case "getUsersOfGroup":
+                    case "getAllGroups": {
                         const headers = [
                             {
                                 "text": "id",
@@ -224,20 +236,17 @@ export default {
                         this.getUsersOfGroup(objectType);
                         break;
                     }
-
-                    case 'getTypeObject':
+                    case "getTypeObject":
                         await this.getAllTypeInGroup(objectType.name);
                         console.log(this.allTypeForTable);
                         this.emptyObject.properties.all_group_type = this.allTypeForTable.map(el => el.name);
                         break;
-
-                    case 'getFeatures':
+                    case "getFeatures":
                         await this.getOneTypeObjectForFeature({ id: objectType.id });
                         this.objectType = this.oneType;
                         this.updateDrawType(this.objectType.type);
                         this.filterForFeature(this.objectType.id);
                         break;
-
                     default:
                         this.getFilteredVersions(objectType);
                         break;
@@ -257,11 +266,10 @@ export default {
             this.fiteredAllTypes = this.allType;
         },
     },
-    components: { CardInLeftPanel },
     mounted() {
         setTimeout(async () => {
             await this.getTypeObject();
-            if (this.fiteredAllTypes.length && this.actions !== 'getAllGroups') {
+            if (this.fiteredAllTypes.length && this.actions !== "getAllGroups") {
                 this.selectedItem = 0;
                 this.changeObject(this.fiteredAllTypes[0]);
             }
