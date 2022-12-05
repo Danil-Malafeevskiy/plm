@@ -34,9 +34,7 @@ export default {
         },
         
         async putFeature({ commit }, features) {
-            console.log(features);
-            features.messege = features.message;
-            await axios.put(`/tower`, features).then((response) => {
+            await axios.put(`/tower`, features, { headers: { "Content-Type": "application/json" } }).then((response) => {
                 console.log(response.data);
                 if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');
