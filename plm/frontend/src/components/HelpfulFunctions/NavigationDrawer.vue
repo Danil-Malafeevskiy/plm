@@ -27,7 +27,7 @@
             </p>
             <p v-else
                 style="display: flex; font-size: 16px; color: #5E5E5E; justify-content: space-between; align-items: center;">
-                Гуппы {{ fiteredAllTypes.length }}
+                Группы {{ fiteredAllTypes.length }}
                 <v-autocomplete @click:clear="clear" multiple clearable id='search' dense append-icon hide-details
                     hint="Поиск" hide-no-data solo label="Поиск" @update:search-input="search">
                 </v-autocomplete>
@@ -183,7 +183,9 @@ export default {
             }
         }
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions', 'getToolbarTitle', 'allTypeForTable', 'user']) },
+    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions', 'getToolbarTitle', 'allTypeForTable', 'user']) 
+                    
+},
     methods: {
         ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAllTypeInGroup', 'getFilteredVersions']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',

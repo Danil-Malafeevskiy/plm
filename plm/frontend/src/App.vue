@@ -22,7 +22,7 @@
         <template v-slot:extension>
 
           <v-tabs v-model="tab" align-with-title color="#E93030">
-            <v-tab v-for="item in items" :key="item" class="ma-0">
+            <v-tab v-for="item in itemsForSlider" :key="item" class="ma-0">
               <span>{{ item }}</span>
             </v-tab>
           </v-tabs>
@@ -84,7 +84,7 @@
                   }} объектов</span>
                 </div>
                 <div>
-                  <v-btn @click="arrayEditMode.messege = ''" text class="pa-0" style="margin: 0 10px 0 0">
+                  <v-btn @click="arrayEditMode.message = ''" text class="pa-0" style="margin: 0 10px 0 0">
                     <span style="color: #787878;">Удалить Комментарий</span>
                   </v-btn>
                   <v-btn @click="editObjects" text class="pa-0" style="margin: 0 10px 0 0">
@@ -92,8 +92,8 @@
                   </v-btn>
                 </div>
               </div>
-              <v-text-field v-model="arrayEditMode.messege" class="pa-2" background-color="#F1F1F1" hide-details
-                label="Комментарий" append-icon="mdi-close" @click:append="arrayEditMode.messege = ''"
+              <v-text-field v-model="arrayEditMode.message" class="pa-2" background-color="#F1F1F1" hide-details
+                label="Комментарий" append-icon="mdi-close" @click:append="arrayEditMode.message = ''"
                 placeholder="Комментарий" filled>
               </v-text-field>
             </div>
@@ -103,7 +103,8 @@
             <Auth v-if="getAuth === false && authbool" />
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
             <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data" @openEditMode="editMode = true" />
+              :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data"
+              @openEditMode="editMode = true" />
             <VersionControl v-if="versionsPage.data" :versionsPage="versionsPage" />
           </div>
         </v-tab-item>
@@ -150,9 +151,6 @@ export default {
     return {
       tab: null,
       filteredFeatures: [],
-      items: [
-        'список', 'карта'
-      ],
       objectForConflict: {},
       conflictCard: false,
       cardVisable: { data: false },
@@ -202,12 +200,7 @@ export default {
     actions: {
       handler() {
         this.notVisableCard();
-        if (this.actions === 'getFeatures') {
-          this.items = ['список', 'карта'];
-        }
-        else {
-          this.items = ['список'];
-        }
+
         setTimeout(() => {
           this.infoCardOn.data = false;
           this.addCardOn.data = false;
@@ -216,16 +209,23 @@ export default {
       }
     },
   },
-  computed: {...mapGetters(['allFeatures', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
-    'newData', 'actions', 'typeForLayer', 'arrayEdit', 'allListItem', 'user', 'conflictArrays']),
-    
-    heightVItem(){
-      if(this.actions === 'getFeatures'){
-        return '89.7%';
+  computed: {
+    ...mapGetters(['allFeatures', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
+      'newData', 'actions', 'typeForLayer', 'arrayEdit', 'allListItem', 'user', 'conflictArrays']),
+
+    heightVItem() {
+      if (this.actions === 'getFeatures') {
+        if (window.screen.width < 1920)
+          return '88%';
+        else
+          return '90%'
       }
-      else{
+      else {
         return '94%';
       }
+    },
+    itemsForSlider(){
+      return this.actions === 'getFeatures' ? ['список', 'карта'] : ['список']
     }
   },
   methods: {
@@ -246,9 +246,7 @@ export default {
     notVisableCard() {
       this.cardVisable.data = false;
     },
-    disabledAddButton() {
-      return !this.cardVisable.data && JSON.stringify(this.emptyObject) === '{}';
-    },
+    
     async onmessage(e) {
       const data = JSON.parse(e.data);
       console.log(data);
@@ -287,15 +285,15 @@ export default {
     async editObjects() {
       let arrayEditModeFromPut = {};
       for (let key in this.arrayEditMode) {
-        if (key != 'messege') {
-          arrayEditModeFromPut[key] = [...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post, 
+        if (key != 'message') {
+          arrayEditModeFromPut[key] = [...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post,
           this.arrayEditMode[key].delete.map(el => el.id), this.arrayEditMode[key].offPoints.map(el => el.id)];
         }
       }
-      arrayEditModeFromPut.messege = this.arrayEditMode.messege;
+      arrayEditModeFromPut.message = this.arrayEditMode.message;
       await this.putFeature(arrayEditModeFromPut);
 
-      if (this.conflictArrays.length || this.newData.length){
+      if (this.conflictArrays.length || this.newData.length) {
         this.isConflict = true;
         return;
       }
@@ -340,10 +338,10 @@ export default {
         this.objectForConflict = object
         this.conflictCard = true;
       }
-      else if (this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.getObjectForCard.id : element.id_ === this.getObjectForCard.id_ ))) {
+      else if (this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.getObjectForCard.id : element.id_ === this.getObjectForCard.id_))) {
         this.conflictCard = true;
       }
-      else{
+      else {
         this.conflictCard = false;
       }
     },
