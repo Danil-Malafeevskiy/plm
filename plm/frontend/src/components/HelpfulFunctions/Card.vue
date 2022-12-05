@@ -234,7 +234,6 @@ export default {
             objectForCard: {},
             showPassword: false,
             listMdiIcons: [mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket],
-            listSelectedIcons: [],
             isOldItem: false,
             snackbar: false,
             rules: {
@@ -411,7 +410,6 @@ export default {
                 this.infoCardOn_.data = !this.infoCardOn_.data;
             }
             if(this.offPointsFlag_ && this.objectForCard.geometry.type === 'Point'){
-                console.log(this.arrayEditMode)
                 this.updateArrayEditMode({ item: this.objectForCard, type: 'offPoints' })
             }
         },
@@ -540,10 +538,6 @@ export default {
                 }
                 this.objectForCard.properties[field] = newPutObject[0].properties[field];
             }
-        },
-
-        clickImage(element) {
-            this.objectForCard.image = element.slice(4) + '.png'
         },
 
         checkDoubleFields(type) {
