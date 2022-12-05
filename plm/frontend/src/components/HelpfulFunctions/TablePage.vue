@@ -37,7 +37,7 @@
         {{ tableArrayItems.length }} объекта </span>
       <span class="object" v-else>{{ tableArrayItems.length }} объектов </span>
     </div>
-    <v-data-table @click:row="showCard" :headers="headersForTale" v-model="selected" show-select item-key="id"
+    <v-data-table  v-model="selected" @click:row="showCard" :headers="headersForTale" show-select item-key="id"
       :items="tableArrayItems" :items-per-page="heightTable" :footer-props="{ 'items-per-page-options': rowsPerPage }"
       class="pa-0" @toggle-select-all="showAll()" :item-class="classRow" style="
         height: 100% !important;
