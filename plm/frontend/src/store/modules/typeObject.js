@@ -1,11 +1,11 @@
 import axios from "axios";
 
-function getUrl(user){
+function getUrl(user) {
     let url;
-    if(user.is_staff || user.is_superuser){
+    if (user.is_staff || user.is_superuser) {
         url = '/dataset/admin';
     }
-    else{
+    else {
         url = '/dataset';
     }
     return url;
@@ -106,14 +106,23 @@ export default {
                 if (state.pastGroup != null) {
                     dispatch('getAllTypeInGroup', state.pastGroup);
                 }
-                else{
+                else {
                     dispatch('getAllTypeForTable');
                 }
                 dispatch('allGroupForNav');
             });
         },
         async deleteTypeObject({ dispatch, commit, state }, id) {
-            await axios.delete(`/dataset/admin?id=${[id.map(el => el.id)]}`).then((response) => {
+            let deleteTypeObjects;
+            
+            if (Array.isArray(id)) {
+                deleteTypeObjects = id.map(el => el.id);
+            }
+            else {
+                deleteTypeObjects = id;
+            }
+            
+            await axios.delete(`/dataset/admin?id=${deleteTypeObjects}`).then((response) => {
                 console.log(response.data);
                 if (typeof response.data === 'string') {
                     commit('updateIsGetAllChange');
@@ -169,7 +178,7 @@ export default {
             state.allTypeForTable = types;
             this.commit('updateListItem', { items: types });
         },
-        updateAllTypeForUpload(state, types){
+        updateAllTypeForUpload(state, types) {
             state.allTypeForUpload = types;
         }
     },
@@ -195,7 +204,7 @@ export default {
         allTypeForTable(state) {
             return state.allTypeForTable
         },
-        allTypeForUpload(state){
+        allTypeForUpload(state) {
             return state.allTypeForUpload;
         }
     },

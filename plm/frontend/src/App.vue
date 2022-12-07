@@ -249,7 +249,7 @@ export default {
     
     async onmessage(e) {
       const data = JSON.parse(e.data);
-      console.log(data);
+      // console.log(data);
       switch (data.action) {
         case "update": {
           if (this.editMode) {
@@ -287,7 +287,7 @@ export default {
       for (let key in this.arrayEditMode) {
         if (key != 'message') {
           arrayEditModeFromPut[key] = [...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post,
-          this.arrayEditMode[key].delete.map(el => el.id), this.arrayEditMode[key].offPoints.map(el => el.id), { 'propeties': this.arrayEditMode[key].properties }];
+          this.arrayEditMode[key].delete.map(el => el.id), this.arrayEditMode[key].offPoints.map(el => el.id), { 'properties': this.arrayEditMode[key].properties }];
         }
       }
       arrayEditModeFromPut.message = this.arrayEditMode.message;

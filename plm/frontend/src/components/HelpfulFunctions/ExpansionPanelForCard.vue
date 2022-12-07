@@ -16,7 +16,7 @@
                                 ">
             </v-checkbox>
         </div>
-        <div style="margin: 0 0 10px 24px"
+        <div style="margin: 30px 0 10px 24px"
             v-if="'properties' in objectForCard && 'all_group_type' in objectForCard.properties">
             <v-expansion-panels accordion flat class="pa-0 ma-0">
                 <v-expansion-panel class="pa-0 ma-0">
@@ -43,7 +43,7 @@
                 </v-expansion-panel>
             </v-expansion-panels>
         </div>
-        <div style="margin: 0 0 10px 24px"
+        <div style="margin: 30px 0 10px 24px"
             v-if="'properties' in objectForCard && ((objectForCard_.is_staff && 'first_name' in objectForCard.properties) || 'type' in objectForCard.properties)">
             <v-expansion-panels accordion flat class="pa-0 ma-0">
                 <v-expansion-panel class="pa-0 ma-0">
@@ -88,7 +88,7 @@
                 </v-expansion-panel>
             </v-expansion-panels>
         </div>
-        <div style="margin: 0 0 10px 24px" v-else-if="'permissions' in objectForCard">
+        <div style="margin: 30px 0 10px 24px" v-else-if="'permissions' in objectForCard">
             <v-expansion-panels accordion flat class="pa-0 ma-0">
                 <v-expansion-panel>
 
@@ -127,7 +127,7 @@
                 </v-expansion-panel>
             </v-expansion-panels>
         </div>
-        <div style="margin: 0 0 10px 24px" v-else-if="'users' in objectForCard">
+        <div style="margin: 30px 0 10px 24px" v-else-if="'users' in objectForCard">
             <v-expansion-panels accordion flat class="pa-0 ma-0">
                 <v-expansion-panel>
 
@@ -184,27 +184,31 @@ export default {
         },
         'objectForCard.is_staff': {
             handler() {
-                if (this.objectForCard.is_staff && !this.objectForCard.is_superuser) {
-                    this.objectForCard_.groups.push('Admin');
-                    this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)];
-                }
-                else {
-                    this.objectForCard_.groups = this.objectForCard_.groups.filter(el => el != 'Admin');
+                if ('is_staff' in this.objectForCard) {
+                    if (this.objectForCard.is_staff && !this.objectForCard.is_superuser) {
+                        this.objectForCard_.groups.push('Admin');
+                        this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)];
+                    }
+                    else {
+                        this.objectForCard_.groups = this.objectForCard_.groups.filter(el => el != 'Admin');
+                    }
                 }
             }
         },
         'objectForCard.is_superuser': {
             handler() {
-                if (this.objectForCard.is_staff && this.objectForCard.is_superuser) {
-                    this.objectForCard_.groups = this.objectForCard_.groups.filter(el => el != 'Admin');
+                if ('is_superuser' in this.objectForCard) {
+                    if (this.objectForCard.is_staff && this.objectForCard.is_superuser) {
+                        this.objectForCard_.groups = this.objectForCard_.groups.filter(el => el != 'Admin');
 
-                }
-                else if (this.objectForCard.is_staff) {
-                    this.objectForCard_.groups.push('Admin');
-                    this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)];
-                }
-                else if (this.objectForCard.is_superuser) {
-                    this.objectForCard_.is_staff = true;
+                    }
+                    else if (this.objectForCard.is_staff) {
+                        this.objectForCard_.groups.push('Admin');
+                        this.objectForCard_.groups = [...new Set(this.objectForCard_.groups)];
+                    }
+                    else if (this.objectForCard.is_superuser) {
+                        this.objectForCard_.is_staff = true;
+                    }
                 }
             }
         }
