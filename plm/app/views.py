@@ -171,9 +171,12 @@ class FileUploadView(APIView):
         dict_1['properties'] = {}
         properties = []
         headers = []
-        for head, prop in type.headers, type.properties:
+        for head in type.headers:
             headers.append(head['text'])
+
+        for prop in type.properties:
             properties.append(prop)
+
         flag = True
         for value in dict_0:
             if len(properties)!=0:
