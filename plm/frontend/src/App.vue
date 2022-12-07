@@ -112,7 +112,7 @@
           <div flat>
             <MapArea :allFeatures="allFeatures" :cardVisable="cardVisable" :visableCard="visableCard"
               :notVisableCard="notVisableCard" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
-              :getFeature="emptyObject" :changeElements="changeElements" />
+              :getFeature="emptyObject" :changeElements="changeElements" :conflict="conflictCard" />
           </div>
         </v-tab-item>
       </v-tabs-items>
