@@ -48,7 +48,6 @@ export default {
             });
         },
         async deleteFeature({ commit }, features) {
-            console.log(features)
             await axios.put('/tower', features).then((response) => {
                 console.log(response.data);
                 if (typeof response.data === 'string') {
@@ -77,7 +76,6 @@ export default {
                 if ('group' in response.data) {
                     for (let i in response.data.data) {
                         response.data.data[i].id_ = uuidv4();
-                        console.log(response.data.data[i]);
                         commit('updateArrayEditMode', { item: { ...response.data.data[i], group: response.data.group }, type: 'post' });
                     }
                     const group = response.data.group;
@@ -201,10 +199,10 @@ export default {
 
                 case 'properties':
                     for (let field in item) {
-                        Vue.set(state.arrayEditMode[item.group].properties, field, item);
+                        if (field != 'group')
+                            Vue.set(state.arrayEditMode[item.group].properties, field, item[field]);
                     }
             }
-
         },
         deleteObjectFromArrayEditMode(state, object) {
             if (object.group in state.arrayEditMode) {
