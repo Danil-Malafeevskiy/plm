@@ -245,6 +245,8 @@ export default {
             password_again: '',
             types: ['Point', 'LineString', 'Polygon'],
             offPointsFlag_: false,
+            postIndex: null, 
+            pointIndex: null,
         }
     },
     watch: {
@@ -488,8 +490,77 @@ export default {
             else {
                 this.deleteObject(this.objectForCard.id)
             }
+
+            if (this.objectForCard.geometry.type === 'Point') {
+                let havePointInLinePost = []
+                this.arrayEdit.post.forEach((element, index) => {
+                    if (element.geometry.type === 'LineString') {
+                        havePointInLinePost.push(element.geometry.coordinates.some((el) => {
+                            if (el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]) {
+                                this.postIndex = index
+                                return el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]
+                            }
+                        }))
+                    }
+                });
+                havePointInLinePost = havePointInLinePost.some((el) => {
+                    return el
+                })
+
+                if (havePointInLinePost) {
+                    this.arrayEdit.post[this.postIndex].geometry.coordinates.forEach((coord, index) => {
+                        if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
+                            this.pointIndex = index
+                        }
+                    });
+                    if(this.pointIndex != this.arrayEdit.post[this.postIndex].geometry.coordinates.length && this.pointIndex != 0){
+                        this.arrayEdit.post[this.postIndex].geometry.coordinates.splice(this.pointIndex, 1)
+                    }
+                } else {
+                    let havePointInLinePut = []
+                    this.arrayEdit.put.forEach((element, index) => {
+                        if (element.geometry.type === 'LineString') {
+                            havePointInLinePut.push(element.geometry.coordinates.some((el) => {
+                                if (el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]) {
+                                    this.postIndex = index
+                                    return el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]
+                                }
+                            }))
+                        }
+                    });
+                    havePointInLinePut = havePointInLinePut.some((el) => {
+                        return el
+                    })
+
+                    if (havePointInLinePut) {
+                        this.arrayEdit.put[this.postIndex].geometry.coordinates.forEach((coord, index) => {
+                            if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
+                                this.pointIndex = index
+                            }
+                        });
+
+                        if (this.pointIndex != this.arrayEdit.put[this.postIndex].geometry.coordinates.length && this.pointIndex != 0) {
+                            this.arrayEdit.put[this.postIndex].geometry.coordinates.splice(this.pointIndex, 1)
+                        }
+                        console.log(this.arrayEdit.put[this.postIndex].geometry.coordinates)
+                    }
+
+
+                }
+
+            }
             this.infoCardOn_.data = !this.infoCardOn_.data;
             this.notVisableCard();
+        },
+        comparePointLine(coordPoint, coordLine) {
+            coordLine.forEach((element, index) => {
+                if (coordPoint[0] === element[0] && coordPoint[1] === element[1]) {
+                    if (index != coordLine.length && index != 0) {
+                        this.pointCoordInLine = coordPoint
+                        this.pointCoordInLineIndex = index
+                    }
+                }
+            });
         },
         fileToBase64(file) {
             const reader = new FileReader();

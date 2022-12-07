@@ -96,7 +96,6 @@ export default {
       drawCoord: null,
       drawFeature: null,
       oneFeature_: this.oneFeature,
-      pointCoordInLine: null,
       pointCoordInLineIndex: null,
     }
   },
@@ -341,18 +340,13 @@ export default {
       }
     },
     checkEqualCoordinates(coord1, coord2) {
-      if (coord1[0] === coord2[0] && coord1[1] === coord2[1]) {
-        return true
-      } else {
-        return false
-      }
+      return coord1[0] === coord2[0] && coord1[1] === coord2[1]
     },
 
     comparePointLine(coordPoint, coordLine) {
       coordLine.forEach((element, index) => {
         if (this.checkEqualCoordinates(coordPoint, element)) {
           if (index != coordLine.length && index != 0) {
-            this.pointCoordInLine = coordPoint
             this.pointCoordInLineIndex = index
           }
         }
