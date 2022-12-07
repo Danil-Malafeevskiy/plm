@@ -1,5 +1,6 @@
 import axios from "axios";
 import Vue from "vue";
+import { v4 as uuidv4 } from 'uuid';
 
 axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 axios.defaults.xsrfCookieName = "csrftoken";
@@ -32,7 +33,7 @@ export default {
                 commit('updateOneFeature', response.data[0]);
             }).catch(error => console.log(error));
         },
-        
+
         async putFeature({ commit }, features) {
             await axios.put(`/tower`, features, { headers: { "Content-Type": "application/json" } }).then((response) => {
                 console.log(response.data);
@@ -41,7 +42,7 @@ export default {
                     commit('updateConflictArrays', []);
                 }
             }).catch(error => {
-                if(error.response.status === 409){
+                if (error.response.status === 409) {
                     commit('updateConflictArrays', error.response.data)
                 }
             });
@@ -73,7 +74,18 @@ export default {
                 }
             }).then((response) => {
                 console.log(response.data)
-                if (typeof response.data === 'object') {
+                if ('group' in response.data) {
+                    for (let i in response.data.data) {
+                        response.data.data[i].id_ = uuidv4();
+                        console.log(response.data.data[i]);
+                        commit('updateArrayEditMode', { item: { ...response.data.data[i], group: response.data.group }, type: 'post' });
+                    }
+                    const group = response.data.group;
+                    delete response.data.data;
+                    delete response.data.group;
+                    commit('updateArrayEditMode', { item: { ...response.data, group: group }, type: 'properties' })
+                }
+                else {
                     for (let i in response.data) {
                         commit('updateError', response.data[i]);
                     }
@@ -85,7 +97,7 @@ export default {
                 commit('updateFeatureInMap', response.data[0])
             });
         },
-        setOffPointsFlag({commit}, flag){
+        setOffPointsFlag({ commit }, flag) {
             commit('updateOffPointsFlag', flag);
         }
     },
@@ -120,7 +132,8 @@ export default {
                 Vue.set(state.arrayEditMode, item.group, {
                     put: [],
                     post: [],
-                    delete: [], 
+                    delete: [],
+                    properties: {},
                     offPoints: [],
                 });
             }
@@ -162,7 +175,7 @@ export default {
                         state.arrayEditMode[item.group].post = state.arrayEditMode[item.group].post.filter(el => el.id_ != item.id_);
                         state.arrayEdit.post = state.arrayEdit.post.filter(el => el.id_ != item.id_);
                     }
-                    else if(!('delete' in item)) {
+                    else if (!('delete' in item)) {
                         state.arrayEditMode[item.group].put = state.arrayEditMode[item.group].put.filter(el => el.id != item.id);
                         state.arrayEdit.put = state.arrayEdit.put.filter(el => el.id != item.id);
 
@@ -173,18 +186,23 @@ export default {
                             state.arrayEditMode[item.group].delete.push(item);
                         }
                     }
-                    else{
+                    else {
                         state.arrayEditMode[item.group].delete = [...state.arrayEditMode[item.group].delete, ...item.delete];
                         state.arrayEditMode[item.group].delete = [...new Set(state.arrayEditMode[item.group].delete)];
                     }
                     state.arrayEdit.delete = getEditedFeatures(state.arrayEditMode, 'delete');
 
                     break;
-                
+
                 case 'offPoints':
                     state.arrayEditMode[item.group].offPoints.push(item);
                     state.arrayEdit.offPoints.push(item);
                     break;
+
+                case 'properties':
+                    for (let field in item) {
+                        Vue.set(state.arrayEditMode[item.group].properties, field, item);
+                    }
             }
 
         },
@@ -222,10 +240,10 @@ export default {
         updateFeatureInMap(state, feature) {
             state.featureInMap = feature;
         },
-        updateConflictArrays(state, newConlicts){
+        updateConflictArrays(state, newConlicts) {
             state.conflictArrays = newConlicts;
         },
-        updateOffPointsFlag(state, flag){
+        updateOffPointsFlag(state, flag) {
             state.offPointsFlag = flag;
         }
     },
@@ -260,13 +278,13 @@ export default {
         featureInMap(state) {
             return state.featureInMap;
         },
-        conflictArrays(state){
+        conflictArrays(state) {
             return state.conflictArrays;
-        }, 
-        oneFeature(state){
+        },
+        oneFeature(state) {
             return state.oneFeature;
         },
-        offPointsFlag(state){
+        offPointsFlag(state) {
             return state.offPointsFlag;
         }
     },
