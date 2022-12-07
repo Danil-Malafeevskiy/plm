@@ -3,7 +3,7 @@
     <NavigationDrawer :addCardOn="addCardOn" :notVisableVersions="notVisableVersions" :visableCard="visableCard"
       :editCardOn="editCardOn" :visableVersions="visableVersions" :versionsPage="versionsPage"
       :infoCardOn="infoCardOn" />
-    <FIleInputWindow v-if="isFileInput" @offFileInput="offFileInput" />
+    <FIleInputWindow v-if="isFileInput" @offFileInput="offFileInput" @switchEditMode="editMode = true" />
     <v-main>
       <router-view></router-view>
       <div style="display: none">
@@ -287,7 +287,7 @@ export default {
       for (let key in this.arrayEditMode) {
         if (key != 'message') {
           arrayEditModeFromPut[key] = [...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post,
-          this.arrayEditMode[key].delete.map(el => el.id), this.arrayEditMode[key].offPoints.map(el => el.id)];
+          this.arrayEditMode[key].delete.map(el => el.id), this.arrayEditMode[key].offPoints.map(el => el.id), { 'propeties': this.arrayEditMode[key].properties }];
         }
       }
       arrayEditModeFromPut.message = this.arrayEditMode.message;

@@ -63,6 +63,7 @@ export default {
             this.uploadFileWithFeature({ file: this.file, group: this.group, filename: this.fileName });
             this.componentKey++;
             this.$emit('offFileInput');
+            this.$emit('switchEditMode')
         },
         test() {
             setTimeout(() => {
