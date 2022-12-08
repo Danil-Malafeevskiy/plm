@@ -155,6 +155,7 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex';
+import Vue from 'vue';
 
 export default {
     name: 'ExpansionPanel',
@@ -178,7 +179,8 @@ export default {
             async handler() {
                 this.objectForCard_ = this.objectForCard;
                 if ('properties' in this.objectForCard && 'all_group_type' in this.objectForCard.properties) {
-                    this.objectForCard_.ruls = [...this.objectForCard_.properties.group_type];
+                    Vue.set(this.objectForCard_, 'ruls', [...this.objectForCard_.properties.group_type])
+                    // this.objectForCard_.ruls = [...this.objectForCard_.properties.group_type];
                 }
             }
         },
@@ -211,7 +213,7 @@ export default {
                     }
                 }
             }
-        }
+        },
     },
     computed: mapGetters(['user', 'currentGroup', 'allGroups', 'allUsersForAdmin', 'emptyObject', 'actions']),
     methods: {

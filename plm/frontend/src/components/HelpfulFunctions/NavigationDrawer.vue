@@ -233,7 +233,6 @@ export default {
                             }
                         ];
                         await this.getAllTypeInGroup(objectType.name);
-                        this.updateHeaders(headers)
                         this.emptyObject.properties.all_group_type = this.allTypeForTable.map(el => el.name);
                         break;
                     }
