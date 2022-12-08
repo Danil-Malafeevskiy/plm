@@ -60,7 +60,7 @@ import Feature from 'ol/Feature';
 export default {
   components: {
   },
-  props: ['allFeatures', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature', 'changeElements', 'cardVisable'],
+  props: ['allFeatures', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature', 'changeElements', 'cardVisable', 'conflict'],
   data() {
     return {
       coord: [],
@@ -165,12 +165,14 @@ export default {
     },
     'getObjectForCard.geometry': {
       handler() {
-        const layer = this.map.getAllLayers().find(layer => layer.get('typeId') === this.getObjectForCard.name);
-        let features = layer.getSource().getFeatures();
+        if (this.conflict) {
+          const layer = this.map.getAllLayers().find(layer => layer.get('typeId') === this.getObjectForCard.name);
+          let features = layer.getSource().getFeatures();
 
-        for (let i in features) {
-          if (features[i].getId() === this.oldFeature.id) {
-            features[i].getGeometry().setCoordinates(this.coordinatesFromLonLat(this.oldFeature.geometry.coordinates));
+          for (let i in features) {
+            if (features[i].getId() === this.oldFeature.id) {
+              features[i].getGeometry().setCoordinates(this.coordinatesFromLonLat(this.oldFeature.geometry.coordinates));
+            }
           }
         }
       },
@@ -345,7 +347,8 @@ export default {
       }
     },
     checkEqualCoordinates(coord1, coord2) {
-      return coord1[0] === coord2[0] && coord1[1] === coord2[1]
+      return coord1[0] === coord2[0] && coord1[1] === coord2[1];
+
     },
 
     comparePointLine(coordPoint, coordLine) {
@@ -479,7 +482,6 @@ export default {
         else {
           coordinates = this.drawLayer.getSource().getFeatures().find(el => el.getGeometry().getType() === 'LineString').getGeometry().getCoordinates();
         }
-
         this.feature.geometry.coordinates = this.coordinatesToLonLat(coordinates);
         this.feature.type = 'Feature';
         this.feature.geometry.type = this.drawType;
@@ -621,11 +623,11 @@ export default {
           source: this.drawLayer.getSource()
         });
       }
-      
+
       this.map.addLayer(this.drawLayer);
       this.map.addInteraction(this.draw);
       this.map.addInteraction(this.modify);
-      if (this.arrFeatureForDraw.length){
+      if (this.arrFeatureForDraw.length) {
         const source = new VectorSource({ features: this.arrFeatureForDraw });
         const snap = new Snap({ source: source });
         this.map.addInteraction(snap);
@@ -710,7 +712,7 @@ export default {
             for (let i = 0; i < this.oldDrawCoordinates.length; i++) {
               this.oldDrawCoordinates[i] = toLonLat(this.oldDrawCoordinates[i])
             }
-            await this.getOneFeatureId(this.drawFeature.getId())
+            await this.getOneFeatureId(this.drawFeature.getId());
             this.oneFeature.geometry.coordinates = this.oldDrawCoordinates
             this.updateArrayEditMode({ item: this.oneFeature, type: 'put' });
           } else {
@@ -834,7 +836,7 @@ export default {
       const allLayers = this.map.getAllLayers().filter(el => el.get('typeId') != undefined);
       allLayers.forEach(layer => {
         if (!this.filteredTypes.find(el => el.id === layer.get('typeId'))) {
-          this.filteredTypes.push(this.allType.find(el => el.id === layer.get('typeId')))
+          this.filteredTypes.push(this.allType.find(el => el.id === layer.get('typeId')));
         }
       });
     }

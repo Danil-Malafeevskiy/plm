@@ -65,8 +65,14 @@ class TowerAPI(APIView):
             with transaction.atomic():
                 for group, groups_data in request.data.items():
                     ids = []
+                    properties = groups_data.pop(-1)
                     disabled_flexibilities = groups_data.pop(-1)
                     delete_mas = groups_data.pop(-1)
+
+                    for type_name, prop in properties['properties'].items():
+                        type = Type.objects.get(name=type_name, group=Group.objects.get(name=group).id)
+                        type.properties = prop
+                        type.save()
 
                     groups_count += 1
 
@@ -165,8 +171,12 @@ class FileUploadView(APIView):
         dict_1['properties'] = {}
         properties = []
         headers = []
-        for obj in type.headers:
-            headers.append(obj['text'])
+        for head in type.headers:
+            headers.append(head['text'])
+
+        for prop in type.properties:
+            properties.append(prop)
+
         flag = True
         for value in dict_0:
             if len(properties)!=0:
@@ -179,62 +189,17 @@ class FileUploadView(APIView):
                     dict_1['geometry'] = value[key]
                     continue
 
-                if flag and key not in headers:
+                if flag and key not in headers and key not in properties:
                     properties.append(key)
 
                 dict_1['properties'][key] = value[key]
             lis.append(json.dumps(dict_1))
 
-        type.properties = properties
-        type.save()
-
         for i in range(len(lis)):
             lis[i] = json.loads(lis[i])
             lis[i]['geometry'] = {"type": GEOSGeometry(lis[i]['geometry']).geom_type, "coordinates": GEOSGeometry(lis[i]['geometry']).coords}
 
-        return Response(lis)
-
-        '''feature_serializer = FeatureSerializer([], data=lis, many=True, context=False)
-        if feature_serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    version, new_version, conflict = feature_serializer.save()
-                    if len(conflict) > 0:
-                        raise IntegrityError
-            except IntegrityError:
-                return Response({"conflicts": conflict, "data": new_version['create']}, status=status.HTTP_409_CONFLICT)
-
-            dataset = Group.objects.get(name=request.data['group'])
-            if VersionControl.objects.filter(flag=True, dataset=dataset.id).exists():
-                version_now = VersionControl.objects.get(flag=True, dataset=dataset.id)
-                version_now.flag = False
-                version_now.save()
-                dis_version = VersionControl.objects.filter(
-                    date_update__gte=version_now.date_update,
-                    dataset=dataset.id, disabled=False)
-                for vers in dis_version:
-                    vers.disabled = True
-                    vers.save()
-
-            OldVersionSerializer = VersionControlSerializer(
-                data={"user": request.user.username, "version": version,
-                      'dataset': dataset.id, 'comment': f"Добавление новых объектов! {dataset.name}",
-                      "new_version": new_version})
-            if OldVersionSerializer.is_valid():
-                OldVersionSerializer.save()
-            else:
-                return Response(OldVersionSerializer.errors)
-
-            layer = get_channel_layer()
-            async_to_sync(layer.group_send)(
-                request.data['group'],
-                {
-                    'type': 'update.feature',
-                    'content': 'Все объекты добавлены!'
-                }
-            )
-            return Response("Success new")
-        return Response(feature_serializer.errors)'''
+        return Response({"data": lis, filename: properties, "group": request.data['group']})
 
 class LoginView(APIView):
     authentication_classes = [SessionAuthentication]

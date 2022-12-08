@@ -3,7 +3,7 @@
     <NavigationDrawer :addCardOn="addCardOn" :notVisableVersions="notVisableVersions" :visableCard="visableCard"
       :editCardOn="editCardOn" :visableVersions="visableVersions" :versionsPage="versionsPage"
       :infoCardOn="infoCardOn" />
-    <FIleInputWindow v-if="isFileInput" @offFileInput="offFileInput" />
+    <FIleInputWindow v-if="isFileInput" @offFileInput="offFileInput" @switchEditMode="editMode = true" />
     <v-main>
       <router-view></router-view>
       <div style="display: none">
@@ -112,7 +112,7 @@
           <div flat>
             <MapArea :allFeatures="allFeatures" :cardVisable="cardVisable" :visableCard="visableCard"
               :notVisableCard="notVisableCard" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
-              :getFeature="emptyObject" :changeElements="changeElements" />
+              :getFeature="emptyObject" :changeElements="changeElements" :conflict="conflictCard" />
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -249,7 +249,7 @@ export default {
     
     async onmessage(e) {
       const data = JSON.parse(e.data);
-      console.log(data);
+      // console.log(data);
       switch (data.action) {
         case "update": {
           if (this.editMode) {
@@ -287,11 +287,13 @@ export default {
       for (let key in this.arrayEditMode) {
         if (key != 'message') {
           arrayEditModeFromPut[key] = [...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post,
+
           this.arrayEditMode[key].delete.map(el => el.id), this.arrayEditMode[key].put.map(el => {
             if (Object.prototype.hasOwnProperty.call(el, 'attachFlag') && el.attachFlag) {
               return el.id
             }
-          })];
+          }), { 'properties': this.arrayEditMode[key].properties }];
+
         }
       }
       arrayEditModeFromPut.message = this.arrayEditMode.message;
