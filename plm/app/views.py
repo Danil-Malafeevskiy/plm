@@ -70,7 +70,7 @@ class TowerAPI(APIView):
                     delete_mas = groups_data.pop(-1)
 
                     for type_name, prop in properties['properties'].items():
-                        type = Type.objects.get(name=type_name)
+                        type = Type.objects.get(name=type_name, group=Group.objects.get(name=group).id)
                         type.properties = prop
                         type.save()
 
