@@ -227,7 +227,6 @@ export default {
 
                     case 'getTypeObject':
                         await this.getAllTypeInGroup(objectType.name);
-                        console.log(this.allTypeForTable);
                         this.emptyObject.properties.all_group_type = this.allTypeForTable.map(el => el.name);
                         break;
 

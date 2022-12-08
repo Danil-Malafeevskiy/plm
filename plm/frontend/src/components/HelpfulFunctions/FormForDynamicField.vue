@@ -45,7 +45,7 @@
                 <v-col v-if="conflictCard && el" :key="`origin-element-${el}`" cols="3" sm="6" md="5" lg="6"
                     v-show="el != 'id'">
                     <v-text-field :class="{ 'blue_field': !checkEqualityOfFieads(el) }"
-                        v-model="objectForConflict_.properties[el]" hide-details :label="el" :placeholder="el" filled
+                        :value="objectForConflict_.properties[el]" hide-details :label="el" :placeholder="el" filled
                         disabled>
                     </v-text-field>
                 </v-col>

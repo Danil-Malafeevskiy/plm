@@ -56,7 +56,7 @@ import Vue from "vue";
 
 export default {
   name: 'TablePage',
-  props: ['infoCardOn', 'visableCard', 'notVisableCard', 'addCardOn', 'editCardOn'],
+  props: ['infoCardOn', 'visableCard', 'notVisableCard', 'addCardOn', 'editCardOn', 'editMode'],
   data() {
     return {
       infoCardOn_: this.infoCardOn,
@@ -127,7 +127,7 @@ export default {
       }
     },
     heightTable() {
-      return Math.round((document.querySelector('.v-window__container').offsetHeight - 64 - 69 - 58 - 75) / 48) - 1;
+      return Math.round((document.querySelector('.v-window__container').offsetHeight - 64 - 69 - 58 - 75) / 48) - 2 * (this.editMode ? 1 : 0);
     },
     rowsPerPage() {
       let rows = [];
