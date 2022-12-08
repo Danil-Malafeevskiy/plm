@@ -133,8 +133,9 @@
                                     </v-col>
                                 </template>
                                 <template v-else-if="('name' in objectForCard)">
-
-                                    <v-checkbox v-if="Object.prototype.hasOwnProperty.call(objectForCard, 'attachFlag')" label="Открепить точку" v-model="objectForCard.attachFlag"></v-checkbox>
+                                    <v-col style="margin-bottom:1em;" v-if="editCardOn.data && Object.prototype.hasOwnProperty.call(objectForCard, 'attachFlag')">
+                                        <v-checkbox label="Открепить точку" v-model="objectForCard.attachFlag"></v-checkbox>
+                                    </v-col>
                                     
                                     <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="1" sm="6" md="5"
                                         lg="6" v-show="el.text != 'id'">
