@@ -84,8 +84,10 @@
                             </v-col>
                         </template>
                         <template v-else-if="('name' in objectForCard)">
-                            <v-checkbox v-if="objectForCard.geometry.type === 'Point' && editCardOn_.data"
-                                label="Открепить точку" v-model="offPointsFlag_"></v-checkbox>
+                            
+                            <v-col v-if="editCardOn.data && Object.prototype.hasOwnProperty.call(objectForCard, 'attachFlag')">
+                                <v-checkbox label="Открепить точку" v-model="objectForCard.attachFlag"></v-checkbox>
+                            </v-col>
 
                             <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="1" sm="6" md="5" lg="6"
                                 v-show="el.text != 'id'">
@@ -186,6 +188,8 @@ export default {
             password: '',
             password_again: '',
             types: ['Point', 'LineString', 'Polygon'],
+            postIndex: null, 
+            pointIndex: null,
         }
     },
     watch: {
@@ -304,6 +308,66 @@ export default {
             }
             this.infoCardOn_.data = !this.infoCardOn_.data;
             this.$emit('notVisableCard');
+
+            if (this.objectForCard.geometry.type === 'Point') {
+                let havePointInLinePost = []
+                this.arrayEdit.post.forEach((element, index) => {
+                    if (element.geometry.type === 'LineString') {
+                        havePointInLinePost.push(element.geometry.coordinates.some((el) => {
+                            if (el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]) {
+                                this.postIndex = index
+                                return el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]
+                            }
+                        }))
+                    }
+                });
+                havePointInLinePost = havePointInLinePost.some((el) => {
+                    return el
+                })
+
+                if (havePointInLinePost) {
+                    this.arrayEdit.post[this.postIndex].geometry.coordinates.forEach((coord, index) => {
+                        if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
+                            this.pointIndex = index
+                        }
+                    });
+                    if (this.pointIndex != this.arrayEdit.post[this.postIndex].geometry.coordinates.length && this.pointIndex != 0) {
+                        this.arrayEdit.post[this.postIndex].geometry.coordinates.splice(this.pointIndex, 1)
+                    }
+                } else {
+                    let havePointInLinePut = []
+                    this.arrayEdit.put.forEach((element, index) => {
+                        if (element.geometry.type === 'LineString') {
+                            havePointInLinePut.push(element.geometry.coordinates.some((el) => {
+                                if (el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]) {
+                                    this.postIndex = index
+                                    return el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]
+                                }
+                            }))
+                        }
+                    });
+                    havePointInLinePut = havePointInLinePut.some((el) => {
+                        return el
+                    })
+
+                    if (havePointInLinePut) {
+                        this.arrayEdit.put[this.postIndex].geometry.coordinates.forEach((coord, index) => {
+                            if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
+                                this.pointIndex = index
+                            }
+                        });
+
+                        if (this.pointIndex != this.arrayEdit.put[this.postIndex].geometry.coordinates.length && this.pointIndex != 0) {
+                            this.arrayEdit.put[this.postIndex].geometry.coordinates.splice(this.pointIndex, 1)
+                        }
+                        console.log(this.arrayEdit.put[this.postIndex].geometry.coordinates)
+                    }
+
+
+                }
+
+            }
+
         },
         changeItem(isOldItem) {
             let newPutobject;
