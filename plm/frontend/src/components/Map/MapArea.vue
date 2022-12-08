@@ -572,7 +572,7 @@ export default {
 
         this.draw.on('drawstart', this.checkDrawCoordinates)
         this.arrFeatureForDraw = []
-        const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString')
+        const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString' && el.get('group') === this.oneType.group)
 
         for (let i in layerOfLineString) {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfLineString[i].getSource().getFeatures()];
