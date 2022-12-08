@@ -53,8 +53,8 @@ export default {
 					sortable: false,
 					width: '5%'
 				},
-				{ text: 'Дата', value: 'date_update', align: 'start', width: '7%' },
-				{ text: 'Время', value: 'time', align: 'start', width: '7%' },
+				{ text: 'Дата', value: 'date_update', align: 'start', width: '10%' },
+				{ text: 'Время', value: 'time', align: 'start', width: '10%' },
 				{ text: 'Автор', value: 'user', align: 'start', width: '15%' },
 				{ text: 'Комментарий', value: 'comment', align: 'start' },
 			],

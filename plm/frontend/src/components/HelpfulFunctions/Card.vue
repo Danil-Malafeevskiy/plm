@@ -134,7 +134,7 @@
                                 </template>
                                 <template v-else-if="('name' in objectForCard)">
 
-                                    <v-checkbox v-if="objectForCard.geometry.type === 'Point' && editCardOn_.data" label="Открепить точку" v-model="offPointsFlag_"></v-checkbox>
+                                    <v-checkbox v-if="Object.prototype.hasOwnProperty.call(objectForCard, 'attachFlag')" label="Открепить точку" v-model="objectForCard.attachFlag"></v-checkbox>
                                     
                                     <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="1" sm="6" md="5"
                                         lg="6" v-show="el.text != 'id'">
@@ -307,11 +307,9 @@ export default {
                     this.updateOneType({ type: emptyType, forFeature: true });
                 }
 
-                if(this.objectForCard && this.objectForCard.geometry && this.objectForCard.geometry.type === 'Point'){
-                    this.offPointsFlag_ = false
-                    this.setOffPointsFlag(false)
+                if(this.editCardOn_.data&& this.objectForCard && this.objectForCard.geometry && this.objectForCard.geometry.type === 'Point'){
+                    console.log(Object.prototype.hasOwnProperty.call(this.objectForCard, 'attachFlag'))
                 }
-                
             },
         },
         allListItem: {
@@ -337,17 +335,12 @@ export default {
                 }
             }
         },
-        offPointsFlag_: {
-            handler(){
-                this.setOffPointsFlag(this.offPointsFlag_)
-            }
-        }
     },
     computed: {
         ...mapGetters(['getTypeId', 'offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
     },
     methods: {
-        ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'setOffPointsFlag', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
+        ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
         ...mapMutations(['updateFunction', 'updateOffPointsFlag', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard', 'deleteItemFromNewData', 'updateError']),
         async addNewFeature() {
             if (this.objectForCard.name && typeof this.objectForCard.name === 'number') {
@@ -629,7 +622,6 @@ export default {
     },
 
     mounted() {
-        this.setOffPointsFlag(false)
     }
 }
 </script>

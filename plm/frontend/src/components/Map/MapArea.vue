@@ -267,6 +267,11 @@ export default {
         if (!this.editCardOn.data && !this.infoCardOn.data) {
           await this.returnCoordinates();
         }
+        const checkFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.objectForCard.geometry.coordinates)))
+        if (this.editCardOn.data && checkFeature.length && checkFeature[0].getGeometry().getType() === 'LineString') {
+          this.objectForCard.attachFlag = false
+          this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
+        }
       },
       deep: true
     },
@@ -295,11 +300,11 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(['drawType', 'oneFeature', 'offPointsFlag', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays']),
+    ...mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays']),
   },
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode', 'deleteObjectFromArrayEditMode']),
-    ...mapActions(['getOneFeature', 'getOneFeatureId', 'setOffPointsFlag', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
+    ...mapActions(['getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
     addChangedObjectOnMap() {
       let arraysOfNewObject = this.createSubArrays();
       let arrayOfLayers = this.map.getAllLayers();
@@ -366,7 +371,7 @@ export default {
 
     },
     returnCoordinateForLineString(oldCoordinates, newCoordinates) {
-      if (!this.offPointsFlag) {
+      if (!this.objectForCard.attachFlag) {
         const geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(oldCoordinates), {
           filterLayer: el => el.get('type') === 'LineString',
         });
