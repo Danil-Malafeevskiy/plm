@@ -209,6 +209,7 @@ export default {
         this.addCardOn_ = this.addCardOn;
         this.selectInteraction.setActive(!this.addCardOn.data);
         if (!this.addCardOn_.data) {
+          this.map.removeInteraction(this.modify);
           const checkFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.emptyObject.geometry.coordinates)))
           if (checkFeature.length && checkFeature[0].getGeometry().getType() === 'LineString') {
             let havePostPoint = this.arrayEdit.post.some((el) => {
@@ -454,8 +455,14 @@ export default {
       return coordinates;
     },
     updateCoordinates() {
-      if (this.drawLayer.getSource().getFeatures().length === 1 || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
+      if ((this.drawLayer.getSource().getFeatures().length === 1 && !this.arrFeatureForDraw.length) || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
         this.map.removeInteraction(this.draw);
+        this.modify = new Modify({
+          source: new VectorSource({
+            features: this.drawLayer.getSource().getFeatures().filter(el => el.getGeometry().getType() === this.drawType),
+          })
+        })
+        this.map.addInteraction(this.modify);
         let coordinates;
         if (this.drawLayer.getSource().getFeatures().length === 1) {
           coordinates = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
@@ -530,6 +537,8 @@ export default {
     async addInteraction() {
       this.map.removeInteraction(this.modify);
       this.drawLayer.getSource().refresh();
+
+      let source = new VectorSource();
       if (this.drawType === 'Point') {
         await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
         this.drawLayer = new VectorLayer({
@@ -540,11 +549,13 @@ export default {
         const layer = this.map.getAllLayers().find(el => el.get('typeId') === this.oneType.id);
         this.drawLayer.set('standartIcon', layer.get('standartIcon'));
         this.drawLayer.setStyle(this.getStyleFromLayer);
-        this.modify = new Modify({
-          source: this.drawLayer.getSource(),
-          //style: this.drawLayer.getStyle()
-        });
-        this.modify.on('modifyend', this.changeCoordinates);
+
+        // this.modify = new Modify({
+        //   source: this.drawLayer.getSource(),
+        //   //style: this.drawLayer.getStyle()
+        // });
+
+        // this.modify.on('modifyend', this.changeCoordinates);
         this.draw = new Draw({
           source: this.drawLayer.getSource(),
           type: this.drawType,
@@ -563,17 +574,13 @@ export default {
         for (let i in layerOfPoint) {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfPoint[i].getSource().getFeatures()];
         }
-        const source = new VectorSource({ features: this.arrFeatureForDraw });
+        source = new VectorSource({ features: this.arrFeatureForDraw });
         this.drawLayer = new VectorLayer({
           source: source
         });
         this.draw = new Draw({
           source: source,
           type: this.drawType,
-        });
-        this.modify = new Modify({
-          source: this.drawLayer.getSource(),
-          //style: this.drawLayer.getStyle()
         });
       }
       else {
@@ -582,11 +589,11 @@ export default {
             features: []
           }),
         });
-        this.modify = new Modify({
-          source: this.drawLayer.getSource(),
-          style: this.drawLayer.getStyle()
-        });
-        this.modify.on('modifyend', this.changeCoordinates);
+        // this.modify = new Modify({
+        //   source: this.drawLayer.getSource(),
+        //   style: this.drawLayer.getStyle()
+        // });
+        //this.modify.on('modifyend', this.changeCoordinates);
         this.draw = new Draw({
           type: this.drawType,
           style: this.drawLayer.getStyle(),
@@ -595,9 +602,8 @@ export default {
       }
       this.map.addLayer(this.drawLayer);
       this.map.addInteraction(this.draw);
-      this.map.addInteraction(this.modify);
+      //this.map.addInteraction(this.modify);
       if (this.arrFeatureForDraw.length) {
-        const source = new VectorSource({ features: this.arrFeatureForDraw });
         const snap = new Snap({ source: source });
         this.map.addInteraction(snap);
       }
