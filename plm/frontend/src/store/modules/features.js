@@ -194,8 +194,10 @@ export default {
                     break;
 
                 case 'offPoints':
-                    state.arrayEditMode[item.group].offPoints.push(item);
-                    state.arrayEdit.offPoints.push(item);
+                    if(Object.prototype.hasOwnProperty.call(item, 'attachFlag')){
+                        state.arrayEditMode[item.group].offPoints.push(item);
+                        state.arrayEdit.offPoints.push(item);
+                    }
                     break;
 
                 case 'properties':

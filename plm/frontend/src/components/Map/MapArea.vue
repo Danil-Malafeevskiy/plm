@@ -96,7 +96,6 @@ export default {
       drawCoord: null,
       drawFeature: null,
       oneFeature_: this.oneFeature,
-      pointCoordInLine: null,
       pointCoordInLineIndex: null,
     }
   },
@@ -271,6 +270,11 @@ export default {
         if (!this.editCardOn.data && !this.infoCardOn.data) {
           await this.returnCoordinates();
         }
+        const checkFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.objectForCard.geometry.coordinates)))
+        if (this.editCardOn.data && checkFeature.length && checkFeature[0].getGeometry().getType() === 'LineString') {
+          this.objectForCard.attachFlag = false
+          this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
+        }
       },
       deep: true
     },
@@ -299,11 +303,11 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(['drawType', 'oneFeature', 'offPointsFlag', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays']),
+    ...mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays']),
   },
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode', 'deleteObjectFromArrayEditMode']),
-    ...mapActions(['getOneFeature', 'getOneFeatureId', 'setOffPointsFlag', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
+    ...mapActions(['getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
     addChangedObjectOnMap() {
       let arraysOfNewObject = this.createSubArrays();
       let arrayOfLayers = this.map.getAllLayers();
@@ -345,13 +349,13 @@ export default {
     },
     checkEqualCoordinates(coord1, coord2) {
       return coord1[0] === coord2[0] && coord1[1] === coord2[1];
+
     },
 
     comparePointLine(coordPoint, coordLine) {
       coordLine.forEach((element, index) => {
         if (this.checkEqualCoordinates(coordPoint, element)) {
           if (index != coordLine.length && index != 0) {
-            this.pointCoordInLine = coordPoint
             this.pointCoordInLineIndex = index
           }
         }
@@ -371,7 +375,7 @@ export default {
 
     },
     returnCoordinateForLineString(oldCoordinates, newCoordinates) {
-      if (!this.offPointsFlag) {
+      if (!this.objectForCard.attachFlag) {
         const geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(oldCoordinates), {
           filterLayer: el => el.get('type') === 'LineString',
         });
@@ -582,7 +586,7 @@ export default {
 
         this.draw.on('drawstart', this.checkDrawCoordinates)
         this.arrFeatureForDraw = []
-        const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString')
+        const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString' && el.get('group') === this.oneType.group)
 
         for (let i in layerOfLineString) {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfLineString[i].getSource().getFeatures()];

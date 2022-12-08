@@ -79,6 +79,7 @@ export default {
             })
         },
         async putUser({ dispatch, state, getters, commit }, user) {
+            console.log(user)
             user = { ...user, ...user.properties };
             delete user.properties;
             user.username = user.email;

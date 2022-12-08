@@ -17,7 +17,7 @@
                         :type="showPassword ? 'text' : 'password'" filled @click:append="showPassword = !showPassword">
                     </v-text-field>
 
-                    <div class="btn">
+                    <div class="btn" style="background-color: #DDDDDD !important;">
                         <v-btn :disabled="disabledBool" class="pa-0 ma-0" color="#EE5E5E" type="submit"
                             style="width: 100%; height: 45px; color: white !important;">
                             Изменить

@@ -58,27 +58,27 @@ class TowerAPI(APIView):
     def put(self, request):
         comment = request.data.pop('message')
         groups_names = []
-        conflicts = []
+        conflicts = {}
 
-        groups_count = 0
         try:
             with transaction.atomic():
                 for group, groups_data in request.data.items():
+                    id_ = []
                     ids = []
                     properties = groups_data.pop(-1)
                     disabled_flexibilities = groups_data.pop(-1)
                     delete_mas = groups_data.pop(-1)
 
                     for type_name, prop in properties['properties'].items():
-                        type = Type.objects.get(name=type_name)
+                        type = Type.objects.get(name=type_name, group=Group.objects.get(name=group).id)
                         type.properties = prop
                         type.save()
-
-                    groups_count += 1
 
                     for data in groups_data:
                         if 'id' in data.keys():
                             ids.append(data['id'])
+                        else:
+                            id_.append(data['id_'])
 
                     ids = ids + delete_mas
 
@@ -87,10 +87,11 @@ class TowerAPI(APIView):
                     dataset = Group.objects.get(name=group).id
                     groups_names.append(group)
 
-                    feature_serializer = FeatureSerializer(feature, data=groups_data, many=True, context=disabled_flexibilities)
+                    feature_serializer = FeatureSerializer(feature, data=groups_data, many=True, context=
+                                         {"disabled_flexibilities": disabled_flexibilities, "id_": id_})
                     if feature_serializer.is_valid():
                         version, new_version, conflict = feature_serializer.save()
-                        conflicts += conflict
+                        conflicts = dict(list(conflicts.items()) + list(conflict.items()))
 
                         if VersionControl.objects.filter(flag=True, dataset=dataset).exists():
                             version_now = VersionControl.objects.get(flag=True, dataset=dataset)
@@ -116,6 +117,8 @@ class TowerAPI(APIView):
         except ValueError:
             return Response(feature_serializer.errors)
         except IntegrityError:
+            print(len(conflicts))
+            print(conflicts)
             return Response(conflicts, status=status.HTTP_409_CONFLICT)
 
         for group_name in groups_names:
@@ -124,10 +127,11 @@ class TowerAPI(APIView):
                 group_name,
                 {
                     'type': 'update.feature',
-                    'content': 'Все объекты добавлены и обновлены!'
+                    'content': {"groups_names": groups_names}
                 }
             )
-        return Response({"groups_count": groups_count})
+
+        return Response("Success up!")
 
 class FileUploadView(APIView):
 

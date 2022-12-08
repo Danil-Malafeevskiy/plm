@@ -199,7 +199,7 @@ export default {
                 this.objectType = objectType;
                 this.upadateTitle({
                     title: typeof objectType === 'string' ? objectType : objectType.name,
-                    group: 'group' in objectType ? objectType.groups : objectType
+                    group: Object.prototype.hasOwnProperty.call(objectType, 'group') ? objectType.groups : objectType
                 });
                 switch (this.actions) {
                     case 'getUsersOfGroup':
@@ -225,10 +225,17 @@ export default {
                         break;
                     }
 
-                    case 'getTypeObject':
+                    case 'getTypeObject': {
+                        const headers = [
+                            {
+                                "text": "name",
+                                "value": "name"
+                            }
+                        ];
                         await this.getAllTypeInGroup(objectType.name);
                         this.emptyObject.properties.all_group_type = this.allTypeForTable.map(el => el.name);
                         break;
+                    }
 
                     case 'getFeatures':
                         await this.getOneTypeObjectForFeature({ id: objectType.id });

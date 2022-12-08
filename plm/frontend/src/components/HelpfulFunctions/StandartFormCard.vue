@@ -163,6 +163,8 @@ export default {
             password_again: '',
             types: ['Point', 'LineString', 'Polygon'],
             snackbar_: false,
+            postIndex: null, 
+            pointIndex: null,
             showPassword: false,
         }
     },
@@ -218,6 +220,66 @@ export default {
             }
             this.infoCardOn_.data = !this.infoCardOn_.data;
             this.$emit('notVisableCard');
+
+            if (this.objectForCard.geometry.type === 'Point') {
+                let havePointInLinePost = []
+                this.arrayEdit.post.forEach((element, index) => {
+                    if (element.geometry.type === 'LineString') {
+                        havePointInLinePost.push(element.geometry.coordinates.some((el) => {
+                            if (el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]) {
+                                this.postIndex = index
+                                return el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]
+                            }
+                        }))
+                    }
+                });
+                havePointInLinePost = havePointInLinePost.some((el) => {
+                    return el
+                })
+
+                if (havePointInLinePost) {
+                    this.arrayEdit.post[this.postIndex].geometry.coordinates.forEach((coord, index) => {
+                        if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
+                            this.pointIndex = index
+                        }
+                    });
+                    if (this.pointIndex != this.arrayEdit.post[this.postIndex].geometry.coordinates.length && this.pointIndex != 0) {
+                        this.arrayEdit.post[this.postIndex].geometry.coordinates.splice(this.pointIndex, 1)
+                    }
+                } else {
+                    let havePointInLinePut = []
+                    this.arrayEdit.put.forEach((element, index) => {
+                        if (element.geometry.type === 'LineString') {
+                            havePointInLinePut.push(element.geometry.coordinates.some((el) => {
+                                if (el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]) {
+                                    this.postIndex = index
+                                    return el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]
+                                }
+                            }))
+                        }
+                    });
+                    havePointInLinePut = havePointInLinePut.some((el) => {
+                        return el
+                    })
+
+                    if (havePointInLinePut) {
+                        this.arrayEdit.put[this.postIndex].geometry.coordinates.forEach((coord, index) => {
+                            if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
+                                this.pointIndex = index
+                            }
+                        });
+
+                        if (this.pointIndex != this.arrayEdit.put[this.postIndex].geometry.coordinates.length && this.pointIndex != 0) {
+                            this.arrayEdit.put[this.postIndex].geometry.coordinates.splice(this.pointIndex, 1)
+                        }
+                        console.log(this.arrayEdit.put[this.postIndex].geometry.coordinates)
+                    }
+
+
+                }
+
+            }
+
         },
 
         async changePassword() {
@@ -227,6 +289,7 @@ export default {
                     email: this.user.email,
                     password: this.password,
                 }
+                console.log(user)
                 await this.putUser(user);
 
                 if (this.error) {

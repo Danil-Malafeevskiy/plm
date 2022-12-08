@@ -9,7 +9,11 @@ class TowerPerm(permissions.BasePermission):
         if request.user.is_superuser or request.user.is_staff or request.method in permissions.SAFE_METHODS:
             return True
         if request.method == 'PUT':
-            return f'Изменение объектов {request.data[-1]}' in request.user.user_permissions.values_list('name', flat=True)
+            for group in request.data.keys():
+                if f'Изменение объектов {group}' in request.user.user_permissions.values_list('name', flat=True) or group == 'message':
+                    continue
+                return False
+            return True
 
 class FileUploadPerm(permissions.BasePermission):
     message = {'errors': ['Вы не имеете достаточно прав для изменения объектов данной группы!']}

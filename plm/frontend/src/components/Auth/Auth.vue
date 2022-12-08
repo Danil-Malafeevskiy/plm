@@ -26,7 +26,7 @@
                             </v-col>
 
                         </v-row>
-                        <div class="btn">
+                        <div class="btn" style="background-color: #DDDDDD !important;">
                             <v-btn class="pa-0 ma-0" color="#EE5E5E" type="submit" style="width: 100%; height: 45px; color: white !important;">
                                 ВОЙТИ
                             </v-btn>
@@ -48,7 +48,7 @@
                             placeholder="vasyly@mail.com" filled :rules="emailRules">
                         </v-text-field>
 
-                        <div class="btn">
+                        <div class="btn" style="background-color: #DDDDDD !important;">
                             <v-btn :disabled="emailBool" class="pa-0 ma-0" color="#EE5E5E" type="submit" style="width: 100%; height: 45px; color: white !important;">
                                 Восстановить пароль
                             </v-btn>

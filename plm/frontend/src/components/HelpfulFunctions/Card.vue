@@ -74,7 +74,7 @@ export default {
             errorMessage: '',
             snackbar: false,
             sliderForConflict: ['Объект', 'Конфликт версий', 'Конфликт положений'],
-            tab: null,
+            tab: null,,
         }
     },
     watch: {
@@ -137,12 +137,6 @@ export default {
                 if ('name' in this.objectForCard && typeof this.objectForCard.name === 'string'){
                     Vue.set(this.objectForCard, 'ruls', []);
                 }
-                if (this.objectForCard && this.objectForCard.geometry && this.objectForCard.geometry.type === 'Point') {
-                    this.offPointsFlag_ = false
-                    this.setOffPointsFlag(false)
-                }
-            },
-        },
     },
     computed: {
         ...mapGetters(['offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
@@ -154,6 +148,7 @@ export default {
         }
     },
     methods: {
+
         ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'setOffPointsFlag', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
         ...mapMutations(['updateFunction', 'updateOffPointsFlag', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard']),
 
@@ -164,7 +159,6 @@ export default {
     },
 
     mounted() {
-        this.setOffPointsFlag(false)
     }
 }
 </script>

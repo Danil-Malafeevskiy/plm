@@ -101,7 +101,7 @@ export default {
         }
       },
       deep: true,
-    }
+    },
   },
   computed: {
     ...mapGetters(['allListItem', 'getObjectForCard', 'headers',
