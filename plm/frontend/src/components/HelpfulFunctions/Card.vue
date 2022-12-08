@@ -3,9 +3,11 @@
         <v-card class="card_of_object" v-show="cardVisable_.data">
             <div class="card__window">
                 <p style="display: none">{{ objectForCard }}</p>
-                <PictureForCard v-show="!conflictCard" :objectForCard_="objectForCard" :infoCardOn_="infoCardOn" :conflictCard="conflictCard"/>
+                <PictureForCard v-show="!conflictCard" :objectForCard_="objectForCard" :infoCardOn_="infoCardOn"
+                    :conflictCard="conflictCard" />
 
-                <PictureForConflict v-show="conflictCard" :objectForCard_="objectForCard" :objectForConflict="objectForConflict"/>
+                <PictureForConflict v-show="conflictCard" :objectForCard_="objectForCard"
+                    :objectForConflict="objectForConflict" />
 
                 <StandartFormCard v-if="!conflictCard" :objectForCard_="objectForCard" :infoCardOn="infoCardOn"
                     :editCardOn="editCardOn" :editMode="editMode" :addCardOn="addCardOn_"
@@ -23,13 +25,14 @@
                             <StandartFormCard :objectForCard_="objectForCard" :infoCardOn="infoCardOn"
                                 :editCardOn="editCardOn" :editMode="editMode" :addCardOn="addCardOn_"
                                 @notVisableCard="notVisableCard" :cardVisable="cardVisable" :errorMessage="errorMessage"
-                                :snackbar="snackbar" @showSnacker="showSnacker" :conflictCard="conflictCard"/>
+                                :snackbar="snackbar" @showSnacker="showSnacker" :conflictCard="conflictCard" />
                         </v-tab-item>
                         <v-tab-item>
-                            <ConflictFormForCard :objectForCard_="objectForCard" :conflictCard="conflictCard" :objectForConflict="objectForConflict"/>
+                            <ConflictFormForCard :objectForCard_="objectForCard" :conflictCard="conflictCard"
+                                :objectForConflict="objectForConflict" />
                         </v-tab-item>
                         <v-tab-item>
-                            <TableForConflict :objectForCard="objectForCard" :cardVisable="cardVisable"/>
+                            <TableForConflict :objectForCard="objectForCard" :cardVisable="cardVisable" />
                         </v-tab-item>
                     </v-tabs-items>
                 </template>
@@ -55,13 +58,13 @@ import PictureForConflict from './PictureForConflict.vue';
 export default {
     name: 'CardInfo',
     components: {
-    StandartFormCard,
-    CardFooter,
-    ConflictFormForCard,
-    TableForConflict,
-    PictureForCard,
-    PictureForConflict
-},
+        StandartFormCard,
+        CardFooter,
+        ConflictFormForCard,
+        TableForConflict,
+        PictureForCard,
+        PictureForConflict
+    },
     props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'visableCard', 'notVisableCard', 'editMode', 'conflictCard', 'objectForConflict'],
     data() {
         return {
@@ -74,7 +77,7 @@ export default {
             errorMessage: '',
             snackbar: false,
             sliderForConflict: ['Объект', 'Конфликт версий', 'Конфликт положений'],
-            tab: null,,
+            tab: null,
         }
     },
     watch: {
@@ -134,31 +137,33 @@ export default {
                     };
                     this.updateOneType({ type: emptyType, forFeature: true });
                 }
-                if ('name' in this.objectForCard && typeof this.objectForCard.name === 'string'){
+                if ('name' in this.objectForCard && typeof this.objectForCard.name === 'string') {
                     Vue.set(this.objectForCard, 'ruls', []);
                 }
-    },
-    computed: {
-        ...mapGetters(['offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
-        heightPicture(){
-            if(this.conflictCard)
-                return '24.48%'
-            else 
-                return '37.5%'
+            },
+            computed: {
+                ...mapGetters(['offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
+                heightPicture() {
+                    if (this.conflictCard)
+                        return '24.48%'
+                    else
+                        return '37.5%'
+                }
+            },
+            methods: {
+
+                ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'setOffPointsFlag', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
+                ...mapMutations(['updateFunction', 'updateOffPointsFlag', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard']),
+
+                showSnacker(errorText) {
+                    this.errorMessage = errorText;
+                    this.snackbar = true;
+                },
+            },
+
+            mounted() {
+            }
         }
-    },
-    methods: {
-
-        ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'setOffPointsFlag', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
-        ...mapMutations(['updateFunction', 'updateOffPointsFlag', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard']),
-
-        showSnacker(errorText) {
-            this.errorMessage = errorText;
-            this.snackbar = true;
-        },
-    },
-
-    mounted() {
     }
 }
 </script>
@@ -173,7 +178,7 @@ export default {
     padding: 0 !important;
 }
 
-.v-window{
+.v-window {
     border-radius: 12px !important;
 }
 
@@ -210,6 +215,7 @@ export default {
 .v-icon--link::after {
     background-color: rgba(255, 255, 255, 0) !important;
 }
+
 .row {
     padding: 24px 24px 12px 24px !important;
 }
@@ -224,7 +230,6 @@ export default {
 </style>
 
 <style>
-
 .card_of_object {
     width: 38.05% !important;
     z-index: 5 !important;
