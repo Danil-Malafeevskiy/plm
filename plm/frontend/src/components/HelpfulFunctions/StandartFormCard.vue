@@ -106,7 +106,7 @@
                         {{ errorMessege }}
                     </v-snackbar>
                 </v-form>
-                <v-form v-if="allListItem[0] === user">
+                <v-form v-if="allListItem[0] === user" style="padding: 24px 24px 12px 24px !important; margin-top: 50%;">
                     <v-row justify="start" style="padding-bottom: 0 !important;">
                         <p class="attributes ma-0">Изменение пароля</p>
                         <v-col cols="2" sm="6" md="5" lg="6">
@@ -190,6 +190,7 @@ export default {
             types: ['Point', 'LineString', 'Polygon'],
             postIndex: null, 
             pointIndex: null,
+            showPassword: false,
         }
     },
     watch: {
@@ -231,7 +232,7 @@ export default {
         ...mapGetters(['allListItem', 'user', 'typeForFeature', 'actions', 'newData'])
     },
     methods: {
-        ...mapActions(['setOffPointsFlag', 'putObject', 'deleteObject', 'postObject']),
+        ...mapActions(['setOffPointsFlag', 'putObject', 'deleteObject', 'postObject', 'putUser']),
         ...mapMutations(['updateArrayEditMode', 'updateObjectForCard', 'updateError', 'deleteItemFromNewData']),
         async addNewFeature() {
             if (this.objectForCard.name && typeof this.objectForCard.name === 'number') {
@@ -387,6 +388,7 @@ export default {
                     email: this.user.email,
                     password: this.password,
                 }
+                console.log(user)
                 await this.putUser(user);
 
                 if (this.error) {
