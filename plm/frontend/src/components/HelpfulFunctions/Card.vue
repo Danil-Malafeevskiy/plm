@@ -78,11 +78,6 @@ export default {
             objectForCard: {},
             showPassword: false,
             listMdiIcons: [mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket],
-
-            offPointsFlag_: false,
-            postIndex: null, 
-            pointIndex: null,
-
         }
     },
     watch: {
@@ -141,10 +136,6 @@ export default {
                         properties: [],
                     };
                     this.updateOneType({ type: emptyType, forFeature: true });
-                }
-
-                if(this.editCardOn_.data&& this.objectForCard && this.objectForCard.geometry && this.objectForCard.geometry.type === 'Point'){
-                    console.log(Object.prototype.hasOwnProperty.call(this.objectForCard, 'attachFlag'))
                 }
             },
         },

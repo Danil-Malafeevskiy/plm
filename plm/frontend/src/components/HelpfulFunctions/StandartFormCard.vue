@@ -85,7 +85,7 @@
                         </template>
                         <template v-else-if="('name' in objectForCard)">
                             
-                            <v-col v-if="editCardOn.data && Object.prototype.hasOwnProperty.call(objectForCard, 'attachFlag')">
+                            <v-col v-if="(editCardOn.data && Object.prototype.hasOwnProperty.call(objectForCard, 'attachFlag') && !objectForCard.id_ )">
                                 <v-checkbox label="Открепить точку" v-model="objectForCard.attachFlag"></v-checkbox>
                             </v-col>
 
@@ -229,7 +229,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['allListItem', 'user', 'typeForFeature', 'actions', 'newData'])
+        ...mapGetters(['allListItem', 'user', 'typeForFeature', 'actions', 'newData', 'arrayEdit'])
     },
     methods: {
         ...mapActions(['setOffPointsFlag', 'putObject', 'deleteObject', 'postObject', 'putUser']),
@@ -325,7 +325,6 @@ export default {
                 havePointInLinePost = havePointInLinePost.some((el) => {
                     return el
                 })
-
                 if (havePointInLinePost) {
                     this.arrayEdit.post[this.postIndex].geometry.coordinates.forEach((coord, index) => {
                         if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
