@@ -47,6 +47,7 @@
                     }" width="100%" style="max-height: 37.53%"></v-img>
                 </template>
 
+
                 <StandartFormCard :objectForCard_="objectForCard" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :editMode="editMode"
                                   :addCardOn="addCardOn_" @notVisableCard="notVisableCard" :cardVisable="cardVisable"/>
 
@@ -77,6 +78,11 @@ export default {
             objectForCard: {},
             showPassword: false,
             listMdiIcons: [mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket],
+
+            offPointsFlag_: false,
+            postIndex: null, 
+            pointIndex: null,
+
         }
     },
     watch: {
@@ -137,20 +143,18 @@ export default {
                     this.updateOneType({ type: emptyType, forFeature: true });
                 }
 
-                if(this.objectForCard && this.objectForCard.geometry && this.objectForCard.geometry.type === 'Point'){
-                    this.offPointsFlag_ = false
-                    this.setOffPointsFlag(false)
+                if(this.editCardOn_.data&& this.objectForCard && this.objectForCard.geometry && this.objectForCard.geometry.type === 'Point'){
+                    console.log(Object.prototype.hasOwnProperty.call(this.objectForCard, 'attachFlag'))
                 }
-                
             },
         },
-        
-        
+
     },
     computed: {
         ...mapGetters(['offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
     },
     methods: {
+
         ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'setOffPointsFlag', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
         ...mapMutations(['updateFunction', 'updateOffPointsFlag', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard']),
 
@@ -166,7 +170,6 @@ export default {
     },
 
     mounted() {
-        this.setOffPointsFlag(false)
     }
 }
 </script>

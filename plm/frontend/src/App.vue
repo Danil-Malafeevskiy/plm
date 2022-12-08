@@ -287,7 +287,13 @@ export default {
       for (let key in this.arrayEditMode) {
         if (key != 'message') {
           arrayEditModeFromPut[key] = [...this.arrayEditMode[key].put, ...this.arrayEditMode[key].post,
-          this.arrayEditMode[key].delete.map(el => el.id), this.arrayEditMode[key].offPoints.map(el => el.id), { 'properties': this.arrayEditMode[key].properties }];
+
+          this.arrayEditMode[key].delete.map(el => el.id), this.arrayEditMode[key].put.map(el => {
+            if (Object.prototype.hasOwnProperty.call(el, 'attachFlag') && el.attachFlag) {
+              return el.id
+            }
+          }), { 'properties': this.arrayEditMode[key].properties }];
+
         }
       }
       arrayEditModeFromPut.message = this.arrayEditMode.message;
