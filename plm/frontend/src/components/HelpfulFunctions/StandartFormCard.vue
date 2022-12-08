@@ -82,6 +82,7 @@
                                 :readonly="infoCardOn_.data" :rules="[rules.required]">
                             </v-text-field>
                         </v-col>
+
                     </template>
                     <template v-else-if="('name' in objectForCard)">
                         <v-checkbox v-if="objectForCard.geometry.type === 'Point' && editCardOn_.data"
@@ -236,7 +237,6 @@ export default {
                 havePointInLinePost = havePointInLinePost.some((el) => {
                     return el
                 })
-
                 if (havePointInLinePost) {
                     this.arrayEdit.post[this.postIndex].geometry.coordinates.forEach((coord, index) => {
                         if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
