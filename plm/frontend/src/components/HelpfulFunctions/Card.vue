@@ -141,31 +141,32 @@ export default {
                     Vue.set(this.objectForCard, 'ruls', []);
                 }
             },
-            computed: {
-                ...mapGetters(['offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
-                heightPicture() {
-                    if (this.conflictCard)
-                        return '24.48%'
-                    else
-                        return '37.5%'
-                }
-            },
-            methods: {
-
-                ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'setOffPointsFlag', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
-                ...mapMutations(['updateFunction', 'updateOffPointsFlag', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard']),
-
-                showSnacker(errorText) {
-                    this.errorMessage = errorText;
-                    this.snackbar = true;
-                },
-            },
-
-            mounted() {
-            }
         }
+    },
+    computed: {
+        ...mapGetters(['offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
+        heightPicture() {
+            if (this.conflictCard)
+                return '24.48%'
+            else
+                return '37.5%'
+        }
+    },
+    methods: {
+
+        ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'setOffPointsFlag', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
+        ...mapMutations(['updateFunction', 'updateOffPointsFlag', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard']),
+
+        showSnacker(errorText) {
+            this.errorMessage = errorText;
+            this.snackbar = true;
+        },
+    },
+
+    mounted() {
     }
 }
+
 </script>
 
 <style scoped>
