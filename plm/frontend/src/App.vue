@@ -251,7 +251,7 @@ export default {
 
     async onmessage(e) {
       const data = JSON.parse(e.data);
-      console.log(data);
+      // console.log(data);
       if ('data' in data && typeof data.data.name === 'string') {
         this.getFeatures();
       }

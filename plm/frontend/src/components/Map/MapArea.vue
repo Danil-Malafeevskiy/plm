@@ -140,6 +140,7 @@ export default {
             this.editCardOn_.data = false;
           }
           else if (!this.conflictCard){
+            console.log(10);
             this.returnCoordinateForPoint('id_' in this.objectForCard ? this.objectForCard.id_ : this.objectForCard.id,
               this.objectForCard.name, this.objectForCard.geometry.coordinates);
           }

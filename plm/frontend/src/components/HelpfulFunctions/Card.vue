@@ -140,7 +140,6 @@ export default {
                 if ('name' in this.objectForCard && typeof this.objectForCard.name === 'string') {
                     Vue.set(this.objectForCard, 'ruls', []);
                 }
-                // console.log(this.conflictCard);
                 if (this.conflictCard) {
                     this.editCardOn_.data = this.conflictCard;
                     this.infoCardOn_.data = !this.conflictCard;
