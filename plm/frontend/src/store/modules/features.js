@@ -43,7 +43,7 @@ export default {
                 }
             }).catch(error => {
                 if (error.response.status === 409) {
-                    // console.log(error.response.data);
+                    console.log(error.response.data);
                     commit('updateConflictArrays', error.response.data)
                 }
             });

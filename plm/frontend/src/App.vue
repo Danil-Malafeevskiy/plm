@@ -64,9 +64,9 @@
         <!-- <CardConflict v-show="conflictCard" :cardVisable="cardVisable" :conflictCard="conflictCard" :editMode="editMode"
           :objectForConflict="objectForConflict" :notVisableCard="notVisableCard" /> -->
 
-        <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :conflictCard="conflictCard"
-          :editCardOn="editCardOn" :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" 
-          :objectForConflict="objectForConflict"/>
+        <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn"
+          :conflictCard="conflictCard" :editCardOn="editCardOn" :visableCard="visableCard"
+          :notVisableCard="notVisableCard" :editMode="editMode" :objectForConflict="objectForConflict" />
 
         <v-tab-item>
 
@@ -103,8 +103,8 @@
 
             <Auth v-if="getAuth === false && authbool" />
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
-            <TablePage v-if="!versionsPage.data" :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" :editCardOn="editCardOn" :editMode="editMode"
+            <TablePage v-if="!versionsPage.data" :visableCard="visableCard" :infoCardOn="infoCardOn"
+              :notVisableCard="notVisableCard" :addCardOn="addCardOn" :editCardOn="editCardOn" :editMode="editMode"
               @openEditMode="editMode = true" />
             <VersionControl v-if="versionsPage.data" :versionsPage="versionsPage" />
           </div>
@@ -226,7 +226,7 @@ export default {
         return '94%';
       }
     },
-    itemsForSlider(){
+    itemsForSlider() {
       return this.actions === 'getFeatures' ? ['список', 'карта'] : ['список']
     }
   },
@@ -248,11 +248,11 @@ export default {
     notVisableCard() {
       this.cardVisable.data = false;
     },
-    
+
     async onmessage(e) {
       const data = JSON.parse(e.data);
       console.log(data);
-      if('data' in data && typeof data.data.name === 'string'){
+      if ('data' in data && typeof data.data.name === 'string') {
         this.getFeatures();
       }
       switch (data.action) {
@@ -283,6 +283,10 @@ export default {
         default:
           if ('content' in data) {
             this.сountMessage++;
+            if (this.сountMessage == data.content.groups_names.filter(el => Boolean(this.user.groups.indexOf(el))).length) {
+              this.getFeatures();
+              this.countMessage = 0;
+            }
           }
           break;
       }
@@ -304,7 +308,7 @@ export default {
       arrayEditModeFromPut.message = this.arrayEditMode.message;
       await this.putFeature(arrayEditModeFromPut);
 
-      if (this.conflictArrays.length || this.newData.length) {
+      if (this.newData.length || Object.keys(this.conflictArrays).length) {
         this.isConflict = true;
         return;
       }
@@ -350,7 +354,7 @@ export default {
         this.objectForConflict = object
         this.conflictCard = true;
       }
-      else if (this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.getObjectForCard.id : element.id_ === this.getObjectForCard.id_))) {
+      else if (this.getObjectForCard.id in this.conflictArrays) {
         this.conflictCard = true;
       }
       else {

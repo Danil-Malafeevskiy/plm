@@ -56,6 +56,7 @@ import Select from 'ol/interaction/Select';
 import { Canvg } from 'canvg';
 import { toStringXY } from 'ol/coordinate';
 import Feature from 'ol/Feature';
+import Vue from 'vue';
 
 export default {
   components: {
@@ -145,7 +146,7 @@ export default {
               this.objectForCard.name, this.objectForCard.geometry.coordinates);
           }
         }
-        if (this.newData.find(el => el.id === this.objectForCard.id) || this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.objectForCard.id : element.id_ === this.objectForCard.id_))) {
+        if (this.newData.find(el => el.id === this.objectForCard.id) || this.objectForCard.id in this.conflictArrays) {
           this.map.getInteractions().getArray().forEach(element => {
 
             if (element instanceof Modify) {
@@ -160,6 +161,13 @@ export default {
               element.setActive(this.editCardOn_.data);
             }
           });
+        }
+
+        if (this.objectForCard.geometry.type === 'Point' && !('attachFlag' in this.objectForCard)) {
+          const checkFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.objectForCard.geometry.coordinates)));
+          if (checkFeature.length && checkFeature.find(el => el.getGeometry().getType() === 'LineString')) {
+            Vue.set(this.objectForCard, 'attachFlag', false);
+          }
         }
       }
     },
@@ -269,11 +277,6 @@ export default {
         });
         if (!this.editCardOn.data && !this.infoCardOn.data) {
           await this.returnCoordinates();
-        }
-        const checkFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.objectForCard.geometry.coordinates)))
-        if (this.editCardOn.data && checkFeature.length && checkFeature[0].getGeometry().getType() === 'LineString') {
-          this.objectForCard.attachFlag = false
-          this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
         }
       },
       deep: true
@@ -473,6 +476,7 @@ export default {
       return coordinates;
     },
     updateCoordinates() {
+      console.log(this.drawLayer.getSource().getFeatures().length, this.arrFeatureForDraw.length)
       if ((this.drawLayer.getSource().getFeatures().length === 1 && !this.arrFeatureForDraw.length) || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
         this.map.removeInteraction(this.draw);
         this.modify = new Modify({
@@ -487,7 +491,7 @@ export default {
           coordinates = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
         }
         else {
-          coordinates = this.drawLayer.getSource().getFeatures().find(el => el.getGeometry().getType() === 'LineString').getGeometry().getCoordinates();
+          coordinates = this.drawLayer.getSource().getFeatures().find(el => el.getGeometry().getType() === this.drawType).getGeometry().getCoordinates();
         }
         this.feature.geometry.coordinates = this.coordinatesToLonLat(coordinates);
         this.feature.type = 'Feature';
@@ -560,37 +564,34 @@ export default {
       this.map.removeInteraction(this.modify);
       this.drawLayer.getSource().refresh();
       let source = new VectorSource();
+      this.arrFeatureForDraw = [];
+      
       if (this.drawType === 'Point') {
         await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
-        this.drawLayer = new VectorLayer({
-          source: new VectorSource({
-            features: []
-          }),
-        });
-
-        const layer = this.map.getAllLayers().find(el => el.get('typeId') === this.oneType.id);
-        this.drawLayer.set('standartIcon', layer.get('standartIcon'));
-        this.drawLayer.setStyle(this.getStyleFromLayer);
-
-        // this.modify = new Modify({
-        //   source: this.drawLayer.getSource(),
-        //   //style: this.drawLayer.getStyle()
-        // });
-
-        // this.modify.on('modifyend', this.changeCoordinates);
-        this.draw = new Draw({
-          source: this.drawLayer.getSource(),
-          type: this.drawType,
-          style: this.drawLayer.getStyle(),
-        });
-
-        this.draw.on('drawstart', this.checkDrawCoordinates)
-        this.arrFeatureForDraw = []
         const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString' && el.get('group') === this.oneType.group)
 
         for (let i in layerOfLineString) {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfLineString[i].getSource().getFeatures()];
         }
+        this.drawLayer = new VectorLayer({
+          source: new VectorSource({
+            features: this.arrFeatureForDraw
+          }),
+        });
+        source = this.drawLayer.getSource();
+
+        const layer = this.map.getAllLayers().find(el => el.get('typeId') === this.oneType.id);
+
+        this.drawLayer.set('standartIcon', layer.get('standartIcon'));
+        this.drawLayer.setStyle(this.getStyleFromLayer);
+
+        this.draw = new Draw({
+          source: source,
+          type: this.drawType,
+          style: this.drawLayer.getStyle(),
+        });
+
+        this.draw.on('drawstart', this.checkDrawCoordinates);
       }
       else if (this.drawType === 'LineString') {
         this.arrFeatureForDraw = [];
@@ -610,16 +611,13 @@ export default {
         });
       }
       else {
+        console.log(this.drawType);
         this.drawLayer = new VectorLayer({
           source: new VectorSource({
             features: []
           }),
         });
-        // this.modify = new Modify({
-        //   source: this.drawLayer.getSource(),
-        //   style: this.drawLayer.getStyle()
-        // });
-        //this.modify.on('modifyend', this.changeCoordinates);
+
         this.draw = new Draw({
           type: this.drawType,
           style: this.drawLayer.getStyle(),
@@ -629,7 +627,6 @@ export default {
 
       this.map.addLayer(this.drawLayer);
       this.map.addInteraction(this.draw);
-      //this.map.addInteraction(this.modify);
       if (this.arrFeatureForDraw.length) {
         const snap = new Snap({ source: source });
         this.map.addInteraction(snap);
@@ -737,7 +734,7 @@ export default {
             return el.getSource().getFeatures().find(element => element.getId() === feature.getId());
         })
         layer = layer && layer.get('standartIcon') ? layer : this.map.getAllLayers().find(el => el.get('typeId') === this.oneType.id);
-        const conflictObject = this.conflictArrays.find(el => el.find(element => element.id === feature.getId())) || this.newData.find(el => el.id === feature.getId());
+        const conflictObject = feature.getId() in this.conflictArrays;
         return new Style({
           image: new Icon({
             anchor: [0.5, 0, 5],

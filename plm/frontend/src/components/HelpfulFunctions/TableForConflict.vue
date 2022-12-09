@@ -48,8 +48,8 @@ export default {
     },
     methods: {
         changeItemFormTable() {
-            const conflictArr = this.conflictArrays.find(el => el.find(element => element.id === this.objectForCard.id));
-            this.itemsForTable = conflictArr ? conflictArr : [];
+            const conflictArr = this.objectForCard.id in this.conflictArrays ? this.conflictArrays[this.objectForCard.id] : [];
+            this.itemsForTable = conflictArr;
         }
     },
     mounted() {

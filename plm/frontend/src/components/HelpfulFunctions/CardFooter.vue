@@ -44,7 +44,7 @@ export default {
         async addNewFeature() {
             if (this.objectForCard.name && typeof this.objectForCard.name === 'number') {
                 if (!this.objectForCard.geometry.coordinates.length) {
-                    this.showSnacker('Создайте объект на карте!');
+                    this.$emit('showSnacker', 'Создайте объект на карте!');
                     return;
                 }
                 this.objectForCard.id_ = uuidv4();
@@ -61,7 +61,7 @@ export default {
                 await this.postObject(object);
             }
             if (this.error) {
-                this.showSnacker(this.error);
+                this.$emit('showSnacker', this.error);
                 return;
             }
             else {
@@ -96,7 +96,7 @@ export default {
                 await this.putObject(object);
             }
             if (this.error) {
-                this.showSnacker(this.error);
+                this.$emit('showSnacker', this.error);
                 return;
             }
             else {

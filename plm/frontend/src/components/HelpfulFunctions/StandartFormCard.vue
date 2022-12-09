@@ -84,8 +84,10 @@
                         </v-col>
                     </template>
                     <template v-else-if="('name' in objectForCard)">
-                        <v-checkbox v-if="objectForCard.geometry.type === 'Point' && editCardOn_.data"
-                            label="Открепить точку" v-model="offPointsFlag_"></v-checkbox>
+                        <v-col
+                            v-if="(editCardOn.data && Object.prototype.hasOwnProperty.call(objectForCard, 'attachFlag') && !objectForCard.id_)">
+                            <v-checkbox label="Открепить точку" v-model="objectForCard.attachFlag"></v-checkbox>
+                        </v-col>
 
                         <v-col v-for="el in typeForFeature.headers" :key="el.text" cols="1" sm="6" md="5" lg="6"
                             v-show="el.text != 'id'">
@@ -163,7 +165,7 @@ export default {
             password_again: '',
             types: ['Point', 'LineString', 'Polygon'],
             snackbar_: false,
-            postIndex: null, 
+            postIndex: null,
             pointIndex: null,
             showPassword: false,
         }
@@ -272,7 +274,6 @@ export default {
                         if (this.pointIndex != this.arrayEdit.put[this.postIndex].geometry.coordinates.length && this.pointIndex != 0) {
                             this.arrayEdit.put[this.postIndex].geometry.coordinates.splice(this.pointIndex, 1)
                         }
-                        console.log(this.arrayEdit.put[this.postIndex].geometry.coordinates)
                     }
 
 
@@ -289,7 +290,6 @@ export default {
                     email: this.user.email,
                     password: this.password,
                 }
-                console.log(user)
                 await this.putUser(user);
 
                 if (this.error) {
