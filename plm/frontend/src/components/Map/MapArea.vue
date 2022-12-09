@@ -368,7 +368,7 @@ export default {
       if (!this.objectForCard.attachFlag) {
         const geom = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(oldCoordinates), {
           filterLayer: el => el.get('type') === 'LineString',
-        });        
+        });
         geom.forEach((element) => {
           if (element.getGeometry().getType() === 'LineString') {
             element.getGeometry().getCoordinates().forEach(async (coord, index) => {
@@ -545,7 +545,7 @@ export default {
 
       let source = new VectorSource();
       this.arrFeatureForDraw = [];
-      
+
       if (this.drawType === 'Point') {
         await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
 
@@ -701,6 +701,7 @@ export default {
     },
     getStyleFromLayer(feature) {
       const type = feature.getGeometry().getType();
+      const conflictObject = feature.getId() in this.conflictArrays || this.newData.find(el => el.id === feature.getId() || el.id_ === feature.getId());
       if (type === 'Point') {
         let layer = feature.getLayer(this.map);
         layer = this.map.getAllLayers().find(el => {
@@ -708,7 +709,6 @@ export default {
             return el.getSource().getFeatures().find(element => element.getId() === feature.getId());
         })
         layer = layer && layer.get('standartIcon') ? layer : this.map.getAllLayers().find(el => el.get('typeId') === this.oneType.id);
-        const conflictObject = feature.getId() in this.conflictArrays;
         return new Style({
           image: new Icon({
             anchor: [0.5, 0, 5],
@@ -720,22 +720,44 @@ export default {
         });
       }
       else if (type === 'LineString') {
-        return new Style({
-          stroke: new Stroke({ color: "blue", width: 2 }),
-          zIndex: 2,
-        });
+        if (conflictObject) {
+          return new Style({
+            stroke: new Stroke({ color: "blue", width: 2 }),
+            zIndex: 2,
+          });
+        }
+        else {
+          return new Style({
+            stroke: new Stroke({ color: "#56abcb", width: 2 }),
+            zIndex: 2,
+          });
+        }
       }
       else {
-        return new Style({
-          stroke: new Stroke({
-            color: 'blue',
-            width: 3,
-          }),
-          fill: new Fill({
-            color: 'rgba(0, 0, 255, 0.1)',
-          }),
-          zIndex: 0,
-        });
+        if (conflictObject) {
+          return new Style({
+            stroke: new Stroke({
+              color: 'blue',
+              width: 2,
+            }),
+            fill: new Fill({
+              color: 'rgba(0, 0, 255, 0.1)',
+            }),
+            zIndex: 0,
+          });
+        }
+        else {
+          return new Style({
+            stroke: new Stroke({
+              color: '#56abcb',
+              width: 2,
+            }),
+            fill: new Fill({
+              color: 'rgba(255, 255, 255, 0.5)',
+            }),
+            zIndex: 0,
+          });
+        }
       }
     },
     getStyleFromSelect(feature) {
@@ -882,6 +904,7 @@ export default {
   padding-left: 5em;
   display: flex;
 }
+
 #card {
   background: white;
   border: 1px solid grey;
@@ -891,6 +914,7 @@ export default {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-shadow: 0 0 10px rgba(128, 128, 128, 0.5);
 }
+
 .edit {
   border: 1px solid grey;
   padding: 2px;
@@ -898,14 +922,17 @@ export default {
   border-radius: 7px;
   transition: .3s;
 }
+
 .edit:hover {
   border: 1px solid #EF5350;
   box-shadow: 0 0 10px rgba(239, 83, 80, 0.5);
 }
+
 .add {
   min-width: 5em;
   max-height: 2.5em;
 }
+
 .add_window,
 .edit_window {
   padding-left: 1em;
@@ -913,24 +940,31 @@ export default {
   border-left: 1px solid black;
   transition: all 1s;
 }
+
 .edit_window {
   min-height: 800px;
 }
+
 .slow {
   max-height: 2000px;
 }
+
 .save {
   margin-left: 1em;
 }
+
 .v_content {
   min-width: 100%;
 }
+
 .animation-enter-active {
   transition: all 1s;
 }
+
 .animation-leave-active {
   transition: all 1s;
 }
+
 .animation-enter,
 .animation-leave-to {
   right: 100px;
