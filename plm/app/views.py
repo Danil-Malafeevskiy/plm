@@ -155,8 +155,12 @@ class FileUploadView(APIView):
         dict_0 = []
         for i in cur.fetchall():
             try:
-                cur.execute(f"SELECT *, st_astext(GEOMETRY) from " + i[0])
+                cur.execute(f"SELECT *, ST_AsText(GeomFromWKB(GEOMETRY)) from " + i[0])
                 dict_0 = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in cur.fetchall()]
+                if dict_0[0]['ST_AsText(GeomFromWKB(GEOMETRY))'] == None:
+                    cur.execute(f"SELECT *, ST_AsText(GEOMETRY) from " + i[0])
+                    dict_0 = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in
+                              cur.fetchall()]
                 break
             except Exception as e:
                 continue
@@ -183,13 +187,11 @@ class FileUploadView(APIView):
 
         flag = True
         for value in dict_0:
-            if len(properties)!=0:
-                flag=False
             for key in value.keys():
-                if key == 'geometry' or key == 'id':
+                if key == 'GEOMETRY' or key == "geometry" or key == 'id':
                     continue
 
-                if key == 'st_astext(GEOMETRY)':
+                if key == 'ST_AsText(GeomFromWKB(GEOMETRY))' or key == 'ST_AsText(GEOMETRY)':
                     dict_1['geometry'] = value[key]
                     continue
 
