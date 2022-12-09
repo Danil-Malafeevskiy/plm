@@ -354,7 +354,7 @@ export default {
         this.objectForConflict = object
         this.conflictCard = true;
       }
-      else if (this.getObjectForCard.id in this.conflictArrays) {
+      else if (this.getObjectForCard.id in this.conflictArrays || this.getObjectForCard.id_ in this.conflictArrays) {
         this.conflictCard = true;
       }
       else {

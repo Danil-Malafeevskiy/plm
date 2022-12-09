@@ -27,11 +27,11 @@
                                 @notVisableCard="notVisableCard" :cardVisable="cardVisable" :errorMessage="errorMessage"
                                 :snackbar="snackbar" @showSnacker="showSnacker" :conflictCard="conflictCard" />
                         </v-tab-item>
-                        <v-tab-item>
+                        <v-tab-item v-if="sliderForConflict.includes('Конфликт версий')">
                             <ConflictFormForCard :objectForCard_="objectForCard" :conflictCard="conflictCard"
                                 :objectForConflict="objectForConflict" />
                         </v-tab-item>
-                        <v-tab-item>
+                        <v-tab-item v-if="sliderForConflict.includes('Конфликт положений')">
                             <TableForConflict :objectForCard="objectForCard" :cardVisable="cardVisable" />
                         </v-tab-item>
                     </v-tabs-items>
@@ -141,10 +141,26 @@ export default {
                     Vue.set(this.objectForCard, 'ruls', []);
                 }
             },
+        },
+        conflictCard: {
+            handler(){
+                if(this.conflictCard){
+                    if((this.objectForCard.id in this.conflictArrays || this.objectForCard.id_ in this.conflictArrays) && 
+                    this.newData.find(el => el.id ? el.id === this.objectForCard.id : el.id_ === this.objectForCard.id_)){
+                        this.sliderForConflict = ['Объект', 'Конфликт версий', 'Конфликт положений'];
+                    }
+                    else if (this.objectForCard.id in this.conflictArrays || this.objectForCard.id_ in this.conflictArrays){
+                        this.sliderForConflict = ['Объект', 'Конфликт положений'];
+                    } 
+                    else {
+                        this.sliderForConflict = ['Объект', 'Конфликт версий'];
+                    }
+                }
+            }
         }
     },
     computed: {
-        ...mapGetters(['offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
+        ...mapGetters(['offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error', 'conflictArrays']),
         heightPicture() {
             if (this.conflictCard)
                 return '24.48%'
