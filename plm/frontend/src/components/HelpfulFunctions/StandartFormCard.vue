@@ -166,7 +166,7 @@ export default {
             password_again: '',
             types: ['Point', 'LineString', 'Polygon'],
             snackbar_: false,
-            postIndex: null,
+            postIndex: [],
             pointIndex: null,
             showPassword: false,
         }
@@ -212,7 +212,7 @@ export default {
     },
     methods: {
         ...mapActions(['setOffPointsFlag', 'putObject', 'deleteObject', 'postObject', 'putUser']),
-        ...mapMutations(['updateArrayEditMode', 'updateObjectForCard', 'updateError']),
+        ...mapMutations(['updateArrayEditMode', 'updateObjectForCard', 'updateError', 'deleteItemFromNewData']),
 
         async deleteObjectOnCard() {
             if (this.actions === 'getFeatures') {
@@ -230,7 +230,7 @@ export default {
                     if (element.geometry.type === 'LineString') {
                         havePointInLinePost.push(element.geometry.coordinates.some((el) => {
                             if (el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]) {
-                                this.postIndex = index
+                                this.postIndex.push(index)
                                 return el[0] === this.objectForCard.geometry.coordinates[0] && el[1] === this.objectForCard.geometry.coordinates[1]
                             }
                         }))
@@ -239,15 +239,45 @@ export default {
                 havePointInLinePost = havePointInLinePost.some((el) => {
                     return el
                 })
+
+
                 if (havePointInLinePost) {
-                    this.arrayEdit.post[this.postIndex].geometry.coordinates.forEach((coord, index) => {
-                        if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
-                            this.pointIndex = index
+                    // this.arrayEdit.post.forEach((element, index) => {
+                    //     if (element.geometry.type === 'LineString') {
+                    //         element.geometry.coordinates.forEach((coord, id) => {
+                    //             if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
+                    //                 this.pointIndex = id
+                    //             }
+                    //         });
+                    //         if ((this.pointIndex === 0 || this.pointIndex === 1) && this.arrayEdit.post[index].geometry.coordinates.length === 2) {
+                    //             this.deleteItemFromNewData(element)
+                    //             console.log(this.arrayEdit.post.length, this.arrayEdit.post[index])
+                    //         } else if (this.pointIndex != this.arrayEdit.post[index].geometry.coordinates.length && this.pointIndex != 0) {
+                    //             this.arrayEdit.post[index].geometry.coordinates.splice(this.pointIndex, 1)
+                    //         }
+                    //     }
+                    // });
+                    this.postIndex.sort((a, b) => b - a);
+
+                    this.postIndex.forEach(index => {
+                        if (this.arrayEdit.post[index].geometry.type === 'LineString') {
+                            this.arrayEdit.post[index].geometry.coordinates.forEach((coord, id) => {
+                                if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
+                                    this.pointIndex = id
+                                }
+                            });
                         }
+                        console.log(this.pointIndex)
+                        console.log(this.arrayEdit.post[index].geometry.coordinates)
+                        if ((this.pointIndex === 0 || this.pointIndex === 1) && this.arrayEdit.post[index].geometry.coordinates.length === 2) {
+                            this.updateArrayEditMode({ item: this.arrayEdit.post[index], type: 'delete' })
+                        } else if (this.pointIndex != this.arrayEdit.post[index].geometry.coordinates.length && this.pointIndex != 0) {
+                            this.arrayEdit.post[index].geometry.coordinates.splice(this.pointIndex, 1)
+                        } else if((this.pointIndex === 0 || this.pointIndex === this.arrayEdit.post[index].geometry.coordinates.length) && this.arrayEdit.post[index].geometry.coordinates.length > 2) (
+                            this.arrayEdit.post[index].geometry.coordinates.splice(this.pointIndex, 1)
+                        )
                     });
-                    if (this.pointIndex != this.arrayEdit.post[this.postIndex].geometry.coordinates.length && this.pointIndex != 0) {
-                        this.arrayEdit.post[this.postIndex].geometry.coordinates.splice(this.pointIndex, 1)
-                    }
+                    
                 } else {
                     let havePointInLinePut = []
                     this.arrayEdit.put.forEach((element, index) => {
