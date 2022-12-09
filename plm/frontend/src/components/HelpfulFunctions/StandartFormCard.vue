@@ -212,7 +212,7 @@ export default {
     },
     methods: {
         ...mapActions(['setOffPointsFlag', 'putObject', 'deleteObject', 'postObject', 'putUser']),
-        ...mapMutations(['updateArrayEditMode', 'updateObjectForCard', 'updateError', 'deleteObjectFromArrayEditMode']),
+        ...mapMutations(['updateArrayEditMode', 'updateObjectForCard', 'updateError', 'deleteItemFromNewData']),
 
         async deleteObjectOnCard() {
             if (this.actions === 'getFeatures') {
@@ -239,34 +239,29 @@ export default {
                 havePointInLinePost = havePointInLinePost.some((el) => {
                     return el
                 })
+
+
                 if (havePointInLinePost) {
                     this.arrayEdit.post.forEach((element, index) => {
-                        let condition = this.postIndex.some((el) => {
-                            return el === index
-                        })
-                        if (condition) {
-                            console.log(element.geometry.coordinates)
-                            element.geometry.coordinates.forEach((coord, index) => {
+                        if (element.geometry.type === 'LineString') {
+                            element.geometry.coordinates.forEach((coord, id) => {
                                 if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
-                                    this.pointIndex = index
+                                    this.pointIndex = id
                                 }
                             });
-                            if (this.pointIndex != this.arrayEdit.post[element.id].geometry.coordinates.length && this.pointIndex != 0) {
-                                this.arrayEdit.post[element.id].geometry.coordinates.splice(this.pointIndex, 1)
-                                console.log(this.arrayEdit.post[element.id].geometry.coordinates)
-                            } else if ((this.pointIndex === 0 || this.pointIndex === this.arrayEdit.post[element.id].geometry.coordinates.length === 2)) {
-                                this.deleteObjectFromArrayEditMode(this.arrayEdit.post[element.id])
+                            if ((this.pointIndex === 0 || this.pointIndex === 1) && this.arrayEdit.post[index].geometry.coordinates.length === 2) {
+                                this.deleteItemFromNewData(element)
+                                console.log(this.arrayEdit.post.length, this.arrayEdit.post[index])
+                            } else if (this.pointIndex != this.arrayEdit.post[index].geometry.coordinates.length && this.pointIndex != 0) {
+                                this.arrayEdit.post[index].geometry.coordinates.splice(this.pointIndex, 1)
                             }
-
                         }
+                    });
 
+                    this.postIndex.forEach(element => {
+                        console.log(this.arrayEdit.post[element])
                     });
                     
-
-                    // if (this.pointIndex != this.arrayEdit.post[this.postIndex].geometry.coordinates.length && this.pointIndex != 0) {
-
-                    //     this.arrayEdit.post[this.postIndex].geometry.coordinates.splice(this.pointIndex, 1)
-                    // }
                 } else {
                     let havePointInLinePut = []
                     this.arrayEdit.put.forEach((element, index) => {
