@@ -71,6 +71,7 @@ export default {
         },
         async editObject() {
             if ('type' in this.objectForCard) {
+                console.log(this.objectForCard.geometry.coordinates);
                 this.updateArrayEditMode({ item: this.objectForCard, type: 'put' });
                 this.deleteItemFromNewData(this.objectForCard);
                 this.allListItem.forEach(element => {

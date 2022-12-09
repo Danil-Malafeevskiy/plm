@@ -7,7 +7,7 @@
                 'edit_form': editCardOn.data || addCardOn.data
             }">
                 <v-row justify="start" style="padding-bottom: 0 !important;">
-                    <v-col cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
+                    <v-col cols="2" sm="6" md="5" lg="6" v-if="(infoCardOn_.data && !conflictCard)">
                         <v-card-text
                             v-if="'properties' in objectForCard && objectForCard.properties.first_name != undefined"
                             class="pa-0" style="font-size: 24px;">{{

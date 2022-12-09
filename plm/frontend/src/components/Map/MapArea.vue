@@ -136,12 +136,10 @@ export default {
         }
         this.objectForCard = this.getObjectForCard;
         if (this.editCardOn_.data && 'geometry' in this.getObjectForCard) {
-          // if (this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) {
-          //   console.log(1);
-          //   this.editCardOn_.data = false;
-          // }
-          if (!(this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) && !this.conflictCard){
-            console.log(10);
+          if ((this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) && !this.conflictCard) {
+            this.editCardOn_.data = false;
+          }
+          else if (!this.conflictCard){
             this.returnCoordinateForPoint('id_' in this.objectForCard ? this.objectForCard.id_ : this.objectForCard.id,
               this.objectForCard.name, this.objectForCard.geometry.coordinates);
           }

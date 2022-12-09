@@ -37,9 +37,9 @@
                     </v-tabs-items>
                 </template>
             </div>
-            <CardFooter v-if="(!infoCardOn_.data || conflictCard)" :objectForCard_="objectForCard" :infoCardOn="infoCardOn_"
-                :editCardOn="editCardOn_" :editMode="editMode" :addCardOn="addCardOn_" @notVisableCard="notVisableCard"
-                :cardVisable="cardVisable" @showSnacker="showSnacker" />
+            <CardFooter v-if="(!infoCardOn_.data || conflictCard)" :objectForCard_="objectForCard"
+                :infoCardOn="infoCardOn_" :editCardOn="editCardOn_" :editMode="editMode" :addCardOn="addCardOn_"
+                @notVisableCard="notVisableCard" :cardVisable="cardVisable" @showSnacker="showSnacker" />
         </v-card>
     </v-scroll-x-reverse-transition>
 </template>
@@ -140,10 +140,11 @@ export default {
                 if ('name' in this.objectForCard && typeof this.objectForCard.name === 'string') {
                     Vue.set(this.objectForCard, 'ruls', []);
                 }
-                console.log(this.conflictCard);
-                this.editCardOn_.data = this.conflictCard;
-                this.infoCardOn_.data = !this.conflictCard;
-                // console.log(this.editCardOn_.data, this.infoCardOn_.data)
+                // console.log(this.conflictCard);
+                if (this.conflictCard) {
+                    this.editCardOn_.data = this.conflictCard;
+                    this.infoCardOn_.data = !this.conflictCard;
+                }
             },
         },
         conflictCard: {
