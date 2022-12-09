@@ -24,7 +24,7 @@
                     </v-select>
                 </div>
                 <v-card-text>
-                    <div class="btn">
+                    <div class="btn" style="background-color: #DDDDDD !important;">
                         <v-btn @click="fileUpload"
                             :disabled="!file || !group || !fileName || (user.permissions.filter(el => el.includes(group)).length != 2 && (!user.is_staff || !user.is_superuser))"
                             color="#EE5E5E" block style="height: 45px; color: white !important;">

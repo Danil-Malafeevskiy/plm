@@ -61,11 +61,12 @@
 
       <v-tabs-items v-model="tab" :style="{ height: heightVItem }">
 
-        <CardConflict v-show="conflictCard" :cardVisable="cardVisable" :conflictCard="conflictCard" :editMode="editMode"
-          :objectForConflict="objectForConflict" :notVisableCard="notVisableCard" />
+        <!-- <CardConflict v-show="conflictCard" :cardVisable="cardVisable" :conflictCard="conflictCard" :editMode="editMode"
+          :objectForConflict="objectForConflict" :notVisableCard="notVisableCard" /> -->
 
-        <CardInfo v-if="!conflictCard" :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn"
-          :editCardOn="editCardOn" :visableCard="visableCard" :notVisableCard="notVisableCard" :editMode="editMode" />
+        <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn"
+          :conflictCard="conflictCard" :editCardOn="editCardOn" :visableCard="visableCard"
+          :notVisableCard="notVisableCard" :editMode="editMode" :objectForConflict="objectForConflict" />
 
         <v-tab-item>
 
@@ -102,8 +103,8 @@
 
             <Auth v-if="getAuth === false && authbool" />
             <ConflicWindow v-if="isConflict" @offConflictWindow="offConflictWindow" />
-            <TablePage :visableCard="visableCard" :infoCardOn="infoCardOn" :notVisableCard="notVisableCard"
-              :addCardOn="addCardOn" :editCardOn="editCardOn" v-if="!versionsPage.data"
+            <TablePage v-if="!versionsPage.data" :visableCard="visableCard" :infoCardOn="infoCardOn"
+              :notVisableCard="notVisableCard" :addCardOn="addCardOn" :editCardOn="editCardOn" :editMode="editMode"
               @openEditMode="editMode = true" />
             <VersionControl v-if="versionsPage.data" :versionsPage="versionsPage" />
           </div>
@@ -132,7 +133,7 @@ import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
 import FIleInputWindow from './components/HelpfulFunctions/FIleInputWindow.vue';
-import CardConflict from './components/HelpfulFunctions/CardConflict.vue';
+// import CardConflict from './components/HelpfulFunctions/CardConflict.vue';
 
 export default {
   components: {
@@ -144,7 +145,7 @@ export default {
     ConflicWindow,
     VersionControl,
     FIleInputWindow,
-    CardConflict
+    // CardConflict
   },
 
   data() {
@@ -167,6 +168,7 @@ export default {
       changeElements: [],
       componentKey: 0,
       authbool: null,
+      сountMessage: 0,
     }
   },
   watch: {
@@ -224,14 +226,14 @@ export default {
         return '94%';
       }
     },
-    itemsForSlider(){
+    itemsForSlider() {
       return this.actions === 'getFeatures' ? ['список', 'карта'] : ['список']
     }
   },
   methods: {
 
     ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getTypeObject']),
-    ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData', 'deleteObjectFromArrayEditMode']),
+    ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData', 'deleteObjectFromArrayEditMode', 'updateConflictArrays']),
 
     visableVersions() {
       this.versionsPage.data = true
@@ -246,10 +248,13 @@ export default {
     notVisableCard() {
       this.cardVisable.data = false;
     },
-    
+
     async onmessage(e) {
       const data = JSON.parse(e.data);
-      // console.log(data);
+      console.log(data);
+      if ('data' in data && typeof data.data.name === 'string') {
+        this.getFeatures();
+      }
       switch (data.action) {
         case "update": {
           if (this.editMode) {
@@ -276,8 +281,12 @@ export default {
           }
           break;
         default:
-          if ('content' in data && (data.content === 'Все объекты добавлены и обновлены!' || data.content === 'Все объекты добавлены!')) {
-            this.getFeatures();
+          if ('content' in data) {
+            this.сountMessage++;
+            if (this.сountMessage == data.content.groups_names.filter(el => Boolean(this.user.groups.indexOf(el))).length) {
+              this.getFeatures();
+              this.countMessage = 0;
+            }
           }
           break;
       }
@@ -299,7 +308,7 @@ export default {
       arrayEditModeFromPut.message = this.arrayEditMode.message;
       await this.putFeature(arrayEditModeFromPut);
 
-      if (this.conflictArrays.length || this.newData.length) {
+      if (this.newData.length || Object.keys(this.conflictArrays).length) {
         this.isConflict = true;
         return;
       }
@@ -333,6 +342,7 @@ export default {
         this.editCardOn.data = !this.editCardOn.data;
         this.infoCardOn = !this.editCardOn.data;
       }
+      this.updateConflictArrays([]);
       this.resetNewData();
       this.resetArrayEditMode();
       this.getFeatures();
@@ -344,12 +354,14 @@ export default {
         this.objectForConflict = object
         this.conflictCard = true;
       }
-      else if (this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.getObjectForCard.id : element.id_ === this.getObjectForCard.id_))) {
+      else if (this.getObjectForCard.id in this.conflictArrays || this.getObjectForCard.id_ in this.conflictArrays) {
         this.conflictCard = true;
       }
       else {
         this.conflictCard = false;
       }
+      this.editCardOn.data = this.conflictCard;
+      this.infoCardOn.data = !this.conflictCard;
     },
     checkPath() {
       if (location.pathname === '/') {

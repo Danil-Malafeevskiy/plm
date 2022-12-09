@@ -3,55 +3,43 @@
         <v-card class="card_of_object" v-show="cardVisable_.data">
             <div class="card__window">
                 <p style="display: none">{{ objectForCard }}</p>
-                <v-card
-                    v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'"
-                    class="one_picture pa-0 ma-0 background_color_gray" tile flat
-                    style="width: 100% !important; min-height: 37.53% !important; overflow-y: scroll !important;">
+                <PictureForCard v-show="!conflictCard" :objectForCard_="objectForCard" :infoCardOn_="infoCardOn"
+                    :conflictCard="conflictCard" />
 
-                    <v-row no-gutters justify="start">
-                        <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4"
-                            style="max-width: 48px !important" class="ma-0">
-                            <v-radio-group hide-details class="pa-0 ma-0" v-model="objectForCard.image">
-                                <v-radio :value="el" :readonly="infoCardOn.data" class="ma-2" color="#E93030"
-                                    :on-icon="el" :off-icon="el" style="
-                                    min-height: 2em !important; 
-                                    min-width: 2em !important;
-                                "></v-radio>
-                            </v-radio-group>
-                        </v-col>
-                    </v-row>
-                </v-card>
-                <v-file-input v-else-if="'properties' in objectForCard && 'type' in objectForCard.properties"
-                    accept="image/*" class="pa-0 ma-0 background_color_red" height="37.53%" :prepend-icon="icon"
-                    :disabled="infoCardOn_.data" hide-input>
-                </v-file-input>
+                <PictureForConflict v-show="conflictCard" :objectForCard_="objectForCard"
+                    :objectForConflict="objectForConflict" />
 
-                <v-file-input v-else-if="!objectForCard.image" @change="fileToBase64" accept="image/*" :class="{
-                    'background_color_red': !('properties' in objectForCard && 'first_name' in objectForCard.properties),
-                    'background_color_gray': ('properties' in objectForCard && 'first_name' in objectForCard.properties)
-                }" class="pa-0 ma-0" height="37.53%" :prepend-icon="icon" :disabled="infoCardOn_.data" hide-input>
-                </v-file-input>
-                <template v-else-if="objectForCard.image && !infoCardOn_.data">
-                    <div class="background_img"></div>
-                    <v-btn class="btn_del_img ma-3 pa-0" elevation="0" icon @click="objectForCard.image = ''">
-                        <v-icon color="white">
-                            mdi-delete-outline
-                        </v-icon>
-                    </v-btn>
+                <StandartFormCard v-if="!conflictCard" :objectForCard_="objectForCard" :infoCardOn="infoCardOn"
+                    :editCardOn="editCardOn" :editMode="editMode" :addCardOn="addCardOn_"
+                    @notVisableCard="notVisableCard" :cardVisable="cardVisable" :errorMessage="errorMessage"
+                    :snackbar="snackbar" @showSnacker="showSnacker" />
+                <template v-else>
+                    <v-tabs v-model="tab" align-with-title style="z-index: 1" color="#E93030">
+                        <v-tab v-for="item in sliderForConflict" :key="item" class="ma-0">
+                            <span>{{ item }}</span>
+                        </v-tab>
+                    </v-tabs>
+                    <v-divider></v-divider>
+                    <v-tabs-items v-model="tab" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0;">
+                        <v-tab-item>
+                            <StandartFormCard :objectForCard_="objectForCard" :infoCardOn="infoCardOn"
+                                :editCardOn="editCardOn" :editMode="editMode" :addCardOn="addCardOn_"
+                                @notVisableCard="notVisableCard" :cardVisable="cardVisable" :errorMessage="errorMessage"
+                                :snackbar="snackbar" @showSnacker="showSnacker" :conflictCard="conflictCard" />
+                        </v-tab-item>
+                        <v-tab-item v-if="sliderForConflict.includes('Конфликт версий')">
+                            <ConflictFormForCard :objectForCard_="objectForCard" :conflictCard="conflictCard"
+                                :objectForConflict="objectForConflict" />
+                        </v-tab-item>
+                        <v-tab-item v-if="sliderForConflict.includes('Конфликт положений')">
+                            <TableForConflict :objectForCard="objectForCard" :cardVisable="cardVisable" />
+                        </v-tab-item>
+                    </v-tabs-items>
                 </template>
-
-                <template v-if="!('properties' in objectForCard && 'type' in objectForCard.properties)">
-                    <v-img v-if="objectForCard.image" :src="objectForCard.image" :class="{
-                        'one_picture': infoCardOn_.data,
-                        'not_one_picture': !infoCardOn_.data,
-                    }" width="100%" style="max-height: 37.53%"></v-img>
-                </template>
-
-
-                <StandartFormCard :objectForCard_="objectForCard" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :editMode="editMode"
-                                  :addCardOn="addCardOn_" @notVisableCard="notVisableCard" :cardVisable="cardVisable"/>
-
             </div>
+            <CardFooter v-if="!infoCardOn.data" :objectForCard_="objectForCard" :infoCardOn="infoCardOn"
+                :editCardOn="editCardOn" :editMode="editMode" :addCardOn="addCardOn_" @notVisableCard="notVisableCard"
+                :cardVisable="cardVisable" @showSnacker="showSnacker" />
         </v-card>
     </v-scroll-x-reverse-transition>
 </template>
@@ -60,29 +48,36 @@
 import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket } from '@mdi/js'
 import StandartFormCard from './StandartFormCard.vue';
+import CardFooter from './CardFooter.vue';
+import ConflictFormForCard from './ConflictFormForCard.vue';
+import Vue from 'vue';
+import TableForConflict from './TableForConflict.vue';
+import PictureForCard from './PictureForCard.vue';
+import PictureForConflict from './PictureForConflict.vue';
 
 export default {
     name: 'CardInfo',
     components: {
-        
         StandartFormCard,
+        CardFooter,
+        ConflictFormForCard,
+        TableForConflict,
+        PictureForCard,
+        PictureForConflict
     },
-    props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'visableCard', 'notVisableCard', 'editMode'],
+    props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'visableCard', 'notVisableCard', 'editMode', 'conflictCard', 'objectForConflict'],
     data() {
         return {
             cardVisable_: this.cardVisable,
             addCardOn_: this.addCardOn,
             infoCardOn_: this.infoCardOn,
             editCardOn_: this.editCardOn,
-            icon: mdiImagePlusOutline,
             objectForCard: {},
-            showPassword: false,
             listMdiIcons: [mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket],
-
-            offPointsFlag_: false,
-            postIndex: null, 
-            pointIndex: null,
-
+            errorMessage: '',
+            snackbar: false,
+            sliderForConflict: ['Объект', 'Конфликт версий', 'Конфликт положений'],
+            tab: null,
         }
     },
     watch: {
@@ -142,36 +137,52 @@ export default {
                     };
                     this.updateOneType({ type: emptyType, forFeature: true });
                 }
-
-                if(this.editCardOn_.data&& this.objectForCard && this.objectForCard.geometry && this.objectForCard.geometry.type === 'Point'){
-                    console.log(Object.prototype.hasOwnProperty.call(this.objectForCard, 'attachFlag'))
+                if ('name' in this.objectForCard && typeof this.objectForCard.name === 'string') {
+                    Vue.set(this.objectForCard, 'ruls', []);
                 }
             },
         },
-
+        conflictCard: {
+            handler(){
+                if(this.conflictCard){
+                    if((this.objectForCard.id in this.conflictArrays || this.objectForCard.id_ in this.conflictArrays) && 
+                    this.newData.find(el => el.id ? el.id === this.objectForCard.id : el.id_ === this.objectForCard.id_)){
+                        this.sliderForConflict = ['Объект', 'Конфликт версий', 'Конфликт положений'];
+                    }
+                    else if (this.objectForCard.id in this.conflictArrays || this.objectForCard.id_ in this.conflictArrays){
+                        this.sliderForConflict = ['Объект', 'Конфликт положений'];
+                    } 
+                    else {
+                        this.sliderForConflict = ['Объект', 'Конфликт версий'];
+                    }
+                }
+            }
+        }
     },
     computed: {
-        ...mapGetters(['offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error']),
+        ...mapGetters(['offPointsFlag', 'arrayEditMode', 'getObjectForCard', 'emptyObject', 'oneType', 'typeForFeature', 'allListItem', 'arrayEdit', 'newData', 'actions', 'user', 'error', 'conflictArrays']),
+        heightPicture() {
+            if (this.conflictCard)
+                return '24.48%'
+            else
+                return '37.5%'
+        }
     },
     methods: {
 
         ...mapActions(['getTypeObject', 'deleteObject', 'putObject', 'setOffPointsFlag', 'postObject', 'getOneObject', 'getAllObject', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAlltypeForTable', 'putUser']),
         ...mapMutations(['updateFunction', 'updateOffPointsFlag', 'upadateEmptyObject', 'updateOneType', 'updateArrayEditMode', 'updateObjectForCard']),
 
-        fileToBase64(file) {
-            const reader = new FileReader();
-
-            reader.onload = (e) => {
-                this.objectForCard.image = e.target.result;
-            };
-            reader.readAsDataURL(file);
+        showSnacker(errorText) {
+            this.errorMessage = errorText;
+            this.snackbar = true;
         },
-
     },
 
     mounted() {
     }
 }
+
 </script>
 
 <style scoped>
@@ -182,6 +193,10 @@ export default {
 
 .v-expansion-panel-content__wrap {
     padding: 0 !important;
+}
+
+.v-window {
+    border-radius: 12px !important;
 }
 
 .v-application--is-ltr .v-expansion-panel-header__icon {
@@ -197,24 +212,8 @@ export default {
     min-height: 100%;
 }
 
-.card_of_object {
-    width: 38.05% !important;
-    z-index: 5 !important;
-    min-height: 92.08% !important;
-    position: absolute !important;
-    left: 60.28% !important;
-    top: 4.19% !important;
-    border-radius: 12px !important;
-}
-
 .card__info {
     align-items: center;
-}
-
-.v-icon--link .v-icon__svg {
-    min-width: 133.33px !important;
-    min-height: 133.33px !important;
-    fill: #FFFFFF !important;
 }
 
 .card__window {
@@ -229,51 +228,9 @@ export default {
     border-radius: 12px;
 }
 
-.card__img {
-    align-items: flex-start;
-}
 
 .v-icon--link::after {
     background-color: rgba(255, 255, 255, 0) !important;
-}
-
-.v-file-input {
-    min-height: 37.53%;
-    max-height: 37.53%;
-    border-radius: 12px 12px 0 0;
-}
-
-.background_color_red {
-    background-color: #EE5E5E !important;
-}
-
-.background_color_gray {
-    background-color: #DDDDDD !important;
-}
-
-.btn_del_img {
-    position: absolute;
-    z-index: 2;
-    right: 0;
-}
-
-.one_picture {
-    position: relative !important;
-    border-radius: 12px 12px 0 0 !important;
-}
-
-.not_one_picture {
-    position: absolute !important;
-    border-radius: 12px 12px 0 0 !important;
-}
-
-.background_img {
-    z-index: 1;
-    background-color: #000;
-    opacity: 0.3;
-    min-height: 37.53%;
-    max-height: 37.53%;
-    border-radius: 12px 12px 0 0;
 }
 
 .row {
@@ -290,12 +247,13 @@ export default {
 </style>
 
 <style>
-.v-input__icon,
-.v-icon--link {
-    min-width: 100% !important;
-    height: 100% !important;
-    min-height: 100% !important;
-    justify-content: center !important;
-    align-items: center !important;
+.card_of_object {
+    width: 38.05% !important;
+    z-index: 5 !important;
+    min-height: 92.08% !important;
+    position: absolute !important;
+    left: 60.28% !important;
+    top: 4.19% !important;
+    border-radius: 12px !important;
 }
 </style>

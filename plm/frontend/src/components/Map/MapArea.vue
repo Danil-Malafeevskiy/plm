@@ -56,6 +56,7 @@ import Select from 'ol/interaction/Select';
 import { Canvg } from 'canvg';
 import { toStringXY } from 'ol/coordinate';
 import Feature from 'ol/Feature';
+import Vue from 'vue';
 
 export default {
   components: {
@@ -110,12 +111,10 @@ export default {
           await this.deleteOldLayers();
           await this.addNewLayers();
           this.map.removeInteraction(this.selectInteraction);
-
           this.selectInteraction = new Select({
             style: this.getStyleFromSelect,
             layers: this.map.getAllLayers(),
           });
-
           this.map.addInteraction(this.selectInteraction);
           this.addChangedObjectOnMap();
         }
@@ -145,9 +144,8 @@ export default {
               this.objectForCard.name, this.objectForCard.geometry.coordinates);
           }
         }
-        if (this.newData.find(el => el.id === this.objectForCard.id) || this.conflictArrays.find(el => el.find(element => element.id_ === undefined ? element.id === this.objectForCard.id : element.id_ === this.objectForCard.id_))) {
+        if (this.newData.find(el => el.id === this.objectForCard.id) || this.objectForCard.id in this.conflictArrays) {
           this.map.getInteractions().getArray().forEach(element => {
-
             if (element instanceof Modify) {
               element.setActive(true);
             }
@@ -155,11 +153,17 @@ export default {
         }
         else {
           this.map.getInteractions().getArray().forEach(element => {
-
             if (element instanceof Modify) {
               element.setActive(this.editCardOn_.data);
             }
           });
+        }
+
+        if (this.objectForCard.geometry.type === 'Point' && !('attachFlag' in this.objectForCard)) {
+          const checkFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.objectForCard.geometry.coordinates)));
+          if (checkFeature.length && checkFeature.find(el => el.getGeometry().getType() === 'LineString')) {
+            Vue.set(this.objectForCard, 'attachFlag', false);
+          }
         }
       }
     },
@@ -168,7 +172,6 @@ export default {
         if (this.conflict) {
           const layer = this.map.getAllLayers().find(layer => layer.get('typeId') === this.getObjectForCard.name);
           let features = layer.getSource().getFeatures();
-
           for (let i in features) {
             if (features[i].getId() === this.oldFeature.id) {
               features[i].getGeometry().setCoordinates(this.coordinatesFromLonLat(this.oldFeature.geometry.coordinates));
@@ -215,12 +218,12 @@ export default {
         this.addCardOn_ = this.addCardOn;
         this.selectInteraction.setActive(!this.addCardOn.data);
         if (!this.addCardOn_.data) {
+          this.map.removeInteraction(this.modify);
           const checkFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.emptyObject.geometry.coordinates)))
           if (checkFeature.length && checkFeature[0].getGeometry().getType() === 'LineString') {
             let havePostPoint = this.arrayEdit.post.some((el) => {
               return this.checkEqualCoordinates(el.geometry.coordinates, this.emptyObject.geometry.coordinates)
             })
-
             if (!havePostPoint) {
               this.arrayEdit.put.forEach(async element => {
                 if (element.geometry.type === 'LineString') {
@@ -235,9 +238,7 @@ export default {
                   newCoord.forEach((el, i) => {
                     newCoord[i] = toLonLat(el)
                   });
-
                   await this.getOneFeatureId(element.id)
-
                   if (JSON.stringify(this.oneFeature) === JSON.stringify(element)) {
                     let checkLine = this.oneFeature.geometry.coordinates.every((el, index) => {
                       return this.checkEqualCoordinates(el, element.geometry.coordinates[index])
@@ -246,7 +247,6 @@ export default {
                       this.deleteObjectFromArrayEditMode(this.oneFeature)
                     }
                   }
-
                 }
               });
             }
@@ -268,11 +268,6 @@ export default {
         });
         if (!this.editCardOn.data && !this.infoCardOn.data) {
           await this.returnCoordinates();
-        }
-        const checkFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.objectForCard.geometry.coordinates)))
-        if (this.editCardOn.data && checkFeature.length && checkFeature[0].getGeometry().getType() === 'LineString') {
-          this.objectForCard.attachFlag = false
-          this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
         }
       },
       deep: true
@@ -348,9 +343,7 @@ export default {
     },
     checkEqualCoordinates(coord1, coord2) {
       return coord1[0] === coord2[0] && coord1[1] === coord2[1];
-
     },
-
     comparePointLine(coordPoint, coordLine) {
       coordLine.forEach((element, index) => {
         if (this.checkEqualCoordinates(coordPoint, element)) {
@@ -364,14 +357,12 @@ export default {
       const layer = this.map.getAllLayers().find(el => el.get('typeId') === typeId);
       const features = layer.getSource().getFeatures();
       let feature = features.find(el => { return el.getId() === id });
-
       const oldCoordinates = feature.getGeometry().getCoordinates();
       const newCoordinates = this.coordinatesFromLonLat(coordinates);
       feature.getGeometry().setCoordinates(newCoordinates);
       if (layer.get('type') === 'Point') {
         this.returnCoordinateForLineString(oldCoordinates, newCoordinates);
       }
-
     },
     returnCoordinateForLineString(oldCoordinates, newCoordinates) {
       if (!this.objectForCard.attachFlag) {
@@ -385,7 +376,6 @@ export default {
                 let lineStingCooradinates = element.getGeometry().getCoordinates();
                 lineStingCooradinates[index] = newCoordinates;
                 element.getGeometry().setCoordinates(lineStingCooradinates);
-
                 if (Number.isInteger(element.getId())) {
                   await this.getOneFeatureId(element.getId())
                   this.arrayEdit.put.forEach(putElement => {
@@ -396,7 +386,6 @@ export default {
                       putElement.geometry.coordinates = lineStingCooradinates
                     }
                   });
-
                 }
 
                 if (typeof element.getId() === 'string') {
@@ -407,7 +396,6 @@ export default {
           }
         })
       }
-
     },
     deleteNewObjectFromMap(feature, arr) {
       feature = feature.filter(function (element) {
@@ -431,7 +419,6 @@ export default {
       for (let i in coordinates) {
         coordinates[i] = toLonLat(coordinates[i]);
       }
-
       lineSting.geometry.coordinates = coordinates;
       this.updateArrayEditMode({ item: lineSting, type: 'put' });
     },
@@ -472,15 +459,21 @@ export default {
       return coordinates;
     },
     updateCoordinates() {
-      if (this.drawLayer.getSource().getFeatures().length === 1 || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
+      console.log(this.drawLayer.getSource().getFeatures().length, this.arrFeatureForDraw.length)
+      if ((this.drawLayer.getSource().getFeatures().length === 1 && !this.arrFeatureForDraw.length) || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
         this.map.removeInteraction(this.draw);
+        this.modify = new Modify({
+          source: new VectorSource({
+            features: this.drawLayer.getSource().getFeatures().filter(el => el.getGeometry().getType() === this.drawType),
+          })
+        })
+        this.map.addInteraction(this.modify);
         let coordinates;
-
         if (this.drawLayer.getSource().getFeatures().length === 1) {
           coordinates = this.drawLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
         }
         else {
-          coordinates = this.drawLayer.getSource().getFeatures().find(el => el.getGeometry().getType() === 'LineString').getGeometry().getCoordinates();
+          coordinates = this.drawLayer.getSource().getFeatures().find(el => el.getGeometry().getType() === this.drawType).getGeometry().getCoordinates();
         }
         this.feature.geometry.coordinates = this.coordinatesToLonLat(coordinates);
         this.feature.type = 'Feature';
@@ -503,17 +496,14 @@ export default {
     async getFeature_(event) {
       this.updateCoordinates();
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
-
       if (feature_ && !this.addCardOn_.data && (feature_.getId() != this.objectForCard.id || !this.cardVisable.data)) {
         let item = this.findItem(feature_.id_)
-
         if (item) {
           this.updateObjectForCard(JSON.parse(JSON.stringify(item)));
         }
         else {
           await this.getOneFeature(feature_.id_);
         }
-
         this.infoCardOn_.data = true;
         this.visableCard();
       }
@@ -553,47 +543,43 @@ export default {
       this.map.removeInteraction(this.modify);
       this.drawLayer.getSource().refresh();
 
+      let source = new VectorSource();
+      this.arrFeatureForDraw = [];
+
       if (this.drawType === 'Point') {
         await this.getOneTypeObject({ id: this.oneType.id, forFeature: true });
+
+        const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString' && el.get('group') === this.oneType.group)
+        for (let i in layerOfLineString) {
+          this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfLineString[i].getSource().getFeatures()];
+        }
         this.drawLayer = new VectorLayer({
           source: new VectorSource({
-            features: []
+            features: this.arrFeatureForDraw
           }),
         });
+        source = this.drawLayer.getSource();
 
         const layer = this.map.getAllLayers().find(el => el.get('typeId') === this.oneType.id);
+
         this.drawLayer.set('standartIcon', layer.get('standartIcon'));
         this.drawLayer.setStyle(this.getStyleFromLayer);
 
-        this.modify = new Modify({
-          source: this.drawLayer.getSource(),
-          //style: this.drawLayer.getStyle()
-        });
-
-        this.modify.on('modifyend', this.changeCoordinates);
         this.draw = new Draw({
-          source: this.drawLayer.getSource(),
+          source: source,
           type: this.drawType,
           style: this.drawLayer.getStyle(),
         });
 
-        this.draw.on('drawstart', this.checkDrawCoordinates)
-        this.arrFeatureForDraw = []
-        const layerOfLineString = this.map.getAllLayers().filter(el => el.get('type') === 'LineString' && el.get('group') === this.oneType.group)
-
-        for (let i in layerOfLineString) {
-          this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfLineString[i].getSource().getFeatures()];
-        }
+        this.draw.on('drawstart', this.checkDrawCoordinates);
       }
       else if (this.drawType === 'LineString') {
         this.arrFeatureForDraw = [];
         const layerOfPoint = this.map.getAllLayers().filter(el => el.get('type') === 'Point' && el.get('group') === this.oneType.group);
-
         for (let i in layerOfPoint) {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfPoint[i].getSource().getFeatures()];
         }
-
-        const source = new VectorSource({ features: this.arrFeatureForDraw });
+        source = new VectorSource({ features: this.arrFeatureForDraw });
         this.drawLayer = new VectorLayer({
           source: source
         });
@@ -601,34 +587,24 @@ export default {
           source: source,
           type: this.drawType,
         });
-        this.modify = new Modify({
-          source: this.drawLayer.getSource(),
-          //style: this.drawLayer.getStyle()
-        });
       }
       else {
+        console.log(this.drawType);
         this.drawLayer = new VectorLayer({
           source: new VectorSource({
             features: []
           }),
         });
-        this.modify = new Modify({
-          source: this.drawLayer.getSource(),
-          style: this.drawLayer.getStyle()
-        });
-        this.modify.on('modifyend', this.changeCoordinates);
+
         this.draw = new Draw({
           type: this.drawType,
           style: this.drawLayer.getStyle(),
           source: this.drawLayer.getSource()
         });
       }
-
       this.map.addLayer(this.drawLayer);
       this.map.addInteraction(this.draw);
-      this.map.addInteraction(this.modify);
       if (this.arrFeatureForDraw.length) {
-        const source = new VectorSource({ features: this.arrFeatureForDraw });
         const snap = new Snap({ source: source });
         this.map.addInteraction(snap);
       }
@@ -667,12 +643,10 @@ export default {
               }),
           }),
         });
-
         await this.getOneTypeObject({ id: element.id, forFeature: true });
         layer.set('typeId', this.typeForLayer.id);
         layer.set('type', this.typeForLayer.type);
         layer.set('group', this.typeForLayer.group);
-
         if (this.typeForLayer.type === 'Point') {
           layer.setZIndex(Infinity)
         } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'LineString') {
@@ -680,7 +654,6 @@ export default {
         } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'Polygon') {
           layer.setZIndex(0)
         }
-
         this.map.addLayer(layer);
         this.canvas.height = 25;
         this.canvas.width = 25;
@@ -728,6 +701,7 @@ export default {
     },
     getStyleFromLayer(feature) {
       const type = feature.getGeometry().getType();
+      const conflictObject = feature.getId() in this.conflictArrays || this.newData.find(el => el.id === feature.getId() || el.id_ === feature.getId());
       if (type === 'Point') {
         let layer = feature.getLayer(this.map);
         layer = this.map.getAllLayers().find(el => {
@@ -735,7 +709,6 @@ export default {
             return el.getSource().getFeatures().find(element => element.getId() === feature.getId());
         })
         layer = layer && layer.get('standartIcon') ? layer : this.map.getAllLayers().find(el => el.get('typeId') === this.oneType.id);
-        const conflictObject = this.conflictArrays.find(el => el.find(element => element.id === feature.getId())) || this.newData.find(el => el.id === feature.getId());
         return new Style({
           image: new Icon({
             anchor: [0.5, 0, 5],
@@ -747,22 +720,44 @@ export default {
         });
       }
       else if (type === 'LineString') {
-        return new Style({
-          stroke: new Stroke({ color: "blue", width: 2 }),
-          zIndex: 2,
-        });
+        if (conflictObject) {
+          return new Style({
+            stroke: new Stroke({ color: "blue", width: 2 }),
+            zIndex: 2,
+          });
+        }
+        else {
+          return new Style({
+            stroke: new Stroke({ color: "#56abcb", width: 2 }),
+            zIndex: 2,
+          });
+        }
       }
       else {
-        return new Style({
-          stroke: new Stroke({
-            color: 'blue',
-            width: 3,
-          }),
-          fill: new Fill({
-            color: 'rgba(0, 0, 255, 0.1)',
-          }),
-          zIndex: 0,
-        });
+        if (conflictObject) {
+          return new Style({
+            stroke: new Stroke({
+              color: 'blue',
+              width: 2,
+            }),
+            fill: new Fill({
+              color: 'rgba(0, 0, 255, 0.1)',
+            }),
+            zIndex: 0,
+          });
+        }
+        else {
+          return new Style({
+            stroke: new Stroke({
+              color: '#56abcb',
+              width: 2,
+            }),
+            fill: new Fill({
+              color: 'rgba(255, 255, 255, 0.5)',
+            }),
+            zIndex: 0,
+          });
+        }
       }
     },
     getStyleFromSelect(feature) {
@@ -799,18 +794,14 @@ export default {
     async addModify(layer) {
       if (this.typeForLayer.type === 'Point' && !(this.typeForLayer.image === '')) {
         this.updataDomElements();
-
         await this.svgToSpan();
         const blackIcon = this.canvas.toDataURL('image/png');
-
         this.canvas.getContext("2d").fillStyle = window.getComputedStyle(this.svg, null).getPropertyValue('color');
         await this.svgToSpan();
         const redIcon = this.canvas.toDataURL('image/png');
-
         this.canvas.getContext("2d").fillStyle = '#27258B';
         await this.svgToSpan();
         const blueIcon = this.canvas.toDataURL('image/png');
-
         layer.set('standartIcon', blackIcon);
         layer.set('selectIcon', redIcon);
         layer.set('conflictIcon', blueIcon);
@@ -843,7 +834,6 @@ export default {
   },
   async mounted() {
     await this.getAllType();
-
     this.map = new Map({
       target: 'map_content',
       layers: [
@@ -857,10 +847,8 @@ export default {
         constrainResolution: true,
       })
     });
-
     Feature.prototype.getLayer = function (map) {
       var this_ = this, layer_, layersToLookFor = [];
-
       var check = function (layer) {
         var source = layer.getSource();
         if (source instanceof VectorSource) {
@@ -886,16 +874,12 @@ export default {
       });
       return layer_;
     };
-
     this.selectInteraction = new Select();
-
     await this.addNewLayers();
-
     this.map.on('click', this.getFeature_);
     if (this.addCardOn_.data) {
       this.addInteraction();
     }
-
     this.selectInteraction = new Select({
       style: this.getStyleFromSelect,
       layers: this.map.getAllLayers(),
@@ -907,10 +891,8 @@ export default {
     this.modifyEdit.on('modifystart', this.takeCoordinates);
     this.modifyEdit.on('modifyend', this.changeCoordinates);
     this.modifyEdit.setActive(false);
-
     this.map.addInteraction(this.modifyEdit);
     this.map.addInteraction(this.selectInteraction);
-
     this.resizeMap();
     this.filteredTypes = this.allType;
   }
