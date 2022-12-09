@@ -27,7 +27,7 @@
                         </v-card-text>
 
                     </v-col>
-                    <v-col class="pa-0" cols="2" sm="6" md="5" lg="6" v-if="infoCardOn_.data">
+                    <v-col class="pa-0" cols="2" sm="6" md="5" lg="6" v-if="(infoCardOn_.data && !conflictCard)">
                         <v-card-text class="pa-0" style="font-size: 24px; display: flex; justify-content: flex-end;">
                             <v-btn @click="editOn" depressed class="ma-0 btn" fab small elevation="0"
                                 style="background-color: white !important" color="white"

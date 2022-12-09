@@ -61,7 +61,7 @@ import Vue from 'vue';
 export default {
   components: {
   },
-  props: ['allFeatures', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature', 'changeElements', 'cardVisable', 'conflict'],
+  props: ['allFeatures', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature', 'changeElements', 'cardVisable', 'conflictCard'],
   data() {
     return {
       coord: [],
@@ -136,10 +136,12 @@ export default {
         }
         this.objectForCard = this.getObjectForCard;
         if (this.editCardOn_.data && 'geometry' in this.getObjectForCard) {
-          if (this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) {
-            this.editCardOn_.data = false;
-          }
-          else {
+          // if (this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) {
+          //   console.log(1);
+          //   this.editCardOn_.data = false;
+          // }
+          if (!(this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) && !this.conflictCard){
+            console.log(10);
             this.returnCoordinateForPoint('id_' in this.objectForCard ? this.objectForCard.id_ : this.objectForCard.id,
               this.objectForCard.name, this.objectForCard.geometry.coordinates);
           }
@@ -459,7 +461,6 @@ export default {
       return coordinates;
     },
     updateCoordinates() {
-      console.log(this.drawLayer.getSource().getFeatures().length, this.arrFeatureForDraw.length)
       if ((this.drawLayer.getSource().getFeatures().length === 1 && !this.arrFeatureForDraw.length) || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
         this.map.removeInteraction(this.draw);
         this.modify = new Modify({
@@ -589,7 +590,6 @@ export default {
         });
       }
       else {
-        console.log(this.drawType);
         this.drawLayer = new VectorLayer({
           source: new VectorSource({
             features: []
