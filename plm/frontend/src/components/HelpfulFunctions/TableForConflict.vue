@@ -48,7 +48,7 @@ export default {
     },
     methods: {
         changeItemFormTable() {
-            console.log(this.objectForCard.id_ in this.conflictArrays);
+            // console.log(this.objectForCard.id_ in this.conflictArrays);
             let conflictArr = this.objectForCard.id in this.conflictArrays ? this.conflictArrays[this.objectForCard.id] : [];
             conflictArr = this.objectForCard.id_ in this.conflictArrays ? this.conflictArrays[this.objectForCard.id_] : []
             this.itemsForTable = conflictArr;

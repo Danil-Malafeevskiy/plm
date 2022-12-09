@@ -76,9 +76,10 @@ export default {
                 console.log(response.data)
                 if ('group' in response.data) {
                     for (let i in response.data.data) {
+                        // console.log(2);
                         response.data.data[i].id_ = uuidv4();
-                        commit('updateArrayEditMode', { item: { ...response.data.data[i], group: response.data.group }, type: 'post' });
                     }
+                    commit('updateArrayEditMode', { item: { arr: response.data.data, group: response.data.group }, type: 'post' });
                     const group = response.data.group;
                     delete response.data.data;
                     delete response.data.group;
@@ -138,8 +139,14 @@ export default {
             }
             switch (type) {
                 case 'post':
-                    state.arrayEditMode[item.group].post.push(item);
-                    state.arrayEdit.post.push(item);
+                    if ('arr' in item) {
+                        state.arrayEditMode[item.group].post = [...state.arrayEditMode[item.group].post, ...item.arr]
+                        state.arrayEdit.post = [...state.arrayEdit.post, ...item.arr];
+                    }
+                    else {
+                        state.arrayEditMode[item.group].post.push(item);
+                        state.arrayEdit.post.push(item);
+                    }
                     break;
 
                 case 'put':
@@ -194,7 +201,7 @@ export default {
                     break;
 
                 case 'offPoints':
-                    if(Object.prototype.hasOwnProperty.call(item, 'attachFlag')){
+                    if (Object.prototype.hasOwnProperty.call(item, 'attachFlag')) {
                         state.arrayEditMode[item.group].offPoints.push(item);
                         state.arrayEdit.offPoints.push(item);
                     }

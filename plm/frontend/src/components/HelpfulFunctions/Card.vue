@@ -37,8 +37,8 @@
                     </v-tabs-items>
                 </template>
             </div>
-            <CardFooter v-if="!infoCardOn.data" :objectForCard_="objectForCard" :infoCardOn="infoCardOn"
-                :editCardOn="editCardOn" :editMode="editMode" :addCardOn="addCardOn_" @notVisableCard="notVisableCard"
+            <CardFooter v-if="(!infoCardOn_.data || conflictCard)" :objectForCard_="objectForCard" :infoCardOn="infoCardOn_"
+                :editCardOn="editCardOn_" :editMode="editMode" :addCardOn="addCardOn_" @notVisableCard="notVisableCard"
                 :cardVisable="cardVisable" @showSnacker="showSnacker" />
         </v-card>
     </v-scroll-x-reverse-transition>
@@ -140,18 +140,22 @@ export default {
                 if ('name' in this.objectForCard && typeof this.objectForCard.name === 'string') {
                     Vue.set(this.objectForCard, 'ruls', []);
                 }
+                console.log(this.conflictCard);
+                this.editCardOn_.data = this.conflictCard;
+                this.infoCardOn_.data = !this.conflictCard;
+                // console.log(this.editCardOn_.data, this.infoCardOn_.data)
             },
         },
         conflictCard: {
-            handler(){
-                if(this.conflictCard){
-                    if((this.objectForCard.id in this.conflictArrays || this.objectForCard.id_ in this.conflictArrays) && 
-                    this.newData.find(el => el.id ? el.id === this.objectForCard.id : el.id_ === this.objectForCard.id_)){
+            handler() {
+                if (this.conflictCard) {
+                    if ((this.objectForCard.id in this.conflictArrays || this.objectForCard.id_ in this.conflictArrays) &&
+                        this.newData.find(el => el.id ? el.id === this.objectForCard.id : el.id_ === this.objectForCard.id_)) {
                         this.sliderForConflict = ['Объект', 'Конфликт версий', 'Конфликт положений'];
                     }
-                    else if (this.objectForCard.id in this.conflictArrays || this.objectForCard.id_ in this.conflictArrays){
+                    else if (this.objectForCard.id in this.conflictArrays || this.objectForCard.id_ in this.conflictArrays) {
                         this.sliderForConflict = ['Объект', 'Конфликт положений'];
-                    } 
+                    }
                     else {
                         this.sliderForConflict = ['Объект', 'Конфликт версий'];
                     }

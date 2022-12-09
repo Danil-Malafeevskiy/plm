@@ -113,7 +113,7 @@
           <div flat>
             <MapArea :allFeatures="allFeatures" :cardVisable="cardVisable" :visableCard="visableCard"
               :notVisableCard="notVisableCard" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
-              :getFeature="emptyObject" :changeElements="changeElements" :conflict="conflictCard" />
+              :getFeature="emptyObject" :changeElements="changeElements" :conflictCard="conflictCard" />
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -360,8 +360,6 @@ export default {
       else {
         this.conflictCard = false;
       }
-      this.editCardOn.data = this.conflictCard;
-      this.infoCardOn.data = !this.conflictCard;
     },
     checkPath() {
       if (location.pathname === '/') {
