@@ -459,7 +459,6 @@ export default {
       return coordinates;
     },
     updateCoordinates() {
-      console.log(this.drawLayer.getSource().getFeatures().length, this.arrFeatureForDraw.length)
       if ((this.drawLayer.getSource().getFeatures().length === 1 && !this.arrFeatureForDraw.length) || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
         this.map.removeInteraction(this.draw);
         this.modify = new Modify({
