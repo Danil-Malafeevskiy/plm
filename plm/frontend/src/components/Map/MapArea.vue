@@ -267,7 +267,7 @@ export default {
             element.setActive(this.editCardOn_.data)
           }
         });
-        if (!this.editCardOn.data && !this.infoCardOn.data) {
+        if (!this.editCardOn.data && !this.infoCardOn.data && !this.conflictCard) {
           await this.returnCoordinates();
         }
       },
@@ -843,7 +843,7 @@ export default {
           source: new XYZ({
             attributions: attributions,
             url:
-              'https://api.maptiler.com/maps/openstreetmap/{z}/{x}/{y}.jpg?key=YeSa4U2UsXEQqN09L71C',
+              'https://api.maptiler.com/maps/openstreetmap/256/{z}/{x}/{y}.jpg?key=YeSa4U2UsXEQqN09L71C',
             tilePixelRatio: 2, // THIS IS IMPORTANT
           })
         }),
