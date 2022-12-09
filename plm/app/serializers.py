@@ -161,40 +161,36 @@ class FeatureListSerializer(serializers.ListSerializer):
 
         conflicts = {}
         for vers in (new_version['create']+new_version['update']):
-            if vers['id'] not in conflicts.keys() and id_.get(vers['id'], None) not in conflicts.keys():
-                type_obj = Type.objects.get(id=vers['name'])
-                conflict = Feature.objects.filter(geometry__intersects=GEOSGeometry(f'{vers["geometry"]}'),
-                                                  name__in=Type.objects.filter(
-                                                      group=Type.objects.get(id=vers['name']).group)).exclude(id=vers['id'])
-                obj = FeatureSerializer(Feature.objects.get(id=vers['id'])).data
-                if obj['id'] in id_.keys():
-                   obj['id'] = id_[obj['id']]
-                conflict_obj = [obj]
-                for con in conflict:
-                    data_in = FeatureSerializer(con).data
-                    if con.id not in conflicts.keys() and id_.get(con.id, None) not in conflicts.keys():
-                        if data_in['id'] in id_.keys():
-                            data_in['id'] = id_[data_in['id']]
-                        con_in = [data_in]
-                        conflict_in = Feature.objects.filter(geometry__intersects=GEOSGeometry(con.geometry),
-                                                      name__in=Type.objects.filter(
-                                                          group=Type.objects.get(id=vers['name']).group))
-                        for confl in conflict_in:
-                            if Ruls.objects.filter(type_1=con.name, type_2=confl.name).exists():
-                                data = FeatureSerializer(confl).data
-                                if data['id'] in id_.keys():
-                                    data['id'] = id_[data['id']]
-                                con_in.append(data)
-                        if len(con_in) > 1:
-                            if con.id in id_.keys():
-                                conflicts[id_[con.id]] = con_in
-                            else:
-                                conflicts[con.id] = con_in
+            type_obj = Type.objects.get(id=vers['name'])
+            conflict = Feature.objects.filter(geometry__intersects=GEOSGeometry(f'{vers["geometry"]}'),
+                                              name__in=Type.objects.filter(id__in=Ruls.objects.filter(type_1=type_obj).values_list("type_2", flat=True),
+                                              group=type_obj.group)).exclude(id=vers['id'])
+            print(conflict)
+            obj = FeatureSerializer(Feature.objects.get(id=vers['id'])).data
+            if obj['id'] in id_.keys():
+               obj['id'] = id_[obj['id']]
 
-                    if Ruls.objects.filter(type_1=type_obj, type_2=con.name).exists():
+            if obj['id'] not in conflicts.keys():
+                conflict_obj = [obj]
+            else:
+                conflict_obj = conflicts[obj['id']]
+
+            for con in conflict:
+                data_in = FeatureSerializer(con).data
+                if data_in['id'] in id_.keys():
+                    data_in['id'] = id_[data_in['id']]
+
+                if Ruls.objects.filter(type_1=type_obj, type_2=con.name).exists():
+                    if data_in not in conflict_obj:
                         conflict_obj.append(data_in)
-                if len(conflict_obj) > 1:
-                    conflicts[obj['id']] = conflict_obj
+                    if data_in['id'] not in conflicts.keys():
+                        conflicts[data_in['id']] = [data_in, obj]
+                    else:
+                        if obj not in conflicts[data_in['id']]:
+                            conflicts[data_in['id']].append(obj)
+
+            if len(conflict_obj) > 1:
+                conflicts[obj['id']] = conflict_obj
 
         return version, new_version, conflicts
 

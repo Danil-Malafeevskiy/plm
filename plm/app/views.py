@@ -109,7 +109,7 @@ class TowerAPI(APIView):
                                   'dataset': dataset, 'comment': comment,
                                   "new_version": new_version})
                         if OldVersionSerializer.is_valid():
-                            OldVersionSerializer.save()
+                            print(OldVersionSerializer.save())
                     else:
                         raise ValueError(feature_serializer.errors)
                 if len(conflicts) > 0:
@@ -117,10 +117,9 @@ class TowerAPI(APIView):
         except ValueError:
             return Response(feature_serializer.errors)
         except IntegrityError:
-            print(len(conflicts))
-            print(conflicts)
             return Response(conflicts, status=status.HTTP_409_CONFLICT)
 
+        print(groups_names)
         for group_name in groups_names:
             layer = get_channel_layer()
             async_to_sync(layer.group_send)(
