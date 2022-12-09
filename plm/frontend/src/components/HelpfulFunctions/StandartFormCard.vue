@@ -242,24 +242,40 @@ export default {
 
 
                 if (havePointInLinePost) {
-                    this.arrayEdit.post.forEach((element, index) => {
-                        if (element.geometry.type === 'LineString') {
-                            element.geometry.coordinates.forEach((coord, id) => {
+                    // this.arrayEdit.post.forEach((element, index) => {
+                    //     if (element.geometry.type === 'LineString') {
+                    //         element.geometry.coordinates.forEach((coord, id) => {
+                    //             if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
+                    //                 this.pointIndex = id
+                    //             }
+                    //         });
+                    //         if ((this.pointIndex === 0 || this.pointIndex === 1) && this.arrayEdit.post[index].geometry.coordinates.length === 2) {
+                    //             this.deleteItemFromNewData(element)
+                    //             console.log(this.arrayEdit.post.length, this.arrayEdit.post[index])
+                    //         } else if (this.pointIndex != this.arrayEdit.post[index].geometry.coordinates.length && this.pointIndex != 0) {
+                    //             this.arrayEdit.post[index].geometry.coordinates.splice(this.pointIndex, 1)
+                    //         }
+                    //     }
+                    // });
+                    this.postIndex.sort((a, b) => b - a);
+
+                    this.postIndex.forEach(index => {
+                        if (this.arrayEdit.post[index].geometry.type === 'LineString') {
+                            this.arrayEdit.post[index].geometry.coordinates.forEach((coord, id) => {
                                 if (coord[0] === this.objectForCard.geometry.coordinates[0] && coord[1] === this.objectForCard.geometry.coordinates[1]) {
                                     this.pointIndex = id
                                 }
                             });
-                            if ((this.pointIndex === 0 || this.pointIndex === 1) && this.arrayEdit.post[index].geometry.coordinates.length === 2) {
-                                this.deleteItemFromNewData(element)
-                                console.log(this.arrayEdit.post.length, this.arrayEdit.post[index])
-                            } else if (this.pointIndex != this.arrayEdit.post[index].geometry.coordinates.length && this.pointIndex != 0) {
-                                this.arrayEdit.post[index].geometry.coordinates.splice(this.pointIndex, 1)
-                            }
                         }
-                    });
-
-                    this.postIndex.forEach(element => {
-                        console.log(this.arrayEdit.post[element])
+                        console.log(this.pointIndex)
+                        console.log(this.arrayEdit.post[index].geometry.coordinates)
+                        if ((this.pointIndex === 0 || this.pointIndex === 1) && this.arrayEdit.post[index].geometry.coordinates.length === 2) {
+                            this.updateArrayEditMode({ item: this.arrayEdit.post[index], type: 'delete' })
+                        } else if (this.pointIndex != this.arrayEdit.post[index].geometry.coordinates.length && this.pointIndex != 0) {
+                            this.arrayEdit.post[index].geometry.coordinates.splice(this.pointIndex, 1)
+                        } else if((this.pointIndex === 0 || this.pointIndex === this.arrayEdit.post[index].geometry.coordinates.length) && this.arrayEdit.post[index].geometry.coordinates.length > 2) (
+                            this.arrayEdit.post[index].geometry.coordinates.splice(this.pointIndex, 1)
+                        )
                     });
                     
                 } else {

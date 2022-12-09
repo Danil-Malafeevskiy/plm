@@ -42,7 +42,7 @@
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
-import OSM from 'ol/source/OSM';
+import XYZ from 'ol/source/XYZ';
 import { fromLonLat, toLonLat } from 'ol/proj';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
@@ -810,12 +810,20 @@ export default {
     }
   },
   async mounted() {
+    const attributions =
+      '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
+      '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
     await this.getAllType();
     this.map = new Map({
       target: 'map_content',
       layers: [
         new TileLayer({
-          source: new OSM()
+          source: new XYZ({
+            attributions: attributions,
+            url:
+              'https://api.maptiler.com/maps/openstreetmap/{z}/{x}/{y}.jpg?key=YeSa4U2UsXEQqN09L71C',
+            tilePixelRatio: 2, // THIS IS IMPORTANT
+          })
         }),
       ],
       view: new View({
