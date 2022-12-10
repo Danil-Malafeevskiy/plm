@@ -50,13 +50,16 @@ import GeoJSON from 'ol/format/GeoJSON';
 import { Draw, Modify, Snap } from 'ol/interaction';
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
-import { Icon, Style, Fill, Stroke } from 'ol/style';
+import { Style, Fill, Stroke } from 'ol/style';
+// import Icon from 'ol/style';
 //import Circle from 'ol/geom/Circle';
 import Select from 'ol/interaction/Select';
 import { Canvg } from 'canvg';
 import { toStringXY } from 'ol/coordinate';
 import Feature from 'ol/Feature';
 import Vue from 'vue';
+// import VectorImageLayer from 'ol/layer/VectorImage';
+import WebGLPointsLayer from 'ol/layer/WebGLPoints';
 
 export default {
   components: {
@@ -494,6 +497,7 @@ export default {
       return item;
     },
     async getFeature_(event) {
+      // console.log(this.map.hasFeatureAtPixel(event.pixel));
       this.updateCoordinates();
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
       if (feature_ && !this.addCardOn_.data && (feature_.getId() != this.objectForCard.id || !this.cardVisable.data)) {
@@ -553,7 +557,7 @@ export default {
         for (let i in layerOfLineString) {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfLineString[i].getSource().getFeatures()];
         }
-        this.drawLayer = new VectorLayer({
+        this.drawLayer = new WebGLPointsLayer({
           source: new VectorSource({
             features: this.arrFeatureForDraw
           }),
@@ -634,14 +638,34 @@ export default {
           type: 'FeatureCollection',
           features: this.features.features.filter(el => el.name === element.id),
         };
-        let layer = new VectorLayer({
+
+        const style = {
+          symbol: {
+            symbolType: 'image',
+            src: 'static/airplane.png',
+            size: 22,
+            color: 'red',
+            rotateWithView: false,
+            offset: [0, 0],
+          },
+        }
+        
+
+        let layer = new WebGLPointsLayer({
           source: new VectorSource({
             features: new GeoJSON().readFeatures(features,
               {
                 featureProjection: 'EPSG:3857'
               }),
-          }),
+          }), 
+          style: style,
+          // declutter: true,
+          // wrapX: true,
         });
+        // console.log(layer.get('standartIcon'))
+
+        this.map.on('click', console.log('lox'))
+
         await this.getOneTypeObject({ id: element.id, forFeature: true });
         layer.set('typeId', this.typeForLayer.id);
         layer.set('type', this.typeForLayer.type);
@@ -704,19 +728,33 @@ export default {
       if (type === 'Point') {
         let layer = feature.getLayer(this.map);
         layer = this.map.getAllLayers().find(el => {
-          if (el instanceof VectorLayer)
+          if (el instanceof WebGLPointsLayer)
             return el.getSource().getFeatures().find(element => element.getId() === feature.getId());
         })
         layer = layer && layer.get('standartIcon') ? layer : this.map.getAllLayers().find(el => el.get('typeId') === this.oneType.id);
-        return new Style({
-          image: new Icon({
-            anchor: [0.5, 0, 5],
-            anchorXUnits: 'fraction',
-            anchorYUnits: 'pixels',
+        
+        const style = {
+          symbol: {
+            symbolType: 'image',
             src: conflictObject ? layer.get('conflictIcon') : layer.get('standartIcon'),
-          }),
-          zIndex: Infinity,
-        });
+            size: 22,
+            rotateWithView: false,
+            offset: [0, 0],
+          },
+        }
+
+        return style
+
+        // return new Style({
+        //   image: new Icon({
+        //     anchor: [0.5, 0, 5],
+        //     anchorXUnits: 'fraction',
+        //     anchorYUnits: 'pixels',
+        //     src: conflictObject ? layer.get('conflictIcon') : layer.get('standartIcon'),
+        //   }),
+        //   zIndex: Infinity,
+        // });
+        
       }
       else if (type === 'LineString') {
         if (conflictObject) {
@@ -763,15 +801,26 @@ export default {
       const type = feature.getGeometry().getType();
       if (type === 'Point') {
         const layer = feature.getLayer(this.map);
-        return new Style({
-          image: new Icon({
-            anchor: [0.5, 0, 5],
-            anchorXUnits: 'fraction',
-            anchorYUnits: 'pixels',
+        // const style = {
+        //   symbol: {
+        //     symbolType: 'image',
+        //     src: 'static/airplane.png',
+        //     size: 22,
+        //     rotateWithView: false,
+        //     offset: [0, 0],
+        //   },
+        // }
+        
+
+        return {
+          symbol: {
+            symbolType: 'image',
             src: layer.get('selectIcon'),
-          }),
-          zIndex: Infinity,
-        });
+            size: 22,
+            rotateWithView: false,
+            offset: [0, 0],
+          },
+        }
       }
       else if (type === 'LineString') {
         return new Style({
@@ -805,7 +854,7 @@ export default {
         layer.set('selectIcon', redIcon);
         layer.set('conflictIcon', blueIcon);
       }
-      layer.setStyle(this.getStyleFromLayer);
+      // layer.setStyle(this.getStyleFromLayer);
     },
     filteredLayer() {
       const allLayers = this.map.getAllLayers().filter(el => el.get('typeId') != undefined);
@@ -891,8 +940,9 @@ export default {
       style: this.getStyleFromSelect,
       layers: this.map.getAllLayers(),
     });
+
     this.modifyEdit = new Modify({
-      //style: this.getStyleFromSelect,
+      // style: style,
       features: this.selectInteraction.getFeatures(),
     })
     this.modifyEdit.on('modifystart', this.takeCoordinates);
