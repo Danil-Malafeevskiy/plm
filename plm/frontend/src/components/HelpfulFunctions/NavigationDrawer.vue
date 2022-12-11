@@ -40,7 +40,9 @@
                         <v-list-item-title style="z-index: 1" class="pa-1" v-if="typeof key === 'object'">
                             <div class="name">
                                 <div>{{ key.name }} <span
-                                        v-if="actions === 'getFeatures' && (user.groups.length > 1 || user.is_superuser)">({{ key.group }})</span>
+                                        v-if="actions === 'getFeatures' && (user.groups.length > 1 || user.is_superuser)">({{
+                                                key.group
+                                        }})</span>
                                 </div>
                                 <template v-if="'all_obj' in key">
                                     <div v-if="key.group in arrayEditMode"
@@ -166,26 +168,24 @@ export default {
                 else {
                     const searchText = document.querySelector('#search').value;
                     if (this.allType.length && typeof this.allType[0] === 'object') {
-                        this.fiteredAllTypes = this.allType.filter(el => el.name.toLowerCase().includes(searchText.toLowerCase()));
+                        this.fiteredAllTypes = this.allType.filter(el => el.name.toLowerCase().includes(searchText.toLowerCase()) && (el.name != 'Admin' || this.actions === 'getAllGroups' || this.actions === 'getUsersOfGroup'));
                     }
                     else {
-                        this.fiteredAllTypes = this.allType.filter(el => el.toLowerCase().includes(searchText.toLowerCase()));
+                        this.fiteredAllTypes = this.allType.filter(el => el.toLowerCase().includes(searchText.toLowerCase()) && (el.name != 'Admin' || this.actions === 'getAllGroups' || this.actions === 'getUsersOfGroup'));
                     }
                 }
             }
         },
         actions: {
             handler() {
-                if (this.fiteredAllTypes.length && this.actions !== 'getAllGroups') {
-                    this.selectedItem = 0;
-                    this.changeObject(this.fiteredAllTypes[0]);
-                }
+                this.upadateTable()
             }
         }
     },
-    computed: { ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions', 'getToolbarTitle', 'allTypeForTable', 'user']) 
-                    
-},
+    computed: {
+        ...mapGetters(['allFeatures', 'getList', 'allType', 'emptyObject', 'allGroups', 'oneType', 'arrayEditMode', 'actions', 'getToolbarTitle', 'allTypeForTable', 'user'])
+
+    },
     methods: {
         ...mapActions(['getGroup', 'getTypeObject', 'getUsersOfGroup', 'filterForFeature', 'getOneTypeObjectForFeature', 'getAllTypeInGroup', 'getFilteredVersions']),
         ...mapMutations(['upadateEmptyObject', 'updateHeaders', 'updateDrawType', 'updateAction', 'upadateTitle',
@@ -193,7 +193,17 @@ export default {
         getOneGroup(id) {
             this.getGroup(id);
         },
-
+        upadateTable() {
+            setTimeout(() => {
+                if (this.fiteredAllTypes.length && this.actions !== 'getAllGroups') {
+                    this.selectedItem = 0;
+                    this.changeObject(this.fiteredAllTypes[0]);
+                }
+                else if (!this.fiteredAllTypes.length) {
+                    this.upadateTable();
+                }
+            }, 500)
+        },
         async changeObject(objectType, index) {
             if (this.selectedItem != index) {
                 this.objectType = objectType;
@@ -257,11 +267,11 @@ export default {
         },
         search(searchText) {
             if (searchText != null) {
-                this.fiteredAllTypes = this.allType.filter(el => el.name.toLowerCase().includes(searchText.toLowerCase()));
+                this.fiteredAllTypes = this.allType.filter(el => el.name.toLowerCase().includes(searchText.toLowerCase()) && (el.name != 'Admin' || this.actions === 'getAllGroups' || this.actions === 'getUsersOfGroup'));
             }
         },
         clear() {
-            this.fiteredAllTypes = this.allType;
+            this.fiteredAllTypes = this.allType.filter(el => (el.name != 'Admin' || this.actions === 'getAllGroups' || this.actions === 'getUsersOfGroup'));
         },
     },
     components: { CardInLeftPanel },

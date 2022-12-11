@@ -14,7 +14,7 @@
                     @notVisableCard="notVisableCard" :cardVisable="cardVisable" :errorMessage="errorMessage"
                     :snackbar="snackbar" @showSnacker="showSnacker" />
                 <template v-else>
-                    <v-tabs v-model="tab" align-with-title style="z-index: 1" color="#E93030">
+                    <v-tabs v-model="tab" align-with-title style="z-index: 1; max-height: 8%;" color="#E93030">
                         <v-tab v-for="item in sliderForConflict" :key="item" class="ma-0">
                             <span>{{ item }}</span>
                         </v-tab>

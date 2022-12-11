@@ -50,6 +50,10 @@ export default {
                 this.objectForCard.id_ = uuidv4();
                 this.updateArrayEditMode({ item: JSON.parse(JSON.stringify(this.objectForCard)), type: 'post' });
             }
+            else if (this.objectForCard.properties.type === 'Point' && !this.objectForCard.image){
+                this.$emit('showSnacker', 'Выберите иконку!');
+                return;
+            }
             else {
                 if (!this.checkCorrectFields()) {
                     return;

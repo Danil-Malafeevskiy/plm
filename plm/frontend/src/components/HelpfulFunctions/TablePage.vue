@@ -83,22 +83,12 @@ export default {
     },
     allListItem: {
       handler() {
-        this.tableArrayItems = [...this.allListItem];
-        if (this.oneType && this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length) {
-          for (let i in this.arrayEdit.post) {
-            this.tableArrayItems.push({ ...this.arrayEdit.post[i].properties, id_: this.arrayEdit.post[i].id_ });
-          }
-        }
+        this.addNewObjectInTable();
       }
     },
     arrayEditMode: {
       handler() {
-        this.tableArrayItems = [...this.allListItem];
-        if (this.oneType && this.oneType.group in this.arrayEditMode && this.arrayEdit.post.length) {
-          for (let i in this.arrayEdit.post) {
-            this.tableArrayItems.push({ ...this.arrayEdit.post[i].properties, id_: this.arrayEdit.post[i].id_ });
-          }
-        }
+        this.addNewObjectInTable();
       },
       deep: true,
     },
@@ -288,6 +278,15 @@ export default {
 
       return classForItem;
     },
+    addNewObjectInTable(){
+      this.tableArrayItems = [...this.allListItem];
+        if (this.oneType && this.oneType.group && this.arrayEdit.post.length && this.actions === 'getFeatures') {
+          for (let i in this.arrayEdit.post) {
+            if (this.arrayEdit.post[i].name === this.oneType.id)
+            this.tableArrayItems.push({ ...this.arrayEdit.post[i].properties, id_: this.arrayEdit.post[i].id_ });
+          }
+        }
+    }
   },
 }
 </script>
