@@ -10,7 +10,7 @@
                 <v-col v-for="(el, index) in listMdiIcons" :key="index" md="3" lg="4" style="max-width: 48px !important"
                     class="ma-0">
                     <v-radio-group hide-details class="pa-0 ma-0" v-model="objectForCard.image">
-                        <v-radio :value="el" :readonly="infoCardOn.data" class="ma-2" color="#E93030" :on-icon="el"
+                        <v-radio :value="el" :readonly="infoCardOn_.data" class="ma-2" color="#E93030" :on-icon="el"
                             :off-icon="el" style="
                                     min-height: 2em !important; 
                                     min-width: 2em !important;
@@ -49,27 +49,29 @@
 </template>
 
 <script>
-import { mdiImagePlusOutline } from '@mdi/js';
+import { mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket } from '@mdi/js'
 
-export default{
+
+export default {
     name: 'PictureForCard',
     props: ['objectForCard_', 'infoCardOn_'],
     data() {
         return {
             objectForCard: this.objectForCard_,
             icon: mdiImagePlusOutline,
+            listMdiIcons: [mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket],
         }
     },
     watch: {
-        objectForCard_(){
+        objectForCard_() {
             this.objectForCard = this.objectForCard_;
         }
     },
     computed: {
-        heightPicture(){
-            if(this.conflictCard)
+        heightPicture() {
+            if (this.conflictCard)
                 return '24.48%'
-            else 
+            else
                 return '37.5%'
         }
     },

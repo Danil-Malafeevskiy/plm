@@ -44,6 +44,7 @@ import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import XYZ from 'ol/source/XYZ';
 import { fromLonLat, toLonLat } from 'ol/proj';
+import VectorImageLayer from 'ol/layer/VectorImage';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
@@ -51,7 +52,6 @@ import { Draw, Modify, Snap } from 'ol/interaction';
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import 'ol/ol.css';
 import { Icon, Style, Fill, Stroke } from 'ol/style';
-//import Circle from 'ol/geom/Circle';
 import Select from 'ol/interaction/Select';
 import { Canvg } from 'canvg';
 import { toStringXY } from 'ol/coordinate';
@@ -71,7 +71,7 @@ export default {
       },
       feature: this.getFeature,
       map: null,
-      drawLayer: new VectorLayer({
+      drawLayer: new VectorImageLayer({
         source: new VectorSource()
       }),
       draw: null,
@@ -139,8 +139,7 @@ export default {
           if ((this.oldFeature.id !== this.getObjectForCard.id || this.oldFeature.id_ !== this.getObjectForCard.id_) && !this.conflictCard) {
             this.editCardOn_.data = false;
           }
-          else if (!this.conflictCard){
-            console.log(10);
+          else if (!this.conflictCard) {
             this.returnCoordinateForPoint('id_' in this.objectForCard ? this.objectForCard.id_ : this.objectForCard.id,
               this.objectForCard.name, this.objectForCard.geometry.coordinates);
           }
@@ -160,7 +159,7 @@ export default {
           });
         }
 
-        if (this.objectForCard.geometry.type === 'Point' && !('attachFlag' in this.objectForCard)) {
+        if ('geometry' in this.objectForCard && this.objectForCard.geometry.type === 'Point' && !('attachFlag' in this.objectForCard)) {
           const checkFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.objectForCard.geometry.coordinates)));
           if (checkFeature.length && checkFeature.find(el => el.getGeometry().getType() === 'LineString')) {
             Vue.set(this.objectForCard, 'attachFlag', false);
@@ -262,6 +261,17 @@ export default {
     editCardOn: {
       async handler() {
         this.editCardOn_ = this.editCardOn;
+        if (this.editCardOn.data) {
+          this.modify = new Modify({
+            features: this.selectInteraction.getFeatures(),
+          });
+          this.modify.on('modifystart', this.takeCoordinates);
+          this.modify.on('modifyend', this.changeCoordinates);
+          this.map.addInteraction(this.modify);
+        }
+        else {
+          this.map.removeInteraction(this.modify);
+        }
         this.map.getInteractions().getArray().forEach(element => {
           if (element instanceof Modify) {
             element.setActive(this.editCardOn_.data)
@@ -296,6 +306,17 @@ export default {
         }
       }
     },
+    conflictArrays: {
+      handler() {
+        this.map.getAllLayers().forEach(layer => {
+          if (layer instanceof VectorImageLayer || layer instanceof VectorImageLayer)
+            layer.getSource().getFeatures().forEach(feature => {
+              if (feature.getId() in this.conflictArrays)
+                feature.setStyle(this.getStyleFromLayer(feature.getGeometry().getType(), layer));
+            })
+        })
+      }
+    }
   },
   computed: {
     ...mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays']),
@@ -308,19 +329,25 @@ export default {
       let arrayOfLayers = this.map.getAllLayers();
       for (let i in arraysOfNewObject) {
         const layer = arrayOfLayers.find((el) => { return `${el.get('typeId')}` === i });
-        let feature = layer.getSource().getFeatures();
-        feature = this.deleteNewObjectFromMap(feature, arraysOfNewObject[i]);
-        const source = new VectorSource({
-          features: [...feature, ...new GeoJSON().readFeatures(
+        
+        if (layer instanceof VectorImageLayer || layer instanceof VectorLayer) {
+          layer.getSource().getFeatures().forEach(feature => {
+            const newFeature = arraysOfNewObject[i].find(el => el.id === feature.getId() || el.id_ === feature.getId());
+            if (newFeature) {
+              feature.getGeometry().setCoordinates(this.coordinatesFromLonLat(newFeature.geometry.coordinates));
+              arraysOfNewObject[i].filter(el => el !== newFeature);
+            }
+          });
+          const newFeatures = new GeoJSON().readFeatures(
             {
               type: 'FeatureCollection',
               features: arraysOfNewObject[i]
             },
             {
               featureProjection: 'EPSG:3857'
-            })],
-        });
-        layer.setSource(source);
+            });
+          layer.getSource().addFeatures(newFeatures);
+        }
       }
     },
     async returnCoordinates() {
@@ -462,6 +489,8 @@ export default {
     updateCoordinates() {
       if ((this.drawLayer.getSource().getFeatures().length === 1 && !this.arrFeatureForDraw.length) || (this.arrFeatureForDraw.length && this.drawLayer.getSource().getFeatures().length === this.arrFeatureForDraw.length + 1)) {
         this.map.removeInteraction(this.draw);
+        this.modify.on('modifystart', this.takeCoordinates);
+        this.modify.on('modifyend', this.changeCoordinates);
         this.modify = new Modify({
           source: new VectorSource({
             features: this.drawLayer.getSource().getFeatures().filter(el => el.getGeometry().getType() === this.drawType),
@@ -495,7 +524,7 @@ export default {
     },
     async getFeature_(event) {
       this.updateCoordinates();
-      const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
+      const feature_ = this.map.getFeaturesAtPixel(event.pixel, { hitTolerance: 5 })[0];
       if (feature_ && !this.addCardOn_.data && (feature_.getId() != this.objectForCard.id || !this.cardVisable.data)) {
         let item = this.findItem(feature_.id_)
         if (item) {
@@ -553,7 +582,7 @@ export default {
         for (let i in layerOfLineString) {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfLineString[i].getSource().getFeatures()];
         }
-        this.drawLayer = new VectorLayer({
+        this.drawLayer = new VectorImageLayer({
           source: new VectorSource({
             features: this.arrFeatureForDraw
           }),
@@ -563,7 +592,7 @@ export default {
         const layer = this.map.getAllLayers().find(el => el.get('typeId') === this.oneType.id);
 
         this.drawLayer.set('standartIcon', layer.get('standartIcon'));
-        this.drawLayer.setStyle(this.getStyleFromLayer);
+        this.drawLayer.setStyle(layer.getStyle());
 
         this.draw = new Draw({
           source: source,
@@ -580,7 +609,7 @@ export default {
           this.arrFeatureForDraw = [...this.arrFeatureForDraw, ...layerOfPoint[i].getSource().getFeatures()];
         }
         source = new VectorSource({ features: this.arrFeatureForDraw });
-        this.drawLayer = new VectorLayer({
+        this.drawLayer = new VectorImageLayer({
           source: source
         });
         this.draw = new Draw({
@@ -589,7 +618,7 @@ export default {
         });
       }
       else {
-        this.drawLayer = new VectorLayer({
+        this.drawLayer = new VectorImageLayer({
           source: new VectorSource({
             features: []
           }),
@@ -630,29 +659,48 @@ export default {
     async addNewLayers() {
       for (let i in this.allTypeForMap) {
         let element = this.allTypeForMap[i];
+        await this.getOneTypeObject({ id: element.id, forFeature: true });
+
         let features = {
           type: 'FeatureCollection',
           features: this.features.features.filter(el => el.name === element.id),
         };
-        let layer = new VectorLayer({
-          source: new VectorSource({
-            features: new GeoJSON().readFeatures(features,
-              {
-                featureProjection: 'EPSG:3857'
-              }),
-          }),
-        });
-        await this.getOneTypeObject({ id: element.id, forFeature: true });
+        let layer
+        if (this.typeForLayer.type !== 'Point') {
+          layer = new VectorImageLayer({
+            source: new VectorSource({
+              features: new GeoJSON().readFeatures(features,
+                {
+                  featureProjection: 'EPSG:3857'
+                }),
+            }),
+          });
+        }
+        else {
+          layer = new VectorLayer({
+            source: new VectorSource({
+              features: new GeoJSON().readFeatures(features,
+                {
+                  featureProjection: 'EPSG:3857'
+                }),
+            }),
+            declutter: true,
+            renderMode: 'hybrid',
+          });
+        }
+
         layer.set('typeId', this.typeForLayer.id);
         layer.set('type', this.typeForLayer.type);
         layer.set('group', this.typeForLayer.group);
+
         if (this.typeForLayer.type === 'Point') {
-          layer.setZIndex(Infinity)
-        } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'LineString') {
+          layer.setZIndex(5)
+        } else if (this.typeForLayer.type === 'LineString') {
           layer.setZIndex(2)
-        } else if (layer.getSource().getFeatures().length && layer.getSource().getFeatures()[0].getGeometry().getType() === 'Polygon') {
+        } else if (this.typeForLayer.type === 'Polygon') {
           layer.setZIndex(0)
         }
+
         this.map.addLayer(layer);
         this.canvas.height = 25;
         this.canvas.width = 25;
@@ -698,65 +746,35 @@ export default {
       v.start();
       v.stop();
     },
-    getStyleFromLayer(feature) {
-      const type = feature.getGeometry().getType();
-      const conflictObject = feature.getId() in this.conflictArrays || this.newData.find(el => el.id === feature.getId() || el.id_ === feature.getId());
+    getStyleFromLayer(type, layer) {
       if (type === 'Point') {
-        let layer = feature.getLayer(this.map);
-        layer = this.map.getAllLayers().find(el => {
-          if (el instanceof VectorLayer)
-            return el.getSource().getFeatures().find(element => element.getId() === feature.getId());
-        })
-        layer = layer && layer.get('standartIcon') ? layer : this.map.getAllLayers().find(el => el.get('typeId') === this.oneType.id);
         return new Style({
           image: new Icon({
             anchor: [0.5, 0, 5],
             anchorXUnits: 'fraction',
             anchorYUnits: 'pixels',
-            src: conflictObject ? layer.get('conflictIcon') : layer.get('standartIcon'),
+            src: layer.get('conflictIcon'),
           }),
           zIndex: Infinity,
         });
       }
       else if (type === 'LineString') {
-        if (conflictObject) {
-          return new Style({
-            stroke: new Stroke({ color: "blue", width: 2 }),
-            zIndex: 2,
-          });
-        }
-        else {
-          return new Style({
-            stroke: new Stroke({ color: "#56abcb", width: 2 }),
-            zIndex: 2,
-          });
-        }
+        return new Style({
+          stroke: new Stroke({ color: "blue", width: 2 }),
+          zIndex: 2,
+        });
       }
       else {
-        if (conflictObject) {
-          return new Style({
-            stroke: new Stroke({
-              color: 'blue',
-              width: 2,
-            }),
-            fill: new Fill({
-              color: 'rgba(0, 0, 255, 0.1)',
-            }),
-            zIndex: 0,
-          });
-        }
-        else {
-          return new Style({
-            stroke: new Stroke({
-              color: '#56abcb',
-              width: 2,
-            }),
-            fill: new Fill({
-              color: 'rgba(255, 255, 255, 0.5)',
-            }),
-            zIndex: 0,
-          });
-        }
+        return new Style({
+          stroke: new Stroke({
+            color: 'blue',
+            width: 2,
+          }),
+          fill: new Fill({
+            color: 'rgba(0, 0, 255, 0.1)',
+          }),
+          zIndex: 0,
+        });
       }
     },
     getStyleFromSelect(feature) {
@@ -793,19 +811,33 @@ export default {
     async addModify(layer) {
       if (this.typeForLayer.type === 'Point' && !(this.typeForLayer.image === '')) {
         this.updataDomElements();
+
         await this.svgToSpan();
         const blackIcon = this.canvas.toDataURL('image/png');
         this.canvas.getContext("2d").fillStyle = window.getComputedStyle(this.svg, null).getPropertyValue('color');
+
         await this.svgToSpan();
         const redIcon = this.canvas.toDataURL('image/png');
         this.canvas.getContext("2d").fillStyle = '#27258B';
+
         await this.svgToSpan();
         const blueIcon = this.canvas.toDataURL('image/png');
+
         layer.set('standartIcon', blackIcon);
         layer.set('selectIcon', redIcon);
         layer.set('conflictIcon', blueIcon);
+
+        layer.setStyle(new Style({
+          image: new Icon({
+            anchor: [0.5, 0, 5],
+            anchorXUnits: 'fraction',
+            anchorYUnits: 'pixels',
+            src: blackIcon,
+          }),
+          zIndex: Infinity,
+        }))
       }
-      layer.setStyle(this.getStyleFromLayer);
+      //layer.setStyle(this.getStyleFromLayer);
     },
     filteredLayer() {
       const allLayers = this.map.getAllLayers().filter(el => el.get('typeId') != undefined);
@@ -845,6 +877,7 @@ export default {
             url:
               'https://api.maptiler.com/maps/openstreetmap/256/{z}/{x}/{y}.jpg?key=YeSa4U2UsXEQqN09L71C',
             tilePixelRatio: 2, // THIS IS IMPORTANT
+            renderMode: 'vector',
           })
         }),
       ],

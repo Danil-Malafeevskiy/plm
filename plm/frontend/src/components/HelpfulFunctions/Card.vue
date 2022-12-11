@@ -46,7 +46,6 @@
 
 <script>
 import { mapActions, mapGetters, mapMutations } from 'vuex';
-import { mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket } from '@mdi/js'
 import StandartFormCard from './StandartFormCard.vue';
 import CardFooter from './CardFooter.vue';
 import ConflictFormForCard from './ConflictFormForCard.vue';
@@ -73,7 +72,6 @@ export default {
             infoCardOn_: this.infoCardOn,
             editCardOn_: this.editCardOn,
             objectForCard: {},
-            listMdiIcons: [mdiImagePlusOutline, mdiTransmissionTower, mdiPineTree, mdiAirplane, mdiApple, mdiBiohazard, mdiBluetooth, mdiBottleWine, mdiBucket],
             errorMessage: '',
             snackbar: false,
             sliderForConflict: ['Объект', 'Конфликт версий', 'Конфликт положений'],
