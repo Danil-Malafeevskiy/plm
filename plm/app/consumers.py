@@ -1,3 +1,4 @@
+from channels.exceptions import StopConsumer
 from django.contrib.auth.models import Group, AnonymousUser
 from djangochannelsrestframework.consumers import AsyncAPIConsumer
 from djangochannelsrestframework.decorators import action
@@ -19,6 +20,14 @@ class FeatureConsumer(AsyncAPIConsumer):
                 await self.dataset_change.subscribe(group=group)
                 await self.channel_layer.group_add(group, self.channel_name)
             await self.accept()
+            self.event_close = False
+
+    @action()
+    async def disconnect(self, message):
+        for group in list(self.scope["user"].groups.values_list("name", flat=True)):
+            await self.channel_layer.group_di(group, self.channel_name)
+        self.event_close = True
+        raise StopConsumer()
 
     @model_observer(Feature)
     async def feature_change(self, message, **kwargs):

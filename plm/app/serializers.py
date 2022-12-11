@@ -160,15 +160,15 @@ class FeatureListSerializer(serializers.ListSerializer):
             version['update'] = old_update
 
         conflicts = {}
-        for vers in (new_version['create']+new_version['update']):
+        for vers in (new_version['create'] + new_version['update']):
             type_obj = Type.objects.get(id=vers['name'])
-            conflict = Feature.objects.filter(geometry__intersects=GEOSGeometry(f'{vers["geometry"]}'),
+            conflict = Feature.objects.filter(geometry__intersects=[GEOSGeometry(f'{vers["geometry"]}'), GEOSGeometry(f'{vers["geometry"]}')],
                                               name__in=Type.objects.filter(id__in=Ruls.objects.filter(type_1=type_obj).values_list("type_2", flat=True),
                                               group=type_obj.group)).exclude(id=vers['id'])
             print(conflict)
             obj = FeatureSerializer(Feature.objects.get(id=vers['id'])).data
             if obj['id'] in id_.keys():
-               obj['id'] = id_[obj['id']]
+                obj['id'] = id_[obj['id']]
 
             if obj['id'] not in conflicts.keys():
                 conflict_obj = [obj]
@@ -191,7 +191,6 @@ class FeatureListSerializer(serializers.ListSerializer):
 
             if len(conflict_obj) > 1:
                 conflicts[obj['id']] = conflict_obj
-
         return version, new_version, conflicts
 
 class FeatureSerializer(serializers.ModelSerializer):
@@ -200,7 +199,6 @@ class FeatureSerializer(serializers.ModelSerializer):
     group = serializers.SerializerMethodField()
     image = BinaryField(required=False)
     class Meta:
-        ordering = ['id']
         list_serializer_class = FeatureListSerializer
         geo_field = 'geometry'
         model = Feature
@@ -216,7 +214,7 @@ class FeatureSerializer(serializers.ModelSerializer):
 
     def get_group(self, obj):
         try:
-            return obj.name.group.name
+            return Group.objects.get(name=obj.name.group).name
         except Exception:
             return obj['name'].group.name
 
@@ -243,10 +241,10 @@ class GroupSerializer(serializers.ModelSerializer):
                 self.fields.pop(field_name)
 
     def get_all_user(self, obj):
-        return len(get_user_model().objects.filter(groups__name=obj.name).exclude(id=self.context))
+        return get_user_model().objects.filter(groups__name=obj.name).exclude(id=self.context).count()
 
     def get_all_type(self, obj):
-        return len(Type.objects.filter(group=obj.id))
+        return Type.objects.filter(group=obj.id).count()
 
     def get_users(self, obj):
         return list(get_user_model().objects.filter(groups=obj).exclude(id=self.context).values_list('username', flat=True))
@@ -398,7 +396,7 @@ class TypeSerializer(serializers.ModelSerializer):
         return [type.type_2.name for type in Ruls.objects.filter(type_1=obj)]
 
     def get_all_obj(self, obj):
-        return len(Feature.objects.filter(name=obj.id))
+        return Feature.objects.filter(name=obj.id).count()
 
     def get_group(self, obj):
         return Group.objects.get(id=obj.group_id).name

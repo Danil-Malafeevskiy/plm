@@ -13,12 +13,14 @@ from django.utils import timezone, dateformat
 from django.utils.encoding import smart_bytes, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.db import transaction, IntegrityError
+
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.parsers import MultiPartParser, FileUploadParser
 
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.response import Response
 
 from app.permissions import TowerPerm, FileUploadPerm, GroupPerm, UserPerm, TypePerm, VersionPerm
 from plm import settings
@@ -28,7 +30,7 @@ from rest_framework.views import APIView
 from app.models import Feature, Type, VersionControl
 from app.serializers import FeatureSerializer, FileSerializer, GroupSerializer, UserSerializer, TypeSerializer, \
     VersionControlSerializer, SetNewPasswordSerializer
-from rest_framework.response import Response
+
 from django.core.mail import send_mail
 
 class TowerAPI(APIView):
@@ -43,12 +45,11 @@ class TowerAPI(APIView):
                 groups = Group.objects.all()
             datasets = Type.objects.filter(group__in=groups)
             if 'group' in request.query_params:
-                datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id)
+                datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id).values_list('id', flat=True).order_by('id')
             ff = DjangoFilterBackend()
-            filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(name__in=
-                list(datasets.values_list('id', flat=True))).order_by('id'), self)
+            filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(name__in=list(datasets)), self)
 
-            feature_serializer = FeatureSerializer(filtered_queryset, many=True, remove_fields=['image'])
+            feature_serializer = FeatureSerializer(filtered_queryset, many=True, remove_fields=['image', 'group'])
             return Response(feature_serializer.data)
         else:
             feature = Feature.objects.filter(id=id)
@@ -119,7 +120,6 @@ class TowerAPI(APIView):
         except IntegrityError:
             return Response(conflicts, status=status.HTTP_409_CONFLICT)
 
-        print(groups_names)
         for group_name in groups_names:
             layer = get_channel_layer()
             async_to_sync(layer.group_send)(
