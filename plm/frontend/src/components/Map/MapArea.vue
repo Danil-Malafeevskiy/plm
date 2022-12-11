@@ -55,7 +55,7 @@ import Feature from 'ol/Feature';
 import Vue from 'vue';
 
 export default {
-  props: ['allFeatures', 'visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature', 'changeElements', 'cardVisable', 'conflictCard'],
+  props: ['visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature', 'changeElements', 'cardVisable', 'conflictCard'],
   data() {
     return {
       coord: [],
@@ -105,25 +105,25 @@ export default {
           await this.deleteOldLayers();
           await this.addNewLayers();
           const allInteractions = this.map.getInteractions();
-          for(let i in allInteractions){
+          for (let i in allInteractions) {
             this.map.removeInteraction(allInteractions[i]);
           }
-          
+
           this.selectInteraction = new Select({
             style: this.getStyleFromSelect,
             layers: this.map.getAllLayers(),
           });
-          
+
           this.map.addInteraction(this.selectInteraction);
           this.addChangedObjectOnMap();
         }
       }
     },
-    arrayEdit: {
+    'arrayEdit.post': {
       handler() {
         this.addChangedObjectOnMap();
       },
-      deep: true,
+      // deep: true,
     },
     getObjectForCard: {
       handler() {
@@ -143,6 +143,7 @@ export default {
               this.objectForCard.name, this.objectForCard.geometry.coordinates);
           }
         }
+
         if (this.newData.find(el => el.id === this.objectForCard.id) || this.objectForCard.id in this.conflictArrays) {
           this.map.getInteractions().getArray().forEach(element => {
             if (element instanceof Modify) {
@@ -269,9 +270,9 @@ export default {
           this.modify.on('modifyend', this.changeCoordinates);
           this.map.addInteraction(this.modify);
 
-          if (this.objectForCard.geometry.type === 'Point')
+          if ('geometry' in this.objectForCard && this.objectForCard.geometry.type === 'Point')
             this.getFeaturesInGroup('LineString', this.objectForCard.group);
-          else if (this.objectForCard.geometry.type === 'LineString')
+          else if ('geometry' in this.objectForCard && this.objectForCard.geometry.type === 'LineString')
             this.getFeaturesInGroup('Point', this.objectForCard.group);
 
           const snap = new Snap({
@@ -285,7 +286,7 @@ export default {
           this.map.getInteractions().forEach(interaction => {
             if (interaction instanceof Snap || interaction instanceof Modify) {
               this.map.removeInteraction(interaction);
-            } 
+            }
           })
         }
         this.map.getInteractions().getArray().forEach(element => {
@@ -304,6 +305,7 @@ export default {
         if (!this.cardVisable.data) {
           this.selectInteraction.getFeatures().clear();
         }
+        this.addObjectFromTableInSelect();
       },
       deep: true,
     },
@@ -325,9 +327,20 @@ export default {
     conflictArrays: {
       handler() {
         this.map.getAllLayers().forEach(layer => {
-          if (layer instanceof VectorImageLayer || layer instanceof VectorImageLayer)
+          if (layer instanceof VectorImageLayer)
             layer.getSource().getFeatures().forEach(feature => {
-              if (feature.getId() in this.conflictArrays)
+              if (feature.getId() in this.conflictArrays || this.newData.find(el => el.id === feature.getId()))
+                feature.setStyle(this.getStyleFromLayer(feature.getGeometry().getType(), layer));
+            })
+        })
+      }
+    },
+    newData: {
+      handler(){
+        this.map.getAllLayers().forEach(layer => {
+          if (layer instanceof VectorImageLayer)
+            layer.getSource().getFeatures().forEach(feature => {
+              if (feature.getId() in this.conflictArrays || this.newData.find(el => el.id === feature.getId()))
                 feature.setStyle(this.getStyleFromLayer(feature.getGeometry().getType(), layer));
             })
         })
@@ -335,25 +348,28 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays']),
+    ...mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays', 'allFeatures']),
   },
   methods: {
     ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode', 'deleteObjectFromArrayEditMode']),
-    ...mapActions(['getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
+    ...mapActions(['getFeatures', 'getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
     addChangedObjectOnMap() {
       let arraysOfNewObject = this.createSubArrays();
+      console.log(arraysOfNewObject);
       let arrayOfLayers = this.map.getAllLayers();
       for (let i in arraysOfNewObject) {
         const layer = arrayOfLayers.find((el) => { return `${el.get('typeId')}` === i });
 
         if (layer instanceof VectorImageLayer) {
-          layer.getSource().getFeatures().forEach(feature => {
-            const newFeature = arraysOfNewObject[i].find(el => el.id === feature.getId() || el.id_ === feature.getId());
+          const allFeaturesOfLayer = layer.getSource().getFeatures();
+          for (let j in allFeaturesOfLayer){
+            const feature = allFeaturesOfLayer[j];
+            const newFeature = arraysOfNewObject[i].find(el => el.id === feature.getId());
             if (newFeature) {
               feature.getGeometry().setCoordinates(this.coordinatesFromLonLat(newFeature.geometry.coordinates));
-              arraysOfNewObject[i].filter(el => el !== newFeature);
+              arraysOfNewObject[i].filter(el => el.id !== newFeature.id);
             }
-          });
+          }
           const newFeatures = new GeoJSON().readFeatures(
             {
               type: 'FeatureCollection',
@@ -365,6 +381,18 @@ export default {
           layer.getSource().addFeatures(newFeatures);
         }
       }
+    },
+    addObjectFromTableInSelect(){
+      if (this.getObjectForCard && 'name' in this.getObjectForCard && typeof this.getObjectForCard.name === 'number' && this.cardVisable.data && !this.addCardOn.data) {
+          this.map.getAllLayers().filter(el => el.get('typeId') === this.getObjectForCard.name).forEach(el => {
+            el.getSource().getFeatures().forEach(element => {
+              if (element.getId() === this.getObjectForCard.id) {
+                this.selectInteraction.getFeatures().clear();
+                this.selectInteraction.getFeatures().push(element);
+              }
+            })
+          })
+        }
     },
     async returnCoordinates() {
       let object;
@@ -585,6 +613,20 @@ export default {
             subArrays[`${this.allType[i].id}`].push(obj);
           }
         }
+        for (let j in this.arrayEdit.put) {
+          if (this.arrayEdit.put[j].name == this.allType[i].id) {
+            let obj = JSON.parse(JSON.stringify(this.arrayEdit.put[j]));
+            obj.id = obj.id_;
+            subArrays[`${this.allType[i].id}`].push(obj);
+          }
+        }
+        for (let j in this.arrayEdit.delete) {
+          if (this.arrayEdit.delete[j].name == this.allType[i].id) {
+            let obj = JSON.parse(JSON.stringify(this.arrayEdit.delete[j]));
+            obj.id = obj.id_;
+            subArrays[`${this.allType[i].id}`].push(obj);
+          }
+        }
       }
       return subArrays;
     },
@@ -683,28 +725,15 @@ export default {
           type: 'FeatureCollection',
           features: this.features.features.filter(el => el.name === element.id),
         };
-        let layer
-        if (this.typeForLayer.type !== 'Point') {
-          layer = new VectorImageLayer({
-            source: new VectorSource({
-              features: new GeoJSON().readFeatures(features,
-                {
-                  featureProjection: 'EPSG:3857'
-                }),
-            }),
-          });
-        }
-        else {
-          layer = new VectorImageLayer({
-            source: new VectorSource({
-              features: new GeoJSON().readFeatures(features,
-                {
-                  featureProjection: 'EPSG:3857'
-                }),
-            }),
-            // declutter: true,
-          });
-        }
+        let layer;
+        layer = new VectorImageLayer({
+          source: new VectorSource({
+            features: new GeoJSON().readFeatures(features,
+              {
+                featureProjection: 'EPSG:3857'
+              }),
+          }),
+        });
 
         layer.set('typeId', this.typeForLayer.id);
         layer.set('type', this.typeForLayer.type);
@@ -854,7 +883,6 @@ export default {
           zIndex: Infinity,
         }));
       }
-      //layer.setStyle(this.getStyleFromLayer);
     },
     filteredLayer() {
       const allLayers = this.map.getAllLayers().filter(el => el.get('typeId') != undefined);
@@ -881,45 +909,6 @@ export default {
     }
   },
   async mounted() {
-    const attributions =
-      '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
-      '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
-    await this.getAllType();
-    this.map = new Map({
-      target: 'map_content',
-      layers: [
-        new TileLayer({
-          source: new XYZ({
-            attributions: attributions,
-            url:
-              'https://api.maptiler.com/maps/openstreetmap/256/{z}/{x}/{y}.jpg?key=YeSa4U2UsXEQqN09L71C',
-            tilePixelRatio: 1, // THIS IS IMPORTANT
-          })
-        }),
-      ],
-      view: new View({
-        zoom: 12,
-        center: fromLonLat([56.177483, 54.924307]),
-        constrainResolution: true,
-      })
-    });
-
-    this.resizeMap();
-
-    this.selectInteraction = new Select();
-    await this.addNewLayers();
-    this.map.on('click', this.getFeature_);
-    if (this.addCardOn_.data) {
-      this.addInteraction();
-    }
-    this.selectInteraction = new Select({
-      style: this.getStyleFromSelect,
-      layers: this.map.getAllLayers(),
-    });
-
-    this.map.addInteraction(this.selectInteraction);
-    this.filteredTypes = this.allType;
-
     Feature.prototype.getLayer = function (map) {
       var this_ = this, layer_, layersToLookFor = [];
       var check = function (layer) {
@@ -947,6 +936,36 @@ export default {
       });
       return layer_;
     };
+    const attributions =
+      '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
+      '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+    this.map = new Map({
+      target: 'map_content',
+      layers: [
+        new TileLayer({
+          source: new XYZ({
+            attributions: attributions,
+            url:
+              'https://api.maptiler.com/maps/openstreetmap/256/{z}/{x}/{y}.jpg?key=YeSa4U2UsXEQqN09L71C',
+            tilePixelRatio: 1, // THIS IS IMPORTANT
+          })
+        }),
+      ],
+      view: new View({
+        zoom: 12,
+        center: fromLonLat([56.177483, 54.924307]),
+        constrainResolution: true,
+      })
+    });
+
+    this.resizeMap();
+    this.map.on('click', this.getFeature_);
+
+    this.selectInteraction = new Select();
+    this.getFeatures();
+    await this.getAllType();
+
+    this.filteredTypes = this.allType;
   }
 }
 </script>

@@ -69,7 +69,7 @@
                             </template>
                             <template v-else>
                                 <v-col v-for="(f, index) in user.groups" :key="index" cols="2" sm="6" md="5" lg="6"
-                                    class="pa-0 ma-0">
+                                    class="pa-0 ma-0" v-show="f != 'Admin'">
                                     <v-radio-group hide-details class="ma-0 pa-0"
                                         v-model="objectForCard_.properties.group">
                                         <v-radio :label="f" :value="user.groups[index]" :readonly="infoCardOn.data"

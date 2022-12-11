@@ -206,6 +206,7 @@ export default {
                 properties: {
                     name: '',
                 },
+                users: [],
             }
             this.upadateEmptyObject(object);
             this.updateHeaders(headers);

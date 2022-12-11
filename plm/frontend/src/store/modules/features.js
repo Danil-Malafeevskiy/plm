@@ -76,8 +76,8 @@ export default {
                 console.log(response.data)
                 if ('group' in response.data) {
                     for (let i in response.data.data) {
-                        // console.log(2);
                         response.data.data[i].id_ = uuidv4();
+                        response.data.data[i].group = response.data.group;
                     }
                     commit('updateArrayEditMode', { item: { arr: response.data.data, group: response.data.group }, type: 'post' });
                     const group = response.data.group;

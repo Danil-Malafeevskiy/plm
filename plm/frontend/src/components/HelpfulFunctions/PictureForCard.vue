@@ -3,7 +3,7 @@
         <v-card
             v-if="'properties' in objectForCard && 'type' in objectForCard.properties && objectForCard.properties.type === 'Point'"
             class="one_picture pa-0 ma-0 background_color_gray" tile flat
-            style="width: 100% !important; overflow-y: scroll !important;"
+            style="width: 100% !important; overflow-y: scroll !important; border-radius: 12px 12px 0 0 !important;"
             :style="{ 'min-height': heightPicture, 'max-height': heightPicture }">
 
             <v-row no-gutters justify="start">

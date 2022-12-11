@@ -36,7 +36,7 @@
 
             <v-btn :disabled="cardVisable.data || (!editMode && actions === 'getFeatures')"
               style="border-radius: 4px; margin-right: 10px !important" class="show__card" height="28px" width="80px"
-              color="#EE5E5E" @click="addCardOn.data = !addCardOn.data; visableCard();">
+              color="#EE5E5E" @click="addCardOn.data = !addCardOn.data; visableCard(); conflictCard = false">
               <v-icon color="white !default" dark>
                 mdi-plus
               </v-icon>
@@ -306,6 +306,7 @@ export default {
         }
       }
       arrayEditModeFromPut.message = this.arrayEditMode.message;
+      this.notVisableCard();
       await this.putFeature(arrayEditModeFromPut);
 
       if (this.newData.length || Object.keys(this.conflictArrays).length) {
@@ -372,7 +373,6 @@ export default {
   mounted() {
     this.checkPath()
     this.getUser();
-    this.getFeatures();
 
     const chatSocket = new WebSocket("ws://localhost:8000/test");
     chatSocket.onmessage = this.onmessage;
