@@ -31,11 +31,10 @@ export default {
         }
     },
     watch: {
-        cardVisable: {
+        'cardVisable.data': {
             handler() {
                 this.changeItemFormTable();
             },
-            deep: true,
         },
         objectForCard: {
             handler(){

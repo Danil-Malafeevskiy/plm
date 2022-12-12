@@ -144,8 +144,8 @@ export default {
                         state.arrayEdit.post = [...state.arrayEdit.post, ...item.arr];
                     }
                     else {
-                        state.arrayEditMode[item.group].post.push(item);
-                        state.arrayEdit.post.push(item);
+                        state.arrayEditMode[item.group].post.push(Object.freeze(item));
+                        state.arrayEdit.post.push(Object.freeze(item));
                     }
                     break;
 
@@ -153,7 +153,7 @@ export default {
                     if ('id_' in item) {
                         for (let key in state.arrayEditMode[item.group].post) {
                             if (state.arrayEditMode[item.group].post[key].id_ === item.id_) {
-                                Vue.set(state.arrayEditMode[item.group].post, key, item);
+                                Vue.set(state.arrayEditMode[item.group].post, key, Object.freeze(item));
                             }
                         }
                         state.arrayEdit.post = getEditedFeatures(state.arrayEditMode, 'post');
@@ -165,12 +165,12 @@ export default {
                         if (state.arrayEditMode[item.group].put.find(el => el.id === item.id)) {
                             for (let key in state.arrayEditMode[item.group].put) {
                                 if (state.arrayEditMode[item.group].put[key].id === item.id) {
-                                    Vue.set(state.arrayEditMode[item.group].put, key, item);
+                                    Vue.set(state.arrayEditMode[item.group].put, key, Object.freeze(item));
                                 }
                             }
                         }
                         else {
-                            state.arrayEditMode[item.group].put.push(item);
+                            state.arrayEditMode[item.group].put.push(Object.freeze(item));
                         }
                     }
                     state.arrayEdit.put = getEditedFeatures(state.arrayEditMode, 'put');
@@ -189,7 +189,7 @@ export default {
                             state.arrayEditMode[item.group].delete = state.arrayEditMode[item.group].delete.filter(el => el.id != item.id);
                         }
                         else {
-                            state.arrayEditMode[item.group].delete.push(item);
+                            state.arrayEditMode[item.group].delete.push(Object.freeze(item));
                         }
                     }
                     else {
@@ -203,14 +203,14 @@ export default {
                 case 'offPoints':
                     if (Object.prototype.hasOwnProperty.call(item, 'attachFlag')) {
                         state.arrayEditMode[item.group].offPoints.push(item);
-                        state.arrayEdit.offPoints.push(item);
+                        state.arrayEdit.offPoints.push(Object.freeze(item));
                     }
                     break;
 
                 case 'properties':
                     for (let field in item) {
                         if (field != 'group')
-                            Vue.set(state.arrayEditMode[item.group].properties, field, item[field]);
+                            Vue.set(state.arrayEditMode[item.group].properties, field, Object.freeze(item[field]));
                     }
             }
         },

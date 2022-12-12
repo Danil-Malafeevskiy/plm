@@ -143,8 +143,9 @@ export default {
     top: 30% !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: 0 !important;
+    bottom: 70px !important;
     z-index: 2;
+    overflow: hidden scroll;
 }
 
 .v-expansion-panel-content__wrap {

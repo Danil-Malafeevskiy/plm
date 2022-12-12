@@ -58,11 +58,7 @@ export default {
   props: ['visableCard', 'addCardOn', 'infoCardOn', 'notVisableCard', 'editCardOn', 'getFeature', 'changeElements', 'cardVisable', 'conflictCard'],
   data() {
     return {
-      coord: [],
-      features: {
-        type: 'FeatureCollection',
-        features: this.allFeatures,
-      },
+      features: {},
       feature: this.getFeature,
       map: null,
       drawLayer: new VectorImageLayer({
@@ -70,7 +66,6 @@ export default {
       }),
       draw: null,
       modify: null,
-      modifyEdit: null,
       addCardOn_: this.addCardOn,
       infoCardOn_: this.infoCardOn,
       editCardOn_: this.editCardOn,
@@ -79,7 +74,6 @@ export default {
       canvas: document.getElementById('png_icon_of_type'),
       svg: document.querySelector('#svg_icon_of_type svg'),
       editedPointCoordinates: null,
-      counter: 0,
       oldFeature: null,
       arrFeatureForDraw: [],
       isFilter: false,
@@ -97,25 +91,28 @@ export default {
   watch: {
     allFeatures: {
       async handler() {
-        this.features = {
-          type: 'FeatureCollection',
-          features: this.allFeatures,
-        }
-        if (this.map != null) {
-          await this.deleteOldLayers();
-          await this.addNewLayers();
-          const allInteractions = this.map.getInteractions();
-          for (let i in allInteractions) {
-            this.map.removeInteraction(allInteractions[i]);
+        if (this.allFeatures.length) {
+          this.features = {
+            type: 'FeatureCollection',
+            features: this.allFeatures,
           }
+          this.updateFeatures([]);
+          if (this.map != null) {
+            await this.deleteOldLayers();
+            await this.addNewLayers();
+            const allInteractions = this.map.getInteractions();
+            for (let i in allInteractions) {
+              this.map.removeInteraction(allInteractions[i]);
+            }
 
-          this.selectInteraction = new Select({
-            style: this.getStyleFromSelect,
-            layers: this.map.getAllLayers(),
-          });
+            this.selectInteraction = new Select({
+              style: this.getStyleFromSelect,
+              layers: this.map.getAllLayers(),
+            });
 
-          this.map.addInteraction(this.selectInteraction);
-          this.addChangedObjectOnMap();
+            this.map.addInteraction(this.selectInteraction);
+            this.addChangedObjectOnMap();
+          }
         }
       }
     },
@@ -123,7 +120,6 @@ export default {
       handler() {
         this.addChangedObjectOnMap();
       },
-      // deep: true,
     },
     getObjectForCard: {
       handler() {
@@ -169,12 +165,21 @@ export default {
     },
     'getObjectForCard.geometry': {
       handler() {
-        if (this.conflict) {
+        if (this.conflictCard) {
+          const featureWithNewGeometry = (new GeoJSON().readFeatures(
+            {
+              type: 'FeatureCollection',
+              features: [this.getObjectForCard]
+            },
+            {
+              featureProjection: 'EPSG:3857'
+            }))[0];
           const layer = this.map.getAllLayers().find(layer => layer.get('typeId') === this.getObjectForCard.name);
           let features = layer.getSource().getFeatures();
           for (let i in features) {
-            if (features[i].getId() === this.oldFeature.id) {
-              features[i].getGeometry().setCoordinates(this.coordinatesFromLonLat(this.oldFeature.geometry.coordinates));
+            if (features[i].getId() === this.getObjectForCard.id) {
+              features[i].getGeometry().setCoordinates(featureWithNewGeometry.getGeometry().getCoordinates());
+              break;
             }
           }
         }
@@ -213,7 +218,7 @@ export default {
         }
       }
     },
-    addCardOn: {
+    'addCardOn.data': {
       handler() {
         this.addCardOn_ = this.addCardOn;
         this.selectInteraction.setActive(!this.addCardOn.data);
@@ -256,16 +261,15 @@ export default {
           this.resetInteractions();
         }
       },
-      deep: true
     },
-    editCardOn: {
+    'editCardOn.data': {
       async handler() {
         this.editCardOn_ = this.editCardOn;
+        this.selectInteraction.setActive(!this.editCardOn.data)
         if (this.editCardOn.data) {
           this.modify = new Modify({
             features: this.selectInteraction.getFeatures(),
           });
-
           this.modify.on('modifystart', this.takeCoordinates);
           this.modify.on('modifyend', this.changeCoordinates);
           this.map.addInteraction(this.modify);
@@ -289,25 +293,18 @@ export default {
             }
           })
         }
-        this.map.getInteractions().getArray().forEach(element => {
-          if (element instanceof Modify) {
-            element.setActive(this.editCardOn_.data)
-          }
-        });
         if (!this.editCardOn.data && !this.infoCardOn.data && !this.conflictCard) {
           await this.returnCoordinates();
         }
       },
-      deep: true
     },
-    cardVisable: {
+    'cardVisable.data': {
       handler() {
         if (!this.cardVisable.data) {
           this.selectInteraction.getFeatures().clear();
         }
         this.addObjectFromTableInSelect();
       },
-      deep: true,
     },
     allType: {
       handler() {
@@ -336,7 +333,7 @@ export default {
       }
     },
     newData: {
-      handler(){
+      handler() {
         this.map.getAllLayers().forEach(layer => {
           if (layer instanceof VectorImageLayer)
             layer.getSource().getFeatures().forEach(feature => {
@@ -351,23 +348,27 @@ export default {
     ...mapGetters(['drawType', 'oneFeature', 'allType', 'typeForLayer', 'getObjectForCard', 'arrayEdit', 'oneType', 'allTypeForMap', 'featureForMap', 'featureInMap', 'newData', 'emptyObject', 'user', 'conflictArrays', 'allFeatures']),
   },
   methods: {
-    ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode', 'deleteObjectFromArrayEditMode']),
+    ...mapMutations(['updateOneFeature', 'upadateEmptyObject', 'updateObjectForCard', 'updateArrayEditMode', 'deleteObjectFromArrayEditMode', 'updateFeatures']),
     ...mapActions(['getFeatures', 'getOneFeature', 'getOneFeatureId', 'getOneTypeObject', 'getAllType', 'getOneObject', 'filterForFeatureForMap', 'getFeatureForMap']),
     addChangedObjectOnMap() {
       let arraysOfNewObject = this.createSubArrays();
-      console.log(arraysOfNewObject);
       let arrayOfLayers = this.map.getAllLayers();
       for (let i in arraysOfNewObject) {
         const layer = arrayOfLayers.find((el) => { return `${el.get('typeId')}` === i });
 
         if (layer instanceof VectorImageLayer) {
           const allFeaturesOfLayer = layer.getSource().getFeatures();
-          for (let j in allFeaturesOfLayer){
+          for (let j in allFeaturesOfLayer) {
             const feature = allFeaturesOfLayer[j];
-            const newFeature = arraysOfNewObject[i].find(el => el.id === feature.getId());
+            const newFeature = arraysOfNewObject[i].find(el => {
+              return typeof el.id === 'string' ? false : el.id === feature.getId()
+            });
             if (newFeature) {
               feature.getGeometry().setCoordinates(this.coordinatesFromLonLat(newFeature.geometry.coordinates));
               arraysOfNewObject[i].filter(el => el.id !== newFeature.id);
+            }
+            else if (typeof feature.getId() === 'string' && !arraysOfNewObject[i].find(el => el.id_ === feature.getId())) {
+              layer.getSource().removeFeature(feature);
             }
           }
           const newFeatures = new GeoJSON().readFeatures(
@@ -382,17 +383,17 @@ export default {
         }
       }
     },
-    addObjectFromTableInSelect(){
+    addObjectFromTableInSelect() {
       if (this.getObjectForCard && 'name' in this.getObjectForCard && typeof this.getObjectForCard.name === 'number' && this.cardVisable.data && !this.addCardOn.data) {
-          this.map.getAllLayers().filter(el => el.get('typeId') === this.getObjectForCard.name).forEach(el => {
-            el.getSource().getFeatures().forEach(element => {
-              if (element.getId() === this.getObjectForCard.id) {
-                this.selectInteraction.getFeatures().clear();
-                this.selectInteraction.getFeatures().push(element);
-              }
-            })
+        this.map.getAllLayers().filter(el => el.get('typeId') === this.getObjectForCard.name).forEach(el => {
+          el.getSource().getFeatures().forEach(element => {
+            if (element.getId() === this.getObjectForCard.id) {
+              this.selectInteraction.getFeatures().clear();
+              this.selectInteraction.getFeatures().push(element);
+            }
           })
-        }
+        })
+      }
     },
     async returnCoordinates() {
       let object;
@@ -499,7 +500,14 @@ export default {
         for (let i in coordinates) {
           if (typeof coordinates[i][0] === 'object') {
             for (let j in coordinates[i]) {
-              coordinates[i][j] = toLonLat(coordinates[i][j]);
+              if (typeof coordinates[i][j][0] === 'object') {
+                for (let k in coordinates[i][j]) {
+                  coordinates[i][j][k] = toLonLat(coordinates[i][j][k]);
+                }
+              }
+              else {
+                coordinates[i][j] = toLonLat(coordinates[i][j]);
+              }
             }
           }
           else {
@@ -517,7 +525,14 @@ export default {
         for (let i in coordinates) {
           if (typeof coordinates[i][0] === 'object') {
             for (let j in coordinates[i]) {
-              coordinates[i][j] = fromLonLat(coordinates[i][j]);
+              if (typeof coordinates[i][j][0] === 'object') {
+                for (let k in coordinates[i][j]) {
+                  coordinates[i][j][k] = fromLonLat(coordinates[i][j][k]);
+                }
+              }
+              else {
+                coordinates[i][j] = fromLonLat(coordinates[i][j]);
+              }
             }
           }
           else {
@@ -573,7 +588,7 @@ export default {
 
       const feature_ = this.map.getFeaturesAtPixel(event.pixel)[0];
 
-      if (feature_ && !this.addCardOn_.data && (feature_.getId() != this.objectForCard.id || !this.cardVisable.data)) {
+      if (feature_ && !this.addCardOn_.data && !this.editCardOn.data && (feature_.getId() != this.objectForCard.id || !this.cardVisable.data)) {
         let item = this.findItem(feature_.getId())
         if (item) {
           this.updateObjectForCard(JSON.parse(JSON.stringify(item)));
@@ -584,7 +599,7 @@ export default {
         this.infoCardOn_.data = true;
         this.visableCard();
       }
-      else if (!feature_ && !this.addCardOn_.data) {
+      else if (!feature_ && !this.addCardOn_.data && !this.editCardOn.data) {
         this.notVisableCard();
         setTimeout(() => {
           this.infoCardOn_.data = false;
@@ -598,7 +613,7 @@ export default {
         this.feature.geometry.coordinates = this.coordinatesToLonLat(coordinates);
       }
       else {
-        this.returnCoordinateForLineString(this.editedPointCoordinates, coordinates)
+        this.returnCoordinateForLineString(this.editedPointCoordinates, coordinates);
         this.objectForCard.geometry.coordinates = this.coordinatesToLonLat(coordinates);
       }
     },
@@ -616,14 +631,12 @@ export default {
         for (let j in this.arrayEdit.put) {
           if (this.arrayEdit.put[j].name == this.allType[i].id) {
             let obj = JSON.parse(JSON.stringify(this.arrayEdit.put[j]));
-            obj.id = obj.id_;
             subArrays[`${this.allType[i].id}`].push(obj);
           }
         }
         for (let j in this.arrayEdit.delete) {
           if (this.arrayEdit.delete[j].name == this.allType[i].id) {
             let obj = JSON.parse(JSON.stringify(this.arrayEdit.delete[j]));
-            obj.id = obj.id_;
             subArrays[`${this.allType[i].id}`].push(obj);
           }
         }

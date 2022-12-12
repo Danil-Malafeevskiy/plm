@@ -61,9 +61,6 @@
 
       <v-tabs-items v-model="tab" :style="{ height: heightVItem }">
 
-        <!-- <CardConflict v-show="conflictCard" :cardVisable="cardVisable" :conflictCard="conflictCard" :editMode="editMode"
-          :objectForConflict="objectForConflict" :notVisableCard="notVisableCard" /> -->
-
         <CardInfo :cardVisable="cardVisable" :addCardOn="addCardOn" :infoCardOn="infoCardOn"
           :conflictCard="conflictCard" :editCardOn="editCardOn" :visableCard="visableCard"
           :notVisableCard="notVisableCard" :editMode="editMode" :objectForConflict="objectForConflict" />
@@ -111,9 +108,9 @@
         </v-tab-item>
         <v-tab-item>
           <div flat>
-            <MapArea :allFeatures="allFeatures" :cardVisable="cardVisable" :visableCard="visableCard"
-              :notVisableCard="notVisableCard" :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn"
-              :getFeature="emptyObject" :changeElements="changeElements" :conflictCard="conflictCard" />
+            <MapArea :cardVisable="cardVisable" :visableCard="visableCard" :notVisableCard="notVisableCard"
+              :addCardOn="addCardOn" :infoCardOn="infoCardOn" :editCardOn="editCardOn" :getFeature="emptyObject"
+              :changeElements="changeElements" :conflictCard="conflictCard" />
           </div>
         </v-tab-item>
       </v-tabs-items>
@@ -133,6 +130,7 @@ import { mapActions, mapGetters, mapMutations } from 'vuex';
 import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
 import FIleInputWindow from './components/HelpfulFunctions/FIleInputWindow.vue';
+import { toStringXY } from 'ol/coordinate';
 // import CardConflict from './components/HelpfulFunctions/CardConflict.vue';
 
 export default {
@@ -212,8 +210,8 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(['allFeatures', 'getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
-      'newData', 'actions', 'typeForLayer', 'arrayEdit', 'allListItem', 'user', 'conflictArrays']),
+    ...mapGetters(['getToolbarTitle', 'getAuth', 'getObjectForCard', 'emptyObject', 'oneType', 'arrayEditMode',
+      'newData', 'actions', 'typeForLayer', 'arrayEdit', 'user', 'conflictArrays']),
 
     heightVItem() {
       if (this.actions === 'getFeatures') {
@@ -232,8 +230,8 @@ export default {
   },
   methods: {
 
-    ...mapActions(['getFeatures', 'postFeature', 'putFeature', 'getUser', 'filterForFeature', 'deleteFeature', 'getTypeObject']),
-    ...mapMutations(['updateFeature', 'updateList', 'resetArrayEditMode', 'updateNewData', 'resetNewData', 'deleteObjectFromArrayEditMode', 'updateConflictArrays']),
+    ...mapActions(['getFeatures', 'putFeature', 'getUser', 'filterForFeature', 'getTypeObject']),
+    ...mapMutations(['resetArrayEditMode', 'updateNewData', 'resetNewData', 'deleteObjectFromArrayEditMode', 'updateConflictArrays']),
 
     visableVersions() {
       this.versionsPage.data = true
@@ -251,7 +249,7 @@ export default {
 
     async onmessage(e) {
       const data = JSON.parse(e.data);
-      // console.log(data);
+      // // console.log(data);
       if ('data' in data && typeof data.data.name === 'string') {
         this.getFeatures();
       }
@@ -262,7 +260,7 @@ export default {
 
             if (editObject.length && this.searchConflict(editObject[0], data.data)) {
               await this.updateNewData(data.data);
-              this.visableConflictCard();
+              this.notVisableCard();
               if (this.newData.length === 1) {
                 this.isConflict = true;
               }
@@ -283,10 +281,10 @@ export default {
         default:
           if ('content' in data) {
             this.сountMessage++;
-            if (this.сountMessage == data.content.groups_names.filter(el => Boolean(this.user.groups.indexOf(el))).length) {
+            if (this.сountMessage == data.content.groups_names.filter(el => Boolean(this.user.groups.indexOf(el))).length && !this.newData.length) {
               this.getFeatures();
-              this.countMessage = 0;
             }
+            this.countMessage = 0;
           }
           break;
       }
@@ -328,11 +326,15 @@ export default {
     searchConflict(itemFirst, itemSecond) {
       let result = false;
       for (let key in itemFirst) {
-        if (typeof itemFirst[key] === 'object') {
+        if ((typeof itemFirst[key] === 'object' && !Array.isArray(itemFirst[key])) || (Array.isArray(itemFirst[key]) && typeof itemFirst[key][0] !== 'number')) {
           result = result || this.searchConflict(itemFirst[key], itemSecond[key])
         }
+        else if (Array.isArray(itemFirst[key]) && typeof itemFirst[key][0] === 'number') {
+          console.log(toStringXY(itemFirst[key], 6) !== toStringXY(itemSecond[key], 6), toStringXY(itemFirst[key], 6), toStringXY(itemSecond[key], 6))
+          result = result || toStringXY(itemFirst[key], 6) !== toStringXY(itemSecond[key], 6);
+        }
         else if (itemFirst[key] != itemSecond[key]) {
-          return true;
+          return true
         }
       }
       return result;

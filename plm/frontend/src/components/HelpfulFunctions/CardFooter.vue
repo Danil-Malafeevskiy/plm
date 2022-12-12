@@ -36,11 +36,11 @@ export default {
         },
     },
     computed: {
-        ...mapGetters(['allListItem', 'user'])
+        ...mapGetters(['allListItem', 'user', 'actions', 'oneType'])
     },
     methods: {
         ...mapActions(['putObject', 'deleteObject', 'postObject']),
-        ...mapMutations(['updateArrayEditMode', 'updateObjectForCard', 'updateError', 'deleteItemFromNewData']),
+        ...mapMutations(['updateArrayEditMode', 'updateObjectForCard', 'updateError', 'deleteItemFromNewData', 'upadateEmptyObject']),
         async addNewFeature() {
             if (this.objectForCard.name && typeof this.objectForCard.name === 'number') {
                 if (!this.objectForCard.geometry.coordinates.length) {
@@ -49,8 +49,9 @@ export default {
                 }
                 this.objectForCard.id_ = uuidv4();
                 this.updateArrayEditMode({ item: JSON.parse(JSON.stringify(this.objectForCard)), type: 'post' });
+                this.resetobject();
             }
-            else if (this.objectForCard.properties.type === 'Point' && !this.objectForCard.image){
+            else if (this.objectForCard.properties.type === 'Point' && !this.objectForCard.image) {
                 this.$emit('showSnacker', 'Выберите иконку!');
                 return;
             }
@@ -63,6 +64,7 @@ export default {
                 object = { ...object, ...object.properties }
                 delete object.properties;
                 await this.postObject(object);
+                this.resetobject();
             }
             if (this.error) {
                 this.$emit('showSnacker', this.error);
@@ -109,6 +111,67 @@ export default {
             }
             if (this.offPointsFlag_ && this.objectForCard.geometry.type === 'Point') {
                 this.updateArrayEditMode({ item: this.objectForCard, type: 'offPoints' })
+            }
+        },
+        resetobject() {
+            let object;
+            switch (this.actions) {
+                case 'getTypeObject':
+                    object = {
+                        properties: {
+                            name: '',
+                            type: '',
+                            headers: [],
+                            properties: [],
+                            group: '',
+                            all_group_type: [],
+                            group_type: [],
+                        },
+                        ruls: [],
+                        image: '',
+                    }
+                    this.upadateEmptyObject(object);
+                    break;
+                case 'getAllGroups':
+                    object = {
+                        properties: {
+                            name: '',
+                        },
+                        users: [],
+                    }
+                    this.upadateEmptyObject(object);
+                    break;
+                case 'getUsersOfGroup':
+                    object = {
+                        properties: {
+                            first_name: "",
+                            last_name: "",
+                            email: "",
+                        },
+                        groups: [],
+                        permissions: [],
+                    }
+                    this.upadateEmptyObject(object);
+                    break;
+                case 'getFeatures':
+                    object = {
+                        name: this.oneType.id,
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: this.oneType.type,
+                            coordinates: [],
+                        },
+                        image: '',
+                    };
+                    for (const el in this.oneType.headers) {
+                        object.properties[el.text] = '';
+                    }
+                    for (const el in this.oneType.properties) {
+                        object.properties[el] = '';
+                    }
+                    this.upadateEmptyObject(object);
+                    break;
             }
         },
         checkCorrectFields() {
