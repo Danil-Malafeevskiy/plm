@@ -6,6 +6,7 @@ from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.gis.db.models.functions import AsGeoJSON
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
@@ -47,10 +48,13 @@ class TowerAPI(APIView):
             if 'group' in request.query_params:
                 datasets = Type.objects.filter(group=Group.objects.get(name=request.query_params['group']).id).values_list('id', flat=True).order_by('id')
             ff = DjangoFilterBackend()
+
             filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(name__in=list(datasets)), self)
 
-            feature_serializer = FeatureSerializer(filtered_queryset, many=True, remove_fields=['image', 'group'])
-            return Response(feature_serializer.data)
+            feature_serializer = filtered_queryset.values('name', 'type', 'geometry', 'properties')
+            for obj in feature_serializer:
+                obj['geometry'] = {"type": GEOSGeometry(obj['geometry']).geom_type, "coordinates": GEOSGeometry(obj['geometry']).coords}
+            return Response(list(feature_serializer))
         else:
             feature = Feature.objects.filter(id=id)
             feature_serializer = FeatureSerializer(feature, many=True)
@@ -170,7 +174,6 @@ class FileUploadView(APIView):
 
         lis = []
         dict_1 = {}
-
         type = Type.objects.get(name=filename, group=Group.objects.get(name=request.data['group']).id)
 
         dict_1['name'] = type.id
