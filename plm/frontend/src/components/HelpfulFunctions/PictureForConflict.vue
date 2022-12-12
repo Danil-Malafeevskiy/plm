@@ -70,7 +70,6 @@ export default {
                 this.objectForCard = this.getObjectForCard;
                 this.notConflictObject = JSON.parse(JSON.stringify(this.objectForCard));
                 this.objectForConflict_ = this.newData.find(el => this.objectForCard.id === el.id);
-                console.log(this.objectForCard, this.notConflictObject, this.objectForConflict_);
             }
         }
     },

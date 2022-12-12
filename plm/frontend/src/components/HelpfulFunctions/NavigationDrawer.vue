@@ -148,6 +148,7 @@ export default {
                                 properties: {
                                     name: '',
                                 },
+                                users: [],
                             }
                             this.upadateEmptyObject(object);
                         }

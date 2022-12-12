@@ -39,7 +39,7 @@
             </div>
             <CardFooter v-if="(!infoCardOn_.data || conflictCard)" :objectForCard_="objectForCard"
                 :infoCardOn="infoCardOn_" :editCardOn="editCardOn_" :editMode="editMode" :addCardOn="addCardOn_"
-                @notVisableCard="notVisableCard" :cardVisable="cardVisable" @showSnacker="showSnacker" />
+                @notVisableCard="notVisableCard" :cardVisable="cardVisable" @showSnacker="showSnacker" :conflictCard="conflictCard" />
         </v-card>
     </v-scroll-x-reverse-transition>
 </template>
@@ -64,7 +64,7 @@ export default {
         PictureForCard,
         PictureForConflict
     },
-    props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'visableCard', 'notVisableCard', 'editMode', 'conflictCard', 'objectForConflict'],
+    props: ['cardVisable', 'addCardOn', 'infoCardOn', 'editCardOn', 'visableCard', 'notVisableCard', 'editMode', 'conflictCard', 'objectForConflict', 'searchConflict'],
     data() {
         return {
             cardVisable_: this.cardVisable,
@@ -79,18 +79,17 @@ export default {
         }
     },
     watch: {
-        cardVisable: {
+        'cardVisable.data': {
             handler() {
                 this.cardVisable_ = this.cardVisable;
-            }, deep: true
+            },
         },
-        addCardOn: {
+        'addCardOn.data': {
             handler() {
                 if (this.addCardOn.data) {
                     this.objectForCard = this.emptyObject;
                 }
             },
-            deep: true,
         },
         getObjectForCard: {
             handler() {
@@ -107,7 +106,8 @@ export default {
                     geometry: {
                         type: this.oneType.type,
                         coordinates: [],
-                    }
+                    },
+                    image: '',
                 };
                 for (const el in this.oneType.headers) {
                     emptyObject.properties[el.text] = '';
@@ -147,6 +147,7 @@ export default {
         conflictCard: {
             handler() {
                 if (this.conflictCard) {
+                    Vue.set(this.objectForCard, 'changeGeometry', false);
                     if ((this.objectForCard.id in this.conflictArrays || this.objectForCard.id_ in this.conflictArrays) &&
                         this.newData.find(el => el.id ? el.id === this.objectForCard.id : el.id_ === this.objectForCard.id_)) {
                         this.sliderForConflict = ['Объект', 'Конфликт версий', 'Конфликт положений'];
