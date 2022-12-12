@@ -6,7 +6,7 @@
                     Выберите файл для импорта и группу
                 </div>
                 <div>
-                    <v-file-input v-model="file" hide_details prepend-icon="mdi-file-upload">
+                    <v-file-input v-model="file" hide-input prepend-icon="mdi-file-upload">
                     </v-file-input>
                     <v-row no-gutters justify="space-between"
                         style="width: 390px; margin: 0 auto; padding-bottom: 20px">

@@ -21,7 +21,7 @@ import { mapGetters, mapMutations, mapActions } from 'vuex';
 
 export default {
     name: 'CardFooter',
-    props: ['infoCardOn', 'editCardOn', 'addCardOn', 'objectForCard_'],
+    props: ['infoCardOn', 'editCardOn', 'addCardOn', 'objectForCard_', 'conflictCard'],
     data() {
         return {
             editCardOn_: this.editCardOn,
@@ -90,6 +90,9 @@ export default {
                     }
                 });
                 this.updateObjectForCard(JSON.parse(JSON.stringify(this.objectForCard)))
+                if (this.conflictCard) {
+                    this.$emit('notVisableCard'); this.editCardOn_.data = !this.editCardOn_.data;
+                }
             }
             else {
                 if (!this.checkCorrectFields()) {
@@ -100,6 +103,9 @@ export default {
                 object.properties = { ...object, ...object.properties };
 
                 await this.putObject(object);
+                if (this.conflictCard) {
+                    this.$emit('notVisableCard'); this.editCardOn_.data = !this.editCardOn_.data;
+                }
             }
             if (this.error) {
                 this.$emit('showSnacker', this.error);

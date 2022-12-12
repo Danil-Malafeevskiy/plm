@@ -324,7 +324,7 @@ export default {
           });
           this.map.addInteraction(snap);
         }
-        else if (!this.editCardOn.data && this.infoCardOn.data) {
+        else if (!this.editCardOn.data && this.infoCardOn.data && 'geometry' in this.getObjectForCard) {
           const feature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.objectForCard.geometry.coordinates)))[0]
 
           if (feature && feature.getGeometry().getType() === 'LineString') {

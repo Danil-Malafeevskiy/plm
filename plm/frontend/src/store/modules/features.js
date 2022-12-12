@@ -103,6 +103,9 @@ export default {
     },
     mutations: {
         updateFeatures(state, features) {
+            for(let i in features) {
+                features[i].geometry = JSON.parse(features[i].geometry);
+            }
             state.features = features;
         },
         updateResultPost(state, bool) {
@@ -114,7 +117,7 @@ export default {
         updatefilterForFeature(state, arrFeature) {
             state.filteredFeature = arrFeature;
             let items = [];
-            state.filteredFeature.forEach(element => {
+            state.filteredFeature.forEach(element => {               
                 let item = { ...element.properties };
                 item.id = element.id;
                 items.push(item);

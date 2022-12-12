@@ -131,7 +131,6 @@ import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
 import FIleInputWindow from './components/HelpfulFunctions/FIleInputWindow.vue';
 import { toStringXY } from 'ol/coordinate';
-// import CardConflict from './components/HelpfulFunctions/CardConflict.vue';
 
 export default {
   components: {
@@ -143,7 +142,6 @@ export default {
     ConflicWindow,
     VersionControl,
     FIleInputWindow,
-    // CardConflict
   },
 
   data() {
@@ -259,8 +257,8 @@ export default {
             let editObject = this.arrayEditMode[data.data.group].put.filter(el => el.id === data.data.id);
 
             if (editObject.length && this.searchConflict(editObject[0], data.data)) {
+              await this.notVisableCard();
               await this.updateNewData(data.data);
-              this.notVisableCard();
               if (this.newData.length === 1) {
                 this.isConflict = true;
               }
@@ -283,8 +281,11 @@ export default {
             this.сountMessage++;
             if (this.сountMessage == data.content.groups_names.filter(el => Boolean(this.user.groups.indexOf(el))).length && !this.newData.length) {
               this.getFeatures();
+              this.countMessage = 0;
             }
-            this.countMessage = 0;
+            else if (this.newData.length){
+              this.countMessage = 0;
+            } 
           }
           break;
       }
@@ -333,8 +334,10 @@ export default {
           console.log(toStringXY(itemFirst[key], 6) !== toStringXY(itemSecond[key], 6), toStringXY(itemFirst[key], 6), toStringXY(itemSecond[key], 6))
           result = result || toStringXY(itemFirst[key], 6) !== toStringXY(itemSecond[key], 6);
         }
-        else if (itemFirst[key] != itemSecond[key]) {
-          return true
+        else if (itemSecond[key] && itemFirst[key] && itemFirst[key] != itemSecond[key] ) {
+          console.log(key);
+          console.log(itemFirst[key] != itemSecond[key], itemFirst[key], itemSecond[key]);
+          return true;
         }
       }
       return result;
@@ -356,9 +359,11 @@ export default {
       if (object) {
         this.objectForConflict = object
         this.conflictCard = true;
+        this.editCardOn.data = true;
       }
       else if (this.getObjectForCard.id in this.conflictArrays || this.getObjectForCard.id_ in this.conflictArrays) {
         this.conflictCard = true;
+        this.editCardOn.data = true;
       }
       else {
         this.conflictCard = false;
