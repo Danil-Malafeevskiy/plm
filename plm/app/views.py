@@ -51,7 +51,7 @@ class TowerAPI(APIView):
 
             filtered_queryset = ff.filter_queryset(request, Feature.objects.filter(name__in=list(datasets)), self)
 
-            feature_serializer = filtered_queryset.values('name', 'type', 'geometry', 'properties')
+            feature_serializer = filtered_queryset.values('id', 'name', 'type', 'geometry', 'properties')
             for obj in feature_serializer:
                 obj['geometry'] = {"type": GEOSGeometry(obj['geometry']).geom_type, "coordinates": GEOSGeometry(obj['geometry']).coords}
             return Response(list(feature_serializer))
