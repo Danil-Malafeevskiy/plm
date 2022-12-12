@@ -89,6 +89,11 @@ export default {
       oldDrawCoordinates: null,
       indexDraw: null,
       drawCoord: null,
+      oldCord: null,
+      indexEdit: null,
+      editCord: null,
+      oldCoordinates: null,
+      oldCoordinatesAttach: null,
       drawFeature: null,
       oneFeature_: this.oneFeature,
       pointCoordInLineIndex: null,
@@ -163,6 +168,39 @@ export default {
           const checkFeature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.objectForCard.geometry.coordinates)));
           if (checkFeature.length && checkFeature.find(el => el.getGeometry().getType() === 'LineString')) {
             Vue.set(this.objectForCard, 'attachFlag', false);
+          }
+        }
+      }
+    },
+    'objectForCard.attachFlag': {
+      async handler() {
+        if (this.editCardOn.data && this.objectForCard.attachFlag) {
+          const feature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.objectForCard.geometry.coordinates)))[0]
+          // let coord = fromLonLat(this.objectForCard.geometry.coordinates)
+          this.oldCoordinatesAttach = feature.getGeometry().getCoordinates()
+          for (let i = 0; i < this.oldCoordinatesAttach.length - 1; i++) {
+            // feature.getGeometry().setCoordinates([feature.getGeometry().getCoordinates()[i], feature.getGeometry().getCoordinates()[i + 1]])
+            let checkCoord = this.oldCoordinatesAttach[i][0] === this.editCord[0] && this.oldCoordinatesAttach[i][1] === this.editCord[1]
+            let checkCoord1 = this.oldCoordinatesAttach[i + 1][0] === this.editCord[0] && this.oldCoordinatesAttach[i + 1][1] === this.editCord[1]
+            if (feature.getGeometry().intersectsCoordinate(this.editCord) && !(checkCoord || checkCoord1)) {
+              this.indexEdit = i + 1
+            }
+            feature.getGeometry().setCoordinates(this.oldCoordinatesAttach)
+          }
+
+          if ((this.indexEdit != -1) && (this.indexEdit != 0) && (this.indexEdit != this.oldCoordinatesAttach.length)) {
+            this.oldCoordinatesAttach.splice(this.indexEdit, 1)
+            feature.getGeometry().setCoordinates(this.oldCoordinatesAttach)
+            if (Number.isInteger(feature.getId())) {
+              for (let i = 0; i < this.oldCoordinatesAttach.length; i++) {
+                this.oldCoordinatesAttach[i] = toLonLat(this.oldCoordinatesAttach[i])
+              }
+              await this.getOneFeatureId(feature.getId());
+              this.oneFeature.geometry.coordinates = this.oldCoordinatesAttach
+              this.updateArrayEditMode({ item: this.oneFeature, type: 'put' });
+            } else {
+              this.changeNewLineString(feature.getId(), this.oldCoordinatesAttach)
+            }
           }
         }
       }
@@ -281,6 +319,74 @@ export default {
             })
           });
           this.map.addInteraction(snap);
+        }
+        else if (!this.editCardOn.data && this.infoCardOn.data) {
+          const feature = this.map.getFeaturesAtPixel(this.map.getPixelFromCoordinate(fromLonLat(this.objectForCard.geometry.coordinates)))[0]
+
+          if (feature && feature.getGeometry().getType() === 'LineString') {
+            this.indexEdit = -1
+            this.oldCoordinates = feature.getGeometry().getCoordinates()
+            this.oldCord = this.oldCoordinates
+            for (let i = 0; i < this.oldCoordinates.length - 1; i++) {
+              feature.getGeometry().setCoordinates([feature.getGeometry().getCoordinates()[i], feature.getGeometry().getCoordinates()[i + 1]])
+              let checkCoord = this.oldCoordinates[i][0] === this.editCord[0] && this.oldCoordinates[i][1] === this.editCord[1]
+              let checkCoord1 = this.oldCoordinates[i + 1][0] === this.editCord[0] && this.oldCoordinates[i + 1][1] === this.editCord[1]
+              if (feature.getGeometry().intersectsCoordinate(this.editCord) && !(checkCoord || checkCoord1)) {
+                this.indexEdit = i + 1
+              }
+              feature.getGeometry().setCoordinates(this.oldCoordinates)
+            }
+            if ((this.indexEdit != -1) && (this.indexEdit != 0) && (this.indexEdit != this.oldCoordinates.length)) {
+              this.oldCoordinates.splice(this.indexEdit, 0, this.editCord)
+              feature.getGeometry().setCoordinates(this.oldCoordinates)
+              if (Number.isInteger(feature.getId())) {
+                for (let i = 0; i < this.oldCoordinates.length; i++) {
+                  this.oldCoordinates[i] = toLonLat(this.oldCoordinates[i])
+                }
+                await this.getOneFeatureId(feature.getId());
+                this.oneFeature.geometry.coordinates = this.oldCoordinates
+                this.updateArrayEditMode({ item: this.oneFeature, type: 'put' });
+              } else {
+                this.changeNewLineString(feature.getId(), this.oldCoordinates)
+              }
+            }
+          }
+          else if (feature && feature.getGeometry().getType() === 'MultiLineString') {
+            this.indexEdit = -1
+            this.oldCoordinates = feature.getGeometry().getCoordinates()
+            this.oldCord = this.oldCoordinates
+            feature.getGeometry().setCoordinates(this.oldCoordinates)
+            // let bufferCoord;
+            this.oldCoordinates.forEach(async (element, index) => {
+              for (let i = 0; i < element.length; ++i) {
+                console.log([[feature.getGeometry().getCoordinates()[index][i] , feature.getGeometry().getCoordinates()[index][i + 1]]])
+                feature.getGeometry().setCoordinates([[feature.getGeometry().getCoordinates()[index][i] , feature.getGeometry().getCoordinates()[index][i + 1]]])
+                // let checkCoord = element[i][0] === this.editCord[0] && element[i][1] === this.editCord[1]
+                // let checkCoord1 = element[i + 1][0] === this.editCord[0] && element[i + 1][1] === this.editCord[1]
+                // if (feature.getGeometry().intersectsCoordinate(this.editCord) && !(checkCoord || checkCoord1)) {
+                //   this.indexEdit = i + 1
+                // }
+                // feature.getGeometry().setCoordinates(element)
+              }
+
+              // if ((this.indexEdit != -1) && (this.indexEdit != 0) && (this.indexEdit != this.oldCoordinates.length)) {
+              //   this.oldCoordinates.splice(this.indexEdit, 0, this.editCord)
+              //   feature.getGeometry().setCoordinates(this.oldCoordinates)
+              //   if (Number.isInteger(feature.getId())) {
+              //     for (let i = 0; i < this.oldCoordinates.length; i++) {
+              //       this.oldCoordinates[i] = toLonLat(this.oldCoordinates[i])
+              //     }
+              //     await this.getOneFeatureId(feature.getId());
+              //     this.oneFeature.geometry.coordinates = this.oldCoordinates
+              //     this.updateArrayEditMode({ item: this.oneFeature, type: 'put' });
+              //   } else {
+              //     this.changeNewLineString(feature.getId(), this.oldCoordinates)
+              //   }
+              // }
+              
+            });
+
+          }
         }
         else {
           this.map.getInteractions().forEach(interaction => {
@@ -594,6 +700,7 @@ export default {
     },
     changeCoordinates(event) {
       const coordinates = event.features.getArray()[0].getGeometry().getCoordinates();
+      this.editCord = coordinates
       if (this.addCardOn_.data) {
         this.feature.geometry.coordinates = this.coordinatesToLonLat(coordinates);
       }
@@ -953,7 +1060,7 @@ export default {
       ],
       view: new View({
         zoom: 12,
-        center: fromLonLat([56.177483, 54.924307]),
+        center: [-742065.1877846791, 8884108.994913828],
         constrainResolution: true,
       })
     });
