@@ -1,5 +1,6 @@
 import json
 import sqlite3
+import time
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -15,7 +16,7 @@ from django.utils.encoding import smart_bytes, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.db import transaction, IntegrityError
 
-from rest_framework import status
+from rest_framework import status, parsers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.parsers import MultiPartParser, FileUploadParser
 
@@ -38,6 +39,7 @@ class TowerAPI(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, TowerPerm]
     filterset_fields = ['name']
+    parser_classes = (parsers.JSONParser,)
 
     def get(self, request, id=0):
         if id == 0:
@@ -54,8 +56,7 @@ class TowerAPI(APIView):
             features = filtered_queryset.extra(
                 select={
                     'geometry': 'ST_AsGeoJSON("app_feature"."geometry")'}).values('id', 'name', 'type', 'geometry', 'properties')
-            '''for obj in features:
-                obj['geometry'] = {"type": GEOSGeometry(obj['geometry']).geom_type, "coordinates": GEOSGeometry(obj['geometry']).coords'''
+
             return Response(features)
         else:
             feature = Feature.objects.filter(id=id)
@@ -208,7 +209,6 @@ class FileUploadView(APIView):
         for i in range(len(lis)):
             lis[i] = json.loads(lis[i])
             lis[i]['geometry'] = {"type": GEOSGeometry(lis[i]['geometry']).geom_type, "coordinates": GEOSGeometry(lis[i]['geometry']).coords}
-
         return Response({"data": lis, filename: properties, "group": request.data['group']})
 
 class LoginView(APIView):
