@@ -351,42 +351,41 @@ export default {
               }
             }
           }
-          else if (feature && feature.getGeometry().getType() === 'MultiLineString') {
-            this.indexEdit = -1
-            this.oldCoordinates = feature.getGeometry().getCoordinates()
-            this.oldCord = this.oldCoordinates
-            feature.getGeometry().setCoordinates(this.oldCoordinates)
-            // let bufferCoord;
-            this.oldCoordinates.forEach(async (element, index) => {
-              for (let i = 0; i < element.length; ++i) {
-                console.log([[feature.getGeometry().getCoordinates()[index][i] , feature.getGeometry().getCoordinates()[index][i + 1]]])
-                feature.getGeometry().setCoordinates([[feature.getGeometry().getCoordinates()[index][i] , feature.getGeometry().getCoordinates()[index][i + 1]]])
-                // let checkCoord = element[i][0] === this.editCord[0] && element[i][1] === this.editCord[1]
-                // let checkCoord1 = element[i + 1][0] === this.editCord[0] && element[i + 1][1] === this.editCord[1]
-                // if (feature.getGeometry().intersectsCoordinate(this.editCord) && !(checkCoord || checkCoord1)) {
-                //   this.indexEdit = i + 1
-                // }
-                // feature.getGeometry().setCoordinates(element)
-              }
+        //   else if (feature && feature.getGeometry().getType() === 'MultiLineString') {
+        //     this.indexEdit = -1
+        //     this.oldCoordinates = feature.getGeometry().getCoordinates()
+        //     this.oldCord = this.oldCoordinates
+        //     feature.getGeometry().setCoordinates(this.oldCoordinates)
+        //     // let bufferCoord;
+        //     this.oldCoordinates.forEach(async (element, index) => {
+        //       for (let i = 0; i < element.length - 1; ++i) {
+        //         feature.getGeometry().setCoordinates([[toLonLat(this.oldCoordinates[index][i]), toLonLat(this.oldCoordinates[index][i + 1])]])
+        //         let checkCoord = element[i][0] === this.editCord[0] && element[i][1] === this.editCord[1]
+        //         let checkCoord1 = element[i + 1][0] === this.editCord[0] && element[i + 1][1] === this.editCord[1]
+        //         console.log(feature.getGeometry().intersectsCoordinate(this.editCord))
+        //         if (feature.getGeometry().intersectsCoordinate(toLonLat(this.editCord)) && !(checkCoord || checkCoord1)) {
+        //           this.indexEdit = i + 1
+        //         }
 
-              // if ((this.indexEdit != -1) && (this.indexEdit != 0) && (this.indexEdit != this.oldCoordinates.length)) {
-              //   this.oldCoordinates.splice(this.indexEdit, 0, this.editCord)
-              //   feature.getGeometry().setCoordinates(this.oldCoordinates)
-              //   if (Number.isInteger(feature.getId())) {
-              //     for (let i = 0; i < this.oldCoordinates.length; i++) {
-              //       this.oldCoordinates[i] = toLonLat(this.oldCoordinates[i])
-              //     }
-              //     await this.getOneFeatureId(feature.getId());
-              //     this.oneFeature.geometry.coordinates = this.oldCoordinates
-              //     this.updateArrayEditMode({ item: this.oneFeature, type: 'put' });
-              //   } else {
-              //     this.changeNewLineString(feature.getId(), this.oldCoordinates)
-              //   }
-              // }
-              
-            });
+        //         feature.getGeometry().setCoordinates(this.oldCoordinates)
+        //       }
 
-          }
+        //       // if ((this.indexEdit != -1) && (this.indexEdit != 0) && (this.indexEdit != this.oldCoordinates.length)) {
+        //       //   this.oldCoordinates.splice(this.indexEdit, 0, this.editCord)
+        //       //   feature.getGeometry().setCoordinates(this.oldCoordinates)
+        //       //   if (Number.isInteger(feature.getId())) {
+        //       //     for (let i = 0; i < this.oldCoordinates.length; i++) {
+        //       //       this.oldCoordinates[i] = toLonLat(this.oldCoordinates[i])
+        //       //     }
+        //       //     await this.getOneFeatureId(feature.getId());
+        //       //     this.oneFeature.geometry.coordinates = this.oldCoordinates
+        //       //     this.updateArrayEditMode({ item: this.oneFeature, type: 'put' });
+        //       //   } else {
+        //       //     this.changeNewLineString(feature.getId(), this.oldCoordinates)
+        //       //   }
+        //       // }
+        //     });
+        //   }
         }
         else {
           this.map.getInteractions().forEach(interaction => {
