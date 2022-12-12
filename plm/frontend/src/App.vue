@@ -131,7 +131,6 @@ import { mdiAlignHorizontalCenter } from '@mdi/js';
 import { Canvg } from 'canvg';
 import FIleInputWindow from './components/HelpfulFunctions/FIleInputWindow.vue';
 import { toStringXY } from 'ol/coordinate';
-// import CardConflict from './components/HelpfulFunctions/CardConflict.vue';
 
 export default {
   components: {
@@ -143,7 +142,6 @@ export default {
     ConflicWindow,
     VersionControl,
     FIleInputWindow,
-    // CardConflict
   },
 
   data() {
@@ -249,7 +247,7 @@ export default {
 
     async onmessage(e) {
       const data = JSON.parse(e.data);
-      // // console.log(data);
+      // console.log(data);
       if ('data' in data && typeof data.data.name === 'string') {
         this.getFeatures();
       }
@@ -259,8 +257,8 @@ export default {
             let editObject = this.arrayEditMode[data.data.group].put.filter(el => el.id === data.data.id);
 
             if (editObject.length && this.searchConflict(editObject[0], data.data)) {
+              await this.notVisableCard();
               await this.updateNewData(data.data);
-              this.notVisableCard();
               if (this.newData.length === 1) {
                 this.isConflict = true;
               }
@@ -282,6 +280,7 @@ export default {
           if ('content' in data) {
             this.сountMessage++;
             if (this.сountMessage == data.content.groups_names.filter(el => Boolean(this.user.groups.indexOf(el))).length && !this.newData.length) {
+              console.log(1);
               this.getFeatures();
             }
             this.countMessage = 0;
@@ -334,6 +333,7 @@ export default {
           result = result || toStringXY(itemFirst[key], 6) !== toStringXY(itemSecond[key], 6);
         }
         else if (itemFirst[key] != itemSecond[key]) {
+          console.log(itemFirst[key] != itemSecond[key], itemFirst[key] != itemSecond[key]);
           return true
         }
       }
