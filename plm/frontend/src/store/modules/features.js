@@ -103,9 +103,6 @@ export default {
     },
     mutations: {
         updateFeatures(state, features) {
-            for(let i in features) {
-                features[i].geometry = JSON.parse(features[i].geometry);
-            }
             state.features = features;
         },
         updateResultPost(state, bool) {
