@@ -1,14 +1,14 @@
 import json
 import sqlite3
 import time
+import uuid
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.contrib.gis.db.models.functions import AsGeoJSON
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.serializers import geojson
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.utils import timezone, dateformat
@@ -55,7 +55,7 @@ class TowerAPI(APIView):
 
             features = filtered_queryset.extra(
                 select={
-                    'geometry': 'ST_AsGeoJSON("app_feature"."geometry")'}).values('id', 'name', 'type', 'geometry', 'properties')
+                    'geometry': 'ST_AsGeoJSON("app_feature"."geometry")::json'}).values('id', 'name', 'type', 'geometry', 'properties')
 
             return Response(features)
         else:
@@ -154,34 +154,18 @@ class FileUploadView(APIView):
         doc.enable_load_extension(True)
 
         filename = request.data['filename']
+        group = request.data['group']
+
         doc.execute(f'SELECT load_extension("mod_spatialite.dll")')
 
         cur = doc.cursor()
         cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
+
         dict_0 = []
-        for i in cur.fetchall():
-            try:
-                cur.execute(f"SELECT *, ST_AsText(GeomFromWKB(GEOMETRY)) from " + i[0])
-                dict_0 = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in cur.fetchall()]
-                if dict_0[0]['ST_AsText(GeomFromWKB(GEOMETRY))'] == None:
-                    cur.execute(f"SELECT *, ST_AsText(GEOMETRY) from " + i[0])
-                    dict_0 = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in
-                              cur.fetchall()]
-                break
-            except Exception as e:
-                continue
+        title_name = []
+        str_for_request = ""
 
-        cur.close()
-        doc.close()
-        self.fs.delete(request.FILES['file'].name)
-
-        lis = []
-        dict_1 = {}
         type = Type.objects.get(name=filename, group=Group.objects.get(name=request.data['group']).id)
-
-        dict_1['name'] = type.id
-        dict_1['type'] = 'Feature'
-        dict_1['properties'] = {}
         properties = []
         headers = []
         for head in type.headers:
@@ -190,26 +174,37 @@ class FileUploadView(APIView):
         for prop in type.properties:
             properties.append(prop)
 
-        flag = True
-        for value in dict_0:
-            for key in value.keys():
-                if key == 'GEOMETRY' or key == "geometry" or key == 'id':
-                    continue
+        for i in cur.fetchall():
+            cur.execute(f"PRAGMA table_info({i[0]})")
 
-                if key == 'ST_AsText(GeomFromWKB(GEOMETRY))' or key == 'ST_AsText(GEOMETRY)':
-                    dict_1['geometry'] = value[key]
-                    continue
+            for k in cur.fetchall():
+                if k[1] != 'GEOMETRY' and k[1] != 'geometry' and k[1] != 'id':
+                    title_name.append(k[1])
+                    str_for_request += f"'{k[1]}', {k[1]}, "
 
-                if flag and key not in headers and key not in properties:
-                    properties.append(key)
+            try:
+                str_for_request = str_for_request[:-2]
+                cur.execute(f"SELECT json_group_array(json_object('geometry', json(AsGeoJSON(GeomFromWKB(GEOMETRY))), 'properties', json_object({str_for_request}),"
+                            f"'type', 'Feature', 'name', {type.id},"
+                            f"'group', '{group}', 'id_', '{uuid.uuid4()}')) FROM {i[0]}")
 
-                dict_1['properties'][key] = value[key]
-            lis.append(json.dumps(dict_1))
+                for name in title_name:
+                    if name not in properties and name not in headers:
+                        properties.append(name)
 
-        for i in range(len(lis)):
-            lis[i] = json.loads(lis[i])
-            lis[i]['geometry'] = {"type": GEOSGeometry(lis[i]['geometry']).geom_type, "coordinates": GEOSGeometry(lis[i]['geometry']).coords}
-        return Response({"data": lis, filename: properties, "group": request.data['group']})
+                dict_0 = json.loads(cur.fetchall()[0][0])
+            except Exception:
+                str_for_request = ""
+                title_name.clear()
+                continue
+
+            break
+
+        cur.close()
+        doc.close()
+        self.fs.delete(request.FILES['file'].name)
+
+        return Response({"data": dict_0, filename: properties, "group": request.data['group']})
 
 class LoginView(APIView):
     authentication_classes = [SessionAuthentication]
