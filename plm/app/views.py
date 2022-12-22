@@ -3,6 +3,7 @@ import sqlite3
 import time
 import uuid
 
+import geojson_to_sqlite
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate, login, logout, get_user_model
@@ -10,6 +11,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.gis.serializers import geojson
 from django.contrib.sites.shortcuts import get_current_site
+from django.http import HttpResponse
 from django.urls import reverse
 from django.utils import timezone, dateformat
 from django.utils.encoding import smart_bytes, smart_str
@@ -175,6 +177,7 @@ class FileUploadView(APIView):
             properties.append(prop)
 
         for i in cur.fetchall():
+            cur.row_factory = None
             cur.execute(f"PRAGMA table_info({i[0]})")
 
             for k in cur.fetchall():
@@ -184,27 +187,25 @@ class FileUploadView(APIView):
 
             try:
                 str_for_request = str_for_request[:-2]
-                cur.execute(f"SELECT json_group_array(json_object('geometry', json(AsGeoJSON(GeomFromWKB(GEOMETRY))), 'properties', json_object({str_for_request}),"
-                            f"'type', 'Feature', 'name', {type.id},"
-                            f"'group', '{group}', 'id_', '{uuid.uuid4()}')) FROM {i[0]}")
+                cur.row_factory = lambda curcor, row: {'geometry': json.loads(row[0]), 'properties': json.loads(row[1]),
+                                                       'type': 'Feature', 'id_': str(uuid.uuid4()), 'name': type.id, 'group': group}
+                cur.execute(f"SELECT json(AsGeoJSON(GeomFromWKB(GEOMETRY))), json_object({str_for_request}) FROM {i[0]}")
 
                 for name in title_name:
                     if name not in properties and name not in headers:
                         properties.append(name)
 
-                dict_0 = json.loads(cur.fetchall()[0][0])
+                dict_0 = {"data": cur.fetchall(), filename: properties, "group": group}
             except Exception:
                 str_for_request = ""
                 title_name.clear()
                 continue
 
             break
-
         cur.close()
         doc.close()
         self.fs.delete(request.FILES['file'].name)
-
-        return Response({"data": dict_0, filename: properties, "group": request.data['group']})
+        return Response(dict_0)
 
 class LoginView(APIView):
     authentication_classes = [SessionAuthentication]
